@@ -294,8 +294,8 @@ export default function Layout({ children }) {
 
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/10 backdrop-blur-xl border-t border-white/20 z-50 safe-area-pb">
-        <div className="flex items-center justify-center px-4 py-3 max-w-lg mx-auto">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center px-2 py-2">
+          <div className="flex items-center justify-center gap-1">
             {visibleNavItems.map((item) => {
               const IconComponent = item.icon;
               const active = isActive(item.path);
@@ -303,7 +303,7 @@ export default function Layout({ children }) {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`flex flex-col items-center justify-center gap-1 transition-all duration-200 px-3 py-2 rounded-xl ${
+                  className={`flex flex-col items-center justify-center gap-0.5 transition-all duration-200 px-2 py-1.5 rounded-lg ${
                     active
                       ? "text-[#FFD700] bg-white/15 shadow-lg"
                       : "text-white/80 hover:text-white hover:bg-white/5"
@@ -311,14 +311,14 @@ export default function Layout({ children }) {
                 >
                   <div className="flex items-center justify-center">
                     {typeof IconComponent === 'function' && (item.name === "אנגלית" || item.name === "חשבון") ? (
-                      <div className={`font-bold ${active ? 'text-sm' : 'text-xs'}`}>
+                      <div className="font-bold text-xs">
                         <IconComponent />
                       </div>
                     ) : (
-                      <IconComponent className={`${active ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                      <IconComponent className="w-5 h-5" />
                     )}
                   </div>
-                  <span className={`text-[10px] font-bold whitespace-nowrap ${active ? 'text-[#FFD700]' : 'text-white/70'}`}>
+                  <span className={`text-[9px] font-bold whitespace-nowrap ${active ? 'text-[#FFD700]' : 'text-white/70'}`}>
                     {item.name}
                   </span>
                 </Link>
