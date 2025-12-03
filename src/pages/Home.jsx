@@ -599,7 +599,7 @@ export default function Home() {
               <CardContent className="p-3 sm:p-6">
                 <div className="flex items-center justify-between mb-2 sm:mb-3">
                   <div className="flex-1 text-right">
-                    <p className="text-white/90 text-[10px] sm:text-sm font-bold">💰 עו״ש</p>
+                    <p className="text-white/90 text-[10px] sm:text-sm font-bold">💰 עובר ושב</p>
                   </div>
                   <motion.div
                     animate={{ rotate: [0, 10, -10, 0] }}
@@ -616,26 +616,28 @@ export default function Home() {
                   </p>
                 </div>
 
-                <div className="bg-red-500/20 rounded-lg px-1.5 sm:px-3 py-1 sm:py-2 border border-red-400/30 mb-2 sm:mb-3 space-y-0.5 sm:space-y-1">
-                  {userData?.total_inflation_lost > 0 && (
-                    <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-center gap-0.5">
-                      <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
-                      <span>אינפלציה: -{userData.total_inflation_lost}</span>
-                    </p>
-                  )}
-                  {userData?.total_income_tax > 0 && (
-                    <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-center gap-0.5">
-                      <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
-                      <span>מס: -{userData.total_income_tax}</span>
-                    </p>
-                  )}
-                  {(userData?.total_credit_interest || 0) > 0 && (
-                    <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-center gap-0.5">
-                      <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
-                      <span>ריבית: -{userData.total_credit_interest}</span>
-                    </p>
-                  )}
-                </div>
+                {(userData?.total_inflation_lost > 0 || userData?.total_income_tax > 0 || (userData?.total_credit_interest || 0) > 0) && (
+                  <div className="bg-red-500/20 rounded-lg px-1.5 sm:px-3 py-1 sm:py-2 border border-red-400/30 mb-2 sm:mb-3 space-y-0.5 sm:space-y-1">
+                    {userData?.total_inflation_lost > 0 && (
+                      <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-center gap-0.5">
+                        <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
+                        <span>אינפלציה: -{userData.total_inflation_lost}</span>
+                      </p>
+                    )}
+                    {userData?.total_income_tax > 0 && (
+                      <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-center gap-0.5">
+                        <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
+                        <span>מס: -{userData.total_income_tax}</span>
+                      </p>
+                    )}
+                    {(userData?.total_credit_interest || 0) > 0 && (
+                      <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-center gap-0.5">
+                        <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
+                        <span>ריבית: -{userData.total_credit_interest}</span>
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <Button
                   onClick={() => setShowShop(true)}
@@ -659,7 +661,7 @@ export default function Home() {
                 <CardContent className="p-3 sm:p-6">
                   <div className="flex items-center justify-between mb-2 sm:mb-3">
                     <div className="flex-1 text-right">
-                      <p className="text-white/90 text-[10px] sm:text-sm font-bold">💎 שווי</p>
+                      <p className="text-white/90 text-[10px] sm:text-sm font-bold">💎 שווי כולל</p>
                     </div>
                     <motion.div
                       animate={{
@@ -681,7 +683,7 @@ export default function Home() {
 
                   <div className="space-y-1 sm:space-y-1.5">
                     <div className="flex items-center justify-between bg-white/10 rounded-lg px-1.5 sm:px-3 py-1 sm:py-2 border border-white/20">
-                      <span className="text-white/80 text-[8px] sm:text-xs font-medium">💰 עו״ש</span>
+                      <span className="text-white/80 text-[8px] sm:text-xs font-medium">💰 עובר ושב</span>
                       <span className="text-white font-bold text-[10px] sm:text-sm">{userData?.coins || 0}</span>
                     </div>
                     <div className="flex items-center justify-between bg-white/10 rounded-lg px-1.5 sm:px-3 py-1 sm:py-2 border border-white/20">
