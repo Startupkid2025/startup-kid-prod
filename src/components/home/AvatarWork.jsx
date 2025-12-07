@@ -47,7 +47,7 @@ const JOBS = [
     id: "startup_founder",
     name: "מייסד סטארטאפ",
     icon: "🚀",
-    minStage: 4,
+    minStage: 5,
     coinsPerHour: 100,
     color: "from-orange-400 to-red-400",
     description: "מנהל חברה משלך!"
@@ -56,7 +56,7 @@ const JOBS = [
     id: "ceo",
     name: "מנכ\"ל חברה",
     icon: "👔",
-    minStage: 5,
+    minStage: 6,
     coinsPerHour: 150,
     color: "from-yellow-500 to-orange-500",
     description: "ראש חברה גדולה!"
@@ -103,6 +103,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
 
   const getCurrentStage = () => {
     const lessons = userData?.total_lessons || 0;
+    if (lessons >= 24) return 6;
     if (lessons >= 20) return 5;
     if (lessons >= 16) return 4;
     if (lessons >= 12) return 3;
