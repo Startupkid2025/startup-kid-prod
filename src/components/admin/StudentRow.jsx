@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, UserCheck, Calendar, Plus, UserX, Edit2, Users, Play } from "lucide-react";
+import { ChevronDown, ChevronUp, UserCheck, Calendar, Plus, UserX, Edit2, Users, Play, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -55,6 +55,7 @@ export default function StudentRow({
     full_name: student.full_name || "",
     user_type: student.user_type || "student"
   });
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const getParticipationForLesson = (lessonId) => {
     return participations.find(
@@ -104,6 +105,94 @@ export default function StudentRow({
       } else {
         console.error("Error removing participation:", error);
       }
+    }
+  };
+
+  // Handle deleting user
+  const handleDeleteUser = async () => {
+    try {
+      // Delete all user's participations
+      const userParticipations = participations.filter(p => p.student_email === student.email);
+      for (const participation of userParticipations) {
+        try {
+          await base44.entities.LessonParticipation.delete(participation.id);
+        } catch (error) {
+          console.error("Error deleting participation:", error);
+        }
+      }
+
+      // Delete user's word progress
+      try {
+        const wordProgress = await base44.entities.WordProgress.filter({ student_email: student.email });
+        for (const progress of wordProgress) {
+          await base44.entities.WordProgress.delete(progress.id);
+        }
+      } catch (error) {
+        console.error("Error deleting word progress:", error);
+      }
+
+      // Delete user's math progress
+      try {
+        const mathProgress = await base44.entities.MathProgress.filter({ student_email: student.email });
+        for (const progress of mathProgress) {
+          await base44.entities.MathProgress.delete(progress.id);
+        }
+      } catch (error) {
+        console.error("Error deleting math progress:", error);
+      }
+
+      // Delete user's quiz progress
+      try {
+        const quizProgress = await base44.entities.QuizProgress.filter({ student_email: student.email });
+        for (const progress of quizProgress) {
+          await base44.entities.QuizProgress.delete(progress.id);
+        }
+      } catch (error) {
+        console.error("Error deleting quiz progress:", error);
+      }
+
+      // Delete user's investments
+      try {
+        const investments = await base44.entities.Investment.filter({ student_email: student.email });
+        for (const investment of investments) {
+          await base44.entities.Investment.delete(investment.id);
+        }
+      } catch (error) {
+        console.error("Error deleting investments:", error);
+      }
+
+      // Delete leaderboard entry
+      try {
+        const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: student.email });
+        for (const entry of leaderboardEntries) {
+          await base44.entities.LeaderboardEntry.delete(entry.id);
+        }
+      } catch (error) {
+        console.error("Error deleting leaderboard entry:", error);
+      }
+
+      // Remove from groups
+      try {
+        const allGroups = await base44.entities.Group.list();
+        for (const group of allGroups) {
+          if (group.student_emails && group.student_emails.includes(student.email)) {
+            const updatedEmails = group.student_emails.filter(email => email !== student.email);
+            await base44.entities.Group.update(group.id, { student_emails: updatedEmails });
+          }
+        }
+      } catch (error) {
+        console.error("Error removing from groups:", error);
+      }
+
+      // Finally, delete the user
+      await base44.entities.User.delete(student.id);
+
+      toast.success(`${student.full_name} נמחק בהצלחה`);
+      setShowDeleteDialog(false);
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error("שגיאה במחיקת המשתמש");
     }
   };
 
@@ -240,7 +329,20 @@ export default function StudentRow({
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-              {/* Edit Student Button - NEW */}
+              {/* Delete User Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-red-400 hover:text-red-300 hover:bg-red-500/20 w-8 h-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDeleteDialog(true);
+                }}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+              
+              {/* Edit Student Button */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -669,6 +771,52 @@ export default function StudentRow({
                 שמור שינויים
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete User Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="bg-gradient-to-br from-red-900/95 to-red-800/95 backdrop-blur-xl border-2 border-red-500/50">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-white text-center">
+              ⚠️ אזהרה - מחיקת משתמש
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-6 text-center">
+            <p className="text-white text-lg mb-4">
+              האם אתה בטוח שברצונך למחוק את <strong>{student.full_name}</strong>?
+            </p>
+            <p className="text-red-200 text-sm mb-2">
+              פעולה זו תמחק גם:
+            </p>
+            <ul className="text-red-200 text-sm text-right list-disc list-inside space-y-1 mb-6">
+              <li>כל ההשתתפויות בשיעורים</li>
+              <li>כל ההתקדמות במילים והמתמטיקה</li>
+              <li>כל החידונים</li>
+              <li>כל ההשקעות</li>
+              <li>הרשומה בטבלת השיאים</li>
+              <li>השיוך לקבוצות</li>
+            </ul>
+            <p className="text-red-300 font-bold text-base">
+              ⚠️ פעולה זו בלתי הפיכה! ⚠️
+            </p>
+          </div>
+          <div className="flex gap-3 justify-center">
+            <Button
+              onClick={() => setShowDeleteDialog(false)}
+              variant="outline"
+              className="bg-white/20 border-white/30 hover:bg-white/30 text-white"
+            >
+              ביטול
+            </Button>
+            <Button
+              onClick={handleDeleteUser}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              מחק לצמיתות
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
