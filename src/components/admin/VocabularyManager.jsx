@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Edit2, Trash2, Search, BookOpen } from "lucide-react";
+import { Plus, Edit2, Trash2, Search, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -17,6 +17,8 @@ export default function VocabularyManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLevel, setFilterLevel] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 100;
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingWord, setEditingWord] = useState(null);
   const [wordForm, setWordForm] = useState({
@@ -133,6 +135,17 @@ export default function VocabularyManager() {
     return matchesSearch && matchesLevel;
   });
 
+  // Pagination
+  const totalPages = Math.ceil(filteredWords.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedWords = filteredWords.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search/filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterLevel]);
+
   const getLevelBadge = (level) => {
     const badges = {
       1: { text: "קל", color: "bg-green-500/30 text-green-200" },
@@ -176,7 +189,7 @@ export default function VocabularyManager() {
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-white mb-2">📚 ניהול מילים באנגלית</h2>
-          <p className="text-white/70 text-sm">סה"כ {words.length} מילים במאגר</p>
+          <p className="text-white/70 text-sm">סה"כ {words.length} מילים במאגר • מציג {filteredWords.length > 0 ? `${startIndex + 1}-${Math.min(endIndex, filteredWords.length)}` : '0'} מתוך {filteredWords.length}</p>
         </div>
         <Button
           onClick={handleOpenAddDialog}
@@ -215,9 +228,42 @@ export default function VocabularyManager() {
         </CardContent>
       </Card>
 
+      {/* Pagination Controls - Top */}
+      {totalPages > 1 && (
+        <Card className="bg-white/10 backdrop-blur-md border-white/20">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <Button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                variant="outline"
+                className="bg-white/10 border-white/20 hover:bg-white/20 text-white disabled:opacity-50"
+              >
+                <ChevronRight className="w-4 h-4 ml-2" />
+                הקודם
+              </Button>
+              
+              <div className="text-white text-sm font-medium">
+                עמוד {currentPage} מתוך {totalPages}
+              </div>
+
+              <Button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                variant="outline"
+                className="bg-white/10 border-white/20 hover:bg-white/20 text-white disabled:opacity-50"
+              >
+                הבא
+                <ChevronLeft className="w-4 h-4 mr-2" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Words List */}
       <div className="grid gap-4">
-        {filteredWords.map((word) => {
+        {paginatedWords.map((word) => {
           const levelBadge = getLevelBadge(word.difficulty_level);
           const stats = wordStats[word.word_english] || { totalAppearances: 0, correctOnce: 0, correctTwice: 0, mistakes: 0 };
           
@@ -311,6 +357,39 @@ export default function VocabularyManager() {
           </Card>
         )}
       </div>
+
+      {/* Pagination Controls - Bottom */}
+      {totalPages > 1 && (
+        <Card className="bg-white/10 backdrop-blur-md border-white/20">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <Button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                variant="outline"
+                className="bg-white/10 border-white/20 hover:bg-white/20 text-white disabled:opacity-50"
+              >
+                <ChevronRight className="w-4 h-4 ml-2" />
+                הקודם
+              </Button>
+              
+              <div className="text-white text-sm font-medium">
+                עמוד {currentPage} מתוך {totalPages}
+              </div>
+
+              <Button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                variant="outline"
+                className="bg-white/10 border-white/20 hover:bg-white/20 text-white disabled:opacity-50"
+              >
+                הבא
+                <ChevronLeft className="w-4 h-4 mr-2" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Add/Edit Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
