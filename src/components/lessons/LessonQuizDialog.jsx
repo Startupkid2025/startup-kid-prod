@@ -107,27 +107,23 @@ export default function LessonQuizDialog({ isOpen, onClose, lesson, onComplete }
       const user = await base44.auth.me();
       
       const finalScore = score;
-      const coinsEarned = finalScore * 10; // Coins *potentially* earned for this attempt
+      const coinsEarned = finalScore * 10; // Coins earned for this attempt
       
-      // Calculate coins to add: only add if improved or first time
-      const coinsToAdd = existingProgress 
-        ? Math.max(0, coinsEarned - (existingProgress.coins_earned || 0))
-        : coinsEarned;
+      // Calculate coins to add: ONLY give coins on first completion
+      const coinsToAdd = existingProgress ? 0 : coinsEarned;
 
       // Update or create quiz progress
       if (existingProgress) {
-        // If current score is better or equal, update. Otherwise, only update if it's the current session's final score for a previous best.
-        // The logic for existingProgress ensures we only save the best score if it's higher.
-        // However, here we want to update the latest attempt's score.
-        // For coins, we only grant new coins for improvement.
+        // Update existing progress but don't give more coins
         await base44.entities.QuizProgress.update(existingProgress.id, {
           score: finalScore,
           total_questions: questions.length,
           completed: true,
-          // Only update coins_earned if current attempt's coins are higher
-          coins_earned: Math.max(existingProgress.coins_earned || 0, coinsEarned)
+          // Keep the original coins_earned from first attempt
+          coins_earned: existingProgress.coins_earned || 0
         });
       } else {
+        // First time - create and give coins
         await base44.entities.QuizProgress.create({
           lesson_id: lesson.id,
           student_email: user.email,
@@ -138,17 +134,33 @@ export default function LessonQuizDialog({ isOpen, onClose, lesson, onComplete }
         });
       }
 
-      // Give coins to user only if there are new coins to add
+      // Give coins to user ONLY on first attempt
       if (coinsToAdd > 0) {
         await base44.auth.updateMe({
           coins: (user.coins || 0) + coinsToAdd
         });
+        
+        // Update leaderboard
+        try {
+          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
+            student_email: user.email 
+          });
+          if (leaderboardEntries.length > 0) {
+            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+              coins: (user.coins || 0) + coinsToAdd
+            });
+          }
+        } catch (error) {
+          console.error("Error updating leaderboard:", error);
+        }
       }
 
       setQuizCompleted(true);
       
       if (coinsToAdd > 0) {
         toast.success(`קיבלת ${coinsToAdd} מטבעות! 🎉`);
+      } else if (existingProgress) {
+        toast.info(`סיימת את החידון! ציון: ${finalScore}/${questions.length} (ללא מטבעות נוספים)`);
       } else {
         toast.success(`סיימת את החידון! ציון: ${finalScore}/${questions.length}`);
       }
