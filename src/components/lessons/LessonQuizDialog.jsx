@@ -31,18 +31,23 @@ export default function LessonQuizDialog({ isOpen, onClose, lesson, onComplete }
     try {
       const user = await base44.auth.me();
       
-      // Check if user attended this lesson (unless they're a demo user)
-      if (user.user_type !== "demo") {
-        const participationList = await base44.entities.LessonParticipation.filter({
-          lesson_id: lesson.id,
-          student_email: user.email
-        });
+      // Check if user is registered to this lesson
+      const participationList = await base44.entities.LessonParticipation.filter({
+        lesson_id: lesson.id,
+        student_email: user.email
+      });
 
-        if (participationList.length === 0 || participationList[0].attended === false) {
-          toast.error("רק תלמידים שנכחו בשיעור יכולים לענות על החידון");
-          onClose();
-          return;
-        }
+      if (participationList.length === 0) {
+        toast.error("רק תלמידים שרשומים לשיעור יכולים לענות על החידון");
+        onClose();
+        return;
+      }
+
+      // For non-demo users, require attendance
+      if (user.user_type !== "demo" && participationList[0].attended === false && !participationList[0].watched_recording) {
+        toast.error("רק תלמידים שנכחו בשיעור או צפו בהקלטה יכולים לענות על החידון");
+        onClose();
+        return;
       }
       
       // Check if user already completed this quiz
