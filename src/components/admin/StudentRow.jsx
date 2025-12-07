@@ -50,6 +50,8 @@ export default function StudentRow({
 
   // NEW: Edit student dialog state
   const [editedStudent, setEditedStudent] = useState({
+    first_name: student.first_name || "",
+    last_name: student.last_name || "",
     full_name: student.full_name || "",
     user_type: student.user_type || "student"
   });
@@ -108,16 +110,19 @@ export default function StudentRow({
   // NEW: Handle saving student details (combines old name and user type change logic)
   const handleSaveStudentDetails = async () => {
     try {
-      if (!editedStudent.full_name.trim()) {
-        toast.error("יש להזין שם");
+      if (!editedStudent.first_name.trim() || !editedStudent.last_name.trim()) {
+        toast.error("יש להזין שם פרטי ושם משפחה");
         return;
       }
 
+      const fullName = `${editedStudent.first_name.trim()} ${editedStudent.last_name.trim()}`;
       console.log("Updating student:", student.id, "with data:", editedStudent);
 
       // Update User entity
       const updateResult = await base44.entities.User.update(student.id, {
-        full_name: editedStudent.full_name,
+        first_name: editedStudent.first_name.trim(),
+        last_name: editedStudent.last_name.trim(),
+        full_name: fullName,
         user_type: editedStudent.user_type
       });
       
@@ -141,7 +146,7 @@ export default function StudentRow({
           // Add/update leaderboard if a student
           const leaderboardData = {
             student_email: student.email,
-            full_name: editedStudent.full_name, // Ensure full_name is updated here
+            full_name: fullName, // Ensure full_name is updated here
             ai_tech_level: student.ai_tech_level || 1,
             ai_tech_xp: student.ai_tech_xp || 0,
             personal_dev_level: student.personal_dev_level || 1,
@@ -218,7 +223,11 @@ export default function StudentRow({
               </div>
               <div className="text-right min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="font-bold text-white text-base sm:text-lg truncate">{student.full_name}</p>
+                  <p className="font-bold text-white text-base sm:text-lg truncate">
+                    {student.first_name && student.last_name 
+                      ? `${student.first_name} ${student.last_name}`
+                      : student.full_name}
+                  </p>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${userTypeColors[student.user_type || "student"]}`}>
                     {userTypeLabels[student.user_type || "student"]}
                   </span>
@@ -239,6 +248,8 @@ export default function StudentRow({
                 onClick={(e) => {
                   e.stopPropagation();
                   setEditedStudent({
+                    first_name: student.first_name || "",
+                    last_name: student.last_name || "",
                     full_name: student.full_name || "",
                     user_type: student.user_type || "student"
                   });
@@ -576,13 +587,25 @@ export default function StudentRow({
             
             <div className="space-y-2">
               <Label className="text-gray-700 font-medium">
-                שם מלא
+                שם פרטי
               </Label>
               <Input
-                value={editedStudent.full_name}
-                onChange={(e) => setEditedStudent({...editedStudent, full_name: e.target.value})}
+                value={editedStudent.first_name}
+                onChange={(e) => setEditedStudent({...editedStudent, first_name: e.target.value})}
                 className="border-2 border-purple-200"
-                placeholder="הזן שם מלא"
+                placeholder="הזן שם פרטי"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-gray-700 font-medium">
+                שם משפחה
+              </Label>
+              <Input
+                value={editedStudent.last_name}
+                onChange={(e) => setEditedStudent({...editedStudent, last_name: e.target.value})}
+                className="border-2 border-purple-200"
+                placeholder="הזן שם משפחה"
               />
             </div>
 
@@ -641,7 +664,7 @@ export default function StudentRow({
               <Button
                 onClick={handleSaveStudentDetails}
                 className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-                disabled={!editedStudent.full_name.trim()}
+                disabled={!editedStudent.first_name.trim() || !editedStudent.last_name.trim()}
               >
                 שמור שינויים
               </Button>
