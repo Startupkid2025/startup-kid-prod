@@ -243,10 +243,16 @@ export default function LessonQuizDialog({ isOpen, onClose, lesson, onComplete }
               </div>
             )}
 
-            {newCoinsAwarded > 0 && (
+            {newCoinsAwarded > 0 ? (
               <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl p-4 mb-6">
                 <p className="text-lg font-bold text-orange-800">
                   🪙 קיבלת {newCoinsAwarded} מטבעות!
+                </p>
+              </div>
+            ) : existingProgress && (
+              <div className="bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl p-4 mb-6">
+                <p className="text-sm text-blue-800">
+                  💡 כבר קיבלת מטבעות על החידון הזה ({existingProgress.coins_earned} מטבעות)
                 </p>
               </div>
             )}
