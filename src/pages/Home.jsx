@@ -440,6 +440,14 @@ export default function Home() {
           updates.daily_credit_interest = 0;
           needsUpdate = true;
         }
+        if (user.total_dividend_tax === undefined || user.total_dividend_tax === null) {
+          updates.total_dividend_tax = 0;
+          needsUpdate = true;
+        }
+        if (user.daily_dividend_tax === undefined || user.daily_dividend_tax === null) {
+          updates.daily_dividend_tax = 0;
+          needsUpdate = true;
+        }
 
         if (user.total_inflation_lost > 0 && !user.inflation_reset_v2) {
           updates.total_inflation_lost = 0;
@@ -448,6 +456,8 @@ export default function Home() {
           updates.daily_income_tax = 0;
           updates.total_credit_interest = 0;
           updates.daily_credit_interest = 0;
+          updates.total_dividend_tax = 0;
+          updates.daily_dividend_tax = 0;
           updates.last_tax_date = null;
           updates.inflation_reset_v2 = true;
           needsUpdate = true;
@@ -631,7 +641,7 @@ export default function Home() {
                   </p>
                 </div>
 
-                {(userData?.total_inflation_lost > 0 || userData?.total_income_tax > 0 || (userData?.total_credit_interest || 0) > 0) && (
+                {(userData?.total_inflation_lost > 0 || userData?.total_income_tax > 0 || (userData?.total_credit_interest || 0) > 0 || (userData?.total_dividend_tax || 0) > 0) && (
                   <div className="bg-red-500/20 rounded-lg px-1.5 sm:px-3 py-1 sm:py-2 border border-red-400/30 mb-2 sm:mb-3 space-y-0.5 sm:space-y-1">
                     {userData?.total_inflation_lost > 0 && (
                       <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-center gap-0.5 group relative">
@@ -648,6 +658,15 @@ export default function Home() {
                         <span>מס: -{userData.total_income_tax}</span>
                         <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-[10px] sm:text-xs rounded-lg px-3 py-2 whitespace-nowrap z-50 shadow-xl">
                           מס הכנסה - 0.5% ביום על כל השווי הכולל 🏦
+                        </div>
+                      </p>
+                    )}
+                    {(userData?.total_dividend_tax || 0) > 0 && (
+                      <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-center gap-0.5 group relative">
+                        <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
+                        <span>מס דיבידנד: -{userData.total_dividend_tax}</span>
+                        <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-[10px] sm:text-xs rounded-lg px-3 py-2 whitespace-nowrap z-50 shadow-xl">
+                          מס דיבידנד - 25% מרווחים יומיים בהשקעות 📈
                         </div>
                       </p>
                     )}
