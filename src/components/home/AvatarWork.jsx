@@ -102,13 +102,8 @@ export default function AvatarWork({ userData, onWorkComplete }) {
   };
 
   const getCurrentStage = () => {
-    // Calculate average level from the 3 skill categories
-    const aiTechLevel = userData?.ai_tech_level || 1;
-    const personalSkillsLevel = userData?.personal_skills_level || 1;
-    const moneyBusinessLevel = userData?.money_business_level || 1;
-    
-    const averageLevel = Math.round((aiTechLevel + personalSkillsLevel + moneyBusinessLevel) / 3);
-    return averageLevel;
+    const lessons = userData?.total_lessons || 0;
+    return Math.floor(lessons / 4) + 1;
   };
 
   const availableJobs = JOBS.filter(job => job.minStage <= getCurrentStage());
