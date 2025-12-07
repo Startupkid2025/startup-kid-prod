@@ -103,7 +103,12 @@ export default function AvatarWork({ userData, onWorkComplete }) {
 
   const getCurrentStage = () => {
     const lessons = userData?.total_lessons || 0;
-    return Math.floor(lessons / 4) + 1;
+    if (lessons < 4) return 1;
+    if (lessons < 10) return 2;
+    if (lessons < 18) return 3;
+    if (lessons < 28) return 4;
+    if (lessons < 40) return 5;
+    return 6;
   };
 
   const availableJobs = JOBS.filter(job => job.minStage <= getCurrentStage());
