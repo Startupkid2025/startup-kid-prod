@@ -262,9 +262,9 @@ export default function Leaderboard() {
     try {
       const today = new Date().toISOString().split('T')[0];
       
-      // Fetch fresh user data
+      // Fetch fresh user data - use me() for current user to avoid permission issues
+      const currentUserFull = await base44.auth.me();
       const allUsers = await base44.entities.User.list();
-      const currentUserFull = allUsers.find(u => u.email === currentUser.email);
       const targetUserFull = allUsers.find(u => u.email === targetUser.student_email);
       
       if (!currentUserFull) {
