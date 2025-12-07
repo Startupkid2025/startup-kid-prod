@@ -25,16 +25,10 @@ const skills = [
     color: "from-blue-400 to-cyan-400"
   },
   {
-    key: "personal_dev",
-    name: "פיתוח אישי",
+    key: "personal_skills",
+    name: "מיומנויות אישיות",
     icon: "🌱",
     color: "from-green-400 to-emerald-400"
-  },
-  {
-    key: "social_skills",
-    name: "מיומנויות חברתיות",
-    icon: "❤️",
-    color: "from-pink-400 to-rose-400"
   },
   {
     key: "money_business",
@@ -57,8 +51,7 @@ export default function Home() {
   const [showShop, setShowShop] = useState(false);
   const [lessonCounts, setLessonCounts] = useState({
     ai_tech: 0,
-    personal_dev: 0,
-    social_skills: 0,
+    personal_skills: 0,
     money_business: 0
   });
 
@@ -86,15 +79,19 @@ export default function Home() {
 
       const counts = {
         ai_tech: 0,
-        personal_dev: 0,
-        social_skills: 0,
+        personal_skills: 0,
         money_business: 0
       };
 
       participations.forEach(participation => {
         const lesson = allLessons.find(l => l.id === participation.lesson_id);
-        if (lesson && lesson.category && counts.hasOwnProperty(lesson.category)) {
-          counts[lesson.category]++;
+        if (lesson && lesson.category) {
+          // Map old categories to new ones
+          if (lesson.category === 'personal_dev' || lesson.category === 'social_skills') {
+            counts.personal_skills++;
+          } else if (counts.hasOwnProperty(lesson.category)) {
+            counts[lesson.category]++;
+          }
         }
       });
 
@@ -104,8 +101,7 @@ export default function Home() {
       console.error("Error calculating lesson counts:", error);
       setLessonCounts({
         ai_tech: 0,
-        personal_dev: 0,
-        social_skills: 0,
+        personal_skills: 0,
         money_business: 0
       });
       return 0;
