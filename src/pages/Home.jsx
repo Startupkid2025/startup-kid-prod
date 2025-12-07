@@ -300,7 +300,9 @@ export default function Home() {
           }
 
           // Income tax: 0.5% on total net worth (taken from cash)
-          const incomeTax = Math.round(currentNetWorth * 0.005);
+          // Recalculate net worth with current coins for accurate tax
+          const currentDayNetWorth = newCoins + itemsValue + investmentsValue;
+          const incomeTax = Math.round(currentDayNetWorth * 0.005);
           totalIncomeTax += incomeTax;
           newCoins -= incomeTax;
 
