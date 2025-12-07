@@ -199,8 +199,8 @@ export default function LessonQuizDialog({ isOpen, onClose, lesson, onComplete }
     const prevBestScore = existingProgress ? existingProgress.score : 0;
     const isImprovement = existingProgress && score > prevBestScore;
     const coinsEarnedThisAttempt = score * 10;
-    const previousMaxCoins = existingProgress ? (existingProgress.coins_earned || 0) : 0;
-    const newCoinsAwarded = Math.max(0, coinsEarnedThisAttempt - previousMaxCoins);
+    // Only award coins on first attempt
+    const newCoinsAwarded = existingProgress ? 0 : coinsEarnedThisAttempt;
     
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
