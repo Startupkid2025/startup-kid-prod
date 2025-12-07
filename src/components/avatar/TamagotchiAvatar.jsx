@@ -394,16 +394,16 @@ export default function TamagotchiAvatar({ equippedItems = {}, size = "large", s
   const hat = equippedItems.hat ? AVATAR_ITEMS[equippedItems.hat]?.emoji : null;
   const accessory = equippedItems.accessory ? AVATAR_ITEMS[equippedItems.accessory]?.emoji : null;
 
-  // Eye rendering with variation
+  // Eye rendering with variation - Pokemon style!
   const renderEyes = () => {
-    const eyeTop = `${35 + variation.eyeOffset}%`;
-    
+    const eyeTop = `${32 + variation.eyeOffset}%`;
+
     if (eyesType === "sunglasses") {
       return (
         <>
-          <div className="absolute" style={{ top: eyeTop, left: '25%', width: '18%', height: '12%', background: '#1F2937', borderRadius: '50%' }} />
-          <div className="absolute" style={{ top: eyeTop, right: '25%', width: '18%', height: '12%', background: '#1F2937', borderRadius: '50%' }} />
-          <div className="absolute" style={{ top: `calc(${eyeTop} + 4%)`, left: '25%', right: '25%', height: '2px', background: '#1F2937' }} />
+          <div className="absolute" style={{ top: eyeTop, left: '23%', width: '20%', height: '15%', background: '#1F2937', borderRadius: '50%' }} />
+          <div className="absolute" style={{ top: eyeTop, right: '23%', width: '20%', height: '15%', background: '#1F2937', borderRadius: '50%' }} />
+          <div className="absolute" style={{ top: `calc(${eyeTop} + 6%)`, left: '23%', right: '23%', height: '2px', background: '#1F2937' }} />
         </>
       );
     }
@@ -411,64 +411,64 @@ export default function TamagotchiAvatar({ equippedItems = {}, size = "large", s
     const eyeShapes = {
       sparkle: (
         <>
-          {/* Left Eye */}
-          <div className="absolute" style={{ top: eyeTop, left: '27%', width: '16%', height: '20%', background: '#1F2937', borderRadius: '50%' }}>
-            <div style={{ position: 'absolute', top: '25%', left: '25%', width: '40%', height: '40%', background: 'white', borderRadius: '50%' }} />
-            <div style={{ position: 'absolute', bottom: '15%', right: '20%', width: '20%', height: '20%', background: 'white', borderRadius: '50%', opacity: 0.8 }} />
+          {/* Left Eye - Bigger Pokemon Style */}
+          <div className="absolute" style={{ top: eyeTop, left: '24%', width: '20%', height: '28%', background: '#1F2937', borderRadius: '50%', border: '2px solid rgba(0,0,0,0.3)' }}>
+            <div style={{ position: 'absolute', top: '20%', left: '20%', width: '45%', height: '45%', background: 'white', borderRadius: '50%' }} />
+            <div style={{ position: 'absolute', bottom: '20%', right: '25%', width: '25%', height: '25%', background: 'white', borderRadius: '50%', opacity: 0.9 }} />
           </div>
-          {/* Right Eye */}
-          <div className="absolute" style={{ top: eyeTop, right: '27%', width: '16%', height: '20%', background: '#1F2937', borderRadius: '50%' }}>
-            <div style={{ position: 'absolute', top: '25%', left: '25%', width: '40%', height: '40%', background: 'white', borderRadius: '50%' }} />
-            <div style={{ position: 'absolute', bottom: '15%', right: '20%', width: '20%', height: '20%', background: 'white', borderRadius: '50%', opacity: 0.8 }} />
+          {/* Right Eye - Bigger Pokemon Style */}
+          <div className="absolute" style={{ top: eyeTop, right: '24%', width: '20%', height: '28%', background: '#1F2937', borderRadius: '50%', border: '2px solid rgba(0,0,0,0.3)' }}>
+            <div style={{ position: 'absolute', top: '20%', left: '20%', width: '45%', height: '45%', background: 'white', borderRadius: '50%' }} />
+            <div style={{ position: 'absolute', bottom: '20%', right: '25%', width: '25%', height: '25%', background: 'white', borderRadius: '50%', opacity: 0.9 }} />
           </div>
         </>
       ),
       determined: (
         <>
-          <div className="absolute" style={{ top: eyeTop, left: '27%', width: '16%', height: '18%', background: '#1F2937', borderRadius: '50%' }}>
-            <div style={{ position: 'absolute', top: '30%', left: '30%', width: '35%', height: '35%', background: 'white', borderRadius: '50%' }} />
+          <div className="absolute" style={{ top: eyeTop, left: '24%', width: '20%', height: '25%', background: '#1F2937', borderRadius: '50%', border: '2px solid rgba(0,0,0,0.3)' }}>
+            <div style={{ position: 'absolute', top: '25%', left: '25%', width: '40%', height: '40%', background: 'white', borderRadius: '50%' }} />
           </div>
-          <div className="absolute" style={{ top: eyeTop, right: '27%', width: '16%', height: '18%', background: '#1F2937', borderRadius: '50%' }}>
-            <div style={{ position: 'absolute', top: '30%', left: '30%', width: '35%', height: '35%', background: 'white', borderRadius: '50%' }} />
+          <div className="absolute" style={{ top: eyeTop, right: '24%', width: '20%', height: '25%', background: '#1F2937', borderRadius: '50%', border: '2px solid rgba(0,0,0,0.3)' }}>
+            <div style={{ position: 'absolute', top: '25%', left: '25%', width: '40%', height: '40%', background: 'white', borderRadius: '50%' }} />
           </div>
         </>
       ),
       heart: (
         <>
-          <div className="absolute" style={{ top: eyeTop, left: '29%', fontSize: avatarSize * 0.15 + 'px' }}>❤️</div>
-          <div className="absolute" style={{ top: eyeTop, right: '29%', fontSize: avatarSize * 0.15 + 'px' }}>❤️</div>
+          <div className="absolute" style={{ top: eyeTop, left: '27%', fontSize: avatarSize * 0.18 + 'px' }}>❤️</div>
+          <div className="absolute" style={{ top: eyeTop, right: '27%', fontSize: avatarSize * 0.18 + 'px' }}>❤️</div>
         </>
       ),
       star: (
         <>
-          <div className="absolute" style={{ top: eyeTop, left: '29%', fontSize: avatarSize * 0.15 + 'px' }}>⭐</div>
-          <div className="absolute" style={{ top: eyeTop, right: '29%', fontSize: avatarSize * 0.15 + 'px' }}>⭐</div>
+          <div className="absolute" style={{ top: eyeTop, left: '27%', fontSize: avatarSize * 0.18 + 'px' }}>⭐</div>
+          <div className="absolute" style={{ top: eyeTop, right: '27%', fontSize: avatarSize * 0.18 + 'px' }}>⭐</div>
         </>
       ),
       laser: (
         <>
-          <div className="absolute" style={{ top: eyeTop, left: '27%', width: '16%', height: '18%', background: '#EF4444', borderRadius: '50%', boxShadow: '0 0 10px #EF4444' }}>
-            <div style={{ position: 'absolute', top: '30%', left: '30%', width: '35%', height: '35%', background: '#FEE2E2', borderRadius: '50%' }} />
+          <div className="absolute" style={{ top: eyeTop, left: '24%', width: '20%', height: '25%', background: '#EF4444', borderRadius: '50%', boxShadow: '0 0 15px #EF4444', border: '2px solid rgba(0,0,0,0.3)' }}>
+            <div style={{ position: 'absolute', top: '25%', left: '25%', width: '40%', height: '40%', background: '#FEE2E2', borderRadius: '50%' }} />
           </div>
-          <div className="absolute" style={{ top: eyeTop, right: '27%', width: '16%', height: '18%', background: '#EF4444', borderRadius: '50%', boxShadow: '0 0 10px #EF4444' }}>
-            <div style={{ position: 'absolute', top: '30%', left: '30%', width: '35%', height: '35%', background: '#FEE2E2', borderRadius: '50%' }} />
+          <div className="absolute" style={{ top: eyeTop, right: '24%', width: '20%', height: '25%', background: '#EF4444', borderRadius: '50%', boxShadow: '0 0 15px #EF4444', border: '2px solid rgba(0,0,0,0.3)' }}>
+            <div style={{ position: 'absolute', top: '25%', left: '25%', width: '40%', height: '40%', background: '#FEE2E2', borderRadius: '50%' }} />
           </div>
         </>
       ),
       cyber: (
         <>
-          <div className="absolute" style={{ top: eyeTop, left: '27%', width: '16%', height: '18%', background: '#06B6D4', borderRadius: '50%', boxShadow: '0 0 15px #06B6D4' }}>
-            <div style={{ position: 'absolute', top: '30%', left: '30%', width: '35%', height: '35%', background: '#E0F2FE', borderRadius: '50%' }} />
+          <div className="absolute" style={{ top: eyeTop, left: '24%', width: '20%', height: '25%', background: '#06B6D4', borderRadius: '50%', boxShadow: '0 0 20px #06B6D4', border: '2px solid rgba(0,0,0,0.3)' }}>
+            <div style={{ position: 'absolute', top: '25%', left: '25%', width: '40%', height: '40%', background: '#E0F2FE', borderRadius: '50%' }} />
           </div>
-          <div className="absolute" style={{ top: eyeTop, right: '27%', width: '16%', height: '18%', background: '#06B6D4', borderRadius: '50%', boxShadow: '0 0 15px #06B6D4' }}>
-            <div style={{ position: 'absolute', top: '30%', left: '30%', width: '35%', height: '35%', background: '#E0F2FE', borderRadius: '50%' }} />
+          <div className="absolute" style={{ top: eyeTop, right: '24%', width: '20%', height: '25%', background: '#06B6D4', borderRadius: '50%', boxShadow: '0 0 20px #06B6D4', border: '2px solid rgba(0,0,0,0.3)' }}>
+            <div style={{ position: 'absolute', top: '25%', left: '25%', width: '40%', height: '40%', background: '#E0F2FE', borderRadius: '50%' }} />
           </div>
         </>
       ),
       diamond: (
         <>
-          <div className="absolute" style={{ top: eyeTop, left: '29%', fontSize: avatarSize * 0.15 + 'px' }}>💎</div>
-          <div className="absolute" style={{ top: eyeTop, right: '29%', fontSize: avatarSize * 0.15 + 'px' }}>💎</div>
+          <div className="absolute" style={{ top: eyeTop, left: '27%', fontSize: avatarSize * 0.18 + 'px' }}>💎</div>
+          <div className="absolute" style={{ top: eyeTop, right: '27%', fontSize: avatarSize * 0.18 + 'px' }}>💎</div>
         </>
       )
     };
@@ -629,19 +629,20 @@ export default function TamagotchiAvatar({ equippedItems = {}, size = "large", s
           transform: `scale(${stageScale})`
         }}
       >
-        {/* Body with unique variation */}
+        {/* Body with unique variation - Pokemon Style */}
         <div 
           className="absolute inset-0 rounded-full shadow-2xl"
           style={{ 
             background: bodyBackgroundStyle,
-            border: '4px solid rgba(255, 255, 255, 0.3)',
-            transform: `scaleX(${1 + variation.bodyVariant / 100})`
+            border: '5px solid rgba(0, 0, 0, 0.15)',
+            transform: `scaleX(${1 + variation.bodyVariant / 100})`,
+            boxShadow: '0 8px 20px rgba(0, 0, 0, 0.3), inset 0 -8px 20px rgba(0, 0, 0, 0.1)'
           }}
         />
 
-        {/* Cheeks */}
-        <div className="absolute" style={{ top: '48%', left: '12%', width: '18%', height: '12%', background: '#FCA5A5', borderRadius: '50%', opacity: 0.6 }} />
-        <div className="absolute" style={{ top: '48%', right: '12%', width: '18%', height: '12%', background: '#FCA5A5', borderRadius: '50%', opacity: 0.6 }} />
+        {/* Cheeks - Pokemon Style */}
+        <div className="absolute" style={{ top: '50%', left: '8%', width: '22%', height: '15%', background: '#FCA5A5', borderRadius: '50%', opacity: 0.7, boxShadow: '0 0 8px rgba(252, 165, 165, 0.5)' }} />
+        <div className="absolute" style={{ top: '50%', right: '8%', width: '22%', height: '15%', background: '#FCA5A5', borderRadius: '50%', opacity: 0.7, boxShadow: '0 0 8px rgba(252, 165, 165, 0.5)' }} />
 
         {/* Eyes with variation */}
         {renderEyes()}
@@ -649,44 +650,46 @@ export default function TamagotchiAvatar({ equippedItems = {}, size = "large", s
         {/* Mouth with variation */}
         {renderMouth()}
 
-        {/* Ears with size variation */}
+        {/* Ears - Pokemon Style (Bigger and rounder) */}
         <div className="absolute" style={{ 
-          top: '15%', 
-          left: '-8%', 
-          width: `${22 * variation.earSize}%`, 
-          height: `${30 * variation.earSize}%`, 
+          top: '10%', 
+          left: '-10%', 
+          width: `${28 * variation.earSize}%`, 
+          height: `${38 * variation.earSize}%`, 
           background: bodyColor,
-          borderRadius: '50%',
-          border: '3px solid rgba(255, 255, 255, 0.3)'
+          borderRadius: '60% 40% 40% 60%',
+          border: '4px solid rgba(0, 0, 0, 0.2)',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
         }} />
         <div className="absolute" style={{ 
-          top: '15%', 
-          right: '-8%', 
-          width: `${22 * variation.earSize}%`, 
-          height: `${30 * variation.earSize}%`, 
+          top: '10%', 
+          right: '-10%', 
+          width: `${28 * variation.earSize}%`, 
+          height: `${38 * variation.earSize}%`, 
           background: bodyColor,
-          borderRadius: '50%',
-          border: '3px solid rgba(255, 255, 255, 0.3)'
+          borderRadius: '40% 60% 60% 40%',
+          border: '4px solid rgba(0, 0, 0, 0.2)',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
         }} />
 
-        {/* Inner Ears */}
+        {/* Inner Ears - Bigger */}
         <div className="absolute" style={{ 
-          top: '22%', 
-          left: '-3%', 
-          width: '12%', 
-          height: '18%', 
+          top: '18%', 
+          left: '-4%', 
+          width: '16%', 
+          height: '24%', 
           background: '#FCA5A5',
           borderRadius: '50%',
-          opacity: 0.7
+          opacity: 0.8
         }} />
         <div className="absolute" style={{ 
-          top: '22%', 
-          right: '-3%', 
-          width: '12%', 
-          height: '18%', 
+          top: '18%', 
+          right: '-4%', 
+          width: '16%', 
+          height: '24%', 
           background: '#FCA5A5',
           borderRadius: '50%',
-          opacity: 0.7
+          opacity: 0.8
         }} />
 
         {/* Arms/Hands - More visible */}
