@@ -294,23 +294,40 @@ export default function Home() {
         for (let i = 0; i < daysPassed; i++) {
           // Inflation: 1% on cash only (only if positive)
           if (newCoins > 0) {
-            const inflationLoss = Math.round(newCoins * 0.01);
-            totalInflationLoss += inflationLoss;
-            newCoins -= inflationLoss;
+            const inflationLoss = Math.floor(newCoins * 0.01);
+            if (inflationLoss > 0) {
+              totalInflationLoss += inflationLoss;
+              newCoins -= inflationLoss;
+            }
           }
 
           // Income tax: 0.5% on total net worth (taken from cash)
-          // Recalculate net worth with current coins for accurate tax
+          // But can be reduced by owning body colors! Each color has different reduction
+          let incomeTaxRate = 0.005; // Base rate: 0.5%
+          
+          // Calculate tax reduction based on owned body colors
+          for (const itemId of purchasedItems) {
+            const item = AVATAR_ITEMS[itemId];
+            if (item && item.category === 'body' && item.taxReduction) {
+              incomeTaxRate = Math.max(0, incomeTaxRate - (item.taxReduction / 100));
+            }
+          }
+          
+          // Recalculate net worth with current coins
           const currentDayNetWorth = newCoins + itemsValue + investmentsValue;
-          const incomeTax = Math.round(currentDayNetWorth * 0.005);
-          totalIncomeTax += incomeTax;
-          newCoins -= incomeTax;
+          const incomeTax = Math.floor(currentDayNetWorth * incomeTaxRate);
+          if (incomeTax > 0) {
+            totalIncomeTax += incomeTax;
+            newCoins -= incomeTax;
+          }
 
-          // Credit interest: 3% per day on negative balance
+          // Credit interest: 3% per day on negative balance only
           if (newCoins < 0) {
-            const creditInterest = Math.round(Math.abs(newCoins) * 0.03);
-            totalCreditInterest += creditInterest;
-            newCoins -= creditInterest;
+            const creditInterest = Math.floor(Math.abs(newCoins) * 0.03);
+            if (creditInterest > 0) {
+              totalCreditInterest += creditInterest;
+              newCoins -= creditInterest;
+            }
           }
         }
 
