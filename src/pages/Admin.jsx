@@ -1271,14 +1271,9 @@ export default function Admin() {
                               🤖 +{lesson.ai_tech_xp}
                             </span>
                           )}
-                          {lesson.personal_dev_xp > 0 && (
+                          {(lesson.personal_dev_xp > 0 || lesson.social_skills_xp > 0) && (
                             <span className="text-xs bg-green-500/30 text-green-200 px-2 py-1 rounded-full">
-                              🌱 +{lesson.personal_dev_xp}
-                            </span>
-                          )}
-                          {lesson.social_skills_xp > 0 && (
-                            <span className="text-xs bg-pink-500/30 text-pink-200 px-2 py-1 rounded-full">
-                              ❤️ +{lesson.social_skills_xp}
+                              🌱 +{(lesson.personal_dev_xp || 0) + (lesson.social_skills_xp || 0)}
                             </span>
                           )}
                           {lesson.money_business_xp > 0 && (
