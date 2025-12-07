@@ -696,10 +696,7 @@ export default function Leaderboard() {
                           🤖{player.ai_tech_level || 1}
                         </div>
                         <div className="text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded-full bg-green-500/30 text-green-200">
-                          🌱{player.personal_dev_level || 1}
-                        </div>
-                        <div className="text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded-full bg-pink-500/30 text-pink-200">
-                          ❤️{player.social_skills_level || 1}
+                          🌱{Math.max(player.personal_dev_level || 1, player.social_skills_level || 1)}
                         </div>
                         <div className="text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded-full bg-yellow-500/30 text-yellow-200">
                           💸{player.money_business_level || 1}
