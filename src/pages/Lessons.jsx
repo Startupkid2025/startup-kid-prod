@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
@@ -121,10 +120,10 @@ export default function Lessons() {
 
       let myLessons;
       
-      // Demo users see all lessons, regular students see only their assigned lessons
+      // Demo users don't see any lessons, regular students see only their assigned lessons
       if (user.user_type === "demo") {
-        myLessons = allLessons;
-        console.log("Demo user - showing all lessons:", allLessons.length);
+        myLessons = [];
+        console.log("Demo user - no lessons shown");
       } else {
         // For regular students, show only lessons they're assigned to
         if (myParticipations.length === 0) {
