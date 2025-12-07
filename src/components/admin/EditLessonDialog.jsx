@@ -19,8 +19,7 @@ import {
 
 const categories = [
   { key: "ai_tech", name: "בינה מלאכותית וטכנולוגיה", icon: "🤖" },
-  { key: "personal_dev", name: "פיתוח אישי", icon: "🌱" },
-  { key: "social_skills", name: "מיומנויות חברתיות", icon: "❤️" },
+  { key: "personal_skills", name: "מיומנויות אישיות", icon: "🌱" },
   { key: "money_business", name: "כסף ועסקים", icon: "💸" }
 ];
 
