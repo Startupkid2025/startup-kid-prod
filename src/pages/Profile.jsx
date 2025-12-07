@@ -18,6 +18,7 @@ export default function Profile() {
     bio: "",
     phone_number: ""
   });
+  const [actualLessonsCount, setActualLessonsCount] = useState(0);
 
   useEffect(() => {
     loadUserData();
@@ -31,6 +32,19 @@ export default function Profile() {
       bio: user.bio || "",
       phone_number: user.phone_number || ""
     });
+
+    // Calculate actual attended lessons
+    try {
+      const participations = await base44.entities.LessonParticipation.filter({
+        student_email: user.email,
+        attended: true
+      });
+      setActualLessonsCount(participations.length);
+    } catch (error) {
+      console.error("Error loading participations:", error);
+      setActualLessonsCount(0);
+    }
+
     setIsLoading(false);
   };
 
@@ -279,7 +293,7 @@ export default function Profile() {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white/5 rounded-xl p-4 text-center">
                 <p className="text-3xl font-black text-yellow-300 mb-1">
-                  {userData?.total_lessons || 0}
+                  {actualLessonsCount}
                 </p>
                 <p className="text-white/70 text-sm">שיעורים</p>
               </div>
