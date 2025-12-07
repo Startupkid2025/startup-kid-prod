@@ -73,7 +73,11 @@ export default function ManageGroupStudentsDialog({ isOpen, onClose, group, allS
                   htmlFor={student.id}
                   className="flex-1 cursor-pointer"
                 >
-                  <p className="font-medium text-gray-900">{student.full_name}</p>
+                  <p className="font-medium text-gray-900">
+                    {student.first_name && student.last_name 
+                      ? `${student.first_name} ${student.last_name}`
+                      : student.full_name}
+                  </p>
                   <p className="text-xs text-gray-500">{student.email}</p>
                 </Label>
               </div>
