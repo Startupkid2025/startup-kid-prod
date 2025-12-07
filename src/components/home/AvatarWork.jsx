@@ -35,10 +35,19 @@ const JOBS = [
     description: "עוזר לילדים ללמוד"
   },
   {
+    id: "digital_freelancer",
+    name: "פרילנסר דיגיטלי",
+    icon: "💼",
+    minStage: 4,
+    coinsPerHour: 45,
+    color: "from-cyan-400 to-blue-400",
+    description: "עובד עצמאי בתחום הדיגיטל"
+  },
+  {
     id: "app_developer",
     name: "מפתח אפליקציות",
     icon: "💻",
-    minStage: 4,
+    minStage: 5,
     coinsPerHour: 60,
     color: "from-purple-400 to-pink-400",
     description: "בונה אפליקציות מגניבות"
@@ -47,7 +56,7 @@ const JOBS = [
     id: "startup_founder",
     name: "מייסד סטארטאפ",
     icon: "🚀",
-    minStage: 5,
+    minStage: 6,
     coinsPerHour: 100,
     color: "from-orange-400 to-red-400",
     description: "מנהל חברה משלך!"
@@ -56,7 +65,7 @@ const JOBS = [
     id: "ceo",
     name: "מנכ\"ל חברה",
     icon: "👔",
-    minStage: 6,
+    minStage: 7,
     coinsPerHour: 150,
     color: "from-yellow-500 to-orange-500",
     description: "ראש חברה גדולה!"
