@@ -38,7 +38,7 @@ const JOBS = [
     id: "app_developer",
     name: "מפתח אפליקציות",
     icon: "💻",
-    minStage: 3,
+    minStage: 4,
     coinsPerHour: 60,
     color: "from-purple-400 to-pink-400",
     description: "בונה אפליקציות מגניבות"
