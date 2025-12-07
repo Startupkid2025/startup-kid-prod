@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
@@ -9,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Calendar, Clock } from "lucide-react"; // Removed Users import as it's no longer used
 import { toast } from "sonner";
 
@@ -16,6 +16,9 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
   const [groups, setGroups] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [showNameInput, setShowNameInput] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   const dayNames = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
@@ -37,24 +40,37 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
   };
 
   const handleSelectGroup = async (group) => {
+    setSelectedGroup(group);
+    setShowNameInput(true);
+  };
+
+  const handleConfirmDetails = async () => {
+    if (!firstName.trim() || !lastName.trim()) {
+      toast.error("אנא הזן שם ושם משפחה");
+      return;
+    }
+
     try {
       const user = await base44.auth.me();
       
       // Add user to group's student_emails
-      const currentStudents = group.student_emails || [];
+      const currentStudents = selectedGroup.student_emails || [];
       if (!currentStudents.includes(user.email)) {
-        await base44.entities.Group.update(group.id, {
+        await base44.entities.Group.update(selectedGroup.id, {
           student_emails: [...currentStudents, user.email]
         });
       }
 
-      // Mark that user has selected a group
+      // Mark that user has selected a group and save name
       await base44.auth.updateMe({
         has_selected_group: true,
-        user_type: "student"
+        user_type: "student",
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        full_name: `${firstName.trim()} ${lastName.trim()}`
       });
 
-      toast.success(`הצטרפת לקבוצה ${group.group_name}! 🎉`);
+      toast.success(`הצטרפת לקבוצה ${selectedGroup.group_name}! 🎉`);
       onComplete();
     } catch (error) {
       console.error("Error joining group:", error);
@@ -63,10 +79,23 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
   };
 
   const handleNotRegistered = async () => {
+    setSelectedGroup(null);
+    setShowNameInput(true);
+  };
+
+  const handleConfirmDemoDetails = async () => {
+    if (!firstName.trim() || !lastName.trim()) {
+      toast.error("אנא הזן שם ושם משפחה");
+      return;
+    }
+
     try {
       await base44.auth.updateMe({
         has_selected_group: true,
-        user_type: "demo"
+        user_type: "demo",
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        full_name: `${firstName.trim()} ${lastName.trim()}`
       });
 
       toast.info("נרשמת כמשתמש דמו - תוכל לשחק באופן חופשי! 🎮");
@@ -90,6 +119,66 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
               ⏳
             </motion.div>
             <p className="text-white">טוען קבוצות...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (showNameInput) {
+    return (
+      <Dialog open={isOpen} onOpenChange={() => {}}>
+        <DialogContent className="bg-gradient-to-br from-purple-600 to-pink-600 border-2 border-white/20 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-3xl font-black text-white text-center mb-2">
+              בוא נכיר! 👋
+            </DialogTitle>
+            <p className="text-white/90 text-center text-lg">
+              איך קוראים לך?
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-4 py-6">
+            <div>
+              <label className="text-white font-bold mb-2 block">שם פרטי</label>
+              <Input
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="הזן שם פרטי"
+                className="bg-white/20 border-white/30 text-white placeholder:text-white/50 text-lg"
+              />
+            </div>
+
+            <div>
+              <label className="text-white font-bold mb-2 block">שם משפחה</label>
+              <Input
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="הזן שם משפחה"
+                className="bg-white/20 border-white/30 text-white placeholder:text-white/50 text-lg"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                onClick={() => {
+                  setShowNameInput(false);
+                  setFirstName("");
+                  setLastName("");
+                  setSelectedGroup(null);
+                }}
+                className="flex-1 bg-white/10 hover:bg-white/20 text-white font-bold text-lg py-6"
+              >
+                חזור
+              </Button>
+              <Button
+                onClick={selectedGroup ? handleConfirmDetails : handleConfirmDemoDetails}
+                disabled={!firstName.trim() || !lastName.trim()}
+                className="flex-1 bg-white hover:bg-white/90 text-purple-600 font-bold text-lg py-6"
+              >
+                בואו נתחיל! 🚀
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
