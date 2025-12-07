@@ -69,27 +69,45 @@ export default function Leaderboard() {
       }
     });
 
-    const currentNetWorth = Math.round(currentCoins + itemsValue + investmentsValue);
     let totalTaxes = 0;
 
     for (let i = 0; i < daysPassed; i++) {
       // Inflation: 1% on positive cash only
       if (currentCoins > 0) {
-        const inflationLoss = Math.round(currentCoins * 0.01);
-        totalTaxes += inflationLoss;
-        currentCoins -= inflationLoss;
+        const inflationLoss = Math.floor(currentCoins * 0.01);
+        if (inflationLoss > 0) {
+          totalTaxes += inflationLoss;
+          currentCoins -= inflationLoss;
+        }
       }
 
-      // Income tax: 0.5% on net worth
-      const incomeTax = Math.round(currentNetWorth * 0.005);
-      totalTaxes += incomeTax;
-      currentCoins -= incomeTax;
+      // Income tax: 0.5% on total net worth (taken from cash)
+      // But can be reduced by owning body colors! Each color has different reduction
+      let incomeTaxRate = 0.005; // Base rate: 0.5%
+      
+      // Calculate tax reduction based on owned body colors
+      for (const itemId of purchasedItems) {
+        const item = AVATAR_ITEMS[itemId];
+        if (item && item.category === 'body' && item.taxReduction) {
+          incomeTaxRate = Math.max(0, incomeTaxRate - (item.taxReduction / 100));
+        }
+      }
+      
+      // Recalculate net worth with current coins
+      const currentDayNetWorth = currentCoins + itemsValue + investmentsValue;
+      const incomeTax = Math.floor(currentDayNetWorth * incomeTaxRate);
+      if (incomeTax > 0) {
+        totalTaxes += incomeTax;
+        currentCoins -= incomeTax;
+      }
 
-      // Credit interest: 3% on negative balance
+      // Credit interest: 3% per day on negative balance only
       if (currentCoins < 0) {
-        const creditInterest = Math.round(Math.abs(currentCoins) * 0.03);
-        totalTaxes += creditInterest;
-        currentCoins -= creditInterest;
+        const creditInterest = Math.floor(Math.abs(currentCoins) * 0.03);
+        if (creditInterest > 0) {
+          totalTaxes += creditInterest;
+          currentCoins -= creditInterest;
+        }
       }
     }
 

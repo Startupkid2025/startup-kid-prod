@@ -119,13 +119,12 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         investments: totalInvestmentValue
       };
 
-      // Losses
+      // Losses - Show DAILY losses (what was deducted today)
       const investmentLoss = Math.max(0, totalInvested - totalInvestmentValue); // Only count losses
       const losses = {
-        inflation: student.total_inflation_lost || 0,
-        incomeTax: student.total_income_tax || 0,
-        capitalGainsTax: student.total_capital_gains_tax || 0,
-        creditInterest: student.total_credit_interest || 0,
+        inflation: student.daily_inflation_lost || 0,
+        incomeTax: student.daily_income_tax || 0,
+        creditInterest: student.daily_credit_interest || 0,
         investmentLosses: investmentLoss,
         investmentFees: student.total_investment_fees || 0,
         itemSaleLosses: student.total_item_sale_losses || 0
@@ -328,13 +327,13 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                   </div>
                 </div>
 
-                {/* Losses */}
+                {/* Losses - DAILY (what was deducted today) */}
                 {financeReport.totalLosses > 0 && (
-                  <div>
+                  <div className="mb-3">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-red-300 font-bold flex items-center gap-1">
                         <TrendingDown className="w-4 h-4" />
-                        הפסדים
+                        הפסדים היום
                       </p>
                       <p className="text-red-300 font-bold">{Math.round(financeReport.totalLosses)}</p>
                     </div>
@@ -345,20 +344,40 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                       {financeReport.losses.incomeTax > 0 && (
                         <div className="flex justify-between"><span className="text-white/70">🏛️ מס הכנסה:</span><span className="text-white font-bold">{Math.round(financeReport.losses.incomeTax)}</span></div>
                       )}
-                      {financeReport.losses.capitalGainsTax > 0 && (
-                        <div className="flex justify-between"><span className="text-white/70">📈 מס רווח הון:</span><span className="text-white font-bold">{Math.round(financeReport.losses.capitalGainsTax)}</span></div>
-                      )}
                       {financeReport.losses.creditInterest > 0 && (
                         <div className="flex justify-between"><span className="text-white/70">💳 ריבית אשראי:</span><span className="text-white font-bold">{Math.round(financeReport.losses.creditInterest)}</span></div>
                       )}
-                      {financeReport.losses.investmentLosses > 0 && (
-                        <div className="flex justify-between"><span className="text-white/70">📊 הפסדי השקעות:</span><span className="text-white font-bold">{Math.round(financeReport.losses.investmentLosses)}</span></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Total Historical Losses */}
+                {(student.total_inflation_lost > 0 || student.total_income_tax > 0 || student.total_credit_interest > 0) && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-orange-300 font-bold flex items-center gap-1">
+                        <TrendingDown className="w-4 h-4" />
+                        סה״כ הפסדים
+                      </p>
+                      <p className="text-orange-300 font-bold">
+                        {Math.round((student.total_inflation_lost || 0) + (student.total_income_tax || 0) + (student.total_credit_interest || 0) + (financeReport.losses.investmentFees || 0) + (financeReport.losses.itemSaleLosses || 0))}
+                      </p>
+                    </div>
+                    <div className="bg-white/10 rounded-lg p-3 space-y-1 text-xs">
+                      {student.total_inflation_lost > 0 && (
+                        <div className="flex justify-between"><span className="text-white/70">📉 אינפלציה:</span><span className="text-white font-bold">{Math.round(student.total_inflation_lost)}</span></div>
+                      )}
+                      {student.total_income_tax > 0 && (
+                        <div className="flex justify-between"><span className="text-white/70">🏛️ מס הכנסה:</span><span className="text-white font-bold">{Math.round(student.total_income_tax)}</span></div>
+                      )}
+                      {student.total_credit_interest > 0 && (
+                        <div className="flex justify-between"><span className="text-white/70">💳 ריבית אשראי:</span><span className="text-white font-bold">{Math.round(student.total_credit_interest)}</span></div>
                       )}
                       {financeReport.losses.investmentFees > 0 && (
                         <div className="flex justify-between"><span className="text-white/70">💸 עמלות:</span><span className="text-white font-bold">{Math.round(financeReport.losses.investmentFees)}</span></div>
                       )}
                       {financeReport.losses.itemSaleLosses > 0 && (
-                        <div className="flex justify-between"><span className="text-white/70">🛍️ הפסדי מכירת פריטים:</span><span className="text-white font-bold">{Math.round(financeReport.losses.itemSaleLosses)}</span></div>
+                        <div className="flex justify-between"><span className="text-white/70">🛍️ מכירת פריטים:</span><span className="text-white font-bold">{Math.round(financeReport.losses.itemSaleLosses)}</span></div>
                       )}
                     </div>
                   </div>
