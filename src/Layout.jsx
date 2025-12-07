@@ -21,14 +21,88 @@ export default function Layout({ children }) {
       // Check and update login streak
       await checkAndUpdateLoginStreak(user);
 
-      // Apply daily taxes to all users (runs automatically in background)
+      // Apply daily taxes and dividend tax to all users (runs automatically in background)
       applyDailyTaxesToAllUsers().catch(error => {
         console.error("Error applying taxes to all users:", error);
+      });
+
+      // Apply daily dividend tax from investment profits
+      applyDailyDividendTax(user).catch(error => {
+        console.error("Error applying dividend tax:", error);
       });
       
       setCurrentUser(user);
     } catch (error) {
       console.error("Error loading user:", error);
+    }
+  };
+
+  const applyDailyDividendTax = async (user) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const lastDividendDate = user.last_dividend_date;
+
+      // If already applied dividend tax today, do nothing
+      if (lastDividendDate === today) {
+        return;
+      }
+
+      // Get all investments for this user
+      const allInvestments = await base44.entities.Investment.list();
+      const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
+
+      if (userInvestments.length === 0) {
+        return;
+      }
+
+      // Get today's market data
+      const todayMarketData = await base44.entities.DailyMarketPerformance.filter({ date: today });
+      if (todayMarketData.length === 0) {
+        return;
+      }
+
+      const todayMarket = todayMarketData[0];
+      const marketChanges = {
+        government_bonds: todayMarket.government_bonds_change || 0,
+        real_estate: todayMarket.real_estate_change || 0,
+        gold: todayMarket.gold_change || 0,
+        stock_market: todayMarket.stock_market_change || 0,
+        tech_startup: todayMarket.tech_startup_change || 0,
+        crypto: todayMarket.crypto_change || 0
+      };
+
+      // Calculate dividend tax from today's profits
+      let totalDividendTax = 0;
+      for (const investment of userInvestments) {
+        const changePercent = marketChanges[investment.business_type] || 0;
+        const currentValue = investment.current_value || 0;
+        const dailyProfit = Math.max(0, Math.round(currentValue * (changePercent / 100)));
+        const dividendTax = Math.floor(dailyProfit * 0.25);
+        totalDividendTax += dividendTax;
+      }
+
+      if (totalDividendTax > 0) {
+        await base44.auth.updateMe({
+          coins: (user.coins || 0) - totalDividendTax,
+          total_dividend_tax: (user.total_dividend_tax || 0) + totalDividendTax,
+          daily_dividend_tax: totalDividendTax,
+          last_dividend_date: today
+        });
+
+        // Update leaderboard
+        try {
+          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: user.email });
+          if (leaderboardEntries.length > 0) {
+            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+              coins: (user.coins || 0) - totalDividendTax
+            });
+          }
+        } catch (error) {
+          console.error("Error updating leaderboard for dividend tax:", error);
+        }
+      }
+    } catch (error) {
+      console.error("Error applying dividend tax:", error);
     }
   };
 
