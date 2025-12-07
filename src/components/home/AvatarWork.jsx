@@ -20,7 +20,7 @@ const JOBS = [
     id: "newspaper",
     name: "משלוח עיתונים",
     icon: "📰",
-    minStage: 1,
+    minStage: 2,
     coinsPerHour: 20,
     color: "from-blue-400 to-cyan-400",
     description: "מחלק חדשות בשכונה"
@@ -29,7 +29,7 @@ const JOBS = [
     id: "tutor",
     name: "מורה פרטי",
     icon: "📚",
-    minStage: 2,
+    minStage: 3,
     coinsPerHour: 35,
     color: "from-green-400 to-emerald-400",
     description: "עוזר לילדים ללמוד"
