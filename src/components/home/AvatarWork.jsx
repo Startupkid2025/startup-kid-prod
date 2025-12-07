@@ -286,7 +286,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
                       <div>
                         <p className="font-bold text-white">{job.name}</p>
                         <p className="text-xs text-white/70">
-                          נדרש רמה {job.minStage + 1}
+                          נדרש רמה {job.minStage}
                         </p>
                       </div>
                     </div>
