@@ -258,11 +258,18 @@ export default function Admin() {
           needsUpdate = true;
         }
 
-        // Refund all dividend tax
-        if (user.total_dividend_tax && user.total_dividend_tax > 0) {
+        // Refund all dividend tax by adding it back to income
+        const dividendTaxRefund = user.total_dividend_tax || 0;
+        if (dividendTaxRefund > 0) {
           updates.total_dividend_tax = 0;
           updates.daily_dividend_tax = 0;
-          breakdown.dividendTaxRefunded = user.total_dividend_tax;
+          breakdown.dividendTaxRefunded = dividendTaxRefund;
+          
+          // Recalculate correct coins with refund
+          const correctCoinsWithRefund = Math.round(totalIncome + dividendTaxRefund - itemsValue - investmentsValue - totalLosses);
+          breakdown.correctCoins = correctCoinsWithRefund;
+          breakdown.coinsDiff = correctCoinsWithRefund - currentCoins;
+          
           needsUpdate = true;
         }
 
