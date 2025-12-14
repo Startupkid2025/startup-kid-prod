@@ -651,7 +651,9 @@ export default function Leaderboard() {
                     >
                       <div className="flex items-center gap-1 sm:gap-2 mb-1">
                         <h3 className="text-sm sm:text-lg font-bold text-white truncate max-w-[120px] sm:max-w-none">
-                          {player.full_name}
+                          {player.first_name && player.last_name 
+                            ? `${player.first_name} ${player.last_name}`
+                            : player.full_name}
                         </h3>
                         {isCurrentUser && (
                           <span className="text-[10px] sm:text-xs bg-yellow-400 text-gray-900 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-bold whitespace-nowrap">
