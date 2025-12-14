@@ -199,7 +199,7 @@ export default function Admin() {
         const creditInterest = user.total_credit_interest || 0;
         breakdown.creditInterest = creditInterest;
 
-        const dividendTax = user.total_dividend_tax || 0;
+        const dividendTax = 0; // Dividend tax removed - refunding all users
         breakdown.dividendTax = dividendTax;
 
         const investmentLoss = Math.max(0, totalInvested - investmentsValue);
@@ -247,7 +247,7 @@ export default function Admin() {
 
         // עדכון המשתמש
         const updates = {
-          coins_recalculated_v13: true
+          coins_recalculated_v14: true
         };
 
         let needsUpdate = false;
@@ -255,6 +255,14 @@ export default function Admin() {
         if (needsFeesUpdate) {
           updates.total_investment_fees = investmentFees;
           breakdown.feesWereUpdated = true;
+          needsUpdate = true;
+        }
+
+        // Refund all dividend tax
+        if (user.total_dividend_tax && user.total_dividend_tax > 0) {
+          updates.total_dividend_tax = 0;
+          updates.daily_dividend_tax = 0;
+          breakdown.dividendTaxRefunded = user.total_dividend_tax;
           needsUpdate = true;
         }
 
@@ -282,12 +290,15 @@ export default function Admin() {
         }
       }
 
-      console.log("📊 Final Coins Verification Report (v13 - WITH ALL TAXES!):");
+      console.log("📊 Final Coins Verification Report (v14 - NO DIVIDEND TAX + REFUND!):");
       report.forEach(r => {
         console.log(`\n👤 ${r.name} (${r.email})`);
         console.log(`  💰 INCOME: ${Math.round(r.totalIncome)}`);
         console.log(`  💎 ASSETS: ${Math.round(r.totalAssets)} (Cash: ${Math.round(r.correctCoins)}${r.coinsWereUpdated ? ' ✅' : ''}, Items: ${Math.round(r.itemsValue)}, Inv: ${Math.round(r.investmentsValue)})`);
-        console.log(`  📉 LOSSES: ${Math.round(r.totalLosses)} (Inflation: ${Math.round(r.inflationLoss)}, Income Tax: ${Math.round(r.incomeTax)}, Capital Gains: ${Math.round(r.capitalGainsTax)}, Dividend Tax: ${Math.round(r.dividendTax)}, Credit: ${Math.round(r.creditInterest)}, Inv Loss: ${Math.round(r.investmentLoss)}, Fees: ${Math.round(r.investmentFees)}${r.feesWereUpdated ? ' ✅' : ''})`);
+        console.log(`  📉 LOSSES: ${Math.round(r.totalLosses)} (Inflation: ${Math.round(r.inflationLoss)}, Income Tax: ${Math.round(r.incomeTax)}, Capital Gains: ${Math.round(r.capitalGainsTax)}, Credit: ${Math.round(r.creditInterest)}, Inv Loss: ${Math.round(r.investmentLoss)}, Fees: ${Math.round(r.investmentFees)}${r.feesWereUpdated ? ' ✅' : ''})`);
+        if (r.dividendTaxRefunded) {
+          console.log(`  💸 REFUND: +${Math.round(r.dividendTaxRefunded)} מס דיבידנד הוחזר!`);
+        }
         if (Math.abs(r.coinsDiff) >= 1) {
           console.log(`  🔧 FIX: ${Math.round(r.oldCoins)} → ${Math.round(r.correctCoins)} (${r.coinsDiff >= 0 ? '+' : ''}${Math.round(r.coinsDiff)})`);
         }
@@ -297,10 +308,12 @@ export default function Admin() {
       if (totalFixed > 0) {
         const coinsFixed = report.filter(r => r.coinsWereUpdated).length;
         const feesFixed = report.filter(r => r.feesWereUpdated).length;
+        const dividendRefunded = report.filter(r => r.dividendTaxRefunded).length;
         
         let message = `✅ תיקנתי ${totalFixed} משתמשים! `;
         if (coinsFixed > 0) message += `${coinsFixed} מטבעות, `;
-        if (feesFixed > 0) message += `${feesFixed} עמלות`;
+        if (feesFixed > 0) message += `${feesFixed} עמלות, `;
+        if (dividendRefunded > 0) message += `${dividendRefunded} החזרי מס דיבידנד`;
         message += ' 💯';
         
         toast.success(message, { duration: 5000 });
