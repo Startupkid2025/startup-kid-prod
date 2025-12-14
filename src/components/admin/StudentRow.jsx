@@ -207,15 +207,18 @@ export default function StudentRow({
       const fullName = `${editedStudent.first_name.trim()} ${editedStudent.last_name.trim()}`;
       console.log("Updating student:", student.id, "with data:", editedStudent);
 
-      // Update User entity
-      const updateResult = await base44.entities.User.update(student.id, {
+      // Update User entity - fetch fresh user data first
+      const allUsers = await base44.entities.User.list();
+      const freshUserData = allUsers.find(u => u.id === student.id);
+      
+      await base44.entities.User.update(student.id, {
         first_name: editedStudent.first_name.trim(),
         last_name: editedStudent.last_name.trim(),
         full_name: fullName,
         user_type: editedStudent.user_type
       });
       
-      console.log("Update result:", updateResult);
+      console.log("Updated user name to:", fullName);
       
       // Update LeaderboardEntry if exists
       try {
@@ -235,28 +238,28 @@ export default function StudentRow({
           // Add/update leaderboard if a student
           const leaderboardData = {
             student_email: student.email,
-            full_name: fullName, // Ensure full_name is updated here
-            ai_tech_level: student.ai_tech_level || 1,
-            ai_tech_xp: student.ai_tech_xp || 0,
-            personal_dev_level: student.personal_dev_level || 1,
-            personal_dev_xp: student.personal_dev_xp || 0,
-            social_skills_level: student.social_skills_level || 1,
-            social_skills_xp: student.social_skills_xp || 0,
-            money_business_level: student.money_business_level || 1,
-            money_business_xp: student.money_business_xp || 0,
-            total_lessons: student.total_lessons || 0,
-            coins: student.coins || 0,
-            equipped_items: student.equipped_items || {},
-            purchased_items: student.purchased_items || [],
+            full_name: fullName, // Updated name
+            ai_tech_level: freshUserData?.ai_tech_level || student.ai_tech_level || 1,
+            ai_tech_xp: freshUserData?.ai_tech_xp || student.ai_tech_xp || 0,
+            personal_dev_level: freshUserData?.personal_dev_level || student.personal_dev_level || 1,
+            personal_dev_xp: freshUserData?.personal_dev_xp || student.personal_dev_xp || 0,
+            social_skills_level: freshUserData?.social_skills_level || student.social_skills_level || 1,
+            social_skills_xp: freshUserData?.social_skills_xp || student.social_skills_xp || 0,
+            money_business_level: freshUserData?.money_business_level || student.money_business_level || 1,
+            money_business_xp: freshUserData?.money_business_xp || student.money_business_xp || 0,
+            total_lessons: freshUserData?.total_lessons || student.total_lessons || 0,
+            coins: freshUserData?.coins || student.coins || 0,
+            equipped_items: freshUserData?.equipped_items || student.equipped_items || {},
+            purchased_items: freshUserData?.purchased_items || student.purchased_items || [],
             user_type: editedStudent.user_type
           };
 
           if (leaderboardEntries.length > 0) {
             await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, leaderboardData);
-            console.log("Updated leaderboard entry");
+            console.log("Updated leaderboard entry with new name:", fullName);
           } else {
             await base44.entities.LeaderboardEntry.create(leaderboardData);
-            console.log("Created new leaderboard entry");
+            console.log("Created new leaderboard entry with name:", fullName);
           }
         }
       } catch (leaderboardError) {
