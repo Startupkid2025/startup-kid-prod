@@ -125,12 +125,25 @@ export default function AvatarWork({ userData, onWorkComplete }) {
   const sendToWork = async (job) => {
     const returnTime = Date.now() + (60 * 60 * 1000); // 1 hour
 
+    // Calculate total earnings including hourly bonuses from items
+    const purchasedItems = userData.purchased_items || [];
+    let hourlyBonus = 0;
+    
+    purchasedItems.forEach(itemId => {
+      const item = require('../avatar/TamagotchiAvatar').AVATAR_ITEMS[itemId];
+      if (item && item.hourlyBonus) {
+        hourlyBonus += item.hourlyBonus;
+      }
+    });
+
+    const totalCoinsToEarn = job.coinsPerHour + hourlyBonus;
+
     await base44.auth.updateMe({
       work_status: {
         isWorking: true,
         jobId: job.id,
         jobName: job.name,
-        coinsToEarn: job.coinsPerHour,
+        coinsToEarn: totalCoinsToEarn,
         returnTime: returnTime
       }
     });
@@ -139,11 +152,12 @@ export default function AvatarWork({ userData, onWorkComplete }) {
       isWorking: true,
       jobId: job.id,
       jobName: job.name,
-      coinsToEarn: job.coinsPerHour,
+      coinsToEarn: totalCoinsToEarn,
       returnTime: returnTime
     });
 
-    toast.success(`${userData.avatar_name} יצא לעבוד כ${job.name}! 💼`);
+    const bonusText = hourlyBonus > 0 ? ` (כולל +${hourlyBonus} מפריטים!)` : '';
+    toast.success(`${userData.avatar_name} יצא לעבוד כ${job.name}! 💼${bonusText}`);
   };
 
   const completeWork = async () => {
@@ -254,30 +268,50 @@ export default function AvatarWork({ userData, onWorkComplete }) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {availableJobs.map((job) => (
-              <motion.button
-                key={job.id}
-                onClick={() => sendToWork(job)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`bg-gradient-to-br ${job.color} p-4 rounded-xl shadow-lg text-white text-right relative overflow-hidden`}
-              >
-                <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-3xl">{job.icon}</span>
-                    <div>
-                      <p className="font-bold text-lg">{job.name}</p>
-                      <p className="text-xs opacity-90">{job.description}</p>
+            {availableJobs.map((job) => {
+              // Calculate total earnings with bonuses
+              const purchasedItems = userData?.purchased_items || [];
+              let hourlyBonus = 0;
+              
+              purchasedItems.forEach(itemId => {
+                const item = require('../avatar/TamagotchiAvatar').AVATAR_ITEMS[itemId];
+                if (item && item.hourlyBonus) {
+                  hourlyBonus += item.hourlyBonus;
+                }
+              });
+
+              const totalEarnings = job.coinsPerHour + hourlyBonus;
+
+              return (
+                <motion.button
+                  key={job.id}
+                  onClick={() => sendToWork(job)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`bg-gradient-to-br ${job.color} p-4 rounded-xl shadow-lg text-white text-right relative overflow-hidden`}
+                >
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-3xl">{job.icon}</span>
+                      <div>
+                        <p className="font-bold text-lg">{job.name}</p>
+                        <p className="text-xs opacity-90">{job.description}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 mt-2 bg-white/20 rounded-lg px-3 py-1 inline-flex">
+                      <Coins className="w-4 h-4" />
+                      <span className="font-bold">{totalEarnings}</span>
+                      <span className="text-sm">/ שעה</span>
+                      {hourlyBonus > 0 && (
+                        <span className="text-xs bg-green-500/50 px-2 py-0.5 rounded-full mr-1">
+                          +{hourlyBonus} מפריטים
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 mt-2 bg-white/20 rounded-lg px-3 py-1 inline-flex">
-                    <Coins className="w-4 h-4" />
-                    <span className="font-bold">{job.coinsPerHour}</span>
-                    <span className="text-sm">/ שעה</span>
-                  </div>
-                </div>
-              </motion.button>
-            ))}
+                </motion.button>
+              );
+            })}
           </div>
 
           {/* Locked Jobs Preview */}
