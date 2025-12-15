@@ -335,9 +335,17 @@ export default function Investments() {
       toast.success(`השקעת ${amount} מטבעות ב${business.name}! (עמלה: ${TRANSACTION_FEE}) 🎉`);
       setInvestmentAmounts({ ...investmentAmounts, [businessId]: 0 });
       
-      // Reload data
-      setIsLoading(true);
-      await loadData();
+      // Update local state instead of full reload
+      const newInvestment = {
+        student_email: userData.email,
+        business_type: businessId,
+        invested_amount: amount,
+        current_value: amount,
+        daily_change_percent: 0,
+        last_updated: new Date().toISOString()
+      };
+      setInvestments([...investments, newInvestment]);
+      setUserData({ ...userData, coins: newCoinsBalance });
     } catch (error) {
       console.error("Error investing:", error);
       toast.error("שגיאה בהשקעה");
@@ -471,8 +479,11 @@ export default function Investments() {
       }
 
       setSellAmounts({ ...sellAmounts, [businessId]: 0 });
-      setIsLoading(true);
-      await loadData();
+      
+      // Update local state instead of full reload
+      const updatedInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
+      setInvestments(updatedInvestments);
+      setUserData({ ...userData, coins: newCoins });
     } catch (error) {
       console.error("Error selling:", error);
       toast.error("שגיאה במכירה");
