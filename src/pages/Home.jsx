@@ -699,7 +699,7 @@ export default function Home() {
                           <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
                           אינפלציה:
                         </span>
-                        <span>-{expectedDailyLosses.inflation}</span>
+                        <span>-{expectedDailyLosses.inflation} 💸</span>
                       </p>
                     )}
                     {expectedDailyLosses.incomeTax > 0 && (
@@ -708,7 +708,7 @@ export default function Home() {
                           <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
                           מס הכנסה:
                         </span>
-                        <span>-{expectedDailyLosses.incomeTax}</span>
+                        <span>-{expectedDailyLosses.incomeTax} 💸</span>
                       </p>
                     )}
                     {expectedDailyLosses.creditInterest > 0 && (
@@ -717,7 +717,7 @@ export default function Home() {
                           <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
                           ריבית אשראי:
                         </span>
-                        <span>-{expectedDailyLosses.creditInterest}</span>
+                        <span>-{expectedDailyLosses.creditInterest} 💸</span>
                       </p>
                     )}
                   </div>
