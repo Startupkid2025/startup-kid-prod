@@ -54,6 +54,11 @@ export default function Home() {
     personal_skills: 0,
     money_business: 0
   });
+  const [expectedDailyLosses, setExpectedDailyLosses] = useState({
+    inflation: 0,
+    incomeTax: 0,
+    creditInterest: 0
+  });
 
   useEffect(() => {
     loadUserData();
@@ -237,6 +242,40 @@ export default function Home() {
 
       const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
       const netWorth = currentCoins + calculatedItemsValue + investmentsValue;
+
+      // Calculate expected daily losses
+      let expectedInflation = 0;
+      let expectedIncomeTax = 0;
+      let expectedCreditInterest = 0;
+
+      // Inflation: 1% on positive cash
+      if (currentCoins > 0) {
+        expectedInflation = Math.floor(currentCoins * 0.01);
+      }
+
+      // Income tax: 0.5% on total net worth (with body color reductions)
+      let incomeTaxRate = 0.005;
+      purchasedItems.forEach(itemId => {
+        const item = AVATAR_ITEMS[itemId];
+        if (item && item.category === 'body' && item.taxReduction) {
+          incomeTaxRate = Math.max(0, incomeTaxRate - (item.taxReduction / 100));
+        }
+      });
+      
+      const netWorthAfterInflation = (currentCoins - expectedInflation) + calculatedItemsValue + investmentsValue;
+      expectedIncomeTax = Math.floor(netWorthAfterInflation * incomeTaxRate);
+
+      // Credit interest: 3% on negative balance
+      const coinsAfterTaxes = currentCoins - expectedInflation - expectedIncomeTax;
+      if (coinsAfterTaxes < 0) {
+        expectedCreditInterest = Math.floor(Math.abs(coinsAfterTaxes) * 0.03);
+      }
+
+      setExpectedDailyLosses({
+        inflation: expectedInflation,
+        incomeTax: expectedIncomeTax,
+        creditInterest: expectedCreditInterest
+      });
 
       return Math.max(0, Math.round(netWorth));
     } catch (error) {
@@ -650,35 +689,35 @@ export default function Home() {
                   </p>
                 </div>
 
-                {/* Daily Taxes Display */}
-                {(userData?.daily_inflation_lost > 0 || userData?.daily_income_tax > 0 || userData?.daily_credit_interest > 0) && (
+                {/* Expected Daily Taxes Display */}
+                {(expectedDailyLosses.inflation > 0 || expectedDailyLosses.incomeTax > 0 || expectedDailyLosses.creditInterest > 0) && (
                   <div className="bg-red-500/20 rounded-lg px-1.5 sm:px-3 py-1 sm:py-2 border border-red-400/30 mb-2 sm:mb-3 space-y-0.5 sm:space-y-1">
-                    <p className="text-white/90 text-[9px] sm:text-xs font-bold text-center mb-1">💸 הפסדים היום</p>
-                    {userData?.daily_inflation_lost > 0 && (
+                    <p className="text-white/90 text-[9px] sm:text-xs font-bold text-center mb-1">💸 הפסדים צפויים</p>
+                    {expectedDailyLosses.inflation > 0 && (
                       <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-between px-1">
                         <span className="flex items-center gap-0.5">
                           <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
                           אינפלציה:
                         </span>
-                        <span>-{userData.daily_inflation_lost}</span>
+                        <span>-{expectedDailyLosses.inflation}</span>
                       </p>
                     )}
-                    {userData?.daily_income_tax > 0 && (
+                    {expectedDailyLosses.incomeTax > 0 && (
                       <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-between px-1">
                         <span className="flex items-center gap-0.5">
                           <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
                           מס הכנסה:
                         </span>
-                        <span>-{userData.daily_income_tax}</span>
+                        <span>-{expectedDailyLosses.incomeTax}</span>
                       </p>
                     )}
-                    {userData?.daily_credit_interest > 0 && (
+                    {expectedDailyLosses.creditInterest > 0 && (
                       <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-between px-1">
                         <span className="flex items-center gap-0.5">
                           <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
                           ריבית אשראי:
                         </span>
-                        <span>-{userData.daily_credit_interest}</span>
+                        <span>-{expectedDailyLosses.creditInterest}</span>
                       </p>
                     )}
                   </div>
