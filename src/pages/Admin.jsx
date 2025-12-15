@@ -85,11 +85,14 @@ export default function Admin() {
       console.log("📥 Loading all users...");
       const allUsers = await base44.entities.User.list();
       console.log(`✅ Loaded ${allUsers.length} users`);
+      
+      console.log("📥 Loading progress data...");
       const allParticipations = await base44.entities.LessonParticipation.list();
       const allWordProgress = await base44.entities.WordProgress.list();
       const allMathProgress = await base44.entities.MathProgress.list();
       const allQuizProgress = await base44.entities.QuizProgress.list();
       const allInvestments = await base44.entities.Investment.list();
+      console.log("✅ All data loaded!");
 
       for (const user of allUsers) {
         const breakdown = {
