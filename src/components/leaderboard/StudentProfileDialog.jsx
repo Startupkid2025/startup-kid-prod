@@ -124,6 +124,8 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       const losses = {
         inflation: student.total_inflation_lost || 0,
         incomeTax: student.total_income_tax || 0,
+        dividendTax: student.total_dividend_tax || 0,
+        capitalGainsTax: student.total_capital_gains_tax || 0,
         creditInterest: student.total_credit_interest || 0,
         investmentLosses: investmentLoss,
         investmentFees: student.total_investment_fees || 0,
@@ -343,6 +345,12 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                       )}
                       {financeReport.losses.incomeTax > 0 && (
                         <div className="flex justify-between"><span className="text-white/70">🏛️ מס הכנסה:</span><span className="text-white font-bold">{Math.round(financeReport.losses.incomeTax)}</span></div>
+                      )}
+                      {financeReport.losses.dividendTax > 0 && (
+                        <div className="flex justify-between"><span className="text-white/70">💎 מס דיבידנד:</span><span className="text-white font-bold">{Math.round(financeReport.losses.dividendTax)}</span></div>
+                      )}
+                      {financeReport.losses.capitalGainsTax > 0 && (
+                        <div className="flex justify-between"><span className="text-white/70">📈 מס רווחי הון:</span><span className="text-white font-bold">{Math.round(financeReport.losses.capitalGainsTax)}</span></div>
                       )}
                       {financeReport.losses.creditInterest > 0 && (
                         <div className="flex justify-between"><span className="text-white/70">💳 ריבית אשראי:</span><span className="text-white font-bold">{Math.round(financeReport.losses.creditInterest)}</span></div>
