@@ -372,6 +372,8 @@ export default function Admin() {
           const leaderboardData = {
             student_email: user.email,
             full_name: user.full_name,
+            first_name: user.first_name || null,
+            last_name: user.last_name || null,
             ai_tech_level: user.ai_tech_level || 1,
             ai_tech_xp: user.ai_tech_xp || 0,
             personal_dev_level: user.personal_dev_level || 1,
