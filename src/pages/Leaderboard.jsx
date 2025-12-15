@@ -201,11 +201,9 @@ export default function Leaderboard() {
           w => w.student_email === u.student_email && w.mastered
         ).length;
 
-        // Get user details from User entity
+        // Get last login date from User entity
         const userRecord = allUsers.find(usr => usr.email === u.student_email);
         const last_login_date = userRecord?.last_login_date;
-        const first_name = userRecord?.first_name || u.first_name;
-        const last_name = userRecord?.last_name || u.last_name;
 
         const averageLevel = Math.round(
           ((u.ai_tech_level || 1) +
@@ -237,9 +235,7 @@ export default function Leaderboard() {
           totalXP,
           adjustedCoins,
           pendingTaxes,
-          last_login_date,
-          first_name,
-          last_name
+          last_login_date
         };
       });
 
