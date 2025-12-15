@@ -590,9 +590,8 @@ export default function Leaderboard() {
                       <div className="hidden sm:grid grid-cols-4 gap-2 text-xs">
                         <div className="flex items-center gap-1">
                           <Coins className="w-3 h-3 text-yellow-300 flex-shrink-0" />
-                          <span className={`truncate ${player.pendingTaxes > 0 ? 'text-red-300' : 'text-white/80'}`}>
-                            {player.adjustedCoins}
-                            {player.pendingTaxes > 0 && <span className="text-[8px]"> (-{player.pendingTaxes})</span>}
+                          <span className="truncate text-white/80">
+                            {player.coins || 0}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
