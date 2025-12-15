@@ -13,9 +13,15 @@ import GroupSelectionDialog from "../components/home/GroupSelectionDialog";
 import AvatarWork from "../components/home/AvatarWork";
 import AvatarShop from "../components/avatar/AvatarShop";
 import { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
-import { TrendingDown, Coins, TrendingUp, ShoppingBag } from "lucide-react";
+import { TrendingDown, Coins, TrendingUp, ShoppingBag, HelpCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const skills = [
   {
@@ -691,36 +697,57 @@ export default function Home() {
 
                 {/* Expected Daily Taxes Display */}
                 {(expectedDailyLosses.inflation > 0 || expectedDailyLosses.incomeTax > 0 || expectedDailyLosses.creditInterest > 0) && (
-                  <div className="bg-red-500/20 rounded-lg px-1.5 sm:px-3 py-1 sm:py-2 border border-red-400/30 mb-2 sm:mb-3 space-y-0.5 sm:space-y-1">
-                    <p className="text-white/90 text-[9px] sm:text-xs font-bold text-center mb-1">💸 הפסדים צפויים</p>
-                    {expectedDailyLosses.inflation > 0 && (
-                      <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-between px-1">
-                        <span className="flex items-center gap-0.5">
-                          <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
-                          אינפלציה:
-                        </span>
-                        <span>-{expectedDailyLosses.inflation} 💸</span>
-                      </p>
-                    )}
-                    {expectedDailyLosses.incomeTax > 0 && (
-                      <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-between px-1">
-                        <span className="flex items-center gap-0.5">
-                          <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
-                          מס הכנסה:
-                        </span>
-                        <span>-{expectedDailyLosses.incomeTax} 💸</span>
-                      </p>
-                    )}
-                    {expectedDailyLosses.creditInterest > 0 && (
-                      <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-between px-1">
-                        <span className="flex items-center gap-0.5">
-                          <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
-                          ריבית אשראי:
-                        </span>
-                        <span>-{expectedDailyLosses.creditInterest} 💸</span>
-                      </p>
-                    )}
-                  </div>
+                  <TooltipProvider>
+                    <div className="bg-red-500/20 rounded-lg px-1.5 sm:px-3 py-1 sm:py-2 border border-red-400/30 mb-2 sm:mb-3 space-y-0.5 sm:space-y-1">
+                      <p className="text-white/90 text-[9px] sm:text-xs font-bold text-center mb-1">💸 הפסדים צפויים</p>
+                      {expectedDailyLosses.inflation > 0 && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-between px-1 cursor-help">
+                              <span className="flex items-center gap-0.5">
+                                <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
+                                אינפלציה:
+                                <HelpCircle className="w-2 h-2 sm:w-3 sm:h-3 opacity-70" />
+                              </span>
+                              <span>-{expectedDailyLosses.inflation} 💸</span>
+                            </p>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-gray-900 border-gray-700">
+                            <p className="text-sm">📉 <strong>אינפלציה:</strong> 1% ליום על העובר ושב (רק אם חיובי)</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {expectedDailyLosses.incomeTax > 0 && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-between px-1 cursor-help">
+                              <span className="flex items-center gap-0.5">
+                                <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
+                                מס הכנסה:
+                                <HelpCircle className="w-2 h-2 sm:w-3 sm:h-3 opacity-70" />
+                              </span>
+                              <span>-{expectedDailyLosses.incomeTax} 💸</span>
+                            </p>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-gray-900 border-gray-700 max-w-xs">
+                            <p className="text-sm">
+                              🏛️ <strong>מס הכנסה:</strong> 0.5% ליום על כל השווי הכולל (עובר ושב + פריטים + השקעות).
+                              <br/>💡 <strong>טיפ:</strong> קנה צבעי גוף כדי להפחית את המס!
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {expectedDailyLosses.creditInterest > 0 && (
+                        <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-between px-1">
+                          <span className="flex items-center gap-0.5">
+                            <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
+                            ריבית אשראי:
+                          </span>
+                          <span>-{expectedDailyLosses.creditInterest} 💸</span>
+                        </p>
+                      )}
+                    </div>
+                  </TooltipProvider>
                 )}
                 
                 <Button
