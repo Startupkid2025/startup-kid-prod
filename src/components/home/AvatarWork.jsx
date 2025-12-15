@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Briefcase, Clock, Coins, Rocket, Lightbulb, TrendingUp, Building, Crown } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import { AVATAR_ITEMS } from "../avatar/TamagotchiAvatar";
 
 const JOBS = [
   {
@@ -130,7 +131,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     let hourlyBonus = 0;
     
     purchasedItems.forEach(itemId => {
-      const item = require('../avatar/TamagotchiAvatar').AVATAR_ITEMS[itemId];
+      const item = AVATAR_ITEMS[itemId];
       if (item && item.hourlyBonus) {
         hourlyBonus += item.hourlyBonus;
       }
@@ -274,7 +275,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
               let hourlyBonus = 0;
               
               purchasedItems.forEach(itemId => {
-                const item = require('../avatar/TamagotchiAvatar').AVATAR_ITEMS[itemId];
+                const item = AVATAR_ITEMS[itemId];
                 if (item && item.hourlyBonus) {
                   hourlyBonus += item.hourlyBonus;
                 }
