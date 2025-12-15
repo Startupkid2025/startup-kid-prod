@@ -242,29 +242,26 @@ export default function Admin() {
 
         report.push(breakdown);
 
-        // עדכון המשתמש
+        // עדכון המשתמש - תמיד מעדכנים!
         const updates = {
-          coins_recalculated_v15: true
+          coins_recalculated_v16: true
         };
-
-        let needsUpdate = false;
 
         if (needsFeesUpdate) {
           updates.total_investment_fees = investmentFees;
           breakdown.feesWereUpdated = true;
-          needsUpdate = true;
         }
 
         if (Math.abs(breakdown.coinsDiff) >= 1) {
           updates.coins = correctCoins;
           breakdown.coinsWereUpdated = true;
-          needsUpdate = true;
         }
 
-        if (needsUpdate) {
+        // Always update if there are coins changes OR fees changes
+        if (updates.coins !== undefined || updates.total_investment_fees !== undefined) {
           await base44.entities.User.update(user.id, updates);
 
-          // Update leaderboard with NETWORTH calculation
+          // Update leaderboard
           try {
             const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: user.email });
             if (leaderboardEntries.length > 0) {
