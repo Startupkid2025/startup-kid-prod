@@ -263,12 +263,15 @@ export default function Admin() {
 
         if (needsUpdate) {
           await base44.entities.User.update(user.id, updates);
-          
+
+          // Update leaderboard with NETWORTH calculation
           try {
             const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: user.email });
             if (leaderboardEntries.length > 0) {
               await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-                coins: correctCoins
+                coins: correctCoins,
+                purchased_items: user.purchased_items || [],
+                equipped_items: user.equipped_items || {}
               });
             }
           } catch (error) {
