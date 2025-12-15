@@ -65,6 +65,7 @@ export default function Home() {
     incomeTax: 0,
     creditInterest: 0
   });
+  const [effectiveIncomeTaxRate, setEffectiveIncomeTaxRate] = useState(0.5);
 
   useEffect(() => {
     loadUserData();
@@ -282,6 +283,7 @@ export default function Home() {
         incomeTax: expectedIncomeTax,
         creditInterest: expectedCreditInterest
       });
+      setEffectiveIncomeTaxRate(incomeTaxRate * 100); // Convert to percentage
 
       return Math.max(0, Math.round(netWorth));
     } catch (error) {
@@ -731,7 +733,7 @@ export default function Home() {
                           </TooltipTrigger>
                           <TooltipContent className="bg-gray-900 border-gray-700 max-w-xs">
                             <p className="text-sm">
-                              🏛️ <strong>מס הכנסה:</strong> 0.5% ליום על כל השווי הכולל (עובר ושב + פריטים + השקעות).
+                              🏛️ <strong>מס הכנסה:</strong> {effectiveIncomeTaxRate.toFixed(2)}% ליום על כל השווי הכולל (עובר ושב + פריטים + השקעות).
                               <br/>💡 <strong>טיפ:</strong> קנה צבעי גוף כדי להפחית את המס!
                             </p>
                           </TooltipContent>
