@@ -290,14 +290,22 @@ export default function Home() {
         let totalInflationLoss = 0;
         let totalIncomeTax = 0;
         let totalCreditInterest = 0;
+        
+        // Track last day separately for display
+        let lastDayInflation = 0;
+        let lastDayIncomeTax = 0;
+        let lastDayCreditInterest = 0;
 
         for (let i = 0; i < daysPassed; i++) {
+          const isLastDay = (i === daysPassed - 1);
+          
           // Inflation: 1% on cash only (only if positive)
           if (newCoins > 0) {
             const inflationLoss = Math.floor(newCoins * 0.01);
             if (inflationLoss > 0) {
               totalInflationLoss += inflationLoss;
               newCoins -= inflationLoss;
+              if (isLastDay) lastDayInflation = inflationLoss;
             }
           }
 
@@ -319,6 +327,7 @@ export default function Home() {
           if (incomeTax > 0) {
             totalIncomeTax += incomeTax;
             newCoins -= incomeTax;
+            if (isLastDay) lastDayIncomeTax = incomeTax;
           }
 
           // Credit interest: 3% per day on negative balance only
@@ -327,6 +336,7 @@ export default function Home() {
             if (creditInterest > 0) {
               totalCreditInterest += creditInterest;
               newCoins -= creditInterest;
+              if (isLastDay) lastDayCreditInterest = creditInterest;
             }
           }
         }
@@ -337,9 +347,9 @@ export default function Home() {
           total_inflation_lost: (user.total_inflation_lost || 0) + totalInflationLoss,
           total_income_tax: (user.total_income_tax || 0) + totalIncomeTax,
           total_credit_interest: (user.total_credit_interest || 0) + totalCreditInterest,
-          daily_inflation_lost: totalInflationLoss,
-          daily_income_tax: totalIncomeTax,
-          daily_credit_interest: totalCreditInterest
+          daily_inflation_lost: lastDayInflation,
+          daily_income_tax: lastDayIncomeTax,
+          daily_credit_interest: lastDayCreditInterest
         });
 
         return {
@@ -349,9 +359,9 @@ export default function Home() {
           total_inflation_lost: (user.total_inflation_lost || 0) + totalInflationLoss,
           total_income_tax: (user.total_income_tax || 0) + totalIncomeTax,
           total_credit_interest: (user.total_credit_interest || 0) + totalCreditInterest,
-          daily_inflation_lost: totalInflationLoss,
-          daily_income_tax: totalIncomeTax,
-          daily_credit_interest: totalCreditInterest
+          daily_inflation_lost: lastDayInflation,
+          daily_income_tax: lastDayIncomeTax,
+          daily_credit_interest: lastDayCreditInterest
         };
       }
       return user;
