@@ -306,7 +306,7 @@ export default function Admin() {
         console.log(`\n👤 ${r.name} (${r.email})`);
         console.log(`  💰 INCOME: ${Math.round(r.totalIncome)}`);
         console.log(`  💎 ASSETS: ${Math.round(r.totalAssets)} (Cash: ${Math.round(r.correctCoins)}${r.coinsWereUpdated ? ' ✅' : ''}, Items: ${Math.round(r.itemsValue)}, Inv: ${Math.round(r.investmentsValue)})`);
-        console.log(`  📉 LOSSES: ${Math.round(r.totalLosses)} (Inflation: ${Math.round(r.inflationLoss)}, Income Tax: ${Math.round(r.incomeTax)}, Credit: ${Math.round(r.creditInterest)}, Inv Loss: ${Math.round(r.investmentLoss)}, Fees: ${Math.round(r.investmentFees)}${r.feesWereUpdated ? ' ✅' : ''})`);
+        console.log(`  📉 LOSSES: ${Math.round(r.totalLosses)} (Inflation: ${Math.round(r.inflationLoss)}, Income Tax: ${Math.round(r.incomeTax)}, Capital Gains: ${Math.round(r.capitalGainsTax)}, Credit: ${Math.round(r.creditInterest)}, Inv Loss: ${Math.round(r.investmentLoss)}, Fees: ${Math.round(r.investmentFees)}${r.feesWereUpdated ? ' ✅' : ''})`);
         if (Math.abs(r.coinsDiff) >= 1) {
           console.log(`  🔧 FIX: ${Math.round(r.oldCoins)} → ${Math.round(r.correctCoins)} (${r.coinsDiff >= 0 ? '+' : ''}${Math.round(r.coinsDiff)})`);
         }
