@@ -287,7 +287,9 @@ export default function Admin() {
         }
       }
 
-      console.log("📊 Final Coins Verification Report (v15 - FIXED!):");
+      console.log("📊 Final Coins Verification Report:");
+      
+      // Always show summary in console
       report.forEach(r => {
         console.log(`\n👤 ${r.name} (${r.email})`);
         console.log(`  💰 INCOME: ${Math.round(r.totalIncome)}`);
@@ -299,28 +301,25 @@ export default function Admin() {
         console.log(`  ${r.incomeMatch ? '✅ PERFECT!' : `⚠️ Diff: ${Math.round(r.totalIncome - r.expectedIncome)}`}`);
       });
       
+      // Show toast message
       if (totalFixed > 0) {
-        const coinsFixed = report.filter(r => r.coinsWereUpdated).length;
-        const feesFixed = report.filter(r => r.feesWereUpdated).length;
-
-        // Show detailed breakdown for fixed users
         const fixedUsers = report.filter(r => r.coinsWereUpdated || r.feesWereUpdated);
         
         let detailMessage = `✅ תיקנתי ${totalFixed} משתמשים:\n\n`;
         fixedUsers.forEach(r => {
           detailMessage += `👤 ${r.name}\n`;
           if (r.coinsWereUpdated) {
-            detailMessage += `   💰 מטבעות: ${Math.round(r.oldCoins)} → ${Math.round(r.correctCoins)} (${r.coinsDiff >= 0 ? '+' : ''}${Math.round(r.coinsDiff)})\n`;
+            detailMessage += `   💰 ${Math.round(r.oldCoins)} → ${Math.round(r.correctCoins)} (${r.coinsDiff >= 0 ? '+' : ''}${Math.round(r.coinsDiff)})\n`;
           }
           if (r.feesWereUpdated) {
-            detailMessage += `   💸 עמלות הוערכו: ${Math.round(r.investmentFees)}\n`;
+            detailMessage += `   💸 עמלות: ${Math.round(r.investmentFees)}\n`;
           }
           detailMessage += '\n';
         });
 
         toast.success(detailMessage, { duration: 8000 });
       } else {
-        toast.success(`✅ הכל מדויק! 💯`, { duration: 5000 });
+        toast.info(`✅ כל המשתמשים כבר מדויקים! בדקתי ${report.length} משתמשים. 💯`, { duration: 5000 });
       }
       
       loadData();
