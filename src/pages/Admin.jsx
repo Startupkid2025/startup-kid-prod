@@ -295,12 +295,22 @@ export default function Admin() {
         const coinsFixed = report.filter(r => r.coinsWereUpdated).length;
         const feesFixed = report.filter(r => r.feesWereUpdated).length;
 
-        let message = `✅ תיקנתי ${totalFixed} משתמשים! `;
-        if (coinsFixed > 0) message += `${coinsFixed} מטבעות תוקנו `;
-        if (feesFixed > 0) message += `${feesFixed} עמלות הוערכו`;
-        message += ' 💯';
+        // Show detailed breakdown for fixed users
+        const fixedUsers = report.filter(r => r.coinsWereUpdated || r.feesWereUpdated);
+        
+        let detailMessage = `✅ תיקנתי ${totalFixed} משתמשים:\n\n`;
+        fixedUsers.forEach(r => {
+          detailMessage += `👤 ${r.name}\n`;
+          if (r.coinsWereUpdated) {
+            detailMessage += `   💰 מטבעות: ${Math.round(r.oldCoins)} → ${Math.round(r.correctCoins)} (${r.coinsDiff >= 0 ? '+' : ''}${Math.round(r.coinsDiff)})\n`;
+          }
+          if (r.feesWereUpdated) {
+            detailMessage += `   💸 עמלות הוערכו: ${Math.round(r.investmentFees)}\n`;
+          }
+          detailMessage += '\n';
+        });
 
-        toast.success(message, { duration: 5000 });
+        toast.success(detailMessage, { duration: 8000 });
       } else {
         toast.success(`✅ הכל מדויק! 💯`, { duration: 5000 });
       }
