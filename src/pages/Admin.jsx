@@ -199,11 +199,6 @@ export default function Admin() {
         const creditInterest = user.total_credit_interest || 0;
         breakdown.creditInterest = creditInterest;
 
-        // Dividend tax - refund to all users who paid it
-        const dividendTaxPaid = user.total_dividend_tax || 0;
-        breakdown.dividendTax = 0; // No longer charging dividend tax
-        breakdown.dividendTaxRefund = dividendTaxPaid;
-
         const investmentLoss = Math.max(0, totalInvested - investmentsValue);
         breakdown.investmentLoss = investmentLoss;
 
@@ -226,21 +221,16 @@ export default function Admin() {
         
         breakdown.investmentFees = investmentFees;
 
-        // Total losses WITHOUT dividend tax (it's refunded)
         const totalLosses = inflationLoss + incomeTax + capitalGainsTax + creditInterest + investmentLoss + itemSaleLosses + investmentFees;
         breakdown.totalLosses = totalLosses;
 
         // ═══════════════════════════════════════════════════
-        // חישוב המטבעות הנכונים + החזר מס דיבידנד!
+        // חישוב המטבעות הנכונים
         // ═══════════════════════════════════════════════════
-        
-        // Add dividend tax refund to income
-        const totalIncomeWithRefund = totalIncome + dividendTaxPaid;
-        breakdown.totalIncomeWithRefund = totalIncomeWithRefund;
-        
-        const correctCoins = Math.round(totalIncomeWithRefund - itemsValue - investmentsValue - totalLosses);
+
+        const correctCoins = Math.round(totalIncome - itemsValue - investmentsValue - totalLosses);
         breakdown.correctCoins = correctCoins;
-        
+
         const totalAssets = correctCoins + itemsValue + investmentsValue;
         breakdown.totalAssets = totalAssets;
 
@@ -254,7 +244,7 @@ export default function Admin() {
 
         // עדכון המשתמש
         const updates = {
-          coins_recalculated_v14: true
+          coins_recalculated_v15: true
         };
 
         let needsUpdate = false;
@@ -262,13 +252,6 @@ export default function Admin() {
         if (needsFeesUpdate) {
           updates.total_investment_fees = investmentFees;
           breakdown.feesWereUpdated = true;
-          needsUpdate = true;
-        }
-
-        // Reset dividend tax counters
-        if (user.total_dividend_tax && user.total_dividend_tax > 0) {
-          updates.total_dividend_tax = 0;
-          updates.daily_dividend_tax = 0;
           needsUpdate = true;
         }
 
@@ -296,32 +279,27 @@ export default function Admin() {
         }
       }
 
-      console.log("📊 Final Coins Verification Report (v14 - DIVIDEND TAX REFUNDED!):");
+      console.log("📊 Final Coins Verification Report (v15 - FIXED!):");
       report.forEach(r => {
         console.log(`\n👤 ${r.name} (${r.email})`);
-        console.log(`  💰 INCOME: ${Math.round(r.totalIncome)} ${r.dividendTaxRefund > 0 ? `+ ${Math.round(r.dividendTaxRefund)} (refund) = ${Math.round(r.totalIncomeWithRefund)}` : ''}`);
+        console.log(`  💰 INCOME: ${Math.round(r.totalIncome)}`);
         console.log(`  💎 ASSETS: ${Math.round(r.totalAssets)} (Cash: ${Math.round(r.correctCoins)}${r.coinsWereUpdated ? ' ✅' : ''}, Items: ${Math.round(r.itemsValue)}, Inv: ${Math.round(r.investmentsValue)})`);
         console.log(`  📉 LOSSES: ${Math.round(r.totalLosses)} (Inflation: ${Math.round(r.inflationLoss)}, Income Tax: ${Math.round(r.incomeTax)}, Capital Gains: ${Math.round(r.capitalGainsTax)}, Credit: ${Math.round(r.creditInterest)}, Inv Loss: ${Math.round(r.investmentLoss)}, Fees: ${Math.round(r.investmentFees)}${r.feesWereUpdated ? ' ✅' : ''})`);
-        if (r.dividendTaxRefund > 0) {
-          console.log(`  💸 DIVIDEND TAX REFUND: +${Math.round(r.dividendTaxRefund)} החזר!`);
-        }
         if (Math.abs(r.coinsDiff) >= 1) {
           console.log(`  🔧 FIX: ${Math.round(r.oldCoins)} → ${Math.round(r.correctCoins)} (${r.coinsDiff >= 0 ? '+' : ''}${Math.round(r.coinsDiff)})`);
         }
-        console.log(`  ${r.incomeMatch ? '✅ PERFECT!' : `⚠️ Diff: ${Math.round((r.totalIncomeWithRefund || r.totalIncome) - r.expectedIncome)}`}`);
+        console.log(`  ${r.incomeMatch ? '✅ PERFECT!' : `⚠️ Diff: ${Math.round(r.totalIncome - r.expectedIncome)}`}`);
       });
       
       if (totalFixed > 0) {
         const coinsFixed = report.filter(r => r.coinsWereUpdated).length;
         const feesFixed = report.filter(r => r.feesWereUpdated).length;
-        const totalRefunded = report.reduce((sum, r) => sum + (r.dividendTaxRefund || 0), 0);
-        
+
         let message = `✅ תיקנתי ${totalFixed} משתמשים! `;
-        if (coinsFixed > 0) message += `${coinsFixed} מטבעות, `;
-        if (feesFixed > 0) message += `${feesFixed} עמלות, `;
-        if (totalRefunded > 0) message += `החזרתי ${Math.round(totalRefunded)} מטבעות ממס דיבידנד`;
+        if (coinsFixed > 0) message += `${coinsFixed} מטבעות תוקנו `;
+        if (feesFixed > 0) message += `${feesFixed} עמלות הוערכו`;
         message += ' 💯';
-        
+
         toast.success(message, { duration: 5000 });
       } else {
         toast.success(`✅ הכל מדויק! 💯`, { duration: 5000 });
