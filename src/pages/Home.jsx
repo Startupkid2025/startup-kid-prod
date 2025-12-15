@@ -723,31 +723,6 @@ export default function Home() {
                   </div>
                 )}
                 
-                {/* Total Losses Summary */}
-                {(userData?.total_inflation_lost > 0 || userData?.total_income_tax > 0 || (userData?.total_credit_interest || 0) > 0) && (
-                  <div className="bg-white/10 rounded-lg px-1.5 sm:px-3 py-1 sm:py-2 border border-white/20 mb-2 sm:mb-3 space-y-0.5 sm:space-y-1">
-                    <p className="text-white/90 text-[9px] sm:text-xs font-bold text-center mb-1">📊 סה״כ הפסדים</p>
-                    {userData?.total_inflation_lost > 0 && (
-                      <p className="text-white/70 text-[8px] sm:text-xs flex items-center justify-between px-1">
-                        <span>📉 אינפלציה:</span>
-                        <span className="font-bold text-red-300">-{userData.total_inflation_lost}</span>
-                      </p>
-                    )}
-                    {userData?.total_income_tax > 0 && (
-                      <p className="text-white/70 text-[8px] sm:text-xs flex items-center justify-between px-1">
-                        <span>🏛️ מס הכנסה:</span>
-                        <span className="font-bold text-red-300">-{userData.total_income_tax}</span>
-                      </p>
-                    )}
-                    {(userData?.total_credit_interest || 0) > 0 && (
-                      <p className="text-white/70 text-[8px] sm:text-xs flex items-center justify-between px-1">
-                        <span>💳 ריבית אשראי:</span>
-                        <span className="font-bold text-red-300">-{userData.total_credit_interest}</span>
-                      </p>
-                    )}
-                  </div>
-                )}
-
                 <Button
                   onClick={() => setShowShop(true)}
                   className="w-full bg-white/20 hover:bg-white/30 text-white font-bold border-2 border-white/40 shadow-lg text-[10px] sm:text-base py-1.5 sm:py-2"
