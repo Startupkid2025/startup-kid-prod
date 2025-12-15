@@ -236,7 +236,8 @@ export default function Admin() {
         
         breakdown.investmentFees = investmentFees;
 
-        const totalLosses = inflationLoss + incomeTax + capitalGainsTax + creditInterest + investmentLoss + itemSaleLosses + investmentFees;
+        // Capital Gains Tax is NOT included in totalLosses because it was already deducted when paid
+        const totalLosses = inflationLoss + incomeTax + creditInterest + investmentLoss + itemSaleLosses + investmentFees;
         breakdown.totalLosses = totalLosses;
 
         // ═══════════════════════════════════════════════════
