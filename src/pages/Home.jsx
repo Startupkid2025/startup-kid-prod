@@ -283,7 +283,9 @@ export default function Home() {
           student_email: user.email
         });
         const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-        const currentNetWorth = currentCoins + itemsValue + investmentsValue;
+        
+        // Calculate ORIGINAL net worth (before any taxes)
+        const originalNetWorth = currentCoins + itemsValue + investmentsValue;
 
         // Apply taxes for all days missed
         let newCoins = currentCoins;
@@ -309,7 +311,7 @@ export default function Home() {
             }
           }
 
-          // Income tax: 0.5% on total net worth (taken from cash)
+          // Income tax: 0.5% on ORIGINAL net worth (not on the reduced amount)
           // But can be reduced by owning body colors! Each color has different reduction
           let incomeTaxRate = 0.005; // Base rate: 0.5%
           
@@ -321,9 +323,8 @@ export default function Home() {
             }
           }
           
-          // Recalculate net worth with current coins
-          const currentDayNetWorth = newCoins + itemsValue + investmentsValue;
-          const incomeTax = Math.floor(currentDayNetWorth * incomeTaxRate);
+          // Income tax is based on ORIGINAL net worth, not current coins
+          const incomeTax = Math.floor(originalNetWorth * incomeTaxRate);
           if (incomeTax > 0) {
             totalIncomeTax += incomeTax;
             newCoins -= incomeTax;
