@@ -205,11 +205,8 @@ export default function Admin() {
         const incomeTax = user.total_income_tax || 0;
         breakdown.incomeTax = incomeTax;
 
-        // Capital Gains Tax is already deducted from coins when it was paid
-        // So we don't include it in losses calculation (it's just for reporting)
         const capitalGainsTax = user.total_capital_gains_tax || 0;
         breakdown.capitalGainsTax = capitalGainsTax;
-        breakdown.capitalGainsTaxNote = "Already deducted from coins";
 
         const creditInterest = user.total_credit_interest || 0;
         breakdown.creditInterest = creditInterest;
