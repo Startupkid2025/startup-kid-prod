@@ -159,8 +159,6 @@ export default function Leaderboard() {
           averageLevel,
           totalValue,
           totalXP,
-          adjustedCoins,
-          pendingTaxes,
           last_login_date
         };
       });
