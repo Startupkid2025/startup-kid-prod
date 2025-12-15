@@ -242,23 +242,31 @@ export default function Admin() {
 
         report.push(breakdown);
 
-        // עדכון המשתמש - תמיד מעדכנים!
-        const updates = {
-          coins_recalculated_v16: true
-        };
+        // בדיקה אם צריך עדכון
+        let needsUpdate = false;
 
         if (needsFeesUpdate) {
-          updates.total_investment_fees = investmentFees;
           breakdown.feesWereUpdated = true;
+          needsUpdate = true;
         }
 
         if (Math.abs(breakdown.coinsDiff) >= 1) {
-          updates.coins = correctCoins;
           breakdown.coinsWereUpdated = true;
+          needsUpdate = true;
         }
 
-        // Always update if there are coins changes OR fees changes
-        if (updates.coins !== undefined || updates.total_investment_fees !== undefined) {
+        // תמיד מעדכן את הלידרבורד אם יש שינוי במטבעות
+        if (needsUpdate) {
+          const updates = {};
+          
+          if (needsFeesUpdate) {
+            updates.total_investment_fees = investmentFees;
+          }
+          
+          if (breakdown.coinsWereUpdated) {
+            updates.coins = correctCoins;
+          }
+
           await base44.entities.User.update(user.id, updates);
 
           // Update leaderboard
