@@ -74,12 +74,17 @@ export default function Admin() {
   };
 
   const recalculateAllCoinsAccurately = async () => {
+    console.log("🔧 Starting coin recalculation...");
+    toast.info("מתחיל לבדוק ולתקן מטבעות... ⏳");
+    
     setIsRecalculatingCoins(true);
     let totalFixed = 0;
     const report = [];
 
     try {
+      console.log("📥 Loading all users...");
       const allUsers = await base44.entities.User.list();
+      console.log(`✅ Loaded ${allUsers.length} users`);
       const allParticipations = await base44.entities.LessonParticipation.list();
       const allWordProgress = await base44.entities.WordProgress.list();
       const allMathProgress = await base44.entities.MathProgress.list();
