@@ -94,7 +94,11 @@ export default function Admin() {
       const allInvestments = await base44.entities.Investment.list();
       console.log("✅ All data loaded!");
 
-      for (const user of allUsers) {
+      console.log(`🔄 Processing ${allUsers.length} users...`);
+      for (let i = 0; i < allUsers.length; i++) {
+        const user = allUsers[i];
+        console.log(`👤 [${i + 1}/${allUsers.length}] Processing ${user.full_name}...`);
+        
         const breakdown = {
           email: user.email,
           name: user.full_name
