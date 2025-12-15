@@ -141,14 +141,11 @@ export default function Leaderboard() {
           (u.money_business_level || 1)) / 4
         );
 
-        // Calculate net worth including investments AND pending taxes
+        // Calculate net worth including investments (NO pending taxes!)
         const userInvestments = allInvestments.filter(inv => inv.student_email === u.student_email);
         const investmentsValue = userInvestments.reduce((sum, inv) => sum + inv.current_value, 0);
         
-        // Calculate what the coins would be after applying pending taxes
-        const { coins: adjustedCoins, taxes: pendingTaxes } = calculatePendingTaxes(u, investmentsValue);
-        
-        const totalValue = calculateTotalValue(u, adjustedCoins, investmentsValue);
+        const totalValue = calculateTotalValue(u, investmentsValue);
 
         const totalXP =
           ((u.ai_tech_level || 1) - 1) * 100 + (u.ai_tech_xp || 0) +
