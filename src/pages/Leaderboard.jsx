@@ -42,79 +42,7 @@ export default function Leaderboard() {
     return () => clearInterval(timer);
   }, []);
 
-  const calculateMissedTaxDays = (lastTaxDate) => {
-    if (!lastTaxDate) return 0;
-    const today = new Date().toISOString().split('T')[0];
-    if (lastTaxDate >= today) return 0;
-    
-    const lastDate = new Date(lastTaxDate);
-    const todayDate = new Date(today);
-    const daysPassed = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
-    return Math.min(daysPassed, 30); // Cap at 30 days
-  };
-
-  const calculatePendingTaxes = (user, investmentsValue) => {
-    const daysPassed = calculateMissedTaxDays(user.last_tax_date);
-    if (daysPassed === 0) return { coins: Math.round(user.coins || 0), taxes: 0 };
-
-    let currentCoins = Math.round(user.coins || 0);
-
-    // Calculate items value
-    const purchasedItems = user.purchased_items || [];
-    let itemsValue = 0;
-    purchasedItems.forEach(itemId => {
-      const item = AVATAR_ITEMS[itemId];
-      if (item) {
-        itemsValue += item.price || 0;
-      }
-    });
-
-    let totalTaxes = 0;
-
-    for (let i = 0; i < daysPassed; i++) {
-      // Inflation: 1% on positive cash only
-      if (currentCoins > 0) {
-        const inflationLoss = Math.floor(currentCoins * 0.01);
-        if (inflationLoss > 0) {
-          totalTaxes += inflationLoss;
-          currentCoins -= inflationLoss;
-        }
-      }
-
-      // Income tax: 0.5% on total net worth (taken from cash)
-      // But can be reduced by owning body colors! Each color has different reduction
-      let incomeTaxRate = 0.005; // Base rate: 0.5%
-      
-      // Calculate tax reduction based on owned body colors
-      for (const itemId of purchasedItems) {
-        const item = AVATAR_ITEMS[itemId];
-        if (item && item.category === 'body' && item.taxReduction) {
-          incomeTaxRate = Math.max(0, incomeTaxRate - (item.taxReduction / 100));
-        }
-      }
-      
-      // Recalculate net worth with current coins
-      const currentDayNetWorth = currentCoins + itemsValue + investmentsValue;
-      const incomeTax = Math.floor(currentDayNetWorth * incomeTaxRate);
-      if (incomeTax > 0) {
-        totalTaxes += incomeTax;
-        currentCoins -= incomeTax;
-      }
-
-      // Credit interest: 3% per day on negative balance only
-      if (currentCoins < 0) {
-        const creditInterest = Math.floor(Math.abs(currentCoins) * 0.03);
-        if (creditInterest > 0) {
-          totalTaxes += creditInterest;
-          currentCoins -= creditInterest;
-        }
-      }
-    }
-
-    return { coins: Math.round(currentCoins), taxes: Math.round(totalTaxes) };
-  };
-
-  const calculateTotalValue = (user, adjustedCoins, investmentsValue) => {
+  const calculateTotalValue = (user, investmentsValue) => {
     const purchasedItems = user.purchased_items || [];
 
     let spentOnItems = 0;
@@ -125,7 +53,8 @@ export default function Leaderboard() {
       }
     });
 
-    return Math.round(adjustedCoins + spentOnItems + investmentsValue);
+    const currentCoins = Math.round(user.coins || 0);
+    return Math.round(currentCoins + spentOnItems + investmentsValue);
   };
 
   const loadData = async () => {
