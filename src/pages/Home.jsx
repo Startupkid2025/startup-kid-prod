@@ -641,42 +641,60 @@ export default function Home() {
                   </p>
                 </div>
 
-                {(userData?.total_inflation_lost > 0 || userData?.total_income_tax > 0 || (userData?.total_credit_interest || 0) > 0 || (userData?.total_dividend_tax || 0) > 0) && (
+                {/* Daily Taxes Display */}
+                {(userData?.daily_inflation_lost > 0 || userData?.daily_income_tax > 0 || userData?.daily_credit_interest > 0) && (
                   <div className="bg-red-500/20 rounded-lg px-1.5 sm:px-3 py-1 sm:py-2 border border-red-400/30 mb-2 sm:mb-3 space-y-0.5 sm:space-y-1">
+                    <p className="text-white/90 text-[9px] sm:text-xs font-bold text-center mb-1">💸 הפסדים היום</p>
+                    {userData?.daily_inflation_lost > 0 && (
+                      <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-between px-1">
+                        <span className="flex items-center gap-0.5">
+                          <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
+                          אינפלציה:
+                        </span>
+                        <span>-{userData.daily_inflation_lost}</span>
+                      </p>
+                    )}
+                    {userData?.daily_income_tax > 0 && (
+                      <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-between px-1">
+                        <span className="flex items-center gap-0.5">
+                          <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
+                          מס הכנסה:
+                        </span>
+                        <span>-{userData.daily_income_tax}</span>
+                      </p>
+                    )}
+                    {userData?.daily_credit_interest > 0 && (
+                      <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-between px-1">
+                        <span className="flex items-center gap-0.5">
+                          <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
+                          ריבית אשראי:
+                        </span>
+                        <span>-{userData.daily_credit_interest}</span>
+                      </p>
+                    )}
+                  </div>
+                )}
+                
+                {/* Total Losses Summary */}
+                {(userData?.total_inflation_lost > 0 || userData?.total_income_tax > 0 || (userData?.total_credit_interest || 0) > 0) && (
+                  <div className="bg-white/10 rounded-lg px-1.5 sm:px-3 py-1 sm:py-2 border border-white/20 mb-2 sm:mb-3 space-y-0.5 sm:space-y-1">
+                    <p className="text-white/90 text-[9px] sm:text-xs font-bold text-center mb-1">📊 סה״כ הפסדים</p>
                     {userData?.total_inflation_lost > 0 && (
-                      <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-center gap-0.5 group relative">
-                        <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
-                        <span>אינפלציה: -{userData.total_inflation_lost}</span>
-                        <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-[10px] sm:text-xs rounded-lg px-3 py-2 whitespace-nowrap z-50 shadow-xl">
-                          ירידת ערך הכסף - כל יום מאבדים 1% מהעובר ושב 💸
-                        </div>
+                      <p className="text-white/70 text-[8px] sm:text-xs flex items-center justify-between px-1">
+                        <span>📉 אינפלציה:</span>
+                        <span className="font-bold text-red-300">-{userData.total_inflation_lost}</span>
                       </p>
                     )}
                     {userData?.total_income_tax > 0 && (
-                      <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-center gap-0.5 group relative">
-                        <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
-                        <span>מס: -{userData.total_income_tax}</span>
-                        <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-[10px] sm:text-xs rounded-lg px-3 py-2 whitespace-nowrap z-50 shadow-xl">
-                          מס הכנסה - 0.5% ביום על כל השווי הכולל 🏦
-                        </div>
-                      </p>
-                    )}
-                    {(userData?.total_dividend_tax || 0) > 0 && (
-                      <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-center gap-0.5 group relative">
-                        <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
-                        <span>מס דיבידנד: -{userData.total_dividend_tax}</span>
-                        <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-[10px] sm:text-xs rounded-lg px-3 py-2 whitespace-nowrap z-50 shadow-xl">
-                          מס דיבידנד - 25% מרווחים יומיים בהשקעות 📈
-                        </div>
+                      <p className="text-white/70 text-[8px] sm:text-xs flex items-center justify-between px-1">
+                        <span>🏛️ מס הכנסה:</span>
+                        <span className="font-bold text-red-300">-{userData.total_income_tax}</span>
                       </p>
                     )}
                     {(userData?.total_credit_interest || 0) > 0 && (
-                      <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-center gap-0.5 group relative">
-                        <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
-                        <span>ריבית: -{userData.total_credit_interest}</span>
-                        <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-[10px] sm:text-xs rounded-lg px-3 py-2 whitespace-nowrap z-50 shadow-xl">
-                          ריבית אשראי - 3% ביום על יתרת חובה 💳
-                        </div>
+                      <p className="text-white/70 text-[8px] sm:text-xs flex items-center justify-between px-1">
+                        <span>💳 ריבית אשראי:</span>
+                        <span className="font-bold text-red-300">-{userData.total_credit_interest}</span>
                       </p>
                     )}
                   </div>
