@@ -465,7 +465,9 @@ export default function Investments() {
         const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
         if (leaderboardEntries.length > 0) {
           await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-            coins: newCoins
+            coins: newCoins,
+            purchased_items: userData.purchased_items || [],
+            equipped_items: userData.equipped_items || {}
           });
         }
       } catch (error) {
