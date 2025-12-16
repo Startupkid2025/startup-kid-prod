@@ -158,6 +158,15 @@ export default function Leaderboard() {
           ((u.social_skills_level || 1) - 1) * 100 + (u.social_skills_xp || 0) +
           ((u.money_business_level || 1) - 1) * 100 + (u.money_business_xp || 0);
 
+        // Calculate category earnings for crowns
+        const userWordProgress = allWordProgress.filter(w => w.student_email === u.student_email);
+        const vocabEarnings = userWordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
+        
+        const mathEarnings = userRecord?.total_math_earnings || 0;
+        const investmentEarnings = userRecord?.total_realized_investment_profit || 0;
+        const loginStreakEarnings = userRecord?.total_login_streak_coins || 0;
+        const workEarnings = userRecord?.total_work_earnings || 0;
+
         return {
           ...u,
           masteredWords,
@@ -169,12 +178,44 @@ export default function Leaderboard() {
           ai_tech_level: actualAiTechLevel,
           personal_dev_level: actualPersonalDevLevel,
           social_skills_level: actualSocialSkillsLevel,
-          money_business_level: actualMoneyBusinessLevel
+          money_business_level: actualMoneyBusinessLevel,
+          vocabEarnings,
+          mathEarnings,
+          investmentEarnings,
+          loginStreakEarnings,
+          workEarnings
         };
       });
 
       // Sort by totalValue (Networth) instead of totalXP
       usersWithAllStats.sort((a, b) => b.totalValue - a.totalValue);
+
+      // Find kings in each category
+      const mathKing = [...usersWithAllStats].sort((a, b) => b.mathEarnings - a.mathEarnings)[0];
+      const vocabKing = [...usersWithAllStats].sort((a, b) => b.vocabEarnings - a.vocabEarnings)[0];
+      const investmentKing = [...usersWithAllStats].sort((a, b) => b.investmentEarnings - a.investmentEarnings)[0];
+      const loginStreakKing = [...usersWithAllStats].sort((a, b) => b.loginStreakEarnings - a.loginStreakEarnings)[0];
+      const workKing = [...usersWithAllStats].sort((a, b) => b.workEarnings - a.workEarnings)[0];
+
+      // Add crown flags to users
+      usersWithAllStats.forEach(u => {
+        u.crowns = [];
+        if (mathKing && u.student_email === mathKing.student_email && u.mathEarnings > 0) {
+          u.crowns.push({ type: 'math', name: '🔢 מלך החשבון', bonus: '+5 מטבעות לתרגיל' });
+        }
+        if (vocabKing && u.student_email === vocabKing.student_email && u.vocabEarnings > 0) {
+          u.crowns.push({ type: 'vocab', name: '📚 מלך האנגלית', bonus: '+5 מטבעות למילה' });
+        }
+        if (investmentKing && u.student_email === investmentKing.student_email && u.investmentEarnings > 0) {
+          u.crowns.push({ type: 'investment', name: '💼 מלך ההשקעות', bonus: '+10% רווח' });
+        }
+        if (loginStreakKing && u.student_email === loginStreakKing.student_email && u.loginStreakEarnings > 0) {
+          u.crowns.push({ type: 'login', name: '🔥 מלך הרצף', bonus: '+10 מטבעות ליום' });
+        }
+        if (workKing && u.student_email === workKing.student_email && u.workEarnings > 0) {
+          u.crowns.push({ type: 'work', name: '💪 מלך העבודה', bonus: '+5 מטבעות לשעה' });
+        }
+      });
 
       setUsers(usersWithAllStats);
     } catch (error) {
@@ -629,6 +670,21 @@ export default function Leaderboard() {
                       {player.last_login_date && (
                         <div className="hidden sm:block text-[9px] text-white/50 mt-1">
                           כניסה אחרונה: {new Date(player.last_login_date).toLocaleDateString('he-IL')}
+                        </div>
+                      )}
+
+                      {/* Crown Badges */}
+                      {player.crowns && player.crowns.length > 0 && (
+                        <div className="flex gap-1 mb-1 flex-wrap">
+                          {player.crowns.map((crown, idx) => (
+                            <div 
+                              key={idx} 
+                              className="text-[9px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-black shadow-lg border border-yellow-300/50"
+                              title={`${crown.name} - ${crown.bonus}`}
+                            >
+                              {crown.name}
+                            </div>
+                          ))}
                         </div>
                       )}
 

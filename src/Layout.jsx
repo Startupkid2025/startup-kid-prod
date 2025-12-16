@@ -115,12 +115,30 @@ export default function Layout({ children }) {
         toast.success(`🎉 ברוך הבא! קיבלת ${streakBonus} מטבע על הכניסה הראשונה!`);
       }
       
+      // Check if user is login streak king and add bonus
+      const allUsers = await base44.entities.User.list();
+      let maxStreakEarnings = 0;
+      let streakKingEmail = null;
+
+      allUsers.forEach(u => {
+        const earnings = u.total_login_streak_coins || 0;
+        if (earnings > maxStreakEarnings) {
+          maxStreakEarnings = earnings;
+          streakKingEmail = u.email;
+        }
+      });
+
+      let finalBonus = streakBonus;
+      if (streakKingEmail === user.email && maxStreakEarnings > 0) {
+        finalBonus += 10; // Login streak king bonus!
+      }
+
       // Update user with new streak and bonus
       await base44.auth.updateMe({
         last_login_date: today,
         login_streak: newStreak,
-        coins: (user.coins || 0) + streakBonus,
-        total_login_streak_coins: (user.total_login_streak_coins || 0) + streakBonus
+        coins: (user.coins || 0) + finalBonus,
+        total_login_streak_coins: (user.total_login_streak_coins || 0) + finalBonus
       });
 
       // Update leaderboard entry if exists

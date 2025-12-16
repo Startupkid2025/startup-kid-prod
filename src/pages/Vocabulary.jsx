@@ -188,6 +188,26 @@ export default function Vocabulary() {
         let coinsEarned = 0;
         if (isMastered && !existingWordProg.mastered) {
           coinsEarned = getCoinsForDifficulty(currentWord.difficulty);
+          
+          // Check if user is vocab king and add bonus
+          const allUsers = await base44.entities.User.list();
+          const allWordProgress = await base44.entities.WordProgress.list();
+          
+          let maxVocabEarnings = 0;
+          let vocabKingEmail = null;
+          
+          allUsers.forEach(user => {
+            const userWords = allWordProgress.filter(w => w.student_email === user.email);
+            const earnings = userWords.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
+            if (earnings > maxVocabEarnings) {
+              maxVocabEarnings = earnings;
+              vocabKingEmail = user.email;
+            }
+          });
+          
+          if (vocabKingEmail === userData.email && maxVocabEarnings > 0) {
+            coinsEarned += 5; // Vocab king bonus!
+          }
 
           // הסר את המילה מהרשימה היומית
           const updatedDailyWords = (userData.daily_vocabulary_words || []).filter(

@@ -489,10 +489,29 @@ ${question} = ${correctAnswer}
       let coinsEarned = 0;
       if (isCorrect) {
         coinsEarned = MATH_COINS_PER_CORRECT_ANSWER;
-        const newCoins = (userData.coins || 0) + MATH_COINS_PER_CORRECT_ANSWER;
+        
+        // Check if user is math king and add bonus
+        const allUsers = await base44.entities.User.list();
+        let maxMathEarnings = 0;
+        let mathKingEmail = null;
+        
+        allUsers.forEach(user => {
+          const earnings = user.total_math_earnings || 0;
+          if (earnings > maxMathEarnings) {
+            maxMathEarnings = earnings;
+            mathKingEmail = user.email;
+          }
+        });
+        
+        if (mathKingEmail === userData.email && maxMathEarnings > 0) {
+          coinsEarned += 5; // Math king bonus!
+        }
+        
+        const newCoins = (userData.coins || 0) + coinsEarned;
         await base44.auth.updateMe({
           coins: newCoins,
-          daily_math_count: (userData.daily_math_count || 0) + 1
+          daily_math_count: (userData.daily_math_count || 0) + 1,
+          total_math_earnings: (userData.total_math_earnings || 0) + coinsEarned
         });
         setDailyCount(prev => prev + 1);
         
