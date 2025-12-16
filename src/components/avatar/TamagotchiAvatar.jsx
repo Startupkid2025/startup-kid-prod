@@ -468,16 +468,16 @@ export const AVATAR_ITEMS = {
     emoji: "🏢",
     category: "background",
     price: 400,
-    passiveIncome: 5,
-    description: "+5 מטבעות ליום (הכנסה פסיבית)"
+    passiveIncome: 10,
+    description: "+10 מטבעות ליום (הכנסה פסיבית)"
   },
   "background_villa": {
     name: "🏡 וילה",
     emoji: "🏡",
     category: "background",
     price: 700,
-    passiveIncome: 10,
-    description: "+10 מטבעות ליום (הכנסה פסיבית)"
+    passiveIncome: 20,
+    description: "+20 מטבעות ליום (הכנסה פסיבית)"
   },
   "background_penthouse": {
     name: "🏙️ פנטהאוז",
@@ -485,8 +485,8 @@ export const AVATAR_ITEMS = {
     category: "background",
     price: 1000,
     unlock: { type: "lessons", value: 8 },
-    passiveIncome: 15,
-    description: "+15 מטבעות ליום (הכנסה פסיבית)"
+    passiveIncome: 30,
+    description: "+30 מטבעות ליום (הכנסה פסיבית)"
   },
   "background_mansion": {
     name: "🏰 אחוזה",
@@ -494,8 +494,8 @@ export const AVATAR_ITEMS = {
     category: "background",
     price: 1500,
     unlock: { type: "lessons", value: 16 },
-    passiveIncome: 25,
-    description: "+25 מטבעות ליום (הכנסה פסיבית)"
+    passiveIncome: 50,
+    description: "+50 מטבעות ליום (הכנסה פסיבית)"
   },
   "background_island": {
     name: "🏝️ אי פרטי",
@@ -503,8 +503,8 @@ export const AVATAR_ITEMS = {
     category: "background",
     price: 2000,
     unlock: { type: "lessons", value: 24 },
-    passiveIncome: 35,
-    description: "+35 מטבעות ליום (הכנסה פסיבית)"
+    passiveIncome: 70,
+    description: "+70 מטבעות ליום (הכנסה פסיבית)"
   },
   "background_space": {
     name: "🚀 תחנת חלל",
@@ -512,8 +512,8 @@ export const AVATAR_ITEMS = {
     category: "background",
     price: 2500,
     unlock: { type: "lessons", value: 32 },
-    passiveIncome: 50,
-    description: "+50 מטבעות ליום (הכנסה פסיבית)"
+    passiveIncome: 100,
+    description: "+100 מטבעות ליום (הכנסה פסיבית)"
   },
   "background_universe": {
     name: "🌌 גלקסיה שלמה",
@@ -521,8 +521,8 @@ export const AVATAR_ITEMS = {
     category: "background",
     price: 3500,
     unlock: { type: "lessons", value: 40 },
-    passiveIncome: 75,
-    description: "+75 מטבעות ליום (הכנסה פסיבית)"
+    passiveIncome: 150,
+    description: "+150 מטבעות ליום (הכנסה פסיבית)"
   },
 
   // 6 תכשיטים - בונוסים מיוחדים
