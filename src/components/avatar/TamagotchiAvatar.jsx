@@ -88,7 +88,8 @@ export const AVATAR_ITEMS = {
     type: "sparkle",
     category: "eyes",
     price: 0,
-    description: "עיניים נוצצות בסיסיות - קוסמטי בלבד"
+    wordBonus: 1,
+    description: "+1 מטבע למילה נכונה באנגלית"
   },
   "eyes_determined": {
     name: "נחושות",
@@ -96,7 +97,8 @@ export const AVATAR_ITEMS = {
     type: "determined",
     category: "eyes",
     price: 300,
-    description: "מבט נחוש ומתוכנן - קוסמטי בלבד"
+    wordBonus: 2,
+    description: "+2 מטבעות למילה נכונה באנגלית"
   },
   "eyes_heart": {
     name: "לבבות",
@@ -104,7 +106,8 @@ export const AVATAR_ITEMS = {
     type: "heart",
     category: "eyes",
     price: 500,
-    description: "עיניים מאוהבות - קוסמטי בלבד"
+    wordBonus: 3,
+    description: "+3 מטבעות למילה נכונה באנגלית"
   },
   "eyes_star": {
     name: "כוכבים",
@@ -113,7 +116,8 @@ export const AVATAR_ITEMS = {
     category: "eyes",
     price: 700,
     unlock: { type: "lessons", value: 8 },
-    description: "עיני כוכב - קוסמטי בלבד"
+    wordBonus: 4,
+    description: "+4 מטבעות למילה נכונה באנגלית"
   },
   "eyes_cool": {
     name: "משקפי שמש",
@@ -163,7 +167,8 @@ export const AVATAR_ITEMS = {
     type: "smile",
     category: "mouth",
     price: 0,
-    description: "חיוך בסיסי - קוסמטי בלבד"
+    quizBonus: 1,
+    description: "+1 מטבע לחידון מושלם"
   },
   "mouth_happy": {
     name: "שמח מאוד",
@@ -171,7 +176,8 @@ export const AVATAR_ITEMS = {
     type: "happy",
     category: "mouth",
     price: 250,
-    description: "חיוך גדול ושמח - קוסמטי בלבד"
+    quizBonus: 2,
+    description: "+2 מטבעות לחידון מושלם"
   },
   "mouth_confident": {
     name: "ביטחון עצמי",
@@ -179,7 +185,8 @@ export const AVATAR_ITEMS = {
     type: "confident",
     category: "mouth",
     price: 400,
-    description: "חיוך בטוח במיוחד - קוסמטי בלבד"
+    quizBonus: 3,
+    description: "+3 מטבעות לחידון מושלם"
   },
   "mouth_cat": {
     name: "חתולי",
@@ -188,7 +195,8 @@ export const AVATAR_ITEMS = {
     category: "mouth",
     price: 550,
     unlock: { type: "lessons", value: 8 },
-    description: "פה של חתול חמוד - קוסמטי בלבד"
+    quizBonus: 4,
+    description: "+4 מטבעות לחידון מושלם"
   },
   "mouth_wink": {
     name: "קריצה",
@@ -197,7 +205,8 @@ export const AVATAR_ITEMS = {
     category: "mouth",
     price: 700,
     unlock: { type: "lessons", value: 16 },
-    description: "חיוך עם קריצה - קוסמטי בלבד"
+    quizBonus: 5,
+    description: "+5 מטבעות לחידון מושלם"
   },
   "mouth_laugh": {
     name: "צחוק גדול",
@@ -206,7 +215,8 @@ export const AVATAR_ITEMS = {
     category: "mouth",
     price: 900,
     unlock: { type: "lessons", value: 24 },
-    description: "צחוק מהלב - קוסמטי בלבד"
+    quizBonus: 7,
+    description: "+7 מטבעות לחידון מושלם"
   },
   "mouth_cool": {
     name: "מגניב",
@@ -215,7 +225,8 @@ export const AVATAR_ITEMS = {
     category: "mouth",
     price: 1100,
     unlock: { type: "lessons", value: 32 },
-    description: "פה מגניב במיוחד - קוסמטי בלבד"
+    quizBonus: 10,
+    description: "+10 מטבעות לחידון מושלם"
   },
   "mouth_boss": {
     name: "בוס",
@@ -224,7 +235,8 @@ export const AVATAR_ITEMS = {
     category: "mouth",
     price: 1500,
     unlock: { type: "lessons", value: 40 },
-    description: "הבעת פנים של בוס - קוסמטי בלבד"
+    quizBonus: 15,
+    description: "+15 מטבעות לחידון מושלם"
   },
 
   // 8 כובעים
