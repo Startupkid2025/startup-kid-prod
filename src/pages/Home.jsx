@@ -255,27 +255,27 @@ export default function Home() {
       let expectedIncomeTax = 0;
       let expectedCreditInterest = 0;
 
-      // Inflation: 1% on positive cash
+      // Inflation: 3% on positive cash
       if (currentCoins > 0) {
-        expectedInflation = Math.floor(currentCoins * 0.01);
+        expectedInflation = Math.floor(currentCoins * 0.03);
       }
 
-      // Income tax: 0.5% on total net worth (with body color reductions)
-      let incomeTaxRate = 0.005;
+      // Income tax: 2% on total net worth (with body color reductions)
+      let incomeTaxRate = 0.02;
       purchasedItems.forEach(itemId => {
         const item = AVATAR_ITEMS[itemId];
         if (item && item.category === 'body' && item.taxReduction) {
           incomeTaxRate = Math.max(0, incomeTaxRate - (item.taxReduction / 100));
         }
       });
-      
+
       const netWorthAfterInflation = (currentCoins - expectedInflation) + calculatedItemsValue + investmentsValue;
       expectedIncomeTax = Math.floor(netWorthAfterInflation * incomeTaxRate);
 
-      // Credit interest: 3% on negative balance
+      // Credit interest: 10% on negative balance
       const coinsAfterTaxes = currentCoins - expectedInflation - expectedIncomeTax;
       if (coinsAfterTaxes < 0) {
-        expectedCreditInterest = Math.floor(Math.abs(coinsAfterTaxes) * 0.03);
+        expectedCreditInterest = Math.floor(Math.abs(coinsAfterTaxes) * 0.10);
       }
 
       setExpectedDailyLosses({
