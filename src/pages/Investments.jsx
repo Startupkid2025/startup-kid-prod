@@ -391,8 +391,8 @@ export default function Investments() {
       }
     }
 
-    const grossProfit = amountAfterFee - totalInvestedSold;
-    const tax = grossProfit > 0 ? grossProfit * 0.25 : 0;
+    const investmentProfit = sellAmount - totalInvestedSold;
+    const tax = investmentProfit > 0 ? investmentProfit * 0.25 : 0;
     const netAmount = amountAfterFee - tax;
 
     setConfirmSellDialog({
