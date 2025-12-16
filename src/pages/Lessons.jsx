@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import LessonSurveyDialog from "../components/lessons/LessonSurveyDialog";
 import LessonQuizDialog from "../components/lessons/LessonQuizDialog";
 import VideoPlayerDialog from "../components/lessons/VideoPlayerDialog";
+import NextLessonTimer from "../components/home/NextLessonTimer";
 
 export default function Lessons() {
   const [lessons, setLessons] = useState([]);
@@ -20,6 +21,8 @@ export default function Lessons() {
   const [surveyParticipation, setSurveyParticipation] = useState(null);
   const [quizLesson, setQuizLesson] = useState(null);
   const [videoLesson, setVideoLesson] = useState(null);
+  const [userGroup, setUserGroup] = useState(null);
+  const [nextLesson, setNextLesson] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -155,6 +158,35 @@ export default function Lessons() {
       setParticipations(myParticipations);
       setQuizProgress(myQuizProgress);
       setQuizQuestions(allQuizQuestions);
+
+      // Load group and next lesson
+      try {
+        const allGroups = await base44.entities.Group.list();
+        const myGroup = allGroups.find(g => g.student_emails?.includes(user.email));
+
+        if (myGroup) {
+          setUserGroup(myGroup);
+
+          if (myGroup.next_lesson_id) {
+            try {
+              const lesson = await base44.entities.Lesson.get(myGroup.next_lesson_id);
+              setNextLesson(lesson);
+            } catch (lessonError) {
+              console.log("Next lesson not found or deleted");
+              setNextLesson(null);
+            }
+          } else {
+            setNextLesson(null);
+          }
+        } else {
+          setUserGroup(null);
+          setNextLesson(null);
+        }
+      } catch (groupError) {
+        console.error("Error loading group info:", groupError);
+        setUserGroup(null);
+        setNextLesson(null);
+      }
     } catch (error) {
       console.error("Error in loadData:", error);
       toast.error("שגיאה בטעינת הנתונים");
@@ -249,6 +281,11 @@ export default function Lessons() {
 
   return (
     <div className="px-4 py-8 max-w-6xl mx-auto">
+      {/* Next Lesson Timer */}
+      {userGroup && (
+        <NextLessonTimer group={userGroup} lesson={nextLesson} />
+      )}
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
