@@ -197,22 +197,29 @@ export default function Leaderboard() {
       const loginStreakKing = [...usersWithAllStats].sort((a, b) => b.loginStreakEarnings - a.loginStreakEarnings)[0];
       const workKing = [...usersWithAllStats].sort((a, b) => b.workEarnings - a.workEarnings)[0];
 
+      // Debug: Log kings
+      console.log('Math King:', mathKing?.student_email, 'Earnings:', mathKing?.mathEarnings);
+      console.log('Vocab King:', vocabKing?.student_email, 'Earnings:', vocabKing?.vocabEarnings);
+      console.log('Investment King:', investmentKing?.student_email, 'Value:', investmentKing?.currentInvestmentValue);
+      console.log('Login Streak King:', loginStreakKing?.student_email, 'Earnings:', loginStreakKing?.loginStreakEarnings);
+      console.log('Work King:', workKing?.student_email, 'Earnings:', workKing?.workEarnings);
+
       // Add crown flags to users
       usersWithAllStats.forEach(u => {
         u.crowns = [];
-        if (mathKing && u.student_email === mathKing.student_email && u.mathEarnings > 0) {
+        if (mathKing && u.student_email === mathKing.student_email && mathKing.mathEarnings > 0) {
           u.crowns.push({ type: 'math', name: '🔢 מלך החשבון', bonus: '+5 מטבעות לתרגיל' });
         }
-        if (vocabKing && u.student_email === vocabKing.student_email && u.vocabEarnings > 0) {
+        if (vocabKing && u.student_email === vocabKing.student_email && vocabKing.vocabEarnings > 0) {
           u.crowns.push({ type: 'vocab', name: '📚 מלך האנגלית', bonus: '+5 מטבעות למילה' });
         }
-        if (investmentKing && u.student_email === investmentKing.student_email && u.currentInvestmentValue > 0) {
+        if (investmentKing && u.student_email === investmentKing.student_email && investmentKing.currentInvestmentValue > 0) {
           u.crowns.push({ type: 'investment', name: '💼 מלך ההשקעות', bonus: '+0.1% תשואה יומית' });
         }
-        if (loginStreakKing && u.student_email === loginStreakKing.student_email && u.loginStreakEarnings > 0) {
+        if (loginStreakKing && u.student_email === loginStreakKing.student_email && loginStreakKing.loginStreakEarnings > 0) {
           u.crowns.push({ type: 'login', name: '🔥 מלך הרצף', bonus: 'פי 2 על בונוס הרצף' });
         }
-        if (workKing && u.student_email === workKing.student_email && u.workEarnings > 0) {
+        if (workKing && u.student_email === workKing.student_email && workKing.workEarnings > 0) {
           u.crowns.push({ type: 'work', name: '💪 מלך העבודה', bonus: '+5 מטבעות לשעה' });
         }
       });
