@@ -465,9 +465,9 @@ export default function Investments() {
         await base44.entities.Investment.delete(id);
       }
 
-      const grossProfit = amountAfterFee - totalInvestedSold;
-      const capitalGainsTax = grossProfit > 0 ? grossProfit * 0.25 : 0;
-      const netProfit = grossProfit - capitalGainsTax;
+      const investmentProfit = sellAmount - totalInvestedSold;
+      const amountAfterFee = sellAmount - TRANSACTION_FEE;
+      const capitalGainsTax = investmentProfit > 0 ? investmentProfit * 0.25 : 0;
       const netAmount = amountAfterFee - capitalGainsTax;
       const newCoins = userData.coins + Math.round(netAmount);
 
@@ -475,7 +475,7 @@ export default function Investments() {
         coins: newCoins,
         total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE,
         total_capital_gains_tax: (userData.total_capital_gains_tax || 0) + Math.round(capitalGainsTax),
-        total_realized_investment_profit: (userData.total_realized_investment_profit || 0) + Math.round(grossProfit)
+        total_realized_investment_profit: (userData.total_realized_investment_profit || 0) + Math.round(investmentProfit)
       });
 
       try {
@@ -735,8 +735,8 @@ export default function Investments() {
                            const afterFee = sellValue - TRANSACTION_FEE;
                            const percentToSell = sellValue / totalValueInBusiness;
                            const investedPortion = totalInvestedInBusiness * percentToSell;
-                           const grossProfit = afterFee - investedPortion;
-                           const tax = grossProfit > 0 ? grossProfit * 0.25 : 0;
+                           const investmentProfit = sellValue - investedPortion;
+                           const tax = investmentProfit > 0 ? investmentProfit * 0.25 : 0;
                            const netAmount = afterFee - tax;
                             
                             return (
