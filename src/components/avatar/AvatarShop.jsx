@@ -241,9 +241,10 @@ export default function AvatarShop({
                             <span>-{item.taxReduction}% מס</span>
                           </div>
                         )}
-                        {item.xpBonus > 0 && item.isUnlocked && (
+                        {item.mathBonus > 0 && item.isUnlocked && (
                           <div className="absolute top-1 left-1 bg-black/80 text-blue-300 text-[10px] px-2 py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-blue-400/50">
-                            <span>+{item.xpBonus}% XP</span>
+                            <Coins className="w-2.5 h-2.5" />
+                            <span>+{item.mathBonus} חשבון</span>
                           </div>
                         )}
                         {item.inflationProtection > 0 && item.isUnlocked && (
@@ -359,9 +360,10 @@ export default function AvatarShop({
                             <span>-{item.taxReduction}% מס</span>
                           </div>
                         )}
-                        {item.xpBonus > 0 && (
+                        {item.mathBonus > 0 && (
                           <div className="absolute top-1 left-1 bg-gradient-to-r from-blue-400 to-cyan-500 text-white text-[10px] px-2 py-1 rounded-full font-black shadow-lg z-10 flex items-center gap-0.5">
-                            <span>+{item.xpBonus}% XP</span>
+                            <Coins className="w-2.5 h-2.5" />
+                            <span>+{item.mathBonus}</span>
                           </div>
                         )}
                         {item.inflationProtection > 0 && (

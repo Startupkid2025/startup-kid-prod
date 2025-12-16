@@ -347,13 +347,13 @@ export const AVATAR_ITEMS = {
     description: "+35 מטבעות/שעה"
   },
 
-  // 8 נעליים - בונוס XP לשיעורים
+  // 8 נעליים - בונוס מטבעות לתרגילי חשבון
   "shoes_sneakers": {
     name: "👟 נעלי ספורט",
     emoji: "👟",
     category: "shoes",
     price: 0,
-    xpBonus: 0,
+    mathBonus: 0,
     description: "ללא בונוס"
   },
   "shoes_running": {
@@ -361,16 +361,16 @@ export const AVATAR_ITEMS = {
     emoji: "🏃",
     category: "shoes",
     price: 350,
-    xpBonus: 5,
-    description: "+5% XP בשיעורים"
+    mathBonus: 1,
+    description: "+1 מטבע לתרגיל חשבון"
   },
   "shoes_boots": {
     name: "🥾 מגפיים",
     emoji: "🥾",
     category: "shoes",
     price: 500,
-    xpBonus: 10,
-    description: "+10% XP בשיעורים"
+    mathBonus: 2,
+    description: "+2 מטבעות לתרגיל חשבון"
   },
   "shoes_heels": {
     name: "👠 עקבים",
@@ -378,8 +378,8 @@ export const AVATAR_ITEMS = {
     category: "shoes",
     price: 700,
     unlock: { type: "lessons", value: 8 },
-    xpBonus: 15,
-    description: "+15% XP בשיעורים"
+    mathBonus: 3,
+    description: "+3 מטבעות לתרגיל חשבון"
   },
   "shoes_dress": {
     name: "👞 נעלי אלגנט",
@@ -387,8 +387,8 @@ export const AVATAR_ITEMS = {
     category: "shoes",
     price: 1000,
     unlock: { type: "lessons", value: 16 },
-    xpBonus: 20,
-    description: "+20% XP בשיעורים"
+    mathBonus: 4,
+    description: "+4 מטבעות לתרגיל חשבון"
   },
   "shoes_rocket": {
     name: "🚀 נעלי רקטה",
@@ -396,8 +396,8 @@ export const AVATAR_ITEMS = {
     category: "shoes",
     price: 1400,
     unlock: { type: "lessons", value: 24 },
-    xpBonus: 25,
-    description: "+25% XP בשיעורים"
+    mathBonus: 5,
+    description: "+5 מטבעות לתרגיל חשבון"
   },
   "shoes_fire": {
     name: "🔥 נעלי אש",
@@ -405,8 +405,8 @@ export const AVATAR_ITEMS = {
     category: "shoes",
     price: 1800,
     unlock: { type: "lessons", value: 32 },
-    xpBonus: 30,
-    description: "+30% XP בשיעורים"
+    mathBonus: 7,
+    description: "+7 מטבעות לתרגיל חשבון"
   },
   "shoes_diamond": {
     name: "💎 נעלי יהלום",
@@ -414,8 +414,8 @@ export const AVATAR_ITEMS = {
     category: "shoes",
     price: 2500,
     unlock: { type: "lessons", value: 40 },
-    xpBonus: 40,
-    description: "+40% XP בשיעורים"
+    mathBonus: 10,
+    description: "+10 מטבעות לתרגיל חשבון"
   },
 
   // 8 רקעים - הפחתת אינפלציה
