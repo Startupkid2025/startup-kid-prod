@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Coins, ShoppingCart, Check, Lock } from "lucide-react";
 import { AVATAR_ITEMS } from "./TamagotchiAvatar";
 import TamagotchiAvatar from "./TamagotchiAvatar";
@@ -210,19 +211,22 @@ export default function AvatarShop({
 
           {/* Shop Tab */}
           <TabsContent value="shop">
-            <div className="mt-3 max-h-[300px] overflow-y-auto px-1">
-              <div className="grid grid-cols-4 gap-2">
-                <AnimatePresence>
-                  {unpurchasedItemsInCategory.map((item) => (
-                    <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                    >
-                      <div className={`relative p-2 rounded-lg border-2 ${
-                        item.isUnlocked ? 'border-purple-300/50 bg-white/10' : 'border-gray-500 bg-gray-800/50'
-                      }`}>
+            <TooltipProvider>
+              <div className="mt-3 max-h-[300px] overflow-y-auto px-1">
+                <div className="grid grid-cols-4 gap-2">
+                  <AnimatePresence>
+                    {unpurchasedItemsInCategory.map((item) => (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                      >
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className={`relative p-2 rounded-lg border-2 ${
+                              item.isUnlocked ? 'border-purple-300/50 bg-white/10' : 'border-gray-500 bg-gray-800/50'
+                            }`}>
                         {!item.isUnlocked && (
                           <div className="absolute top-1 right-1 bg-gray-800 text-white rounded-full p-0.5 z-10">
                             <Lock className="w-4 h-4" />
@@ -301,36 +305,46 @@ export default function AvatarShop({
                             {item.price}
                           </Button>
                         )}
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="bg-black/90 text-white border-purple-400/50">
+                            <p className="font-bold">{item.name}</p>
+                            {item.description && <p className="text-xs text-white/80">{item.description}</p>}
+                          </TooltipContent>
+                        </Tooltip>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
 
-              {unpurchasedItemsInCategory.length === 0 && (
+                {unpurchasedItemsInCategory.length === 0 && (
                 <div className="text-center py-8">
                   <div className="text-4xl mb-2">🎉</div>
                   <p className="text-white font-medium text-base">
                     רכשת את כל הפריטים!
                   </p>
-                </div>
-              )}
-            </div>
+                  </div>
+                )}
+              </div>
+            </TooltipProvider>
           </TabsContent>
 
           {/* Wardrobe Tab */}
           <TabsContent value="wardrobe">
-            <div className="mt-3 max-h-[300px] overflow-y-auto px-1">
-              <div className="grid grid-cols-4 gap-2">
-                <AnimatePresence>
-                  {purchasedItemsInCategory.map((item) => (
-                    <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                    >
-                      <button
+            <TooltipProvider>
+              <div className="mt-3 max-h-[300px] overflow-y-auto px-1">
+                <div className="grid grid-cols-4 gap-2">
+                  <AnimatePresence>
+                    {purchasedItemsInCategory.map((item) => (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                      >
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
                         onClick={() => handleEquip(selectedCategory, item.id)}
                         className={`relative w-full p-2 rounded-lg border-2 transition-all ${
                           item.isEquipped
@@ -392,24 +406,31 @@ export default function AvatarShop({
                           </div>
                         )}
 
-                        <p className="font-bold text-sm text-white text-center line-clamp-2 min-h-[28px]">
-                          {item.name}
-                        </p>
-                      </button>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
+                              <p className="font-bold text-sm text-white text-center line-clamp-2 min-h-[28px]">
+                                {item.name}
+                              </p>
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="bg-black/90 text-white border-purple-400/50">
+                            <p className="font-bold">{item.name}</p>
+                            {item.description && <p className="text-xs text-white/80">{item.description}</p>}
+                          </TooltipContent>
+                        </Tooltip>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
 
-              {purchasedItemsInCategory.length === 0 && (
+                {purchasedItemsInCategory.length === 0 && (
                 <div className="text-center py-8">
                   <div className="text-4xl mb-2">🛒</div>
                   <p className="text-white/70 text-base">
                     עדיין לא רכשת פריטים בקטגוריה זו
                   </p>
-                </div>
-              )}
-            </div>
+                  </div>
+                )}
+              </div>
+            </TooltipProvider>
           </TabsContent>
         </Tabs>
 
