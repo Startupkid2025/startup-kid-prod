@@ -306,7 +306,19 @@ export default function Admin() {
       // Always show summary in console
       report.forEach(r => {
         console.log(`\n👤 ${r.name} (${r.email})`);
-        console.log(`  💰 INCOME: ${Math.round(r.totalIncome)} (inc. ${Math.round(r.totalInvestmentProfit)} inv profit: ${Math.round(r.unrealizedProfit)} unrealized + ${Math.round(r.realizedProfit)} realized)`);
+        console.log(`  💰 INCOME: ${Math.round(r.totalIncome)}`);
+        console.log(`     🎯 Base: ${Math.round(r.baseCoins)}`);
+        console.log(`     📚 Lessons: ${Math.round(r.lessonsCoins)} (${r.attendedCount} lessons)`);
+        console.log(`     🔤 Vocabulary: ${Math.round(r.wordCoins)}`);
+        console.log(`     🔢 Math: ${Math.round(r.mathCoins)}`);
+        console.log(`     📝 Surveys: ${Math.round(r.surveyCoins)}`);
+        console.log(`     ❓ Quizzes: ${Math.round(r.quizCoins)}`);
+        console.log(`     ✅ Profile Tasks: ${Math.round(r.profileTasksCoins)}`);
+        console.log(`     👤 Profile Details: ${Math.round(r.profileDetailsCoins)}`);
+        console.log(`     💼 Work: ${Math.round(r.workCoins)}`);
+        console.log(`     🤝 Collaboration: ${Math.round(r.collaborationCoins)}`);
+        console.log(`     🔥 Login Streak: ${Math.round(r.loginStreakCoins)}`);
+        console.log(`     📈 Investment Profits: ${Math.round(r.totalInvestmentProfit)} (unrealized: ${Math.round(r.unrealizedProfit)}, realized: ${Math.round(r.realizedProfit)})`);
         console.log(`  💎 ASSETS: ${Math.round(r.totalAssets)} (Cash: ${Math.round(r.correctCoins)}${r.coinsWereUpdated ? ' ✅' : ''}, Items: ${Math.round(r.itemsValue)}, Inv: ${Math.round(r.investmentsValue)})`);
         console.log(`  📉 LOSSES: ${Math.round(r.totalLosses)} (Inflation: ${Math.round(r.inflationLoss)}, Income Tax: ${Math.round(r.incomeTax)}, Capital Gains: ${Math.round(r.capitalGainsTax)}, Credit: ${Math.round(r.creditInterest)}, Fees: ${Math.round(r.investmentFees)}${r.feesWereUpdated ? ' ✅' : ''})`);
         if (Math.abs(r.coinsDiff) >= 1) {
