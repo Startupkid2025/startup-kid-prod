@@ -115,7 +115,7 @@ export default function Investments() {
       low: { min: -3, max: 5 },
       optimal_medium: { min: -4, max: 10 },
       high: { min: -12, max: 15 },
-      extreme: { min: -15, max: 20 }
+      extreme: { min: -25, max: 20 }
     };
 
     const range = ranges[volatility];
