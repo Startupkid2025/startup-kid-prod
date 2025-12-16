@@ -162,19 +162,17 @@ export default function Admin() {
         const loginStreakCoins = user.total_login_streak_coins || 0;
         breakdown.loginStreakCoins = loginStreakCoins;
 
-        // רווחי השקעות
+        // רווחי השקעות - לא צריך להוסיף להכנסות! הם כבר מוגלמים בנכסים
         const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
         const totalInvested = userInvestments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
         const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-        const investmentProfits = Math.max(0, investmentsValue - totalInvested);
-        breakdown.investmentProfits = investmentProfits;
         breakdown.totalInvested = totalInvested;
         breakdown.investmentsValue = investmentsValue;
 
         const totalIncome = baseCoins + lessonsCoins + wordCoins + mathCoins + 
                            surveyCoins + quizCoins + profileTasksCoins + 
                            profileDetailsCoins + workCoins + collaborationCoins + 
-                           loginStreakCoins + investmentProfits;
+                           loginStreakCoins;
         breakdown.totalIncome = totalIncome;
 
         // ═══════════════════════════════════════════════════
@@ -211,9 +209,6 @@ export default function Admin() {
         const creditInterest = user.total_credit_interest || 0;
         breakdown.creditInterest = creditInterest;
 
-        const investmentLoss = Math.max(0, totalInvested - investmentsValue);
-        breakdown.investmentLoss = investmentLoss;
-
         const itemSaleLosses = user.total_item_sale_losses || 0;
         breakdown.itemSaleLosses = itemSaleLosses;
 
@@ -233,7 +228,7 @@ export default function Admin() {
         
         breakdown.investmentFees = investmentFees;
 
-        const totalLosses = inflationLoss + incomeTax + capitalGainsTax + creditInterest + investmentLoss + itemSaleLosses + investmentFees;
+        const totalLosses = inflationLoss + incomeTax + capitalGainsTax + creditInterest + itemSaleLosses + investmentFees;
         breakdown.totalLosses = totalLosses;
 
         // ═══════════════════════════════════════════════════
@@ -306,7 +301,7 @@ export default function Admin() {
         console.log(`\n👤 ${r.name} (${r.email})`);
         console.log(`  💰 INCOME: ${Math.round(r.totalIncome)}`);
         console.log(`  💎 ASSETS: ${Math.round(r.totalAssets)} (Cash: ${Math.round(r.correctCoins)}${r.coinsWereUpdated ? ' ✅' : ''}, Items: ${Math.round(r.itemsValue)}, Inv: ${Math.round(r.investmentsValue)})`);
-        console.log(`  📉 LOSSES: ${Math.round(r.totalLosses)} (Inflation: ${Math.round(r.inflationLoss)}, Income Tax: ${Math.round(r.incomeTax)}, Capital Gains: ${Math.round(r.capitalGainsTax)}, Credit: ${Math.round(r.creditInterest)}, Inv Loss: ${Math.round(r.investmentLoss)}, Fees: ${Math.round(r.investmentFees)}${r.feesWereUpdated ? ' ✅' : ''})`);
+        console.log(`  📉 LOSSES: ${Math.round(r.totalLosses)} (Inflation: ${Math.round(r.inflationLoss)}, Income Tax: ${Math.round(r.incomeTax)}, Capital Gains: ${Math.round(r.capitalGainsTax)}, Credit: ${Math.round(r.creditInterest)}, Fees: ${Math.round(r.investmentFees)}${r.feesWereUpdated ? ' ✅' : ''})`);
         if (Math.abs(r.coinsDiff) >= 1) {
           console.log(`  🔧 FIX: ${Math.round(r.oldCoins)} → ${Math.round(r.correctCoins)} (${r.coinsDiff >= 0 ? '+' : ''}${Math.round(r.coinsDiff)})`);
         }
