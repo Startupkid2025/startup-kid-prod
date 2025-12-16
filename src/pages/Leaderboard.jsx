@@ -130,16 +130,20 @@ export default function Leaderboard() {
           w => w.student_email === u.student_email && w.mastered
         ).length;
 
-        // Get last login date and total_lessons from User entity (real source of truth)
+        // Get actual data from User entity (real source of truth)
         const userRecord = allUsers.find(usr => usr.email === u.student_email);
         const last_login_date = userRecord?.last_login_date;
         const actualTotalLessons = userRecord?.total_lessons || u.total_lessons || 0;
+        const actualAiTechLevel = userRecord?.ai_tech_level || u.ai_tech_level || 1;
+        const actualPersonalDevLevel = userRecord?.personal_dev_level || u.personal_dev_level || 1;
+        const actualSocialSkillsLevel = userRecord?.social_skills_level || u.social_skills_level || 1;
+        const actualMoneyBusinessLevel = userRecord?.money_business_level || u.money_business_level || 1;
 
         const averageLevel = Math.round(
-          ((u.ai_tech_level || 1) +
-          (u.personal_dev_level || 1) +
-          (u.social_skills_level || 1) +
-          (u.money_business_level || 1)) / 4
+          (actualAiTechLevel +
+          actualPersonalDevLevel +
+          actualSocialSkillsLevel +
+          actualMoneyBusinessLevel) / 4
         );
 
         // Calculate net worth including investments (NO pending taxes!)
@@ -161,7 +165,11 @@ export default function Leaderboard() {
           totalValue,
           totalXP,
           last_login_date,
-          total_lessons: actualTotalLessons
+          total_lessons: actualTotalLessons,
+          ai_tech_level: actualAiTechLevel,
+          personal_dev_level: actualPersonalDevLevel,
+          social_skills_level: actualSocialSkillsLevel,
+          money_business_level: actualMoneyBusinessLevel
         };
       });
 
