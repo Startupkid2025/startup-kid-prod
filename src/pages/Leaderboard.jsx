@@ -162,10 +162,10 @@ export default function Leaderboard() {
         const userWordProgress = allWordProgress.filter(w => w.student_email === u.student_email);
         const vocabEarnings = userWordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
         
-        const mathEarnings = userRecord?.total_math_earnings || 0;
+        const mathEarnings = userRecord?.total_math_earnings || u.total_math_earnings || 0;
         const currentInvestmentValue = investmentsValue; // Already calculated above
-        const loginStreakEarnings = userRecord?.total_login_streak_coins || 0;
-        const workEarnings = userRecord?.total_work_earnings || 0;
+        const loginStreakEarnings = userRecord?.total_login_streak_coins || u.total_login_streak_coins || 0;
+        const workEarnings = userRecord?.total_work_earnings || u.total_work_earnings || 0;
 
         return {
           ...u,
