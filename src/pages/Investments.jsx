@@ -468,7 +468,26 @@ export default function Investments() {
       const investmentProfit = sellAmount - totalInvestedSold;
       const amountAfterFee = sellAmount - TRANSACTION_FEE;
       const capitalGainsTax = investmentProfit > 0 ? investmentProfit * 0.25 : 0;
-      const netAmount = amountAfterFee - capitalGainsTax;
+
+      // Check if user is investment king and add bonus
+      const allUsers = await base44.entities.User.list();
+      let maxInvestmentEarnings = 0;
+      let investmentKingEmail = null;
+
+      allUsers.forEach(user => {
+        const earnings = user.total_realized_investment_profit || 0;
+        if (earnings > maxInvestmentEarnings) {
+          maxInvestmentEarnings = earnings;
+          investmentKingEmail = user.email;
+        }
+      });
+
+      let kingBonus = 0;
+      if (investmentKingEmail === userData.email && maxInvestmentEarnings > 0 && investmentProfit > 0) {
+        kingBonus = Math.round(investmentProfit * 0.10); // Investment king gets 10% bonus on profits!
+      }
+
+      const netAmount = amountAfterFee - capitalGainsTax + kingBonus;
       const newCoins = userData.coins + Math.round(netAmount);
 
       await base44.auth.updateMe({ 

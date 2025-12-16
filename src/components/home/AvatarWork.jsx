@@ -164,7 +164,25 @@ export default function AvatarWork({ userData, onWorkComplete }) {
   const completeWork = async () => {
     if (!workStatus) return;
 
-    const coinsToAdd = workStatus.coinsToEarn;
+    let coinsToAdd = workStatus.coinsToEarn;
+    
+    // Check if user is work king and add bonus
+    const allUsers = await base44.entities.User.list();
+    let maxWorkEarnings = 0;
+    let workKingEmail = null;
+    
+    allUsers.forEach(user => {
+      const earnings = user.total_work_earnings || 0;
+      if (earnings > maxWorkEarnings) {
+        maxWorkEarnings = earnings;
+        workKingEmail = user.email;
+      }
+    });
+    
+    if (workKingEmail === userData.email && maxWorkEarnings > 0) {
+      coinsToAdd += 5; // Work king bonus!
+    }
+    
     const totalWorkEarnings = (userData.total_work_earnings || 0) + coinsToAdd;
 
     await base44.auth.updateMe({
