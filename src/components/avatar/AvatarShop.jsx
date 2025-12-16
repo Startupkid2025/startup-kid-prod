@@ -150,27 +150,29 @@ export default function AvatarShop({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 border-4 border-yellow-400/50 max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl">
+      <DialogContent className="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 border-4 border-yellow-400/50 max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl sm:p-6 p-3">
         <DialogHeader>
           <div className="flex items-center justify-between mb-2">
-            <DialogTitle className="text-2xl font-black text-white">
+            <DialogTitle className="text-xl sm:text-2xl font-black text-white">
               🛍️ חנות היזמים
             </DialogTitle>
-            <div className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full shadow-xl border-2 border-white/30">
-              <Coins className="w-5 h-5" />
-              <span className="text-lg font-black">{currentCoins}</span>
+            <div className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-xl border-2 border-white/30">
+              <Coins className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-base sm:text-lg font-black">{currentCoins}</span>
             </div>
           </div>
         </DialogHeader>
 
         {/* Preview Avatar */}
-        <div className="flex justify-center py-2">
-          <TamagotchiAvatar 
-            equippedItems={equippedItems} 
-            size="medium"
-            showBackground={true}
-            userEmail={userData?.email}
-          />
+        <div className="flex justify-center py-1 sm:py-2">
+          <div className="scale-75 sm:scale-100">
+            <TamagotchiAvatar 
+              equippedItems={equippedItems} 
+              size="medium"
+              showBackground={true}
+              userEmail={userData?.email}
+            />
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-2">
@@ -212,8 +214,8 @@ export default function AvatarShop({
           {/* Shop Tab */}
           <TabsContent value="shop">
             <TooltipProvider>
-              <div className="mt-3 max-h-[300px] overflow-y-auto px-1">
-                <div className="grid grid-cols-4 gap-2">
+              <div className="mt-2 sm:mt-3 max-h-[300px] overflow-y-auto px-1">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <AnimatePresence>
                     {unpurchasedItemsInCategory.map((item) => (
                       <motion.div
@@ -235,41 +237,47 @@ export default function AvatarShop({
 
                         {/* Bonus Badges - Top Left */}
                         {item.hourlyBonus > 0 && item.isUnlocked && (
-                          <div className="absolute top-1 left-1 bg-black/80 text-yellow-300 text-[10px] px-2 py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-yellow-400/50">
-                            <Coins className="w-2.5 h-2.5" />
-                            <span>+{item.hourlyBonus}/ש</span>
+                          <div className="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 bg-black/80 text-yellow-300 text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 sm:py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-yellow-400/50">
+                            <Coins className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                            <span className="hidden sm:inline">+{item.hourlyBonus}/ש</span>
+                            <span className="sm:hidden">+{item.hourlyBonus}</span>
                           </div>
                         )}
                         {item.taxReduction > 0 && item.isUnlocked && (
-                          <div className="absolute top-1 left-1 bg-black/80 text-green-300 text-[10px] px-2 py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-green-400/50">
-                            <span>-{item.taxReduction}% מס</span>
+                          <div className="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 bg-black/80 text-green-300 text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 sm:py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-green-400/50">
+                            <span className="hidden sm:inline">-{item.taxReduction}% מס</span>
+                            <span className="sm:hidden">-{item.taxReduction}%</span>
                           </div>
                         )}
                         {item.mathBonus > 0 && item.isUnlocked && (
-                          <div className="absolute top-1 left-1 bg-black/80 text-blue-300 text-[10px] px-2 py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-blue-400/50">
-                            <Coins className="w-2.5 h-2.5" />
-                            <span>+{item.mathBonus} חשבון</span>
+                          <div className="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 bg-black/80 text-blue-300 text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 sm:py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-blue-400/50">
+                            <Coins className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                            <span className="hidden sm:inline">+{item.mathBonus} חשבון</span>
+                            <span className="sm:hidden">+{item.mathBonus}</span>
                           </div>
                         )}
                         {item.wordBonus > 0 && item.isUnlocked && (
-                          <div className="absolute top-1 left-1 bg-black/80 text-green-300 text-[10px] px-2 py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-green-400/50">
-                            <Coins className="w-2.5 h-2.5" />
-                            <span>+{item.wordBonus} אנגלית</span>
+                          <div className="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 bg-black/80 text-green-300 text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 sm:py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-green-400/50">
+                            <Coins className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                            <span className="hidden sm:inline">+{item.wordBonus} אנגלית</span>
+                            <span className="sm:hidden">+{item.wordBonus}</span>
                           </div>
                         )}
                         {item.quizBonus > 0 && item.isUnlocked && (
-                          <div className="absolute top-1 left-1 bg-black/80 text-orange-300 text-[10px] px-2 py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-orange-400/50">
-                            <Coins className="w-2.5 h-2.5" />
-                            <span>+{item.quizBonus} חידון</span>
+                          <div className="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 bg-black/80 text-orange-300 text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 sm:py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-orange-400/50">
+                            <Coins className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                            <span className="hidden sm:inline">+{item.quizBonus} חידון</span>
+                            <span className="sm:hidden">+{item.quizBonus}</span>
                           </div>
                         )}
                         {item.inflationProtection > 0 && item.isUnlocked && (
-                          <div className="absolute top-1 left-1 bg-black/80 text-purple-300 text-[10px] px-2 py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-purple-400/50">
-                            <span>-{item.inflationProtection}% 📉</span>
+                          <div className="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 bg-black/80 text-purple-300 text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 sm:py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-purple-400/50">
+                            <span className="hidden sm:inline">-{item.inflationProtection}% 📉</span>
+                            <span className="sm:hidden">-{item.inflationProtection}%</span>
                           </div>
                         )}
                         {item.specialBonus && item.isUnlocked && (
-                          <div className="absolute top-1 left-1 bg-black/80 text-pink-300 text-[10px] px-2 py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-pink-400/50">
+                          <div className="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 bg-black/80 text-pink-300 text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 sm:py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-pink-400/50">
                             <span>✨</span>
                           </div>
                         )}
@@ -277,7 +285,7 @@ export default function AvatarShop({
                         {/* Preview - Show actual item */}
                         {item.category === "body" ? (
                           <div 
-                            className={`mb-2 h-20 rounded-full border-2 border-white/30 ${
+                            className={`mb-1 sm:mb-2 h-16 sm:h-20 rounded-full border-2 border-white/30 ${
                               !item.isUnlocked ? 'opacity-40 grayscale' : ''
                             }`}
                             style={{ 
@@ -286,14 +294,14 @@ export default function AvatarShop({
                             }}
                           />
                         ) : (
-                          <div className={`mb-2 h-20 flex items-center justify-center text-4xl ${
+                          <div className={`mb-1 sm:mb-2 h-16 sm:h-20 flex items-center justify-center text-3xl sm:text-4xl ${
                             !item.isUnlocked ? 'opacity-40 grayscale' : ''
                           }`}>
                             {item.emoji || "🎨"}
                           </div>
                         )}
 
-                        <p className={`font-bold text-sm mb-1.5 text-center line-clamp-2 min-h-[28px] ${
+                        <p className={`font-bold text-xs sm:text-sm mb-1 sm:mb-1.5 text-center line-clamp-2 min-h-[20px] sm:min-h-[28px] ${
                           item.isUnlocked ? 'text-white' : 'text-gray-400'
                         }`}>
                           {item.name}
@@ -307,13 +315,13 @@ export default function AvatarShop({
                           <Button
                             onClick={() => handlePurchase(item.id)}
                             disabled={!item.canAfford}
-                            className={`w-full text-sm py-2 h-auto ${
+                            className={`w-full text-xs sm:text-sm py-1.5 sm:py-2 h-auto ${
                               item.canAfford
                                 ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
                                 : 'bg-gray-600 cursor-not-allowed opacity-50'
                             } text-white font-bold`}
                           >
-                            <Coins className="w-4 h-4 mr-1" />
+                            <Coins className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                             {item.price}
                           </Button>
                         )}
@@ -344,8 +352,8 @@ export default function AvatarShop({
           {/* Wardrobe Tab */}
           <TabsContent value="wardrobe">
             <TooltipProvider>
-              <div className="mt-3 max-h-[300px] overflow-y-auto px-1">
-                <div className="grid grid-cols-4 gap-2">
+              <div className="mt-2 sm:mt-3 max-h-[300px] overflow-y-auto px-1">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <AnimatePresence>
                     {purchasedItemsInCategory.map((item) => (
                       <motion.div
@@ -418,19 +426,19 @@ export default function AvatarShop({
                         {/* Preview - Show actual item */}
                         {item.category === "body" ? (
                           <div 
-                            className="mb-2 h-20 rounded-full border-2 border-white/30"
+                            className="mb-1 sm:mb-2 h-16 sm:h-20 rounded-full border-2 border-white/30"
                             style={{ 
                               background: item.color.includes('gradient') ? item.color : item.color,
                               boxShadow: `0 0 20px ${item.color}50`
                             }}
                           />
                         ) : (
-                          <div className="mb-2 h-20 flex items-center justify-center text-4xl">
+                          <div className="mb-1 sm:mb-2 h-16 sm:h-20 flex items-center justify-center text-3xl sm:text-4xl">
                             {item.emoji || "🎨"}
                           </div>
                         )}
 
-                              <p className="font-bold text-sm text-white text-center line-clamp-2 min-h-[28px]">
+                              <p className="font-bold text-xs sm:text-sm text-white text-center line-clamp-2 min-h-[20px] sm:min-h-[28px]">
                                 {item.name}
                               </p>
                             </button>
