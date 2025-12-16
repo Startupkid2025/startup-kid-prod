@@ -19,7 +19,10 @@ const categories = {
   eyes: { name: "עיניים", icon: "👀" },
   mouth: { name: "פה", icon: "😊" },
   hat: { name: "כובע", icon: "🎩" },
-  accessory: { name: "אביזרים יזמיים", icon: "💼" }
+  accessory: { name: "אביזרים", icon: "💼" },
+  shoes: { name: "נעליים", icon: "👟" },
+  background: { name: "רקע", icon: "🏠" },
+  jewelry: { name: "תכשיטים", icon: "💍" }
 };
 
 export default function AvatarShop({ 
@@ -226,16 +229,31 @@ export default function AvatarShop({
                           </div>
                         )}
 
-                        {/* Hourly Bonus or Tax Reduction Badge - Top Left */}
+                        {/* Bonus Badges - Top Left */}
                         {item.hourlyBonus > 0 && item.isUnlocked && (
                           <div className="absolute top-1 left-1 bg-black/80 text-yellow-300 text-[10px] px-2 py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-yellow-400/50">
                             <Coins className="w-2.5 h-2.5" />
-                            <span>+{item.hourlyBonus}/שעה</span>
+                            <span>+{item.hourlyBonus}/ש</span>
                           </div>
                         )}
                         {item.taxReduction > 0 && item.isUnlocked && (
                           <div className="absolute top-1 left-1 bg-black/80 text-green-300 text-[10px] px-2 py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-green-400/50">
                             <span>-{item.taxReduction}% מס</span>
+                          </div>
+                        )}
+                        {item.xpBonus > 0 && item.isUnlocked && (
+                          <div className="absolute top-1 left-1 bg-black/80 text-blue-300 text-[10px] px-2 py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-blue-400/50">
+                            <span>+{item.xpBonus}% XP</span>
+                          </div>
+                        )}
+                        {item.inflationProtection > 0 && item.isUnlocked && (
+                          <div className="absolute top-1 left-1 bg-black/80 text-purple-300 text-[10px] px-2 py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-purple-400/50">
+                            <span>-{item.inflationProtection}% 📉</span>
+                          </div>
+                        )}
+                        {item.specialBonus && item.isUnlocked && (
+                          <div className="absolute top-1 left-1 bg-black/80 text-pink-300 text-[10px] px-2 py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-pink-400/50">
+                            <span>✨</span>
                           </div>
                         )}
 
@@ -329,16 +347,31 @@ export default function AvatarShop({
                           </motion.div>
                         )}
 
-                        {/* Hourly Bonus or Tax Reduction Badge */}
+                        {/* Bonus Badges */}
                         {item.hourlyBonus > 0 && (
                           <div className="absolute top-1 left-1 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-[10px] px-2 py-1 rounded-full font-black shadow-lg z-10 flex items-center gap-0.5">
                             <Coins className="w-2.5 h-2.5" />
-                            <span>+{item.hourlyBonus}/שעה</span>
+                            <span>+{item.hourlyBonus}/ש</span>
                           </div>
                         )}
                         {item.taxReduction > 0 && (
                           <div className="absolute top-1 left-1 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-[10px] px-2 py-1 rounded-full font-black shadow-lg z-10 flex items-center gap-0.5">
                             <span>-{item.taxReduction}% מס</span>
+                          </div>
+                        )}
+                        {item.xpBonus > 0 && (
+                          <div className="absolute top-1 left-1 bg-gradient-to-r from-blue-400 to-cyan-500 text-white text-[10px] px-2 py-1 rounded-full font-black shadow-lg z-10 flex items-center gap-0.5">
+                            <span>+{item.xpBonus}% XP</span>
+                          </div>
+                        )}
+                        {item.inflationProtection > 0 && (
+                          <div className="absolute top-1 left-1 bg-gradient-to-r from-purple-400 to-pink-500 text-white text-[10px] px-2 py-1 rounded-full font-black shadow-lg z-10 flex items-center gap-0.5">
+                            <span>-{item.inflationProtection}% 📉</span>
+                          </div>
+                        )}
+                        {item.specialBonus && (
+                          <div className="absolute top-1 left-1 bg-gradient-to-r from-pink-400 to-rose-500 text-white text-[10px] px-2 py-1 rounded-full font-black shadow-lg z-10 flex items-center gap-0.5">
+                            <span>✨ מיוחד</span>
                           </div>
                         )}
 
