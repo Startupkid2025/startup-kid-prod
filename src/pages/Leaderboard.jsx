@@ -130,9 +130,10 @@ export default function Leaderboard() {
           w => w.student_email === u.student_email && w.mastered
         ).length;
 
-        // Get last login date from User entity
+        // Get last login date and total_lessons from User entity (real source of truth)
         const userRecord = allUsers.find(usr => usr.email === u.student_email);
         const last_login_date = userRecord?.last_login_date;
+        const actualTotalLessons = userRecord?.total_lessons || u.total_lessons || 0;
 
         const averageLevel = Math.round(
           ((u.ai_tech_level || 1) +
@@ -159,7 +160,8 @@ export default function Leaderboard() {
           averageLevel,
           totalValue,
           totalXP,
-          last_login_date
+          last_login_date,
+          total_lessons: actualTotalLessons
         };
       });
 
