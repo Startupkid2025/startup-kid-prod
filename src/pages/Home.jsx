@@ -8,10 +8,10 @@ import Avatar from "../components/home/Avatar";
 import SkillBar from "../components/home/SkillBar";
 import LevelUpModal from "../components/home/LevelUpModal";
 import AvatarChat from "../components/home/AvatarChat";
-import NextLessonTimer from "../components/home/NextLessonTimer";
 import GroupSelectionDialog from "../components/home/GroupSelectionDialog";
 import AvatarWork from "../components/home/AvatarWork";
 import AvatarShop from "../components/avatar/AvatarShop";
+import CommunityFeed from "../components/home/CommunityFeed";
 import { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
 import { TrendingDown, Coins, TrendingUp, ShoppingBag, HelpCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -660,10 +660,6 @@ export default function Home() {
         </motion.div>
       )}
 
-      {userGroup && (
-        <NextLessonTimer group={userGroup} lesson={nextLesson} />
-      )}
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -846,6 +842,10 @@ export default function Home() {
         userData={userData}
         onWorkComplete={loadUserData}
       />
+
+      <div className="mb-6 sm:mb-8">
+        <CommunityFeed currentUser={userData} />
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
