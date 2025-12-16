@@ -306,7 +306,7 @@ export const AVATAR_ITEMS = {
     category: "accessory",
     price: 400,
     hourlyBonus: 3,
-    description: "+3 מטבעות/שעה"
+    description: "+3 מטבעות לשעה בעבודה"
   },
   "accessory_tie": {
     name: "👔 עניבה עסקית",
@@ -314,7 +314,7 @@ export const AVATAR_ITEMS = {
     category: "accessory",
     price: 600,
     hourlyBonus: 5,
-    description: "+5 מטבעות/שעה"
+    description: "+5 מטבעות לשעה בעבודה"
   },
   "accessory_briefcase": {
     name: "💼 תיק עסקים",
@@ -323,7 +323,7 @@ export const AVATAR_ITEMS = {
     price: 800,
     unlock: { type: "lessons", value: 8 },
     hourlyBonus: 8,
-    description: "+8 מטבעות/שעה"
+    description: "+8 מטבעות לשעה בעבודה"
   },
   "accessory_laptop": {
     name: "💻 מחשב נייד",
@@ -332,7 +332,7 @@ export const AVATAR_ITEMS = {
     price: 1000,
     unlock: { type: "lessons", value: 16 },
     hourlyBonus: 10,
-    description: "+10 מטבעות/שעה"
+    description: "+10 מטבעות לשעה בעבודה"
   },
   "accessory_suit": {
     name: "🤵 חליפה מלאה",
@@ -341,7 +341,7 @@ export const AVATAR_ITEMS = {
     price: 1300,
     unlock: { type: "lessons", value: 24 },
     hourlyBonus: 15,
-    description: "+15 מטבעות/שעה"
+    description: "+15 מטבעות לשעה בעבודה"
   },
   "accessory_rocket": {
     name: "🚀 רקטה",
@@ -350,7 +350,7 @@ export const AVATAR_ITEMS = {
     price: 1600,
     unlock: { type: "lessons", value: 32 },
     hourlyBonus: 20,
-    description: "+20 מטבעות/שעה"
+    description: "+20 מטבעות לשעה בעבודה"
   },
   "accessory_trophy": {
     name: "🏆 גביע אלוף",
@@ -359,7 +359,7 @@ export const AVATAR_ITEMS = {
     price: 2000,
     unlock: { type: "lessons", value: 40 },
     hourlyBonus: 25,
-    description: "+25 מטבעות/שעה"
+    description: "+25 מטבעות לשעה בעבודה"
   },
   "accessory_diamond_brief": {
     name: "💎 תיק יהלום",
@@ -368,7 +368,7 @@ export const AVATAR_ITEMS = {
     price: 3000,
     unlock: { type: "lessons", value: 48 },
     hourlyBonus: 35,
-    description: "+35 מטבעות/שעה"
+    description: "+35 מטבעות לשעה בעבודה"
   },
 
   // 8 נעליים - בונוס מטבעות לתרגילי חשבון
@@ -378,7 +378,7 @@ export const AVATAR_ITEMS = {
     category: "shoes",
     price: 0,
     mathBonus: 0,
-    description: "ללא בונוס"
+    description: "נעליים בסיסיות - ללא בונוס"
   },
   "shoes_running": {
     name: "🏃 נעלי ריצה",
@@ -386,7 +386,7 @@ export const AVATAR_ITEMS = {
     category: "shoes",
     price: 350,
     mathBonus: 1,
-    description: "+1 מטבע לתרגיל חשבון"
+    description: "+1 מטבע לתרגיל חשבון נכון"
   },
   "shoes_boots": {
     name: "🥾 מגפיים",
@@ -394,7 +394,7 @@ export const AVATAR_ITEMS = {
     category: "shoes",
     price: 500,
     mathBonus: 2,
-    description: "+2 מטבעות לתרגיל חשבון"
+    description: "+2 מטבעות לתרגיל חשבון נכון"
   },
   "shoes_heels": {
     name: "👠 עקבים",
@@ -403,7 +403,7 @@ export const AVATAR_ITEMS = {
     price: 700,
     unlock: { type: "lessons", value: 8 },
     mathBonus: 3,
-    description: "+3 מטבעות לתרגיל חשבון"
+    description: "+3 מטבעות לתרגיל חשבון נכון"
   },
   "shoes_dress": {
     name: "👞 נעלי אלגנט",
@@ -412,7 +412,7 @@ export const AVATAR_ITEMS = {
     price: 1000,
     unlock: { type: "lessons", value: 16 },
     mathBonus: 4,
-    description: "+4 מטבעות לתרגיל חשבון"
+    description: "+4 מטבעות לתרגיל חשבון נכון"
   },
   "shoes_rocket": {
     name: "🚀 נעלי רקטה",
@@ -421,7 +421,7 @@ export const AVATAR_ITEMS = {
     price: 1400,
     unlock: { type: "lessons", value: 24 },
     mathBonus: 5,
-    description: "+5 מטבעות לתרגיל חשבון"
+    description: "+5 מטבעות לתרגיל חשבון נכון"
   },
   "shoes_fire": {
     name: "🔥 נעלי אש",
@@ -430,7 +430,7 @@ export const AVATAR_ITEMS = {
     price: 1800,
     unlock: { type: "lessons", value: 32 },
     mathBonus: 7,
-    description: "+7 מטבעות לתרגיל חשבון"
+    description: "+7 מטבעות לתרגיל חשבון נכון"
   },
   "shoes_diamond": {
     name: "💎 נעלי יהלום",
@@ -439,7 +439,7 @@ export const AVATAR_ITEMS = {
     price: 2500,
     unlock: { type: "lessons", value: 40 },
     mathBonus: 10,
-    description: "+10 מטבעות לתרגיל חשבון"
+    description: "+10 מטבעות לתרגיל חשבון נכון"
   },
 
   // 8 רקעים - הפחתת אינפלציה
@@ -449,7 +449,7 @@ export const AVATAR_ITEMS = {
     category: "background",
     price: 0,
     inflationProtection: 0,
-    description: "ללא הגנה"
+    description: "רקע בסיסי - ללא הגנה מאינפלציה"
   },
   "background_apartment": {
     name: "🏢 דירה בעיר",
@@ -457,7 +457,7 @@ export const AVATAR_ITEMS = {
     category: "background",
     price: 400,
     inflationProtection: 10,
-    description: "-10% אינפלציה"
+    description: "מפחית 10% אינפלציה יומית על מזומן"
   },
   "background_villa": {
     name: "🏡 וילה",
@@ -465,7 +465,7 @@ export const AVATAR_ITEMS = {
     category: "background",
     price: 700,
     inflationProtection: 20,
-    description: "-20% אינפלציה"
+    description: "מפחית 20% אינפלציה יומית על מזומן"
   },
   "background_penthouse": {
     name: "🏙️ פנטהאוז",
@@ -474,7 +474,7 @@ export const AVATAR_ITEMS = {
     price: 1000,
     unlock: { type: "lessons", value: 8 },
     inflationProtection: 30,
-    description: "-30% אינפלציה"
+    description: "מפחית 30% אינפלציה יומית על מזומן"
   },
   "background_mansion": {
     name: "🏰 אחוזה",
@@ -483,7 +483,7 @@ export const AVATAR_ITEMS = {
     price: 1500,
     unlock: { type: "lessons", value: 16 },
     inflationProtection: 40,
-    description: "-40% אינפלציה"
+    description: "מפחית 40% אינפלציה יומית על מזומן"
   },
   "background_island": {
     name: "🏝️ אי פרטי",
@@ -492,7 +492,7 @@ export const AVATAR_ITEMS = {
     price: 2000,
     unlock: { type: "lessons", value: 24 },
     inflationProtection: 50,
-    description: "-50% אינפלציה"
+    description: "מפחית 50% אינפלציה יומית על מזומן"
   },
   "background_space": {
     name: "🚀 תחנת חלל",
@@ -501,7 +501,7 @@ export const AVATAR_ITEMS = {
     price: 2500,
     unlock: { type: "lessons", value: 32 },
     inflationProtection: 60,
-    description: "-60% אינפלציה"
+    description: "מפחית 60% אינפלציה יומית על מזומן"
   },
   "background_universe": {
     name: "🌌 גלקסיה שלמה",
@@ -510,7 +510,7 @@ export const AVATAR_ITEMS = {
     price: 3500,
     unlock: { type: "lessons", value: 40 },
     inflationProtection: 75,
-    description: "-75% אינפלציה"
+    description: "מפחית 75% אינפלציה יומית על מזומן"
   },
 
   // 6 תכשיטים - בונוסים מיוחדים
@@ -520,7 +520,7 @@ export const AVATAR_ITEMS = {
     category: "jewelry",
     price: 600,
     specialBonus: "time",
-    description: "+10 מטבעות ליום"
+    description: "+10 מטבעות ליום (בונוס רצף כניסות)"
   },
   "jewelry_necklace": {
     name: "📿 שרשרת זהב",
@@ -529,7 +529,7 @@ export const AVATAR_ITEMS = {
     price: 900,
     unlock: { type: "lessons", value: 8 },
     specialBonus: "words",
-    description: "+2 מטבעות למילה"
+    description: "+2 מטבעות למילה נכונה באנגלית"
   },
   "jewelry_ring": {
     name: "💍 טבעת יהלום",
@@ -538,7 +538,7 @@ export const AVATAR_ITEMS = {
     price: 1200,
     unlock: { type: "lessons", value: 16 },
     specialBonus: "math",
-    description: "+2 מטבעות לתרגיל"
+    description: "+2 מטבעות לתרגיל חשבון נכון"
   },
   "jewelry_crown_small": {
     name: "👑 כתר קטן",
@@ -547,7 +547,7 @@ export const AVATAR_ITEMS = {
     price: 1500,
     unlock: { type: "lessons", value: 24 },
     specialBonus: "quiz",
-    description: "+5 מטבעות לחידון"
+    description: "+5 מטבעות לחידון מושלם"
   },
   "jewelry_amulet": {
     name: "🧿 קמע מזל",
@@ -556,7 +556,7 @@ export const AVATAR_ITEMS = {
     price: 2000,
     unlock: { type: "lessons", value: 32 },
     specialBonus: "investment",
-    description: "-20% עמלות השקעה"
+    description: "מפחית 20% מעמלות קנייה ומכירה בהשקעות"
   },
   "jewelry_infinity": {
     name: "♾️ תכשיט אינסוף",
@@ -565,7 +565,7 @@ export const AVATAR_ITEMS = {
     price: 3000,
     unlock: { type: "lessons", value: 40 },
     specialBonus: "all",
-    description: "+5% לכל הכנסה"
+    description: "מוסיף 5% לכל הכנסה במשחק"
   }
 };
 
