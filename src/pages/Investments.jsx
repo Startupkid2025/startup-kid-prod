@@ -377,7 +377,7 @@ export default function Investments() {
     const percentToSell = sellAmount / totalValue;
     const investedPortion = totalInvested * percentToSell;
     const grossProfit = amountAfterFee - investedPortion;
-    const tax = grossProfit > 0 ? Math.round(grossProfit * 0.25) : 0;
+    const tax = grossProfit > 0 ? grossProfit * 0.25 : 0;
     const netAmount = amountAfterFee - tax;
 
     setConfirmSellDialog({
@@ -434,12 +434,12 @@ export default function Investments() {
         } else {
           // Partial sell - reduce investment proportionally
           const percentToSell = remainingToSell / investment.current_value;
-          const investedToDeduct = Math.round(investment.invested_amount * percentToSell);
+          const investedToDeduct = investment.invested_amount * percentToSell;
           totalInvestedSold += investedToDeduct;
 
           await base44.entities.Investment.update(investment.id, {
-            current_value: Math.round(investment.current_value - remainingToSell),
-            invested_amount: Math.round(investment.invested_amount - investedToDeduct)
+            current_value: investment.current_value - remainingToSell,
+            invested_amount: investment.invested_amount - investedToDeduct
           });
           remainingToSell = 0;
         }
@@ -451,7 +451,7 @@ export default function Investments() {
       }
 
       const grossProfit = amountAfterFee - totalInvestedSold;
-      const capitalGainsTax = grossProfit > 0 ? Math.round(grossProfit * 0.25) : 0;
+      const capitalGainsTax = grossProfit > 0 ? grossProfit * 0.25 : 0;
       const netProfit = grossProfit - capitalGainsTax;
       const netAmount = amountAfterFee - capitalGainsTax;
       const newCoins = userData.coins + netAmount;
@@ -714,13 +714,13 @@ export default function Investments() {
                             className="bg-white/20 border-white/30 text-white placeholder:text-white/50 h-8 text-sm"
                           />
                           {sellAmounts[business.id] > 0 && (() => {
-                            const sellValue = sellAmounts[business.id];
-                            const afterFee = Math.round(sellValue - TRANSACTION_FEE);
-                            const percentToSell = sellValue / totalValueInBusiness;
-                            const investedPortion = Math.round(totalInvestedInBusiness * percentToSell);
-                            const grossProfit = Math.round(afterFee - investedPortion);
-                            const tax = grossProfit > 0 ? Math.round(grossProfit * 0.25) : 0;
-                            const netAmount = Math.round(afterFee - tax);
+                           const sellValue = sellAmounts[business.id];
+                           const afterFee = sellValue - TRANSACTION_FEE;
+                           const percentToSell = sellValue / totalValueInBusiness;
+                           const investedPortion = totalInvestedInBusiness * percentToSell;
+                           const grossProfit = afterFee - investedPortion;
+                           const tax = grossProfit > 0 ? grossProfit * 0.25 : 0;
+                           const netAmount = afterFee - tax;
                             
                             return (
                               <div className="text-[10px] mt-0.5 space-y-0.5">
