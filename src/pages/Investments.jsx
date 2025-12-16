@@ -527,7 +527,9 @@ export default function Investments() {
 
   const totalInvested = investments.reduce((sum, inv) => sum + inv.invested_amount, 0);
   const totalValue = investments.reduce((sum, inv) => sum + inv.current_value, 0);
-  const totalProfit = totalValue - totalInvested;
+  const unrealizedProfit = totalValue - totalInvested;
+  const realizedProfit = userData?.total_realized_investment_profit || 0;
+  const totalProfit = unrealizedProfit + realizedProfit;
   const totalProfitPercent = totalInvested > 0 ? Math.round((totalProfit / totalInvested) * 100) : 0;
 
   const investmentsByBusiness = investments.reduce((acc, inv) => {
