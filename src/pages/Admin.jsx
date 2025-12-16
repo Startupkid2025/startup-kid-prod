@@ -114,9 +114,12 @@ export default function Admin() {
         const attendedLessons = allParticipations.filter(
           p => p.student_email === user.email && p.attended === true
         );
-        const lessonsCoins = attendedLessons.length * 100;
+        const correctTotalLessons = attendedLessons.length;
+        const lessonsCoins = correctTotalLessons * 100;
         breakdown.lessonsCoins = lessonsCoins;
-        breakdown.attendedCount = attendedLessons.length;
+        breakdown.attendedCount = correctTotalLessons;
+        breakdown.correctTotalLessons = correctTotalLessons;
+        breakdown.oldTotalLessons = user.total_lessons || 0;
 
         const wordCoins = allWordProgress
           .filter(w => w.student_email === user.email)
@@ -269,6 +272,11 @@ export default function Admin() {
           needsUpdate = true;
         }
 
+        if (breakdown.correctTotalLessons !== breakdown.oldTotalLessons) {
+          breakdown.lessonsWereUpdated = true;
+          needsUpdate = true;
+        }
+
         // תמיד מעדכן את הלידרבורד אם יש שינוי במטבעות
         if (needsUpdate) {
           const updates = {};
@@ -281,6 +289,10 @@ export default function Admin() {
             updates.coins = correctCoins;
           }
 
+          if (breakdown.lessonsWereUpdated) {
+            updates.total_lessons = correctTotalLessons;
+          }
+
           await base44.entities.User.update(user.id, updates);
 
           // Update leaderboard
@@ -289,7 +301,7 @@ export default function Admin() {
             if (leaderboardEntries.length > 0) {
               await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
                 coins: correctCoins,
-                total_lessons: user.total_lessons || 0,
+                total_lessons: breakdown.lessonsWereUpdated ? correctTotalLessons : (user.total_lessons || 0),
                 ai_tech_level: user.ai_tech_level || 1,
                 ai_tech_xp: user.ai_tech_xp || 0,
                 personal_dev_level: user.personal_dev_level || 1,
@@ -333,6 +345,9 @@ export default function Admin() {
         if (Math.abs(r.coinsDiff) >= 1) {
           console.log(`  🔧 FIX: ${Math.round(r.oldCoins)} → ${Math.round(r.correctCoins)} (${r.coinsDiff >= 0 ? '+' : ''}${Math.round(r.coinsDiff)})`);
         }
+        if (r.lessonsWereUpdated) {
+          console.log(`  📚 LESSONS FIX: ${r.oldTotalLessons} → ${r.correctTotalLessons}`);
+        }
         console.log(`  ${r.incomeMatch ? '✅ PERFECT!' : `⚠️ Diff: ${Math.round(r.totalIncome - r.expectedIncome)}`}`);
       });
       
@@ -345,6 +360,9 @@ export default function Admin() {
           detailMessage += `👤 ${r.name}\n`;
           if (r.coinsWereUpdated) {
             detailMessage += `   💰 ${Math.round(r.oldCoins)} → ${Math.round(r.correctCoins)} (${r.coinsDiff >= 0 ? '+' : ''}${Math.round(r.coinsDiff)})\n`;
+          }
+          if (r.lessonsWereUpdated) {
+            detailMessage += `   📚 שיעורים: ${r.oldTotalLessons} → ${r.correctTotalLessons}\n`;
           }
           if (r.feesWereUpdated) {
             detailMessage += `   💸 עמלות: ${Math.round(r.investmentFees)}\n`;
