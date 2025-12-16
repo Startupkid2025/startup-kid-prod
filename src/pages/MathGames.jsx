@@ -490,6 +490,19 @@ ${question} = ${correctAnswer}
       if (isCorrect) {
         coinsEarned = MATH_COINS_PER_CORRECT_ANSWER;
         
+        // Check for shoes bonus
+        const purchasedItems = userData.purchased_items || [];
+        const equippedItems = userData.equipped_items || {};
+        const equippedShoes = equippedItems.shoes;
+        
+        if (equippedShoes && purchasedItems.includes(equippedShoes)) {
+          const { AVATAR_ITEMS } = await import('../components/avatar/TamagotchiAvatar');
+          const shoesItem = AVATAR_ITEMS[equippedShoes];
+          if (shoesItem && shoesItem.mathBonus) {
+            coinsEarned += shoesItem.mathBonus;
+          }
+        }
+        
         // Check if user is math king and add bonus
         const allUsers = await base44.entities.User.list();
         let maxMathEarnings = 0;
