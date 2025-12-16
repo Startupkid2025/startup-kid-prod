@@ -77,7 +77,7 @@ export default function Layout({ children }) {
         crypto: todayMarket.crypto_change || 0
       };
 
-      // Calculate 25% dividend tax on daily profits
+      // Calculate 25% dividend tax on daily profits (with mouth reductions)
       let totalDailyProfit = 0;
       userInvestments.forEach(inv => {
         const changePercent = marketChanges[inv.business_type] || 0;
@@ -89,7 +89,19 @@ export default function Layout({ children }) {
 
       let dividendTax = 0;
       if (totalDailyProfit > 0) {
-        dividendTax = Math.floor(totalDailyProfit * 0.25);
+        // Base dividend tax rate: 25%
+        let dividendTaxRate = 0.25;
+
+        // Check if user has mouth item that reduces dividend tax
+        const equippedMouth = user.equipped_items?.mouth;
+        if (equippedMouth) {
+          const mouthItem = AVATAR_ITEMS[equippedMouth];
+          if (mouthItem && mouthItem.dividendTaxReduction) {
+            dividendTaxRate = Math.max(0, dividendTaxRate - (mouthItem.dividendTaxReduction / 100));
+          }
+        }
+
+        dividendTax = Math.floor(totalDailyProfit * dividendTaxRate);
 
         const newCoins = (user.coins || 0) - dividendTax;
         await base44.auth.updateMe({

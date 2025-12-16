@@ -290,7 +290,19 @@ export default function Home() {
             });
 
             if (totalDailyProfit > 0) {
-              expectedDividendTax = Math.floor(totalDailyProfit * 0.25);
+              // Base dividend tax rate: 25%
+              let dividendTaxRate = 0.25;
+
+              // Check if user has mouth item that reduces dividend tax
+              const equippedMouth = userData?.equipped_items?.mouth;
+              if (equippedMouth) {
+                const mouthItem = AVATAR_ITEMS[equippedMouth];
+                if (mouthItem && mouthItem.dividendTaxReduction) {
+                  dividendTaxRate = Math.max(0, dividendTaxRate - (mouthItem.dividendTaxReduction / 100));
+                }
+              }
+
+              expectedDividendTax = Math.floor(totalDailyProfit * dividendTaxRate);
             }
           }
         } catch (error) {

@@ -168,7 +168,8 @@ export const AVATAR_ITEMS = {
     category: "mouth",
     price: 0,
     wordBonus: 1,
-    description: "+1 מטבע למילה נכונה באנגלית"
+    dividendTaxReduction: 1,
+    description: "+1 מטבע למילה באנגלית | מפחית 1% מס דיבידנד"
   },
   "mouth_happy": {
     name: "שמח מאוד",
@@ -177,7 +178,8 @@ export const AVATAR_ITEMS = {
     category: "mouth",
     price: 250,
     wordBonus: 2,
-    description: "+2 מטבעות למילה נכונה באנגלית"
+    dividendTaxReduction: 2,
+    description: "+2 מטבעות למילה באנגלית | מפחית 2% מס דיבידנד"
   },
   "mouth_confident": {
     name: "ביטחון עצמי",
@@ -186,7 +188,8 @@ export const AVATAR_ITEMS = {
     category: "mouth",
     price: 400,
     wordBonus: 3,
-    description: "+3 מטבעות למילה נכונה באנגלית"
+    dividendTaxReduction: 3,
+    description: "+3 מטבעות למילה באנגלית | מפחית 3% מס דיבידנד"
   },
   "mouth_cat": {
     name: "חתולי",
@@ -196,7 +199,8 @@ export const AVATAR_ITEMS = {
     price: 550,
     unlock: { type: "lessons", value: 8 },
     wordBonus: 4,
-    description: "+4 מטבעות למילה נכונה באנגלית"
+    dividendTaxReduction: 4,
+    description: "+4 מטבעות למילה באנגלית | מפחית 4% מס דיבידנד"
   },
   "mouth_wink": {
     name: "קריצה",
@@ -206,7 +210,8 @@ export const AVATAR_ITEMS = {
     price: 700,
     unlock: { type: "lessons", value: 16 },
     wordBonus: 5,
-    description: "+5 מטבעות למילה נכונה באנגלית"
+    dividendTaxReduction: 5,
+    description: "+5 מטבעות למילה באנגלית | מפחית 5% מס דיבידנד"
   },
   "mouth_laugh": {
     name: "צחוק גדול",
@@ -216,7 +221,8 @@ export const AVATAR_ITEMS = {
     price: 900,
     unlock: { type: "lessons", value: 24 },
     wordBonus: 7,
-    description: "+7 מטבעות למילה נכונה באנגלית"
+    dividendTaxReduction: 7,
+    description: "+7 מטבעות למילה באנגלית | מפחית 7% מס דיבידנד"
   },
   "mouth_cool": {
     name: "מגניב",
@@ -226,7 +232,8 @@ export const AVATAR_ITEMS = {
     price: 1100,
     unlock: { type: "lessons", value: 32 },
     wordBonus: 10,
-    description: "+10 מטבעות למילה נכונה באנגלית"
+    dividendTaxReduction: 10,
+    description: "+10 מטבעות למילה באנגלית | מפחית 10% מס דיבידנד"
   },
   "mouth_boss": {
     name: "בוס",
@@ -236,7 +243,8 @@ export const AVATAR_ITEMS = {
     price: 1500,
     unlock: { type: "lessons", value: 40 },
     wordBonus: 15,
-    description: "+15 מטבעות למילה נכונה באנגלית"
+    dividendTaxReduction: 15,
+    description: "+15 מטבעות למילה באנגלית | מפחית 15% מס דיבידנד"
   },
 
   // 8 כובעים
