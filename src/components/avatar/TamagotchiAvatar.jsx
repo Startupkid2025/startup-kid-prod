@@ -167,8 +167,8 @@ export const AVATAR_ITEMS = {
     type: "smile",
     category: "mouth",
     price: 0,
-    quizBonus: 1,
-    description: "+1 מטבע לחידון מושלם"
+    wordBonus: 1,
+    description: "+1 מטבע למילה נכונה באנגלית"
   },
   "mouth_happy": {
     name: "שמח מאוד",
@@ -176,8 +176,8 @@ export const AVATAR_ITEMS = {
     type: "happy",
     category: "mouth",
     price: 250,
-    quizBonus: 2,
-    description: "+2 מטבעות לחידון מושלם"
+    wordBonus: 2,
+    description: "+2 מטבעות למילה נכונה באנגלית"
   },
   "mouth_confident": {
     name: "ביטחון עצמי",
@@ -185,8 +185,8 @@ export const AVATAR_ITEMS = {
     type: "confident",
     category: "mouth",
     price: 400,
-    quizBonus: 3,
-    description: "+3 מטבעות לחידון מושלם"
+    wordBonus: 3,
+    description: "+3 מטבעות למילה נכונה באנגלית"
   },
   "mouth_cat": {
     name: "חתולי",
@@ -195,8 +195,8 @@ export const AVATAR_ITEMS = {
     category: "mouth",
     price: 550,
     unlock: { type: "lessons", value: 8 },
-    quizBonus: 4,
-    description: "+4 מטבעות לחידון מושלם"
+    wordBonus: 4,
+    description: "+4 מטבעות למילה נכונה באנגלית"
   },
   "mouth_wink": {
     name: "קריצה",
@@ -205,8 +205,8 @@ export const AVATAR_ITEMS = {
     category: "mouth",
     price: 700,
     unlock: { type: "lessons", value: 16 },
-    quizBonus: 5,
-    description: "+5 מטבעות לחידון מושלם"
+    wordBonus: 5,
+    description: "+5 מטבעות למילה נכונה באנגלית"
   },
   "mouth_laugh": {
     name: "צחוק גדול",
@@ -215,8 +215,8 @@ export const AVATAR_ITEMS = {
     category: "mouth",
     price: 900,
     unlock: { type: "lessons", value: 24 },
-    quizBonus: 7,
-    description: "+7 מטבעות לחידון מושלם"
+    wordBonus: 7,
+    description: "+7 מטבעות למילה נכונה באנגלית"
   },
   "mouth_cool": {
     name: "מגניב",
@@ -225,8 +225,8 @@ export const AVATAR_ITEMS = {
     category: "mouth",
     price: 1100,
     unlock: { type: "lessons", value: 32 },
-    quizBonus: 10,
-    description: "+10 מטבעות לחידון מושלם"
+    wordBonus: 10,
+    description: "+10 מטבעות למילה נכונה באנגלית"
   },
   "mouth_boss": {
     name: "בוס",
@@ -235,8 +235,8 @@ export const AVATAR_ITEMS = {
     category: "mouth",
     price: 1500,
     unlock: { type: "lessons", value: 40 },
-    quizBonus: 15,
-    description: "+15 מטבעות לחידון מושלם"
+    wordBonus: 15,
+    description: "+15 מטבעות למילה נכונה באנגלית"
   },
 
   // 8 כובעים
