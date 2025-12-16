@@ -162,17 +162,24 @@ export default function Admin() {
         const loginStreakCoins = user.total_login_streak_coins || 0;
         breakdown.loginStreakCoins = loginStreakCoins;
 
-        // רווחי השקעות - לא צריך להוסיף להכנסות! הם כבר מוגלמים בנכסים
+        // רווחי והפסדי השקעות
         const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
         const totalInvested = userInvestments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
         const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+        const unrealizedProfit = investmentsValue - totalInvested;
+        const realizedProfit = user.total_realized_investment_profit || 0;
+        const totalInvestmentProfit = unrealizedProfit + realizedProfit;
+
         breakdown.totalInvested = totalInvested;
         breakdown.investmentsValue = investmentsValue;
+        breakdown.unrealizedProfit = unrealizedProfit;
+        breakdown.realizedProfit = realizedProfit;
+        breakdown.totalInvestmentProfit = totalInvestmentProfit;
 
         const totalIncome = baseCoins + lessonsCoins + wordCoins + mathCoins + 
                            surveyCoins + quizCoins + profileTasksCoins + 
                            profileDetailsCoins + workCoins + collaborationCoins + 
-                           loginStreakCoins;
+                           loginStreakCoins + totalInvestmentProfit;
         breakdown.totalIncome = totalIncome;
 
         // ═══════════════════════════════════════════════════
@@ -299,7 +306,7 @@ export default function Admin() {
       // Always show summary in console
       report.forEach(r => {
         console.log(`\n👤 ${r.name} (${r.email})`);
-        console.log(`  💰 INCOME: ${Math.round(r.totalIncome)}`);
+        console.log(`  💰 INCOME: ${Math.round(r.totalIncome)} (inc. ${Math.round(r.totalInvestmentProfit)} inv profit: ${Math.round(r.unrealizedProfit)} unrealized + ${Math.round(r.realizedProfit)} realized)`);
         console.log(`  💎 ASSETS: ${Math.round(r.totalAssets)} (Cash: ${Math.round(r.correctCoins)}${r.coinsWereUpdated ? ' ✅' : ''}, Items: ${Math.round(r.itemsValue)}, Inv: ${Math.round(r.investmentsValue)})`);
         console.log(`  📉 LOSSES: ${Math.round(r.totalLosses)} (Inflation: ${Math.round(r.inflationLoss)}, Income Tax: ${Math.round(r.incomeTax)}, Capital Gains: ${Math.round(r.capitalGainsTax)}, Credit: ${Math.round(r.creditInterest)}, Fees: ${Math.round(r.investmentFees)}${r.feesWereUpdated ? ' ✅' : ''})`);
         if (Math.abs(r.coinsDiff) >= 1) {

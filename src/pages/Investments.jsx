@@ -458,7 +458,8 @@ export default function Investments() {
       await base44.auth.updateMe({ 
         coins: newCoins,
         total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE,
-        total_capital_gains_tax: (userData.total_capital_gains_tax || 0) + capitalGainsTax
+        total_capital_gains_tax: (userData.total_capital_gains_tax || 0) + capitalGainsTax,
+        total_realized_investment_profit: (userData.total_realized_investment_profit || 0) + grossProfit
       });
 
       try {
