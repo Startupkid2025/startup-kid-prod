@@ -245,13 +245,41 @@ export default function Investments() {
         return lastUpdate !== today;
       });
 
+      // Check if current user is investment king
+      const allUsers = await base44.entities.User.list();
+      const allInvestments = await base44.entities.Investment.list();
+      let maxInvestmentValue = 0;
+      let investmentKingEmail = null;
+
+      const investmentsByUser = {};
+      allInvestments.forEach(inv => {
+        if (!investmentsByUser[inv.student_email]) {
+          investmentsByUser[inv.student_email] = 0;
+        }
+        investmentsByUser[inv.student_email] += inv.current_value || 0;
+      });
+
+      Object.keys(investmentsByUser).forEach(email => {
+        if (investmentsByUser[email] > maxInvestmentValue) {
+          maxInvestmentValue = investmentsByUser[email];
+          investmentKingEmail = email;
+        }
+      });
+
+      const isInvestmentKing = investmentKingEmail === user.email && maxInvestmentValue > 0;
+
       // Update investments in batches to avoid rate limiting
       if (investmentsNeedingUpdate.length > 0) {
         // Update in smaller batches with delays
         for (let i = 0; i < investmentsNeedingUpdate.length; i++) {
           const investment = investmentsNeedingUpdate[i];
-          const changePercent = todayMarket[investment.business_type] || 0;
-          
+          let changePercent = todayMarket[investment.business_type] || 0;
+
+          // Add 0.1% bonus for investment king
+          if (isInvestmentKing) {
+            changePercent += 0.1;
+          }
+
           try {
             const newValue = Math.round(investment.current_value * (1 + changePercent / 100));
             await base44.entities.Investment.update(investment.id, {
@@ -259,7 +287,7 @@ export default function Investments() {
               daily_change_percent: Math.round(changePercent * 10) / 10,
               last_updated: new Date().toISOString()
             });
-            
+
             // Add small delay between updates to avoid rate limiting
             if (i < investmentsNeedingUpdate.length - 1) {
               await new Promise(resolve => setTimeout(resolve, 100));

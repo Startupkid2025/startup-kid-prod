@@ -207,7 +207,7 @@ export default function Leaderboard() {
           u.crowns.push({ type: 'vocab', name: '📚 מלך האנגלית', bonus: '+5 מטבעות למילה' });
         }
         if (investmentKing && u.student_email === investmentKing.student_email && u.currentInvestmentValue > 0) {
-          u.crowns.push({ type: 'investment', name: '💼 מלך ההשקעות', bonus: 'עמלות 0%' });
+          u.crowns.push({ type: 'investment', name: '💼 מלך ההשקעות', bonus: '+0.1% תשואה יומית' });
         }
         if (loginStreakKing && u.student_email === loginStreakKing.student_email && u.loginStreakEarnings > 0) {
           u.crowns.push({ type: 'login', name: '🔥 מלך הרצף', bonus: 'פי 2 על בונוס הרצף' });
