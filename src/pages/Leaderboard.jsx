@@ -163,7 +163,8 @@ export default function Leaderboard() {
         const vocabEarnings = userWordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
         
         const mathEarnings = userRecord?.total_math_earnings || 0;
-        const investmentEarnings = userRecord?.total_realized_investment_profit || 0;
+        const userInvestments = allInvestments.filter(inv => inv.student_email === u.student_email);
+        const currentInvestmentValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
         const loginStreakEarnings = userRecord?.total_login_streak_coins || 0;
         const workEarnings = userRecord?.total_work_earnings || 0;
 
@@ -181,7 +182,7 @@ export default function Leaderboard() {
           money_business_level: actualMoneyBusinessLevel,
           vocabEarnings,
           mathEarnings,
-          investmentEarnings,
+          currentInvestmentValue,
           loginStreakEarnings,
           workEarnings
         };
@@ -193,7 +194,7 @@ export default function Leaderboard() {
       // Find kings in each category
       const mathKing = [...usersWithAllStats].sort((a, b) => b.mathEarnings - a.mathEarnings)[0];
       const vocabKing = [...usersWithAllStats].sort((a, b) => b.vocabEarnings - a.vocabEarnings)[0];
-      const investmentKing = [...usersWithAllStats].sort((a, b) => b.investmentEarnings - a.investmentEarnings)[0];
+      const investmentKing = [...usersWithAllStats].sort((a, b) => b.currentInvestmentValue - a.currentInvestmentValue)[0];
       const loginStreakKing = [...usersWithAllStats].sort((a, b) => b.loginStreakEarnings - a.loginStreakEarnings)[0];
       const workKing = [...usersWithAllStats].sort((a, b) => b.workEarnings - a.workEarnings)[0];
 
@@ -206,8 +207,8 @@ export default function Leaderboard() {
         if (vocabKing && u.student_email === vocabKing.student_email && u.vocabEarnings > 0) {
           u.crowns.push({ type: 'vocab', name: '📚 מלך האנגלית', bonus: '+5 מטבעות למילה' });
         }
-        if (investmentKing && u.student_email === investmentKing.student_email && u.investmentEarnings > 0) {
-          u.crowns.push({ type: 'investment', name: '💼 מלך ההשקעות', bonus: '+10% רווח' });
+        if (investmentKing && u.student_email === investmentKing.student_email && u.currentInvestmentValue > 0) {
+          u.crowns.push({ type: 'investment', name: '💼 מלך ההשקעות', bonus: 'עמלות 0%' });
         }
         if (loginStreakKing && u.student_email === loginStreakKing.student_email && u.loginStreakEarnings > 0) {
           u.crowns.push({ type: 'login', name: '🔥 מלך הרצף', bonus: '+10 מטבעות ליום' });
