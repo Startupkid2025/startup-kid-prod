@@ -10,7 +10,7 @@ export const AVATAR_ITEMS = {
     category: "body",
     price: 0,
     taxReduction: 0.05,
-    description: "-0.05% מס הכנסה"
+    description: "מפחית 0.05% מס הכנסה יומי"
   },
   "body_pink": {
     name: "ורוד מתוק",
@@ -19,7 +19,7 @@ export const AVATAR_ITEMS = {
     category: "body",
     price: 200,
     taxReduction: 0.10,
-    description: "-0.10% מס הכנסה"
+    description: "מפחית 0.10% מס הכנסה יומי"
   },
   "body_purple": {
     name: "סגול מיסטי",
@@ -28,7 +28,7 @@ export const AVATAR_ITEMS = {
     category: "body",
     price: 400,
     taxReduction: 0.15,
-    description: "-0.15% מס הכנסה"
+    description: "מפחית 0.15% מס הכנסה יומי"
   },
   "body_green": {
     name: "ירוק עשבי",
@@ -38,7 +38,7 @@ export const AVATAR_ITEMS = {
     price: 600,
     unlock: { type: "lessons", value: 8 },
     taxReduction: 0.20,
-    description: "-0.20% מס הכנסה"
+    description: "מפחית 0.20% מס הכנסה יומי"
   },
   "body_orange": {
     name: "כתום חם",
@@ -48,7 +48,7 @@ export const AVATAR_ITEMS = {
     price: 800,
     unlock: { type: "lessons", value: 16 },
     taxReduction: 0.25,
-    description: "-0.25% מס הכנסה"
+    description: "מפחית 0.25% מס הכנסה יומי"
   },
   "body_red": {
     name: "אדום לוהט",
@@ -58,7 +58,7 @@ export const AVATAR_ITEMS = {
     price: 1000,
     unlock: { type: "lessons", value: 24 },
     taxReduction: 0.30,
-    description: "-0.30% מס הכנסה"
+    description: "מפחית 0.30% מס הכנסה יומי"
   },
   "body_gold": {
     name: "זהב מלכותי",
@@ -68,7 +68,7 @@ export const AVATAR_ITEMS = {
     price: 1500,
     unlock: { type: "lessons", value: 32 },
     taxReduction: 0.35,
-    description: "-0.35% מס הכנסה"
+    description: "מפחית 0.35% מס הכנסה יומי"
   },
   "body_rainbow": {
     name: "קשת בענן",
@@ -78,7 +78,7 @@ export const AVATAR_ITEMS = {
     price: 2000,
     unlock: { type: "lessons", value: 40 },
     taxReduction: 0.40,
-    description: "-0.40% מס הכנסה"
+    description: "מפחית 0.40% מס הכנסה יומי"
   },
 
   // 8 סוגי עיניים
@@ -87,21 +87,24 @@ export const AVATAR_ITEMS = {
     emoji: "✨",
     type: "sparkle",
     category: "eyes",
-    price: 0
+    price: 0,
+    description: "עיניים נוצצות בסיסיות - קוסמטי בלבד"
   },
   "eyes_determined": {
     name: "נחושות",
     emoji: "👀",
     type: "determined",
     category: "eyes",
-    price: 300
+    price: 300,
+    description: "מבט נחוש ומתוכנן - קוסמטי בלבד"
   },
   "eyes_heart": {
     name: "לבבות",
     emoji: "😍",
     type: "heart",
     category: "eyes",
-    price: 500
+    price: 500,
+    description: "עיניים מאוהבות - קוסמטי בלבד"
   },
   "eyes_star": {
     name: "כוכבים",
@@ -109,7 +112,8 @@ export const AVATAR_ITEMS = {
     type: "star",
     category: "eyes",
     price: 700,
-    unlock: { type: "lessons", value: 8 }
+    unlock: { type: "lessons", value: 8 },
+    description: "עיני כוכב - קוסמטי בלבד"
   },
   "eyes_cool": {
     name: "משקפי שמש",
@@ -118,7 +122,8 @@ export const AVATAR_ITEMS = {
     category: "eyes",
     price: 1000,
     unlock: { type: "lessons", value: 16 },
-    hourlyBonus: 5
+    hourlyBonus: 5,
+    description: "+5 מטבעות לשעה בעבודה"
   },
   "eyes_laser": {
     name: "לייזר אדום",
@@ -127,7 +132,8 @@ export const AVATAR_ITEMS = {
     category: "eyes",
     price: 1200,
     unlock: { type: "lessons", value: 24 },
-    hourlyBonus: 8
+    hourlyBonus: 8,
+    description: "+8 מטבעות לשעה בעבודה"
   },
   "eyes_cyber": {
     name: "סייבר",
@@ -136,7 +142,8 @@ export const AVATAR_ITEMS = {
     category: "eyes",
     price: 1500,
     unlock: { type: "lessons", value: 32 },
-    hourlyBonus: 10
+    hourlyBonus: 10,
+    description: "+10 מטבעות לשעה בעבודה"
   },
   "eyes_diamond": {
     name: "יהלומים",
@@ -145,7 +152,8 @@ export const AVATAR_ITEMS = {
     category: "eyes",
     price: 2000,
     unlock: { type: "lessons", value: 40 },
-    hourlyBonus: 15
+    hourlyBonus: 15,
+    description: "+15 מטבעות לשעה בעבודה"
   },
 
   // 8 סוגי פה
@@ -154,21 +162,24 @@ export const AVATAR_ITEMS = {
     emoji: "😊",
     type: "smile",
     category: "mouth",
-    price: 0
+    price: 0,
+    description: "חיוך בסיסי - קוסמטי בלבד"
   },
   "mouth_happy": {
     name: "שמח מאוד",
     emoji: "😄",
     type: "happy",
     category: "mouth",
-    price: 250
+    price: 250,
+    description: "חיוך גדול ושמח - קוסמטי בלבד"
   },
   "mouth_confident": {
     name: "ביטחון עצמי",
     emoji: "😏",
     type: "confident",
     category: "mouth",
-    price: 400
+    price: 400,
+    description: "חיוך בטוח במיוחד - קוסמטי בלבד"
   },
   "mouth_cat": {
     name: "חתולי",
@@ -176,7 +187,8 @@ export const AVATAR_ITEMS = {
     type: "cat",
     category: "mouth",
     price: 550,
-    unlock: { type: "lessons", value: 8 }
+    unlock: { type: "lessons", value: 8 },
+    description: "פה של חתול חמוד - קוסמטי בלבד"
   },
   "mouth_wink": {
     name: "קריצה",
@@ -184,7 +196,8 @@ export const AVATAR_ITEMS = {
     type: "wink",
     category: "mouth",
     price: 700,
-    unlock: { type: "lessons", value: 16 }
+    unlock: { type: "lessons", value: 16 },
+    description: "חיוך עם קריצה - קוסמטי בלבד"
   },
   "mouth_laugh": {
     name: "צחוק גדול",
@@ -192,7 +205,8 @@ export const AVATAR_ITEMS = {
     type: "laugh",
     category: "mouth",
     price: 900,
-    unlock: { type: "lessons", value: 24 }
+    unlock: { type: "lessons", value: 24 },
+    description: "צחוק מהלב - קוסמטי בלבד"
   },
   "mouth_cool": {
     name: "מגניב",
@@ -200,7 +214,8 @@ export const AVATAR_ITEMS = {
     type: "cool",
     category: "mouth",
     price: 1100,
-    unlock: { type: "lessons", value: 32 }
+    unlock: { type: "lessons", value: 32 },
+    description: "פה מגניב במיוחד - קוסמטי בלבד"
   },
   "mouth_boss": {
     name: "בוס",
@@ -208,7 +223,8 @@ export const AVATAR_ITEMS = {
     type: "boss",
     category: "mouth",
     price: 1500,
-    unlock: { type: "lessons", value: 40 }
+    unlock: { type: "lessons", value: 40 },
+    description: "הבעת פנים של בוס - קוסמטי בלבד"
   },
 
   // 8 כובעים
@@ -217,14 +233,16 @@ export const AVATAR_ITEMS = {
     emoji: "🧢",
     category: "hat",
     price: 300,
-    hourlyBonus: 2
+    hourlyBonus: 2,
+    description: "+2 מטבעות לשעה בעבודה"
   },
   "hat_party": {
     name: "🎉 כובע מסיבה",
     emoji: "🎉",
     category: "hat",
     price: 450,
-    hourlyBonus: 3
+    hourlyBonus: 3,
+    description: "+3 מטבעות לשעה בעבודה"
   },
   "hat_tophat": {
     name: "🎩 כובע צילינדר",
@@ -232,7 +250,8 @@ export const AVATAR_ITEMS = {
     category: "hat",
     price: 600,
     unlock: { type: "lessons", value: 8 },
-    hourlyBonus: 5
+    hourlyBonus: 5,
+    description: "+5 מטבעות לשעה בעבודה"
   },
   "hat_graduate": {
     name: "🎓 כובע בוגר",
@@ -240,7 +259,8 @@ export const AVATAR_ITEMS = {
     category: "hat",
     price: 800,
     unlock: { type: "lessons", value: 16 },
-    hourlyBonus: 7
+    hourlyBonus: 7,
+    description: "+7 מטבעות לשעה בעבודה"
   },
   "hat_cowboy": {
     name: "🤠 כובע בוקרים",
@@ -248,7 +268,8 @@ export const AVATAR_ITEMS = {
     category: "hat",
     price: 1000,
     unlock: { type: "lessons", value: 24 },
-    hourlyBonus: 10
+    hourlyBonus: 10,
+    description: "+10 מטבעות לשעה בעבודה"
   },
   "hat_crown": {
     name: "👑 כתר מלכותי",
@@ -256,7 +277,8 @@ export const AVATAR_ITEMS = {
     category: "hat",
     price: 1300,
     unlock: { type: "lessons", value: 32 },
-    hourlyBonus: 15
+    hourlyBonus: 15,
+    description: "+15 מטבעות לשעה בעבודה"
   },
   "hat_wizard": {
     name: "🧙 כובע קוסם",
@@ -264,7 +286,8 @@ export const AVATAR_ITEMS = {
     category: "hat",
     price: 1600,
     unlock: { type: "lessons", value: 40 },
-    hourlyBonus: 20
+    hourlyBonus: 20,
+    description: "+20 מטבעות לשעה בעבודה"
   },
   "hat_diamond": {
     name: "💎 כתר יהלום",
@@ -272,7 +295,8 @@ export const AVATAR_ITEMS = {
     category: "hat",
     price: 2500,
     unlock: { type: "lessons", value: 48 },
-    hourlyBonus: 30
+    hourlyBonus: 30,
+    description: "+30 מטבעות לשעה בעבודה"
   },
 
   // 8 אביזרים יזמיים
