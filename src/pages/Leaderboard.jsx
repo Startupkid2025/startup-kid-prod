@@ -210,7 +210,7 @@ export default function Leaderboard() {
           u.crowns.push({ type: 'investment', name: '💼 מלך ההשקעות', bonus: 'עמלות 0%' });
         }
         if (loginStreakKing && u.student_email === loginStreakKing.student_email && u.loginStreakEarnings > 0) {
-          u.crowns.push({ type: 'login', name: '🔥 מלך הרצף', bonus: '+10 מטבעות ליום' });
+          u.crowns.push({ type: 'login', name: '🔥 מלך הרצף', bonus: 'פי 2 על בונוס הרצף' });
         }
         if (workKing && u.student_email === workKing.student_email && u.workEarnings > 0) {
           u.crowns.push({ type: 'work', name: '💪 מלך העבודה', bonus: '+5 מטבעות לשעה' });

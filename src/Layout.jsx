@@ -97,13 +97,13 @@ export default function Layout({ children }) {
       const yesterdayStr = yesterday.toISOString().split('T')[0];
       
       let newStreak = 1;
-      let streakBonus = 5; // Base bonus: 5 coins
-      
+      let streakBonus = 10; // Base bonus: 10 coins
+
       if (lastLogin === yesterdayStr) {
         // Continued streak!
         newStreak = (user.login_streak || 0) + 1;
-        streakBonus = Math.min(newStreak * 5, 50); // 5 coins per day, max 50 coins (day 10+)
-        
+        streakBonus = newStreak * 10; // 10 coins per day, increases forever (10, 20, 30, 40, ...)
+
         toast.success(`🔥 רצף כניסות: ${newStreak} ימים! קיבלת ${streakBonus} מטבעות! 🎉`, {
           duration: 5000
         });
@@ -130,7 +130,7 @@ export default function Layout({ children }) {
 
       let finalBonus = streakBonus;
       if (streakKingEmail === user.email && maxStreakEarnings > 0) {
-        finalBonus += 10; // Login streak king bonus!
+        finalBonus = streakBonus * 2; // Login streak king gets x2 bonus!
       }
 
       // Update user with new streak and bonus
