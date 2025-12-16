@@ -74,7 +74,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       // Calculate finance report
       const income = {
         base: 500,
-        lessons: participations.filter(p => p.attended).length * 100,
+        lessons: (student.total_lessons || 0) * 100,
         vocabulary: wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0),
         math: mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0),
         surveys: participations.filter(p => p.survey_completed).length * 20,
