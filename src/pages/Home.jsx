@@ -63,7 +63,8 @@ export default function Home() {
   const [expectedDailyLosses, setExpectedDailyLosses] = useState({
     inflation: 0,
     incomeTax: 0,
-    creditInterest: 0
+    creditInterest: 0,
+    dividendTax: 0
   });
   const [effectiveIncomeTaxRate, setEffectiveIncomeTaxRate] = useState(0.5);
 
@@ -254,6 +255,48 @@ export default function Home() {
       let expectedInflation = 0;
       let expectedIncomeTax = 0;
       let expectedCreditInterest = 0;
+      let expectedDividendTax = 0;
+
+      // Dividend tax: 25% of daily profit from investments
+      if (userInvestments.length > 0) {
+        try {
+          const today = new Date().toISOString().split('T')[0];
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+          const [todayMarket, yesterdayMarket] = await Promise.all([
+            base44.entities.DailyMarketPerformance.filter({ date: today }),
+            base44.entities.DailyMarketPerformance.filter({ date: yesterdayStr })
+          ]);
+
+          if (todayMarket.length > 0) {
+            const marketChanges = {
+              government_bonds: todayMarket[0].government_bonds_change || 0,
+              real_estate: todayMarket[0].real_estate_change || 0,
+              gold: todayMarket[0].gold_change || 0,
+              stock_market: todayMarket[0].stock_market_change || 0,
+              tech_startup: todayMarket[0].tech_startup_change || 0,
+              crypto: todayMarket[0].crypto_change || 0
+            };
+
+            let totalDailyProfit = 0;
+            userInvestments.forEach(inv => {
+              const changePercent = marketChanges[inv.business_type] || 0;
+              if (changePercent > 0) {
+                const profit = Math.floor(inv.current_value * (changePercent / 100));
+                totalDailyProfit += profit;
+              }
+            });
+
+            if (totalDailyProfit > 0) {
+              expectedDividendTax = Math.floor(totalDailyProfit * 0.25);
+            }
+          }
+        } catch (error) {
+          console.error("Error calculating dividend tax:", error);
+        }
+      }
 
       // Inflation: 3% on positive cash
       if (currentCoins > 0) {
@@ -281,7 +324,8 @@ export default function Home() {
       setExpectedDailyLosses({
         inflation: expectedInflation,
         incomeTax: expectedIncomeTax,
-        creditInterest: expectedCreditInterest
+        creditInterest: expectedCreditInterest,
+        dividendTax: expectedDividendTax
       });
       setEffectiveIncomeTaxRate(incomeTaxRate * 100); // Convert to percentage
 
@@ -694,7 +738,7 @@ export default function Home() {
                 </div>
 
                 {/* Expected Daily Taxes Display */}
-                {(expectedDailyLosses.inflation > 0 || expectedDailyLosses.incomeTax > 0 || expectedDailyLosses.creditInterest > 0) && (
+                {(expectedDailyLosses.inflation > 0 || expectedDailyLosses.incomeTax > 0 || expectedDailyLosses.creditInterest > 0 || expectedDailyLosses.dividendTax > 0) && (
                   <TooltipProvider>
                     <div className="bg-red-500/20 rounded-lg px-1.5 sm:px-3 py-1 sm:py-2 border border-red-400/30 mb-2 sm:mb-3 space-y-0.5 sm:space-y-1">
                       <p className="text-white/90 text-[9px] sm:text-xs font-bold text-center mb-1">💸 הפסדים צפויים</p>
@@ -743,6 +787,23 @@ export default function Home() {
                           </span>
                           <span>-{expectedDailyLosses.creditInterest} 💸</span>
                         </p>
+                      )}
+                      {expectedDailyLosses.dividendTax > 0 && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="text-red-100 text-[8px] sm:text-xs font-bold flex items-center justify-between px-1 cursor-help">
+                              <span className="flex items-center gap-0.5">
+                                <TrendingDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
+                                מס דיבידנד:
+                                <HelpCircle className="w-2 h-2 sm:w-3 sm:h-3 opacity-70" />
+                              </span>
+                              <span>-{expectedDailyLosses.dividendTax} 💸</span>
+                            </p>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-gray-900 border-gray-700">
+                            <p className="text-sm">💰 <strong>מס דיבידנד:</strong> 25% מהרווחים היומיים בהשקעות</p>
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                     </div>
                   </TooltipProvider>

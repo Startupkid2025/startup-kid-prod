@@ -52,12 +52,18 @@ export default function Layout({ children }) {
       const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
 
       if (userInvestments.length === 0) {
+        await base44.auth.updateMe({
+          last_dividend_date: today
+        });
         return;
       }
 
       // Get today's market data
       const todayMarketData = await base44.entities.DailyMarketPerformance.filter({ date: today });
       if (todayMarketData.length === 0) {
+        await base44.auth.updateMe({
+          last_dividend_date: today
+        });
         return;
       }
 
@@ -71,11 +77,47 @@ export default function Layout({ children }) {
         crypto: todayMarket.crypto_change || 0
       };
 
-      // Dividend tax removed - no longer applied
-      // Mark as processed for today
-      await base44.auth.updateMe({
-        last_dividend_date: today
+      // Calculate 25% dividend tax on daily profits
+      let totalDailyProfit = 0;
+      userInvestments.forEach(inv => {
+        const changePercent = marketChanges[inv.business_type] || 0;
+        if (changePercent > 0) {
+          const profit = Math.floor(inv.current_value * (changePercent / 100));
+          totalDailyProfit += profit;
+        }
       });
+
+      let dividendTax = 0;
+      if (totalDailyProfit > 0) {
+        dividendTax = Math.floor(totalDailyProfit * 0.25);
+
+        const newCoins = (user.coins || 0) - dividendTax;
+        await base44.auth.updateMe({
+          coins: newCoins,
+          last_dividend_date: today,
+          total_dividend_tax: (user.total_dividend_tax || 0) + dividendTax,
+          daily_dividend_tax: dividendTax
+        });
+
+        // Update leaderboard
+        try {
+          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
+            student_email: user.email 
+          });
+          if (leaderboardEntries.length > 0) {
+            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+              coins: newCoins
+            });
+          }
+        } catch (error) {
+          console.error("Error updating leaderboard:", error);
+        }
+      } else {
+        await base44.auth.updateMe({
+          last_dividend_date: today,
+          daily_dividend_tax: 0
+        });
+      }
     } catch (error) {
       console.error("Error applying dividend tax:", error);
     }
