@@ -37,49 +37,7 @@ export default function Layout({ children }) {
     }
   };
 
-  const applyDailyDividendTax = async (user) => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const lastDividendDate = user.last_dividend_date;
 
-      // If already applied dividend tax today, do nothing
-      if (lastDividendDate === today) {
-        return;
-      }
-
-      // Get all investments for this user
-      const allInvestments = await base44.entities.Investment.list();
-      const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
-
-      if (userInvestments.length === 0) {
-        return;
-      }
-
-      // Get today's market data
-      const todayMarketData = await base44.entities.DailyMarketPerformance.filter({ date: today });
-      if (todayMarketData.length === 0) {
-        return;
-      }
-
-      const todayMarket = todayMarketData[0];
-      const marketChanges = {
-        government_bonds: todayMarket.government_bonds_change || 0,
-        real_estate: todayMarket.real_estate_change || 0,
-        gold: todayMarket.gold_change || 0,
-        stock_market: todayMarket.stock_market_change || 0,
-        tech_startup: todayMarket.tech_startup_change || 0,
-        crypto: todayMarket.crypto_change || 0
-      };
-
-      // Dividend tax removed - no longer applied
-      // Mark as processed for today
-      await base44.auth.updateMe({
-        last_dividend_date: today
-      });
-    } catch (error) {
-      console.error("Error applying dividend tax:", error);
-    }
-  };
 
   const checkAndUpdateLoginStreak = async (user) => {
     try {
@@ -178,6 +136,7 @@ export default function Layout({ children }) {
             // Get investments value
             const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
             const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+            const totalInvested = userInvestments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
             const currentNetWorth = currentCoins + itemsValue + investmentsValue;
 
             // Apply taxes for all days missed

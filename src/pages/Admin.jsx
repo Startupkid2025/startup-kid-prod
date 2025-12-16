@@ -162,19 +162,17 @@ export default function Admin() {
         const loginStreakCoins = user.total_login_streak_coins || 0;
         breakdown.loginStreakCoins = loginStreakCoins;
 
-        // רווחי השקעות
+        // רווחי השקעות - לא צריך להוסיף להכנסות כי זה כבר בנכסים!
         const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
         const totalInvested = userInvestments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
         const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-        const investmentProfits = Math.max(0, investmentsValue - totalInvested);
-        breakdown.investmentProfits = investmentProfits;
         breakdown.totalInvested = totalInvested;
         breakdown.investmentsValue = investmentsValue;
 
         const totalIncome = baseCoins + lessonsCoins + wordCoins + mathCoins + 
                            surveyCoins + quizCoins + profileTasksCoins + 
                            profileDetailsCoins + workCoins + collaborationCoins + 
-                           loginStreakCoins + investmentProfits;
+                           loginStreakCoins + totalInvested;
         breakdown.totalIncome = totalIncome;
 
         // ═══════════════════════════════════════════════════
