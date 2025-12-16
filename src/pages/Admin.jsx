@@ -289,6 +289,15 @@ export default function Admin() {
             if (leaderboardEntries.length > 0) {
               await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
                 coins: correctCoins,
+                total_lessons: user.total_lessons || 0,
+                ai_tech_level: user.ai_tech_level || 1,
+                ai_tech_xp: user.ai_tech_xp || 0,
+                personal_dev_level: user.personal_dev_level || 1,
+                personal_dev_xp: user.personal_dev_xp || 0,
+                social_skills_level: user.social_skills_level || 1,
+                social_skills_xp: user.social_skills_xp || 0,
+                money_business_level: user.money_business_level || 1,
+                money_business_xp: user.money_business_xp || 0,
                 purchased_items: user.purchased_items || [],
                 equipped_items: user.equipped_items || {}
               });
