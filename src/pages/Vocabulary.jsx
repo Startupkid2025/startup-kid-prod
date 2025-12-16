@@ -189,6 +189,28 @@ export default function Vocabulary() {
         if (isMastered && !existingWordProg.mastered) {
           coinsEarned = getCoinsForDifficulty(currentWord.difficulty);
           
+          // Check for eyes and mouth bonus
+          const purchasedItems = userData.purchased_items || [];
+          const equippedItems = userData.equipped_items || {};
+          const equippedEyes = equippedItems.eyes;
+          const equippedMouth = equippedItems.mouth;
+          
+          if (equippedEyes && purchasedItems.includes(equippedEyes)) {
+            const { AVATAR_ITEMS } = await import('../components/avatar/TamagotchiAvatar');
+            const eyesItem = AVATAR_ITEMS[equippedEyes];
+            if (eyesItem && eyesItem.wordBonus) {
+              coinsEarned += eyesItem.wordBonus;
+            }
+          }
+          
+          if (equippedMouth && purchasedItems.includes(equippedMouth)) {
+            const { AVATAR_ITEMS } = await import('../components/avatar/TamagotchiAvatar');
+            const mouthItem = AVATAR_ITEMS[equippedMouth];
+            if (mouthItem && mouthItem.wordBonus) {
+              coinsEarned += mouthItem.wordBonus;
+            }
+          }
+          
           // Check if user is vocab king and add bonus
           const allUsers = await base44.entities.User.list();
           const allWordProgress = await base44.entities.WordProgress.list();
