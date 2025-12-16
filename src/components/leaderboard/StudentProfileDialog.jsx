@@ -68,7 +68,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       const totalInvested = studentInvestments.reduce((sum, inv) => sum + inv.invested_amount, 0);
       const totalInvestmentValue = studentInvestments.reduce((sum, inv) => sum + inv.current_value, 0);
 
-      // Calculate finance report - רווחי השקעות לא נכללים בהכנסות! רק הסכום שהושקע
+      // Calculate finance report
       const income = {
         base: 500,
         lessons: participations.filter(p => p.attended).length * 100,
@@ -78,8 +78,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         quizzes: quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0),
         work: student.total_work_earnings || 0,
         profileTasks: 0,
-        profileDetails: 0,
-        investments: totalInvested
+        profileDetails: 0
       };
 
       // Profile tasks
@@ -308,7 +307,6 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                     <div className="flex justify-between"><span className="text-white/70">👤 פרטי פרופיל:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileDetails)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">🤝 שיתופי פעולה:</span><span className="text-white font-bold">{Math.round(financeReport.income.collaboration)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">🔥 רצף כניסות:</span><span className="text-white font-bold">{Math.round(financeReport.income.loginStreak)}</span></div>
-                    <div className="flex justify-between"><span className="text-white/70">💰 השקעות שבוצעו:</span><span className="text-white font-bold">{Math.round(financeReport.income.investments)}</span></div>
                   </div>
                 </div>
 
