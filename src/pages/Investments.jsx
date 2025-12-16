@@ -492,9 +492,9 @@ export default function Investments() {
       }
 
       if (grossProfit > 0) {
-        toast.success(`מכרת! רווח נטו: ${Math.round(netProfit)} מטבעות (עמלה: ${TRANSACTION_FEE}, מס: ${capitalGainsTax}) 💰`);
+        toast.success(`מכרת! רווח נטו: ${Math.round(netProfit)} מטבעות (עמלה: ${TRANSACTION_FEE}, מס: ${Math.round(capitalGainsTax)}) 💰`);
       } else {
-        toast.error(`מכרת בהפסד של ${Math.round(Math.abs(grossProfit))} מטבעות (כולל עמלה ${TRANSACTION_FEE}) 😢`);
+        toast.error(`מכרת בהפסד של ${Math.round(Math.abs(grossProfit))} מטבעות (כולל עמלה ${TRANSACTION_FEE}) �😢`);
       }
 
       setSellAmounts({ ...sellAmounts, [businessId]: 0 });
@@ -829,24 +829,24 @@ export default function Investments() {
               <p className="font-bold">⚠️ שים לב: במכירת השקעות ברווח יגבה מס רווח הון מתוך הרווח!</p>
 
               <div className="bg-white/10 rounded-lg p-3 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold">{confirmSellDialog.amount} 🪙</span>
-                  <span>סכום למכירה:</span>
-                </div>
-                <div className="flex justify-between items-center text-red-300">
-                  <span className="font-bold">-{TRANSACTION_FEE} 🪙</span>
-                  <span>עמלת מכירה:</span>
-                </div>
-                {confirmSellDialog.tax > 0 && (
-                  <div className="flex justify-between items-center text-red-300">
-                    <span className="font-bold">-{confirmSellDialog.tax} 🪙</span>
-                    <span>מס רווח הון (25% מהרווח):</span>
-                  </div>
-                )}
-                <div className="border-t border-white/20 pt-2 flex justify-between items-center text-green-300">
-                  <span className="font-black text-xl">{confirmSellDialog.netAmount} 🪙</span>
-                  <span className="font-bold">תקבל בפועל:</span>
-                </div>
+               <div className="flex justify-between items-center">
+                 <span className="font-bold">{Math.round(confirmSellDialog.amount)} 🪙</span>
+                 <span>סכום למכירה:</span>
+               </div>
+               <div className="flex justify-between items-center text-red-300">
+                 <span className="font-bold">-{TRANSACTION_FEE} 🪙</span>
+                 <span>עמלת מכירה:</span>
+               </div>
+               {confirmSellDialog.tax > 0 && (
+                 <div className="flex justify-between items-center text-red-300">
+                   <span className="font-bold">-{Math.round(confirmSellDialog.tax)} 🪙</span>
+                   <span>מס רווח הון (25% מהרווח):</span>
+                 </div>
+               )}
+               <div className="border-t border-white/20 pt-2 flex justify-between items-center text-green-300">
+                 <span className="font-black text-xl">{Math.round(confirmSellDialog.netAmount)} 🪙</span>
+                 <span className="font-bold">תקבל בפועל:</span>
+               </div>
               </div>
 
               <p className="text-sm text-white/70 text-center">האם אתה בטוח שברצונך למכור?</p>
