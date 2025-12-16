@@ -251,6 +251,18 @@ export default function AvatarShop({
                             <span>+{item.mathBonus} חשבון</span>
                           </div>
                         )}
+                        {item.wordBonus > 0 && item.isUnlocked && (
+                          <div className="absolute top-1 left-1 bg-black/80 text-green-300 text-[10px] px-2 py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-green-400/50">
+                            <Coins className="w-2.5 h-2.5" />
+                            <span>+{item.wordBonus} אנגלית</span>
+                          </div>
+                        )}
+                        {item.quizBonus > 0 && item.isUnlocked && (
+                          <div className="absolute top-1 left-1 bg-black/80 text-orange-300 text-[10px] px-2 py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-orange-400/50">
+                            <Coins className="w-2.5 h-2.5" />
+                            <span>+{item.quizBonus} חידון</span>
+                          </div>
+                        )}
                         {item.inflationProtection > 0 && item.isUnlocked && (
                           <div className="absolute top-1 left-1 bg-black/80 text-purple-300 text-[10px] px-2 py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-purple-400/50">
                             <span>-{item.inflationProtection}% 📉</span>
@@ -378,6 +390,18 @@ export default function AvatarShop({
                           <div className="absolute top-1 left-1 bg-gradient-to-r from-blue-400 to-cyan-500 text-white text-[10px] px-2 py-1 rounded-full font-black shadow-lg z-10 flex items-center gap-0.5">
                             <Coins className="w-2.5 h-2.5" />
                             <span>+{item.mathBonus}</span>
+                          </div>
+                        )}
+                        {item.wordBonus > 0 && (
+                          <div className="absolute top-1 left-1 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-[10px] px-2 py-1 rounded-full font-black shadow-lg z-10 flex items-center gap-0.5">
+                            <Coins className="w-2.5 h-2.5" />
+                            <span>+{item.wordBonus}</span>
+                          </div>
+                        )}
+                        {item.quizBonus > 0 && (
+                          <div className="absolute top-1 left-1 bg-gradient-to-r from-orange-400 to-amber-500 text-white text-[10px] px-2 py-1 rounded-full font-black shadow-lg z-10 flex items-center gap-0.5">
+                            <Coins className="w-2.5 h-2.5" />
+                            <span>+{item.quizBonus}</span>
                           </div>
                         )}
                         {item.inflationProtection > 0 && (
