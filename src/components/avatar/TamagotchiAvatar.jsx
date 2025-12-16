@@ -345,6 +345,203 @@ export const AVATAR_ITEMS = {
     unlock: { type: "lessons", value: 48 },
     hourlyBonus: 35,
     description: "+35 מטבעות/שעה"
+  },
+
+  // 8 נעליים - בונוס XP לשיעורים
+  "shoes_sneakers": {
+    name: "👟 נעלי ספורט",
+    emoji: "👟",
+    category: "shoes",
+    price: 0,
+    xpBonus: 0,
+    description: "ללא בונוס"
+  },
+  "shoes_running": {
+    name: "🏃 נעלי ריצה",
+    emoji: "🏃",
+    category: "shoes",
+    price: 350,
+    xpBonus: 5,
+    description: "+5% XP בשיעורים"
+  },
+  "shoes_boots": {
+    name: "🥾 מגפיים",
+    emoji: "🥾",
+    category: "shoes",
+    price: 500,
+    xpBonus: 10,
+    description: "+10% XP בשיעורים"
+  },
+  "shoes_heels": {
+    name: "👠 עקבים",
+    emoji: "👠",
+    category: "shoes",
+    price: 700,
+    unlock: { type: "lessons", value: 8 },
+    xpBonus: 15,
+    description: "+15% XP בשיעורים"
+  },
+  "shoes_dress": {
+    name: "👞 נעלי אלגנט",
+    emoji: "👞",
+    category: "shoes",
+    price: 1000,
+    unlock: { type: "lessons", value: 16 },
+    xpBonus: 20,
+    description: "+20% XP בשיעורים"
+  },
+  "shoes_rocket": {
+    name: "🚀 נעלי רקטה",
+    emoji: "🚀",
+    category: "shoes",
+    price: 1400,
+    unlock: { type: "lessons", value: 24 },
+    xpBonus: 25,
+    description: "+25% XP בשיעורים"
+  },
+  "shoes_fire": {
+    name: "🔥 נעלי אש",
+    emoji: "🔥",
+    category: "shoes",
+    price: 1800,
+    unlock: { type: "lessons", value: 32 },
+    xpBonus: 30,
+    description: "+30% XP בשיעורים"
+  },
+  "shoes_diamond": {
+    name: "💎 נעלי יהלום",
+    emoji: "💎",
+    category: "shoes",
+    price: 2500,
+    unlock: { type: "lessons", value: 40 },
+    xpBonus: 40,
+    description: "+40% XP בשיעורים"
+  },
+
+  // 8 רקעים - הפחתת אינפלציה
+  "background_basic": {
+    name: "🏠 בית פשוט",
+    emoji: "🏠",
+    category: "background",
+    price: 0,
+    inflationProtection: 0,
+    description: "ללא הגנה"
+  },
+  "background_apartment": {
+    name: "🏢 דירה בעיר",
+    emoji: "🏢",
+    category: "background",
+    price: 400,
+    inflationProtection: 10,
+    description: "-10% אינפלציה"
+  },
+  "background_villa": {
+    name: "🏡 וילה",
+    emoji: "🏡",
+    category: "background",
+    price: 700,
+    inflationProtection: 20,
+    description: "-20% אינפלציה"
+  },
+  "background_penthouse": {
+    name: "🏙️ פנטהאוז",
+    emoji: "🏙️",
+    category: "background",
+    price: 1000,
+    unlock: { type: "lessons", value: 8 },
+    inflationProtection: 30,
+    description: "-30% אינפלציה"
+  },
+  "background_mansion": {
+    name: "🏰 אחוזה",
+    emoji: "🏰",
+    category: "background",
+    price: 1500,
+    unlock: { type: "lessons", value: 16 },
+    inflationProtection: 40,
+    description: "-40% אינפלציה"
+  },
+  "background_island": {
+    name: "🏝️ אי פרטי",
+    emoji: "🏝️",
+    category: "background",
+    price: 2000,
+    unlock: { type: "lessons", value: 24 },
+    inflationProtection: 50,
+    description: "-50% אינפלציה"
+  },
+  "background_space": {
+    name: "🚀 תחנת חלל",
+    emoji: "🚀",
+    category: "background",
+    price: 2500,
+    unlock: { type: "lessons", value: 32 },
+    inflationProtection: 60,
+    description: "-60% אינפלציה"
+  },
+  "background_universe": {
+    name: "🌌 גלקסיה שלמה",
+    emoji: "🌌",
+    category: "background",
+    price: 3500,
+    unlock: { type: "lessons", value: 40 },
+    inflationProtection: 75,
+    description: "-75% אינפלציה"
+  },
+
+  // 6 תכשיטים - בונוסים מיוחדים
+  "jewelry_watch": {
+    name: "⌚ שעון יוקרה",
+    emoji: "⌚",
+    category: "jewelry",
+    price: 600,
+    specialBonus: "time",
+    description: "+10 מטבעות ליום"
+  },
+  "jewelry_necklace": {
+    name: "📿 שרשרת זהב",
+    emoji: "📿",
+    category: "jewelry",
+    price: 900,
+    unlock: { type: "lessons", value: 8 },
+    specialBonus: "words",
+    description: "+2 מטבעות למילה"
+  },
+  "jewelry_ring": {
+    name: "💍 טבעת יהלום",
+    emoji: "💍",
+    category: "jewelry",
+    price: 1200,
+    unlock: { type: "lessons", value: 16 },
+    specialBonus: "math",
+    description: "+2 מטבעות לתרגיל"
+  },
+  "jewelry_crown_small": {
+    name: "👑 כתר קטן",
+    emoji: "👑",
+    category: "jewelry",
+    price: 1500,
+    unlock: { type: "lessons", value: 24 },
+    specialBonus: "quiz",
+    description: "+5 מטבעות לחידון"
+  },
+  "jewelry_amulet": {
+    name: "🧿 קמע מזל",
+    emoji: "🧿",
+    category: "jewelry",
+    price: 2000,
+    unlock: { type: "lessons", value: 32 },
+    specialBonus: "investment",
+    description: "-20% עמלות השקעה"
+  },
+  "jewelry_infinity": {
+    name: "♾️ תכשיט אינסוף",
+    emoji: "♾️",
+    category: "jewelry",
+    price: 3000,
+    unlock: { type: "lessons", value: 40 },
+    specialBonus: "all",
+    description: "+5% לכל הכנסה"
   }
 };
 
