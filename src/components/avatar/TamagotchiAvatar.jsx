@@ -454,30 +454,30 @@ export const AVATAR_ITEMS = {
     description: "+10 מטבעות לתרגיל חשבון נכון"
   },
 
-  // 8 רקעים - הפחתת אינפלציה
+  // 8 רקעים - הכנסה פסיבית יומית
   "background_basic": {
     name: "🏠 בית פשוט",
     emoji: "🏠",
     category: "background",
     price: 0,
-    inflationProtection: 0,
-    description: "רקע בסיסי - ללא הגנה מאינפלציה"
+    passiveIncome: 0,
+    description: "רקע בסיסי - ללא הכנסה פסיבית"
   },
   "background_apartment": {
     name: "🏢 דירה בעיר",
     emoji: "🏢",
     category: "background",
     price: 400,
-    inflationProtection: 10,
-    description: "מפחית 10% אינפלציה יומית על מזומן"
+    passiveIncome: 5,
+    description: "+5 מטבעות ליום (הכנסה פסיבית)"
   },
   "background_villa": {
     name: "🏡 וילה",
     emoji: "🏡",
     category: "background",
     price: 700,
-    inflationProtection: 20,
-    description: "מפחית 20% אינפלציה יומית על מזומן"
+    passiveIncome: 10,
+    description: "+10 מטבעות ליום (הכנסה פסיבית)"
   },
   "background_penthouse": {
     name: "🏙️ פנטהאוז",
@@ -485,8 +485,8 @@ export const AVATAR_ITEMS = {
     category: "background",
     price: 1000,
     unlock: { type: "lessons", value: 8 },
-    inflationProtection: 30,
-    description: "מפחית 30% אינפלציה יומית על מזומן"
+    passiveIncome: 15,
+    description: "+15 מטבעות ליום (הכנסה פסיבית)"
   },
   "background_mansion": {
     name: "🏰 אחוזה",
@@ -494,8 +494,8 @@ export const AVATAR_ITEMS = {
     category: "background",
     price: 1500,
     unlock: { type: "lessons", value: 16 },
-    inflationProtection: 40,
-    description: "מפחית 40% אינפלציה יומית על מזומן"
+    passiveIncome: 25,
+    description: "+25 מטבעות ליום (הכנסה פסיבית)"
   },
   "background_island": {
     name: "🏝️ אי פרטי",
@@ -503,8 +503,8 @@ export const AVATAR_ITEMS = {
     category: "background",
     price: 2000,
     unlock: { type: "lessons", value: 24 },
-    inflationProtection: 50,
-    description: "מפחית 50% אינפלציה יומית על מזומן"
+    passiveIncome: 35,
+    description: "+35 מטבעות ליום (הכנסה פסיבית)"
   },
   "background_space": {
     name: "🚀 תחנת חלל",
@@ -512,8 +512,8 @@ export const AVATAR_ITEMS = {
     category: "background",
     price: 2500,
     unlock: { type: "lessons", value: 32 },
-    inflationProtection: 60,
-    description: "מפחית 60% אינפלציה יומית על מזומן"
+    passiveIncome: 50,
+    description: "+50 מטבעות ליום (הכנסה פסיבית)"
   },
   "background_universe": {
     name: "🌌 גלקסיה שלמה",
@@ -521,8 +521,8 @@ export const AVATAR_ITEMS = {
     category: "background",
     price: 3500,
     unlock: { type: "lessons", value: 40 },
-    inflationProtection: 75,
-    description: "מפחית 75% אינפלציה יומית על מזומן"
+    passiveIncome: 75,
+    description: "+75 מטבעות ליום (הכנסה פסיבית)"
   },
 
   // 6 תכשיטים - בונוסים מיוחדים

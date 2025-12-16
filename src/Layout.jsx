@@ -203,8 +203,19 @@ export default function Layout({ children }) {
             let totalInflationLoss = 0;
             let totalIncomeTax = 0;
             let totalCreditInterest = 0;
+            let totalPassiveIncome = 0;
 
             for (let i = 0; i < daysPassed; i++) {
+              // Passive income from backgrounds
+              const equippedBackground = user.equipped_items?.background;
+              if (equippedBackground) {
+                const bgItem = AVATAR_ITEMS[equippedBackground];
+                if (bgItem && bgItem.passiveIncome > 0) {
+                  totalPassiveIncome += bgItem.passiveIncome;
+                  newCoins += bgItem.passiveIncome;
+                }
+              }
+
               // Inflation: 3% on cash only (only if positive)
               if (newCoins > 0) {
                 const inflationLoss = Math.floor(newCoins * 0.03);
@@ -217,7 +228,7 @@ export default function Layout({ children }) {
               // Income tax: 2% on total net worth (taken from cash)
               // But can be reduced by owning body colors! Each color has different reduction
               let incomeTaxRate = 0.02; // Base rate: 2%
-              
+
               // Calculate tax reduction based on owned body colors
               for (const itemId of purchasedItems) {
                 const item = AVATAR_ITEMS[itemId];
@@ -225,7 +236,7 @@ export default function Layout({ children }) {
                   incomeTaxRate = Math.max(0, incomeTaxRate - (item.taxReduction / 100));
                 }
               }
-              
+
               // Recalculate net worth with current coins
               const currentDayNetWorth = newCoins + itemsValue + investmentsValue;
               const incomeTax = Math.floor(currentDayNetWorth * incomeTaxRate);
@@ -250,6 +261,7 @@ export default function Layout({ children }) {
               total_inflation_lost: (user.total_inflation_lost || 0) + totalInflationLoss,
               total_income_tax: (user.total_income_tax || 0) + totalIncomeTax,
               total_credit_interest: (user.total_credit_interest || 0) + totalCreditInterest,
+              total_passive_income: (user.total_passive_income || 0) + totalPassiveIncome,
               daily_inflation_lost: lastDayInflation,
               daily_income_tax: lastDayIncomeTax,
               daily_credit_interest: lastDayCreditInterest
