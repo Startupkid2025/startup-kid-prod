@@ -89,6 +89,28 @@ export default function CommunityFeed({ currentUser }) {
         likes: updatedLikes
       });
 
+      // Award 3 coins for liking (only when adding a like, not removing)
+      if (!hasLiked) {
+        const newCoins = (currentUser.coins || 0) + 3;
+        await base44.auth.updateMe({
+          coins: newCoins
+        });
+
+        // Update leaderboard
+        try {
+          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: currentUser.email });
+          if (leaderboardEntries.length > 0) {
+            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+              coins: newCoins
+            });
+          }
+        } catch (leaderboardError) {
+          console.error("Error updating leaderboard:", leaderboardError);
+        }
+
+        toast.success("לייק! +3 מטבעות 💙");
+      }
+
       await loadPosts();
     } catch (error) {
       console.error("Error liking post:", error);
@@ -120,8 +142,26 @@ export default function CommunityFeed({ currentUser }) {
         comments: [...comments, newComment]
       });
 
+      // Award 3 coins for commenting
+      const newCoins = (currentUser.coins || 0) + 3;
+      await base44.auth.updateMe({
+        coins: newCoins
+      });
+
+      // Update leaderboard
+      try {
+        const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: currentUser.email });
+        if (leaderboardEntries.length > 0) {
+          await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+            coins: newCoins
+          });
+        }
+      } catch (leaderboardError) {
+        console.error("Error updating leaderboard:", leaderboardError);
+      }
+
       setCommentTexts({ ...commentTexts, [post.id]: "" });
-      toast.success("תגובה נוספה! 💬");
+      toast.success("תגובה נוספה! +3 מטבעות 💬");
       await loadPosts();
     } catch (error) {
       console.error("Error commenting:", error);
