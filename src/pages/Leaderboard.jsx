@@ -343,6 +343,13 @@ export default function Leaderboard() {
     return "from-purple-400 to-pink-400";
   };
 
+  // Calculate percentage from first place
+  const firstPlaceValue = users.length > 0 ? users[0].totalValue : 0;
+  const calculatePercentageFromFirst = (value) => {
+    if (firstPlaceValue === 0) return 100;
+    return Math.round((value / firstPlaceValue) * 100);
+  };
+
   const handleStudentClick = async (student) => {
     try {
       // Fetch full user data as LeaderboardEntry doesn't contain all User fields
