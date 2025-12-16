@@ -205,18 +205,18 @@ export default function Layout({ children }) {
             let totalCreditInterest = 0;
 
             for (let i = 0; i < daysPassed; i++) {
-              // Inflation: 1% on cash only (only if positive)
+              // Inflation: 3% on cash only (only if positive)
               if (newCoins > 0) {
-                const inflationLoss = Math.floor(newCoins * 0.01);
+                const inflationLoss = Math.floor(newCoins * 0.03);
                 if (inflationLoss > 0) {
                   totalInflationLoss += inflationLoss;
                   newCoins -= inflationLoss;
                 }
               }
 
-              // Income tax: 0.5% on total net worth (taken from cash)
+              // Income tax: 5% on total net worth (taken from cash)
               // But can be reduced by owning body colors! Each color has different reduction
-              let incomeTaxRate = 0.005; // Base rate: 0.5%
+              let incomeTaxRate = 0.05; // Base rate: 5%
               
               // Calculate tax reduction based on owned body colors
               for (const itemId of purchasedItems) {
@@ -234,9 +234,9 @@ export default function Layout({ children }) {
                 newCoins -= incomeTax;
               }
 
-              // Credit interest: 3% per day on negative balance only
+              // Credit interest: 10% per day on negative balance only
               if (newCoins < 0) {
-                const creditInterest = Math.floor(Math.abs(newCoins) * 0.03);
+                const creditInterest = Math.floor(Math.abs(newCoins) * 0.10);
                 if (creditInterest > 0) {
                   totalCreditInterest += creditInterest;
                   newCoins -= creditInterest;
