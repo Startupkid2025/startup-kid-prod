@@ -256,17 +256,17 @@ export default function AvatarShop({
                             <span className="sm:hidden">+{item.mathBonus}</span>
                           </div>
                         )}
-                        {item.wordBonus > 0 && item.isUnlocked && (
-                          <div className="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 bg-black/80 text-green-300 text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 sm:py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-green-400/50">
-                            <Coins className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
-                            <span className="hidden sm:inline">+{item.wordBonus} אנגלית</span>
-                            <span className="sm:hidden">+{item.wordBonus}</span>
-                          </div>
-                        )}
                         {item.dividendTaxReduction > 0 && item.isUnlocked && (
                           <div className="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 bg-black/80 text-purple-300 text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 sm:py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-purple-400/50">
                             <span className="hidden sm:inline">-{item.dividendTaxReduction}% מס דיב'</span>
                             <span className="sm:hidden">-{item.dividendTaxReduction}%</span>
+                          </div>
+                        )}
+                        {item.wordBonus > 0 && !item.dividendTaxReduction && item.isUnlocked && (
+                          <div className="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 bg-black/80 text-green-300 text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 sm:py-1 rounded-full font-black shadow-xl z-10 flex items-center gap-0.5 border border-green-400/50">
+                            <Coins className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                            <span className="hidden sm:inline">+{item.wordBonus} אנגלית</span>
+                            <span className="sm:hidden">+{item.wordBonus}</span>
                           </div>
                         )}
                         {item.quizBonus > 0 && item.isUnlocked && (
@@ -407,15 +407,15 @@ export default function AvatarShop({
                             <span>+{item.mathBonus}</span>
                           </div>
                         )}
-                        {item.wordBonus > 0 && (
-                          <div className="absolute top-1 left-1 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-[10px] px-2 py-1 rounded-full font-black shadow-lg z-10 flex items-center gap-0.5">
-                            <Coins className="w-2.5 h-2.5" />
-                            <span>+{item.wordBonus}</span>
-                          </div>
-                        )}
                         {item.dividendTaxReduction > 0 && (
                           <div className="absolute top-1 left-1 bg-gradient-to-r from-purple-400 to-pink-500 text-white text-[10px] px-2 py-1 rounded-full font-black shadow-lg z-10 flex items-center gap-0.5">
                             <span>-{item.dividendTaxReduction}%</span>
+                          </div>
+                        )}
+                        {item.wordBonus > 0 && !item.dividendTaxReduction && (
+                          <div className="absolute top-1 left-1 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-[10px] px-2 py-1 rounded-full font-black shadow-lg z-10 flex items-center gap-0.5">
+                            <Coins className="w-2.5 h-2.5" />
+                            <span>+{item.wordBonus}</span>
                           </div>
                         )}
                         {item.quizBonus > 0 && (
