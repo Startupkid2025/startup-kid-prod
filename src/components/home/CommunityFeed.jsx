@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Heart, MessageCircle, Send, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Send, Trash2, Edit2, Check, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import TamagotchiAvatar from "../avatar/TamagotchiAvatar";
@@ -15,6 +15,7 @@ export default function CommunityFeed({ currentUser }) {
   const [commentTexts, setCommentTexts] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [isPosting, setIsPosting] = useState(false);
+  const [editingComment, setEditingComment] = useState(null); // { postId, commentIndex, text }
 
   useEffect(() => {
     loadPosts();
@@ -180,6 +181,33 @@ export default function CommunityFeed({ currentUser }) {
     }
   };
 
+  const handleEditComment = async (post, commentIndex) => {
+    if (!editingComment?.text?.trim()) {
+      toast.error("אנא כתוב תגובה");
+      return;
+    }
+
+    try {
+      const comments = [...post.comments];
+      comments[commentIndex] = {
+        ...comments[commentIndex],
+        content: editingComment.text,
+        edited: true
+      };
+
+      await base44.entities.Post.update(post.id, {
+        comments: comments
+      });
+
+      setEditingComment(null);
+      toast.success("התגובה עודכנה! ✏️");
+      await loadPosts();
+    } catch (error) {
+      console.error("Error editing comment:", error);
+      toast.error("שגיאה בעריכת התגובה");
+    }
+  };
+
   if (isLoading) {
     return (
       <Card className="bg-white/10 backdrop-blur-md border-white/20">
@@ -290,15 +318,62 @@ export default function CommunityFeed({ currentUser }) {
                   {/* Comments */}
                   {comments.length > 0 && (
                     <div className="space-y-2 mb-3 pl-4 border-r-2 border-white/10">
-                      {comments.map((comment, idx) => (
-                        <div key={idx} className="bg-white/5 rounded-lg p-2">
-                          <p className="text-white/90 font-bold text-xs">{comment.author_name}</p>
-                          <p className="text-white/70 text-sm">{comment.content}</p>
-                          <p className="text-white/40 text-[10px] mt-1">
-                            {new Date(comment.created_at).toLocaleDateString('he-IL')} {new Date(comment.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                        </div>
-                      ))}
+                      {comments.map((comment, idx) => {
+                        const isOwnComment = comment.author_email === currentUser.email;
+                        const isEditing = editingComment?.postId === post.id && editingComment?.commentIndex === idx;
+                        
+                        return (
+                          <div key={idx} className="bg-white/5 rounded-lg p-2">
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-white/90 font-bold text-xs">{comment.author_name}</p>
+                              {isOwnComment && !isEditing && (
+                                <Button
+                                  onClick={() => setEditingComment({ postId: post.id, commentIndex: idx, text: comment.content })}
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-white/50 hover:text-white/80 h-5 px-1"
+                                >
+                                  <Edit2 className="w-3 h-3" />
+                                </Button>
+                              )}
+                            </div>
+                            
+                            {isEditing ? (
+                              <div className="flex gap-1 items-center">
+                                <Input
+                                  value={editingComment.text}
+                                  onChange={(e) => setEditingComment({ ...editingComment, text: e.target.value })}
+                                  className="bg-white/10 border-white/20 text-white h-7 text-sm"
+                                  autoFocus
+                                />
+                                <Button
+                                  onClick={() => handleEditComment(post, idx)}
+                                  size="sm"
+                                  className="bg-green-500/30 hover:bg-green-500/50 h-7 px-2"
+                                >
+                                  <Check className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                  onClick={() => setEditingComment(null)}
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-white/50 hover:text-white/80 h-7 px-2"
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <>
+                                <p className="text-white/70 text-sm">{comment.content}</p>
+                                <p className="text-white/40 text-[10px] mt-1">
+                                  {new Date(comment.created_at).toLocaleDateString('he-IL')} {new Date(comment.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                                  {comment.edited && <span className="mr-1">(נערך)</span>}
+                                </p>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
 
