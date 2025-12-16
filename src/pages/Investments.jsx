@@ -469,7 +469,7 @@ export default function Investments() {
       const capitalGainsTax = grossProfit > 0 ? grossProfit * 0.25 : 0;
       const netProfit = grossProfit - capitalGainsTax;
       const netAmount = amountAfterFee - capitalGainsTax;
-      const newCoins = userData.coins + netAmount;
+      const newCoins = userData.coins + Math.round(netAmount);
 
       await base44.auth.updateMe({ 
         coins: newCoins,
