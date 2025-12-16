@@ -359,7 +359,6 @@ export default function Investments() {
     if (businessInvestments.length === 0) return;
 
     const totalValue = businessInvestments.reduce((sum, inv) => sum + inv.current_value, 0);
-    const totalInvested = businessInvestments.reduce((sum, inv) => sum + inv.invested_amount, 0);
     
     if (sellAmount > totalValue) {
       toast.error("אין לך מספיק להשקעות למכירה");
@@ -373,10 +372,26 @@ export default function Investments() {
       return;
     }
 
-    // Calculate approximate profit and tax
-    const percentToSell = sellAmount / totalValue;
-    const investedPortion = totalInvested * percentToSell;
-    const grossProfit = amountAfterFee - investedPortion;
+    // Calculate EXACT profit and tax using same logic as handleSell
+    let remainingToSell = sellAmount;
+    let totalInvestedSold = 0;
+    const sortedInvestments = [...businessInvestments].sort((a, b) => a.current_value - b.current_value);
+
+    for (const investment of sortedInvestments) {
+      if (remainingToSell <= 0) break;
+
+      if (investment.current_value <= remainingToSell) {
+        totalInvestedSold += investment.invested_amount;
+        remainingToSell -= investment.current_value;
+      } else {
+        const percentToSell = remainingToSell / investment.current_value;
+        const investedToDeduct = investment.invested_amount * percentToSell;
+        totalInvestedSold += investedToDeduct;
+        remainingToSell = 0;
+      }
+    }
+
+    const grossProfit = amountAfterFee - totalInvestedSold;
     const tax = grossProfit > 0 ? grossProfit * 0.25 : 0;
     const netAmount = amountAfterFee - tax;
 
