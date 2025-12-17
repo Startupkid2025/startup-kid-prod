@@ -32,6 +32,7 @@ export default function Home() {
   const [showGroupSelection, setShowGroupSelection] = useState(false);
   const [userGroup, setUserGroup] = useState(null);
   const [nextLesson, setNextLesson] = useState(null);
+  const [netWorth, setNetWorth] = useState(0);
 
   useEffect(() => {
     loadData();
@@ -58,6 +59,10 @@ export default function Home() {
       }
 
       setUserData({ ...user, ...lessonCounts });
+
+      // Calculate net worth
+      const worth = await calculateNetWorth();
+      setNetWorth(worth);
 
       // Fetch user group and next lesson
       try {
@@ -398,7 +403,7 @@ export default function Home() {
     toast.success(`מכרת את ${item.name} ב-${salePrice} מטבעות (50% מהמחיר המקורי)`);
   };
 
-  const calculateNetWorth = () => {
+  const calculateNetWorth = async () => {
     if (!userData) return 0;
 
     const currentCoins = userData.coins || 0;
@@ -412,7 +417,15 @@ export default function Home() {
       }
     });
 
-    return currentCoins + itemsValue;
+    // Get investments value
+    try {
+      const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
+      const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      return currentCoins + itemsValue + investmentsValue;
+    } catch (error) {
+      console.error("Error calculating net worth:", error);
+      return currentCoins + itemsValue;
+    }
   };
 
   const calculateExpectedDailyLoss = () => {
@@ -462,7 +475,6 @@ export default function Home() {
     );
   }
 
-  const netWorth = calculateNetWorth();
   const expectedDailyLoss = calculateExpectedDailyLoss();
 
   return (
@@ -592,32 +604,59 @@ export default function Home() {
                 <p className="text-6xl font-black text-white mb-6">{userData?.coins || 0}</p>
                 
                 <div className="space-y-2 mb-4">
-                  <p className="text-white/90 font-bold text-sm mb-2">🎨 הפריטים שצוידו:</p>
+                  <p className="text-white/90 font-bold text-sm mb-2">💸 הפסדים צפויים:</p>
                   {(() => {
-                    const equippedItems = userData?.equipped_items || {};
-                    const equipped = Object.entries(equippedItems).map(([category, itemId]) => {
-                      const item = AVATAR_ITEMS[itemId];
-                      if (!item) return null;
-                      
-                      let bonusText = "";
-                      if (item.hourlyBonus) bonusText = `${item.hourlyBonus}+`;
-                      else if (item.taxReduction) bonusText = `${item.taxReduction}+`;
-                      else if (item.mathBonus) bonusText = `${item.mathBonus}+`;
-                      else if (item.wordBonus) bonusText = `${item.wordBonus}+`;
-                      else if (item.dividendTaxReduction) bonusText = `${item.dividendTaxReduction}+`;
-                      else if (item.passiveIncome) bonusText = `${item.passiveIncome}+`;
-                      
-                      return (
-                        <div key={category} className="flex items-center gap-2 text-white/90 text-sm">
-                          <span className="text-green-300">✓</span>
-                          <span>{bonusText}</span>
-                          <span>{item.name}</span>
-                        </div>
-                      );
-                    }).filter(Boolean);
+                    const currentCoins = userData?.coins || 0;
+                    const purchasedItems = userData?.purchased_items || [];
                     
-                    return equipped.length > 0 ? equipped : (
-                      <p className="text-white/70 text-sm">אין פריטים מצוידים</p>
+                    let inflationLoss = 0;
+                    let incomeTax = 0;
+                    let creditInterest = 0;
+                    
+                    // Inflation: 3% on positive cash
+                    if (currentCoins > 0) {
+                      inflationLoss = Math.floor(currentCoins * 0.03);
+                    }
+                    
+                    // Income tax: 2% on net worth (with body reductions)
+                    let incomeTaxRate = 0.02;
+                    for (const itemId of purchasedItems) {
+                      const item = AVATAR_ITEMS[itemId];
+                      if (item && item.category === 'body' && item.taxReduction) {
+                        incomeTaxRate = Math.max(0, incomeTaxRate - (item.taxReduction / 100));
+                      }
+                    }
+                    incomeTax = Math.floor(netWorth * incomeTaxRate);
+                    
+                    // Credit interest: 10% per day on negative balance
+                    if (currentCoins < 0) {
+                      creditInterest = Math.floor(Math.abs(currentCoins) * 0.10);
+                    }
+                    
+                    return (
+                      <>
+                        {inflationLoss > 0 && (
+                          <div className="flex items-center justify-between text-white/90 text-sm">
+                            <span>{inflationLoss} 🪙</span>
+                            <span>💨 אינפלציה (3%)</span>
+                          </div>
+                        )}
+                        {incomeTax > 0 && (
+                          <div className="flex items-center justify-between text-white/90 text-sm">
+                            <span>{incomeTax} 🪙</span>
+                            <span>📊 מס הכנסה ({(incomeTaxRate * 100).toFixed(1)}%)</span>
+                          </div>
+                        )}
+                        {creditInterest > 0 && (
+                          <div className="flex items-center justify-between text-white/90 text-sm">
+                            <span>{creditInterest} 🪙</span>
+                            <span>💳 ריבית אשראי (10%)</span>
+                          </div>
+                        )}
+                        {inflationLoss === 0 && incomeTax === 0 && creditInterest === 0 && (
+                          <p className="text-white/70 text-sm">אין הפסדים צפויים 🎉</p>
+                        )}
+                      </>
                     );
                   })()}
                 </div>
