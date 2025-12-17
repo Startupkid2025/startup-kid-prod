@@ -13,11 +13,11 @@ export default function Layout({ children }) {
   React.useEffect(() => {
     loadUser();
     
-    // One-time migration: estimate work hours for all users
-    const hasRunMigration = localStorage.getItem('workHoursMigrationDone');
+    // One-time migration: estimate work hours for all users - FORCE UPDATE
+    const hasRunMigration = localStorage.getItem('workHoursMigrationV2Done');
     if (!hasRunMigration) {
       estimateWorkHoursForAllUsers().then(() => {
-        localStorage.setItem('workHoursMigrationDone', 'true');
+        localStorage.setItem('workHoursMigrationV2Done', 'true');
       }).catch(error => {
         console.error("Error running work hours migration:", error);
       });
