@@ -572,12 +572,12 @@ export default function Investments() {
     );
   }
 
-  const totalInvested = investments.reduce((sum, inv) => sum + inv.invested_amount, 0);
-  const totalValue = investments.reduce((sum, inv) => sum + inv.current_value, 0);
+  const totalInvested = investments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
+  const totalValue = investments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
   const unrealizedProfit = totalValue - totalInvested;
   const realizedProfit = userData?.total_realized_investment_profit || 0;
   const totalProfit = unrealizedProfit + realizedProfit;
-  const totalProfitPercent = totalInvested > 0 ? Math.round((totalProfit / totalInvested) * 100) : 0;
+  const totalProfitPercent = totalInvested > 0 ? Math.round((unrealizedProfit / totalInvested) * 100) : 0;
 
   const investmentsByBusiness = investments.reduce((acc, inv) => {
     if (!acc[inv.business_type]) {
@@ -758,12 +758,25 @@ export default function Investments() {
 
                  {/* Existing Investments */}
                  {hasInvestments && (
-                   <div className="bg-white/10 rounded-lg p-2 mb-2">
-                     <div className="mb-2">
-                       <p className="text-white/80 text-[9px] sm:text-[10px]">{businessInvestments.length} השקעות פעילות</p>
-                       <p className="text-white font-bold text-xs sm:text-sm">
-                         {Math.round(totalInvestedInBusiness)} 🪙 ← {Math.round(totalValueInBusiness)} 🪙
-                       </p>
+                   <div className="bg-white/10 rounded-lg p-2 mb-2 space-y-2">
+                     <div>
+                       <p className="text-white/80 text-[9px] sm:text-[10px] mb-1">{businessInvestments.length} השקעות פעילות</p>
+                       <div className="flex items-center justify-between">
+                         <div>
+                           <p className="text-white/70 text-[9px] sm:text-[10px]">מושקע:</p>
+                           <p className="text-white font-bold text-xs sm:text-sm">{Math.round(totalInvestedInBusiness)} 🪙</p>
+                         </div>
+                         <div className="text-right">
+                           <p className="text-white/70 text-[9px] sm:text-[10px]">שווי:</p>
+                           <p className="text-white font-bold text-xs sm:text-sm">{Math.round(totalValueInBusiness)} 🪙</p>
+                         </div>
+                         <div className="text-right">
+                           <p className="text-white/70 text-[9px] sm:text-[10px]">רווח:</p>
+                           <p className={`font-bold text-xs sm:text-sm ${profitInBusiness >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                             {profitInBusiness >= 0 ? '+' : ''}{Math.round(profitInBusiness)} 🪙
+                           </p>
+                         </div>
+                       </div>
                      </div>
                      <div className="flex gap-1.5 sm:gap-2 items-end">
                        <div className="flex-1 min-w-0">
