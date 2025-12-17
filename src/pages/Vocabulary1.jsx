@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Check, X, Trophy, Coins, BookOpen, Star } from "lucide-react";
 import { toast } from "sonner";
+import { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
 
 export default function Vocabulary() {
   const [userData, setUserData] = useState(null);
@@ -114,6 +115,14 @@ export default function Vocabulary() {
 
   const getCoinsForDifficulty = (difficulty) => {
     return difficulty * 3;
+  };
+
+  const calculateTotalCoinsForWord = (difficulty) => {
+    const baseCoins = getCoinsForDifficulty(difficulty);
+    const equippedMouth = userData?.equipped_items?.mouth;
+    const mouthItem = equippedMouth ? AVATAR_ITEMS[equippedMouth] : null;
+    const vocabBonus = mouthItem?.vocabBonus || 0;
+    return baseCoins + vocabBonus;
   };
 
   const maxWords = availableVocabWords.length;
@@ -406,7 +415,7 @@ export default function Vocabulary() {
       </motion.div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
         <Card className="bg-white/10 backdrop-blur-md border-white/20">
           <CardContent className="pt-6 text-center">
             <BookOpen className="w-8 h-8 text-blue-300 mx-auto mb-2" />
@@ -436,6 +445,39 @@ export default function Vocabulary() {
             <Coins className="w-8 h-8 text-amber-300 mx-auto mb-2" />
             <p className="text-2xl font-black text-white">{totalCoinsEarned}</p>
             <p className="text-white/70 text-sm">מטבעות צברת</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-md border-2 border-yellow-500/30">
+          <CardContent className="pt-6 text-center">
+            <Coins className="w-8 h-8 text-yellow-300 mx-auto mb-2" />
+            {(() => {
+              const equippedMouth = userData?.equipped_items?.mouth;
+              const mouthItem = equippedMouth ? AVATAR_ITEMS[equippedMouth] : null;
+              const vocabBonus = mouthItem?.vocabBonus || 0;
+              
+              return (
+                <>
+                  <div className="flex items-center justify-center gap-1 text-white text-lg font-black mb-1">
+                    {currentWord ? (
+                      <>
+                        <span className="text-white/60">{getCoinsForDifficulty(currentWord.difficulty)}</span>
+                        {vocabBonus > 0 && (
+                          <>
+                            <span className="text-yellow-300">+{vocabBonus}</span>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <span>-</span>
+                    )}
+                  </div>
+                  <p className="text-yellow-200 text-xs">
+                    {vocabBonus > 0 ? `בסיס + בונוס פה` : 'מטבעות למילה'}
+                  </p>
+                </>
+              );
+            })()}
           </CardContent>
         </Card>
       </div>
@@ -469,10 +511,29 @@ export default function Vocabulary() {
                       <span className="mr-1">עניתי נכון</span>
                     </span>
                   )}
-                  <span className="bg-amber-500/20 text-amber-200 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2">
-                    <Coins className="w-4 h-4" />
-                    {getCoinsForDifficulty(currentWord.difficulty)} {currentWord.difficulty === 1 ? "מטבע" : "מטבעות"}
-                  </span>
+                  {(() => {
+                    const equippedMouth = userData?.equipped_items?.mouth;
+                    const mouthItem = equippedMouth ? AVATAR_ITEMS[equippedMouth] : null;
+                    const vocabBonus = mouthItem?.vocabBonus || 0;
+                    const baseCoins = getCoinsForDifficulty(currentWord.difficulty);
+                    const totalCoins = baseCoins + vocabBonus;
+                    
+                    return (
+                      <span className="bg-amber-500/20 text-amber-200 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2">
+                        <Coins className="w-4 h-4" />
+                        {vocabBonus > 0 ? (
+                          <>
+                            <span className="text-white/60">{baseCoins}</span>
+                            <span className="text-yellow-300">+{vocabBonus}</span>
+                            <span className="text-white/60">=</span>
+                            <span>{totalCoins}</span>
+                          </>
+                        ) : (
+                          <span>{baseCoins} {baseCoins === 1 ? "מטבע" : "מטבעות"}</span>
+                        )}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 <div className="flex items-center justify-center gap-4 mb-6 sm:mb-8">
