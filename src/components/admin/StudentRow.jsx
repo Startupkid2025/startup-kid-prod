@@ -309,52 +309,6 @@ export default function StudentRow({
           onClick={() => setIsExpanded(!isExpanded)}
         >
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white w-8 h-8 sm:w-10 sm:h-10"
-              >
-                {isExpanded ? <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" /> : <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />}
-              </Button>
-              <div className="text-center">
-                <p className="text-xl sm:text-2xl font-black text-yellow-300">{totalParticipations}</p>
-                <p className="text-white/60 text-[10px] sm:text-xs">השתתפויות</p>
-              </div>
-              
-              {/* Edit Student Button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white w-8 h-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEditedStudent({
-                    first_name: student.first_name || "",
-                    last_name: student.last_name || "",
-                    full_name: student.full_name || "",
-                    user_type: student.user_type || "student"
-                  });
-                  setShowEditStudentDialog(true);
-                }}
-              >
-                <Edit2 className="w-4 h-4" />
-              </Button>
-              
-              {/* Delete User Button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-red-400 hover:text-red-300 hover:bg-red-500/20 w-8 h-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowDeleteDialog(true);
-                }}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               <div className="text-right min-w-0 flex-1">
                 <div className="flex items-center gap-2 justify-end">
@@ -375,6 +329,52 @@ export default function StudentRow({
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0">
                 {student.full_name?.[0] || "?"}
               </div>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:text-white w-8 h-8 sm:w-10 sm:h-10 hover:bg-white/10 transition-all"
+              >
+                {isExpanded ? <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" /> : <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />}
+              </Button>
+              <div className="text-center bg-gradient-to-br from-yellow-500/20 to-amber-500/20 rounded-xl px-3 py-2 border border-yellow-500/30 shadow-lg backdrop-blur-sm">
+                <p className="text-xl sm:text-2xl font-black text-yellow-300">{totalParticipations}</p>
+                <p className="text-white/60 text-[10px] sm:text-xs whitespace-nowrap">השתתפויות</p>
+              </div>
+              
+              {/* Edit Student Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-blue-300 hover:text-blue-200 w-9 h-9 hover:bg-gradient-to-br hover:from-blue-500/30 hover:to-cyan-500/30 transition-all duration-300 hover:shadow-lg border border-transparent hover:border-blue-400/50 rounded-xl"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditedStudent({
+                    first_name: student.first_name || "",
+                    last_name: student.last_name || "",
+                    full_name: student.full_name || "",
+                    user_type: student.user_type || "student"
+                  });
+                  setShowEditStudentDialog(true);
+                }}
+              >
+                <Edit2 className="w-4 h-4" />
+              </Button>
+              
+              {/* Delete User Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-red-300 hover:text-red-200 w-9 h-9 hover:bg-gradient-to-br hover:from-red-500/30 hover:to-pink-500/30 transition-all duration-300 hover:shadow-lg border border-transparent hover:border-red-400/50 rounded-xl"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDeleteDialog(true);
+                }}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </div>
