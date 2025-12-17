@@ -5,20 +5,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Plus, Trash2, Save, X } from "lucide-react";
 import { toast } from "sonner";
 
-export default function QuizQuestionsManager({ lesson }) {
+export default function QuizQuestionsManager({ lesson, isOpen, onClose }) {
   const [questions, setQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
 
   useEffect(() => {
-    loadQuestions();
-  }, [lesson]);
+    if (lesson && isOpen) {
+      loadQuestions();
+    }
+  }, [lesson, isOpen]);
 
   const loadQuestions = async () => {
+    if (!lesson) return;
     try {
       const quizQuestions = await base44.entities.QuizQuestion.filter(
         { lesson_id: lesson.id },
@@ -88,12 +97,21 @@ export default function QuizQuestionsManager({ lesson }) {
     }
   };
 
-  if (isLoading) {
-    return <div className="text-white text-center py-8">טוען...</div>;
-  }
+  if (!lesson) return null;
 
   return (
-    <div className="space-y-4">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-purple-900/95 to-blue-900/95 backdrop-blur-xl border-white/20" dir="rtl">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-white">
+            שאלות חידון - {lesson.lesson_name}
+          </DialogTitle>
+        </DialogHeader>
+
+        {isLoading ? (
+          <div className="text-white text-center py-8">טוען...</div>
+        ) : (
+          <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold text-white">
           שאלות חידון ({questions.length})
@@ -262,6 +280,9 @@ export default function QuizQuestionsManager({ lesson }) {
           </CardContent>
         </Card>
       ))}
-    </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
