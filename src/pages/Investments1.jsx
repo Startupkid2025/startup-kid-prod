@@ -661,6 +661,13 @@ export default function Investments() {
             <CardTitle className="text-white flex items-center gap-2">
               📊 השוק היום - מה קרה אתמול?
             </CardTitle>
+            <p className="text-white/60 text-sm mt-2">
+              השקעות משתנות כל יום! עסקים בסיכון גבוה יכולים להרוויח יותר אבל גם להפסיד הרבה.
+              פזר את ההשקעות שלך למספר עסקים כדי להקטין סיכון! 
+              <span className="block mt-1 text-yellow-300 font-bold">
+                שים לב: כל קניה ומכירה כוללת עמלה של {TRANSACTION_FEE} מטבעות!
+              </span>
+            </p>
           </CardHeader>
           <CardContent className="space-y-2">
             {BUSINESSES.map((business) => {
@@ -670,10 +677,12 @@ export default function Investments() {
               return (
                 <div key={business.id} className="bg-white/5 rounded-lg p-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
+                    <div className="text-2xl">{business.icon}</div>
                     <div>
-                      <p className="font-bold text-white">{business.name}</p>
-                      <p className="text-xs text-white/60">
-                        {business.riskLevel === 0 ? '🛡️ בטוח' : '⚠️'.repeat(business.riskLevel) + ' סיכון'}
+                      <p className="font-bold text-white text-sm">{business.name}</p>
+                      <p className="text-xs text-white/60">{business.description}</p>
+                      <p className="text-[10px] text-white/50 mt-0.5">
+                        {business.riskLevel === 0 ? '🛡️ בטוח' : '⚠️'.repeat(business.riskLevel) + ' סיכון'} • מינימום: {business.minInvestment} 🪙
                       </p>
                     </div>
                   </div>
@@ -700,11 +709,10 @@ export default function Investments() {
       >
         <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-6">
           <CardHeader className="pb-3">
-            <CardTitle className="text-white text-base flex items-center gap-2">
-              <PieChart className="w-4 h-4" />
+            <CardTitle className="text-white text-lg flex items-center gap-2">
+              <PieChart className="w-5 h-5" />
               תיק ההשקעות
             </CardTitle>
-            <p className="text-white/70 text-xs">עמלת קניה: {TRANSACTION_FEE} מטבעות</p>
           </CardHeader>
           <CardContent className="space-y-2">
             {BUSINESSES.map((business) => {
@@ -720,115 +728,28 @@ export default function Investments() {
               const profitPercent = totalInvestedInBusiness > 0 ? ((profitInBusiness / totalInvestedInBusiness) * 100).toFixed(1) : 0;
 
               return (
-                <div key={business.id} className={`bg-gradient-to-r ${business.color} rounded-lg p-3 overflow-visible`}>
-                 <div className="flex items-start gap-2 mb-2">
+                <div key={business.id} className={`bg-gradient-to-r ${business.color} rounded-lg p-3`}>
+                 <div className="flex items-start gap-2 mb-3">
                    <div className="text-2xl flex-shrink-0">{business.icon}</div>
                    <div className="flex-1 min-w-0">
-                     <h3 className="font-bold text-white text-sm mb-0.5 truncate">{business.name}</h3>
-                     <p className="text-white/90 text-xs mb-1 line-clamp-2">{business.description}</p>
-                     <div className="flex flex-wrap items-center gap-2 text-[10px] text-white/80 mb-1">
-                       <div>מינימום: {business.minInvestment} 🪙</div>
-                       <div>
-                         {business.riskLevel === 0 ? '🛡️ בטוח' : '⚠️'.repeat(business.riskLevel) + ' סיכון'}
-                       </div>
+                     <h3 className="font-bold text-white text-sm mb-0.5">{business.name}</h3>
+                     <div className="flex items-center gap-2 text-[10px] text-white/80">
+                       <span>מינימום: {business.minInvestment} 🪙</span>
+                       <span>•</span>
+                       <span>{business.riskLevel === 0 ? '🛡️ בטוח' : '⚠️'.repeat(business.riskLevel)}</span>
                      </div>
-                     {yesterdayPerformance && Object.keys(yesterdayPerformance).length > 0 && (
-                       <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${
-                         yesterdayChange >= 0 ? 'bg-green-500/30' : 'bg-red-500/30'
-                       }`}>
-                         {yesterdayChange >= 0 ? (
-                           <TrendingUp className="w-3 h-3 text-green-200" />
-                         ) : (
-                           <TrendingDown className="w-3 h-3 text-red-200" />
-                         )}
-                         <span className={`font-bold text-[10px] ${
-                           yesterdayChange >= 0 ? 'text-green-200' : 'text-red-200'
-                         }`}>
-                           אתמול: {yesterdayChange >= 0 ? '+' : ''}{yesterdayChange.toFixed(1)}%
-                         </span>
-                       </div>
-                     )}
                      </div>
                      {hasInvestments && (
                      <div className="text-right flex-shrink-0">
-                       <p className="font-black text-white text-base">{Math.round(totalValueInBusiness)}</p>
-                       <p className={`text-[10px] font-bold ${profitInBusiness >= 0 ? 'text-green-200' : 'text-red-200'}`}>
-                         {profitInBusiness >= 0 ? '+' : ''}{Math.round(profitInBusiness)} ({Math.round(profitPercent)}%)
+                       <p className="font-black text-white text-lg">{Math.round(totalValueInBusiness)}</p>
+                       <p className={`text-xs font-bold ${profitInBusiness >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                         {profitInBusiness >= 0 ? '+' : ''}{Math.round(profitInBusiness)}
                        </p>
                      </div>
                      )}
                      </div>
 
-                     {/* Existing Investments */}
-                     {hasInvestments && (
-                     <div className="bg-white/10 rounded-lg p-3 mb-3 space-y-3 overflow-visible">
-                     <div>
-                       <p className="text-white/80 text-xs mb-2 font-bold">{businessInvestments.length} השקעות פעילות</p>
-                       <div className="grid grid-cols-3 gap-2">
-                         <div className="text-center">
-                           <p className="text-white/70 text-[10px] mb-1">מושקע</p>
-                           <p className="text-white font-bold text-sm">{Math.round(totalInvestedInBusiness)} 🪙</p>
-                         </div>
-                         <div className="text-center">
-                           <p className="text-white/70 text-[10px] mb-1">שווי</p>
-                           <p className="text-white font-bold text-sm">{Math.round(totalValueInBusiness)} 🪙</p>
-                         </div>
-                         <div className="text-center">
-                           <p className="text-white/70 text-[10px] mb-1">רווח</p>
-                           <p className={`font-bold text-sm ${profitInBusiness >= 0 ? 'text-green-300' : 'text-red-300'}`}>
-                             {profitInBusiness >= 0 ? '+' : ''}{Math.round(profitInBusiness)} 🪙
-                           </p>
-                         </div>
-                       </div>
-                     </div>
-                     <div className="space-y-2">
-                       <Input
-                         type="number"
-                         placeholder={`מכור עד ${Math.round(totalValueInBusiness)} 🪙`}
-                         value={sellAmounts[business.id] || ''}
-                         onChange={(e) => setSellAmounts({
-                           ...sellAmounts,
-                           [business.id]: parseInt(e.target.value) || 0
-                         })}
-                         className="bg-white/20 border-white/30 text-white placeholder:text-white/50 h-9 text-sm w-full"
-                       />
-                         {sellAmounts[business.id] > 0 && (() => {
-                          const sellValue = sellAmounts[business.id];
-                          const afterFee = sellValue - TRANSACTION_FEE;
-                          const percentToSell = sellValue / totalValueInBusiness;
-                          const investedPortion = totalInvestedInBusiness * percentToSell;
-                          const investmentProfit = sellValue - investedPortion;
-                          const tax = investmentProfit > 0 ? investmentProfit * 0.25 : 0;
-                          const netAmount = afterFee - tax;
-
-                           return (
-                             <div className="text-[10px] mt-1 space-y-1 bg-black/20 p-2 rounded">
-                               <p className="text-white/70">
-                                עמלה: {TRANSACTION_FEE} 🪙
-                               </p>
-                               {tax > 0 && (
-                                <p className="text-white/70">
-                                  מס רווח הון: {Math.round(tax)} 🪙
-                                </p>
-                               )}
-                               <p className="text-green-300 font-bold">
-                                 תקבל: {Math.round(netAmount)} מטבעות
-                               </p>
-                             </div>
-                           );
-                         })()}
-                         <Button
-                           onClick={() => openConfirmDialog(business.id, sellAmounts[business.id] || totalValueInBusiness)}
-                           disabled={isSelling[business.id]}
-                           className="bg-white/20 hover:bg-white/30 text-white font-bold text-sm h-10 w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                         >
-                           {isSelling[business.id] ? '⏳ מוכר...' : '💰 מכור השקעה'}
-                         </Button>
-                         </div>
-                         </div>
-                         )}
-
-                  {/* New Investment Input */}
+                  {/* Investment Actions */}
                   <div className="space-y-2">
                     <Input
                       type="number"
@@ -838,20 +759,37 @@ export default function Investments() {
                         ...investmentAmounts,
                         [business.id]: parseInt(e.target.value) || 0
                       })}
-                      className="bg-white/20 border-white/30 text-white placeholder:text-white/50 h-9 text-sm w-full"
+                      className="bg-white/20 border-white/30 text-white placeholder:text-white/50 h-9 text-sm"
                     />
-                    {totalCost > 0 && (
-                      <p className="text-white/70 text-[10px]">
-                        סה"כ: {totalCost} מטבעות (כולל עמלה)
-                      </p>
-                    )}
                     <Button
                       onClick={() => handleInvest(business.id)}
                       disabled={!investmentAmounts[business.id] || investmentAmounts[business.id] < business.minInvestment || isInvesting[business.id]}
-                      className="bg-white/20 hover:bg-white/30 text-white font-bold text-sm h-10 w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-white/20 hover:bg-white/30 text-white font-bold text-sm h-9 w-full disabled:opacity-50"
                     >
-                      {isInvesting[business.id] ? '⏳ משקיע...' : '💰 השקע כעת'}
+                      {isInvesting[business.id] ? '⏳ משקיע...' : '📈 השקע'}
                     </Button>
+
+                     {hasInvestments && (
+                     <>
+                       <Input
+                         type="number"
+                         placeholder={`מכור עד ${Math.round(totalValueInBusiness)} 🪙`}
+                         value={sellAmounts[business.id] || ''}
+                         onChange={(e) => setSellAmounts({
+                           ...sellAmounts,
+                           [business.id]: parseInt(e.target.value) || 0
+                         })}
+                         className="bg-white/20 border-white/30 text-white placeholder:text-white/50 h-9 text-sm"
+                       />
+                         <Button
+                           onClick={() => openConfirmDialog(business.id, sellAmounts[business.id] || totalValueInBusiness)}
+                           disabled={isSelling[business.id]}
+                           className="bg-red-500/30 hover:bg-red-500/40 text-white font-bold text-sm h-9 w-full disabled:opacity-50"
+                         >
+                           {isSelling[business.id] ? '⏳ מוכר...' : '💰 מכור'}
+                         </Button>
+                         </>
+                         )}
                   </div>
                 </div>
               );
@@ -860,22 +798,7 @@ export default function Investments() {
         </Card>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
-          <CardContent className="p-6 text-center">
-            <h3 className="font-bold text-white mb-2">💡 טיפ</h3>
-            <p className="text-white/70 text-sm">
-              השקעות משתנות כל יום! עסקים בסיכון גבוה יכולים להרוויח יותר אבל גם להפסיד הרבה.<br/>
-              פזר את ההשקעות שלך למספר עסקים כדי להקטין סיכון! 📊<br/>
-              <span className="text-yellow-300 font-bold">שים לב: כל קניה ומכירה כוללת עמלה של {TRANSACTION_FEE} מטבעות!</span>
-            </p>
-          </CardContent>
-        </Card>
-      </motion.div>
+
 
       {/* Confirmation Dialog */}
       <AlertDialog open={confirmSellDialog.isOpen} onOpenChange={(open) => !open && setConfirmSellDialog({ ...confirmSellDialog, isOpen: false })}>
