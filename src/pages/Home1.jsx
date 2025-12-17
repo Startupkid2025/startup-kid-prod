@@ -487,47 +487,53 @@ export default function Home() {
   return (
     <div className="px-4 py-8 pb-24 max-w-6xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column - Avatar + Skills */}
         <div className="lg:col-span-2 space-y-8">
-          <Avatar 
-            stage={1}
-            totalLessons={userData?.total_lessons || 0}
-            equippedItems={userData?.equipped_items || {}}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Avatar */}
+            <Avatar 
+              stage={1}
+              totalLessons={userData?.total_lessons || 0}
+              equippedItems={userData?.equipped_items || {}}
+            />
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card className="bg-white/10 backdrop-blur-md border-white/20">
-              <CardContent className="p-6">
-                <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                  <Sparkles className="w-6 h-6 text-yellow-300" />
-                  המיומנויות שלי
-                </h2>
-                
-                <div className="space-y-4">
-                  {SKILLS.map((skill, index) => {
-                    const level = userData[`${skill.key}_level`] || 1;
-                    const xp = userData[`${skill.key}_xp`] || 0;
-                    const lessonCount = userData[`${skill.key}_lessons`] || 0;
+            {/* Skills */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card className="bg-white/10 backdrop-blur-md border-white/20">
+                <CardContent className="p-6">
+                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                    <Sparkles className="w-6 h-6 text-yellow-300" />
+                    המיומנויות שלי
+                  </h2>
 
-                    return (
-                      <SkillBar
-                        key={skill.key}
-                        skill={skill}
-                        level={level}
-                        xp={xp}
-                        lessonCount={lessonCount}
-                        delay={index * 0.1}
-                      />
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+                  <div className="space-y-4">
+                    {SKILLS.map((skill, index) => {
+                      const level = userData[`${skill.key}_level`] || 1;
+                      const xp = userData[`${skill.key}_xp`] || 0;
+                      const lessonCount = userData[`${skill.key}_lessons`] || 0;
 
+                      return (
+                        <SkillBar
+                          key={skill.key}
+                          skill={skill}
+                          level={level}
+                          xp={xp}
+                          lessonCount={lessonCount}
+                          delay={index * 0.1}
+                        />
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Community Feed */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -537,78 +543,81 @@ export default function Home() {
           </motion.div>
         </div>
 
+        {/* Right Column - Stats Cards */}
         <div className="space-y-6">
-          {/* Net Worth Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card className="bg-gradient-to-br from-purple-500 to-pink-500 border-0 shadow-2xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white/90 font-bold text-lg flex items-center gap-2">
-                    💎 שווי כולל
-                  </h3>
-                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-white" />
+          {/* Net Worth and Coins in one row on desktop */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Net Worth Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card className="bg-gradient-to-br from-purple-500 to-pink-500 border-0 shadow-2xl">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-white/90 font-bold text-base flex items-center gap-2">
+                      💎 שווי כולל
+                    </h3>
+                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 text-white" />
+                    </div>
                   </div>
-                </div>
-                
-                <p className="text-6xl font-black text-white mb-6">{netWorth}</p>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-white/90">
-                    <span className="text-sm">💰 עובר ושב</span>
-                    <span className="font-bold">{userData?.coins || 0}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-white/90">
-                    <span className="text-sm">👕 פריטים</span>
-                    <span className="font-bold">{(() => {
-                      const purchasedItems = userData?.purchased_items || [];
-                      let itemsValue = 0;
-                      purchasedItems.forEach(itemId => {
-                        const item = AVATAR_ITEMS[itemId];
-                        if (item) itemsValue += item.price || 0;
-                      });
-                      return itemsValue;
-                    })()}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-white/90">
-                    <span className="text-sm">📈 השקעות</span>
-                    <span className="font-bold">{netWorth - (userData?.coins || 0) - (() => {
-                      const purchasedItems = userData?.purchased_items || [];
-                      let itemsValue = 0;
-                      purchasedItems.forEach(itemId => {
-                        const item = AVATAR_ITEMS[itemId];
-                        if (item) itemsValue += item.price || 0;
-                      });
-                      return itemsValue;
-                    })()}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
 
-          {/* Coins & Equipped Items Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <Card className="bg-gradient-to-br from-amber-500 to-orange-500 border-0 shadow-2xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white/90 font-bold text-lg flex items-center gap-2">
-                    💰 עובר ושב
-                  </h3>
-                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                    <Coins className="w-6 h-6 text-white" />
+                  <p className="text-5xl font-black text-white mb-4">{netWorth}</p>
+
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center text-white/90 text-xs">
+                      <span>💰 עובר ושב</span>
+                      <span className="font-bold">{userData?.coins || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-white/90 text-xs">
+                      <span>👕 פריטים</span>
+                      <span className="font-bold">{(() => {
+                        const purchasedItems = userData?.purchased_items || [];
+                        let itemsValue = 0;
+                        purchasedItems.forEach(itemId => {
+                          const item = AVATAR_ITEMS[itemId];
+                          if (item) itemsValue += item.price || 0;
+                        });
+                        return itemsValue;
+                      })()}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-white/90 text-xs">
+                      <span>📈 השקעות</span>
+                      <span className="font-bold">{netWorth - (userData?.coins || 0) - (() => {
+                        const purchasedItems = userData?.purchased_items || [];
+                        let itemsValue = 0;
+                        purchasedItems.forEach(itemId => {
+                          const item = AVATAR_ITEMS[itemId];
+                          if (item) itemsValue += item.price || 0;
+                        });
+                        return itemsValue;
+                      })()}</span>
+                    </div>
                   </div>
-                </div>
-                
-                <p className="text-6xl font-black text-white mb-6">{userData?.coins || 0}</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Coins & Equipped Items Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Card className="bg-gradient-to-br from-amber-500 to-orange-500 border-0 shadow-2xl">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-white/90 font-bold text-base flex items-center gap-2">
+                      💰 עובר ושב
+                    </h3>
+                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                      <Coins className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+
+                  <p className="text-5xl font-black text-white mb-4">{userData?.coins || 0}</p>
                 
                 <div className="space-y-2 mb-4">
                   <p className="text-white/90 font-bold text-sm mb-2">💸 הפסדים צפויים:</p>
