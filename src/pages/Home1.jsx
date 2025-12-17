@@ -485,68 +485,9 @@ export default function Home() {
   const expectedDailyLoss = calculateExpectedDailyLoss();
 
   return (
-    <div className="px-4 py-8 pb-24 max-w-6xl mx-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Avatar + Skills */}
-        <div className="lg:col-span-2 space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Avatar */}
-            <Avatar 
-              stage={1}
-              totalLessons={userData?.total_lessons || 0}
-              equippedItems={userData?.equipped_items || {}}
-            />
-
-            {/* Skills */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card className="bg-white/10 backdrop-blur-md border-white/20">
-                <CardContent className="p-6">
-                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                    <Sparkles className="w-6 h-6 text-yellow-300" />
-                    המיומנויות שלי
-                  </h2>
-
-                  <div className="space-y-4">
-                    {SKILLS.map((skill, index) => {
-                      const level = userData[`${skill.key}_level`] || 1;
-                      const xp = userData[`${skill.key}_xp`] || 0;
-                      const lessonCount = userData[`${skill.key}_lessons`] || 0;
-
-                      return (
-                        <SkillBar
-                          key={skill.key}
-                          skill={skill}
-                          level={level}
-                          xp={xp}
-                          lessonCount={lessonCount}
-                          delay={index * 0.1}
-                        />
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-
-          {/* Community Feed */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <CommunityFeed userData={userData} onRefresh={loadData} />
-          </motion.div>
-        </div>
-
-        {/* Right Column - Stats Cards */}
-        <div className="space-y-6">
-          {/* Net Worth and Coins in one row on desktop */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className="px-4 py-8 pb-24 max-w-6xl mx-auto space-y-8">
+      {/* First Row - Net Worth and Coins */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Net Worth Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -741,75 +682,87 @@ export default function Home() {
               </CardContent>
             </Card>
             </motion.div>
-            </div>
-
-            {/* Quick Action Buttons */}
-            <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="space-y-2"
-            >
-            <Button
-            onClick={() => setShowWardrobe(true)}
-            className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold flex items-center justify-center gap-2"
-            >
-            <Shirt className="w-5 h-5" />
-            הארון שלי 👕
-            </Button>
-
-            <Link to={createPageUrl("Investments1")}>
-            <Button
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold flex items-center justify-center gap-2"
-            >
-              <TrendingUp className="w-5 h-5" />
-              תיק ההשקעות 💼
-            </Button>
-            </Link>
-            </motion.div>
-
-          {!userGroup && userData?.user_type === 'student' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <Card className="bg-gradient-to-br from-orange-500/30 to-red-500/30 backdrop-blur-md border-2 border-orange-400/50">
-                <CardContent className="p-6 text-center">
-                  <Users className="w-12 h-12 text-orange-200 mx-auto mb-3" />
-                  <h3 className="text-xl font-bold text-white mb-2">
-                    אתה עדיין לא בקבוצה! 🤔
-                  </h3>
-                  <p className="text-white/80 text-sm mb-4">
-                    הצטרף לקבוצה כדי לקבל גישה לשיעורים!
-                  </p>
-                  <Button
-                    onClick={() => setShowGroupSelection(true)}
-                    className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold"
-                  >
-                    בחר קבוצה 👥
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <Card className="bg-white/10 backdrop-blur-md border-white/20">
-              <CardContent className="p-6 text-center">
-                <h3 className="font-bold text-white mb-2">💡 טיפ</h3>
-                <p className="text-white/70 text-sm">
-                  לחץ על הדמות שלך כדי לפתוח את הארון ולהחליף פריטים! 👕
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
       </div>
+
+      {/* Second Row - Avatar + Skills */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Avatar */}
+        <Avatar 
+          stage={1}
+          totalLessons={userData?.total_lessons || 0}
+          equippedItems={userData?.equipped_items || {}}
+        />
+
+        {/* Skills */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="bg-white/10 backdrop-blur-md border-white/20">
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                <Sparkles className="w-6 h-6 text-yellow-300" />
+                המיומנויות שלי
+              </h2>
+
+              <div className="space-y-4">
+                {SKILLS.map((skill, index) => {
+                  const level = userData[`${skill.key}_level`] || 1;
+                  const xp = userData[`${skill.key}_xp`] || 0;
+                  const lessonCount = userData[`${skill.key}_lessons`] || 0;
+
+                  return (
+                    <SkillBar
+                      key={skill.key}
+                      skill={skill}
+                      level={level}
+                      xp={xp}
+                      lessonCount={lessonCount}
+                      delay={index * 0.1}
+                    />
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Community Feed */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <CommunityFeed userData={userData} onRefresh={loadData} />
+      </motion.div>
+
+      {!userGroup && userData?.user_type === 'student' && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card className="bg-gradient-to-br from-orange-500/30 to-red-500/30 backdrop-blur-md border-2 border-orange-400/50">
+            <CardContent className="p-6 text-center">
+              <Users className="w-12 h-12 text-orange-200 mx-auto mb-3" />
+              <h3 className="text-xl font-bold text-white mb-2">
+                אתה עדיין לא בקבוצה! 🤔
+              </h3>
+              <p className="text-white/80 text-sm mb-4">
+                הצטרף לקבוצה כדי לקבל גישה לשיעורים!
+              </p>
+              <Button
+                onClick={() => setShowGroupSelection(true)}
+                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold"
+              >
+                בחר קבוצה 👥
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       <TamagotchiWardrobe
         isOpen={showWardrobe}
