@@ -183,8 +183,8 @@ export default function Leaderboard() {
           if (lesson.category === 'money_business') moneyBusinessLessons++;
         });
         
-        // Count mastered math questions
-        const userMathProgress = allMathProgress.filter(m => m.student_email === u.student_email && m.mastered);
+        // Count completed math questions (any question with attempts)
+        const userMathProgress = allMathProgress.filter(m => m.student_email === u.student_email && (m.total_attempts || 0) > 0);
         const masteredMathQuestions = userMathProgress.length;
         
         // Login streak
