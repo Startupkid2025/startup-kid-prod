@@ -459,8 +459,8 @@ export default function Lessons() {
                         </Button>
                       )}
 
-                      {/* Quiz Button - only for attended lessons and only if there are questions */}
-                      {(wasAttended || isDemoWithoutParticipation) && hasQuestions && (
+                      {/* Quiz Button - always available if there are questions */}
+                      {hasQuestions && (
                         <Button
                           onClick={() => setQuizLesson(lesson)}
                           className={`w-full font-bold flex items-center justify-between ${
@@ -481,8 +481,8 @@ export default function Lessons() {
                         </Button>
                       )}
 
-                      {/* Survey Button - only for attended lessons with participation */}
-                      {wasAttended && participation && !hasSurvey && (
+                      {/* Survey Button - always available if has participation */}
+                      {participation && !hasSurvey && (
                         <Button
                           onClick={() => handleOpenSurvey(lesson, participation)}
                           className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold flex items-center justify-center"
