@@ -37,7 +37,11 @@ const FractionDisplay = ({ text }) => {
         
         // Make division symbol very clear
         if (trimmed === '÷') {
-          return <span key={index} className="text-6xl font-black mx-2 text-yellow-300">÷</span>;
+          return (
+            <span key={index} className="text-7xl font-black mx-3 text-yellow-300" style={{ fontFamily: 'Arial, sans-serif', letterSpacing: '0.1em' }}>
+              ÷
+            </span>
+          );
         }
         
         // Make multiplication symbol clear
