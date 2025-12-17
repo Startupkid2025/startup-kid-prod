@@ -586,7 +586,7 @@ export default function Home() {
                                   className="flex items-center justify-between bg-white/15 rounded-lg px-3 py-2.5 cursor-help hover:bg-white/25 transition-all border border-white/10"
                                   whileHover={{ x: 5 }}
                                 >
-                                  <span className="text-white/90 text-xs flex items-center gap-1">
+                                  <span className="text-white/90 text-sm font-medium flex items-center gap-1">
                                     💨 אינפלציה
                                     <span className="text-white/60 text-[10px]">(3%)</span>
                                   </span>
@@ -608,7 +608,7 @@ export default function Home() {
                                   className="flex items-center justify-between bg-white/15 rounded-lg px-3 py-2.5 cursor-help hover:bg-white/25 transition-all border border-white/10"
                                   whileHover={{ x: 5 }}
                                 >
-                                  <span className="text-white/90 text-xs flex items-center gap-1">
+                                  <span className="text-white/90 text-sm font-medium flex items-center gap-1">
                                     📊 מס הכנסה
                                     <span className="text-white/60 text-[10px]">({(incomeTaxRate * 100).toFixed(1)}%)</span>
                                   </span>
@@ -631,7 +631,7 @@ export default function Home() {
                                   className="flex items-center justify-between bg-white/15 rounded-lg px-3 py-2.5 cursor-help hover:bg-white/25 transition-all border border-white/10"
                                   whileHover={{ x: 5 }}
                                 >
-                                  <span className="text-white/90 text-xs flex items-center gap-1">
+                                  <span className="text-white/90 text-sm font-medium flex items-center gap-1">
                                     💳 ריבית אשראי
                                     <span className="text-white/60 text-[10px]">(10%)</span>
                                   </span>
@@ -654,7 +654,7 @@ export default function Home() {
                                   className="flex items-center justify-between bg-white/15 rounded-lg px-3 py-2.5 cursor-help hover:bg-white/25 transition-all border border-white/10"
                                   whileHover={{ x: 5 }}
                                 >
-                                  <span className="text-white/90 text-xs flex items-center gap-1">
+                                  <span className="text-white/90 text-sm font-medium flex items-center gap-1">
                                     📈 מס דיבידנד
                                     <span className="text-white/60 text-[10px]">(25%)</span>
                                   </span>
