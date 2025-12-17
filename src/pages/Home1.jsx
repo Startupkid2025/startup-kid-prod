@@ -486,6 +486,17 @@ export default function Home() {
 
   return (
     <div className="px-4 py-8 pb-24 max-w-6xl mx-auto space-y-8">
+      {/* Greeting */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-right"
+      >
+        <h1 className="text-3xl font-black text-white">
+          שלום {userData?.first_name || userData?.full_name?.split(' ')[0] || 'חבר'}! 👋
+        </h1>
+      </motion.div>
+
       {/* First Row - Coins and Net Worth */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Coins & Equipped Items Card */}
