@@ -226,6 +226,7 @@ export default function Leaderboard() {
         const currentInvestmentValue = investmentsValue; // Already calculated above
         const loginStreakEarnings = userRecord?.total_login_streak_coins || u.total_login_streak_coins || 0;
         const workEarnings = userRecord?.total_work_earnings || u.total_work_earnings || 0;
+        const workHours = userRecord?.total_work_hours || u.total_work_hours || 0;
 
         return {
           ...u,
@@ -244,6 +245,7 @@ export default function Leaderboard() {
           currentInvestmentValue,
           loginStreakEarnings,
           workEarnings,
+          workHours,
           aiTechLessons,
           socialSkillsLessons,
           moneyBusinessLessons,
@@ -261,14 +263,14 @@ export default function Leaderboard() {
       const vocabKing = [...usersWithAllStats].sort((a, b) => b.vocabEarnings - a.vocabEarnings)[0];
       const investmentKing = [...usersWithAllStats].sort((a, b) => b.currentInvestmentValue - a.currentInvestmentValue)[0];
       const loginStreakKing = [...usersWithAllStats].sort((a, b) => b.loginStreak - a.loginStreak)[0];
-      const workKing = [...usersWithAllStats].sort((a, b) => b.workEarnings - a.workEarnings)[0];
+      const workKing = [...usersWithAllStats].sort((a, b) => b.workHours - a.workHours)[0];
 
       // Debug: Log kings
       console.log('Math King:', mathKing?.student_email, 'Questions:', mathKing?.masteredMathQuestions);
       console.log('Vocab King:', vocabKing?.student_email, 'Earnings:', vocabKing?.vocabEarnings);
       console.log('Investment King:', investmentKing?.student_email, 'Value:', investmentKing?.currentInvestmentValue);
       console.log('Login Streak King:', loginStreakKing?.student_email, 'Streak:', loginStreakKing?.loginStreak);
-      console.log('Work King:', workKing?.student_email, 'Earnings:', workKing?.workEarnings);
+      console.log('Work King:', workKing?.student_email, 'Hours:', workKing?.workHours);
 
       // Add crown flags to users
       usersWithAllStats.forEach(u => {
@@ -285,7 +287,7 @@ export default function Leaderboard() {
         if (loginStreakKing && u.student_email === loginStreakKing.student_email && loginStreakKing.loginStreak > 0) {
           u.crowns.push({ type: 'login', name: '🔥 מלך הרצף', bonus: 'פי 2 על בונוס הרצף' });
         }
-        if (workKing && u.student_email === workKing.student_email && workKing.workEarnings > 0) {
+        if (workKing && u.student_email === workKing.student_email && workKing.workHours > 0) {
           u.crowns.push({ type: 'work', name: '💪 מלך העבודה', bonus: '+5 מטבעות לשעה' });
         }
       });
@@ -797,6 +799,19 @@ export default function Leaderboard() {
                             </TooltipTrigger>
                             <TooltipContent>
                               <p className="text-xs">שיתופי פעולה: {player.collaborationCount || 0}</p>
+                            </TooltipContent>
+                          </Tooltip>
+
+                          {/* Work Hours */}
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-yellow-500/20 border border-yellow-500/30 cursor-help">
+                                <span className="text-[10px] sm:text-xs">💼</span>
+                                <span className="text-[10px] sm:text-xs font-bold text-yellow-200">{player.workHours || 0}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">שעות עבודה: {player.workHours || 0}</p>
                             </TooltipContent>
                           </Tooltip>
                         </div>
