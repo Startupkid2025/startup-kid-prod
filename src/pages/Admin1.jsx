@@ -39,6 +39,19 @@ export default function Admin() {
 
   useEffect(() => {
     loadData();
+    
+    // One-time fix for Daniel - run immediately
+    (async () => {
+      try {
+        const allUsers = await base44.entities.User.list();
+        const daniel = allUsers.find(u => u.email === 'daniel@smeianikov.com');
+        if (daniel) {
+          await base44.entities.User.update(daniel.id, { total_work_hours: 19 });
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    })();
   }, []);
 
   const loadData = async () => {
