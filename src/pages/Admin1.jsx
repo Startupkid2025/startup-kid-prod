@@ -201,65 +201,168 @@ export default function Admin() {
         </p>
       </motion.div>
 
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-500/30">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/70 text-sm mb-1">השתתפויות</p>
+                  <p className="text-4xl font-black text-white">{totalParticipations}</p>
+                </div>
+                <div className="w-16 h-16 rounded-full bg-green-500/30 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-blue-500/30">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/70 text-sm mb-1">שיעורים</p>
+                  <p className="text-4xl font-black text-white">{lessons.length}</p>
+                </div>
+                <div className="w-16 h-16 rounded-full bg-blue-500/30 flex items-center justify-center">
+                  <BookOpen className="w-8 h-8 text-blue-300" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-500/30">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/70 text-sm mb-1">תלמידים</p>
+                  <p className="text-4xl font-black text-white">{students.filter(s => s.user_type === 'student').length}</p>
+                </div>
+                <div className="w-16 h-16 rounded-full bg-purple-500/30 flex items-center justify-center">
+                  <Users className="w-8 h-8 text-purple-300" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
       <Tabs defaultValue="students" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 mb-8 bg-white/10">
-          <TabsTrigger value="students" className="data-[state=active]:bg-white/20">
-            <Users className="w-4 h-4 mr-2" />
-            תלמידים
+        <TabsList className="grid w-full grid-cols-5 mb-8 bg-white/5 backdrop-blur-md border border-white/10 p-1 rounded-xl">
+          <TabsTrigger 
+            value="students" 
+            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white"
+          >
+            <Users className="w-4 h-4 ml-2" />
+            תלמידים ושיעורים
           </TabsTrigger>
-          <TabsTrigger value="lessons" className="data-[state=active]:bg-white/20">
-            <BookOpen className="w-4 h-4 mr-2" />
-            שיעורים
+          <TabsTrigger 
+            value="lessons"
+            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white"
+          >
+            <BookOpen className="w-4 h-4 ml-2" />
+            ניהול שיעורים
           </TabsTrigger>
-          <TabsTrigger value="groups" className="data-[state=active]:bg-white/20">
-            <Users className="w-4 h-4 mr-2" />
-            קבוצות
+          <TabsTrigger 
+            value="groups"
+            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white"
+          >
+            <Users className="w-4 h-4 ml-2" />
+            ניהול קבוצות
           </TabsTrigger>
-          <TabsTrigger value="vocabulary" className="data-[state=active]:bg-white/20">
-            <Languages className="w-4 h-4 mr-2" />
-            מילים
+          <TabsTrigger 
+            value="vocabulary"
+            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white"
+          >
+            <Languages className="w-4 h-4 ml-2" />
+            ניהול מילים
           </TabsTrigger>
-          <TabsTrigger value="tools" className="data-[state=active]:bg-white/20">
-            <Shield className="w-4 h-4 mr-2" />
-            כלים
+          <TabsTrigger 
+            value="tools"
+            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white"
+          >
+            <Shield className="w-4 h-4 ml-2" />
+            כלים באנגלית
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="students">
-          <Card className="bg-white/10 backdrop-blur-md border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center justify-between">
-                <span>ניהול תלמידים ({students.filter(s => filterUserType === 'all' || s.user_type === filterUserType).length})</span>
-                <div className="flex gap-2">
-                  <Select value={filterUserType} onValueChange={setFilterUserType}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="student">תלמידים</SelectItem>
-                      <SelectItem value="demo">דמו</SelectItem>
-                      <SelectItem value="parent">הורים</SelectItem>
-                      <SelectItem value="all">הכל</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={filterGroup} onValueChange={setFilterGroup}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue placeholder="סנן קבוצה" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">כל הקבוצות</SelectItem>
-                      {groups.map(group => (
-                        <SelectItem key={group.id} value={group.id}>
-                          {group.group_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+          {/* Filters Bar */}
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-white/70 text-sm">
+              <Filter className="w-4 h-4" />
+              <span>סינון:</span>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-white/70 text-sm">קבוצה:</span>
+                <Select value={filterGroup} onValueChange={setFilterGroup}>
+                  <SelectTrigger className="w-40 bg-white/10 border-white/20 text-white">
+                    <SelectValue placeholder="כל הקבוצות" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">כל הקבוצות</SelectItem>
+                    {groups.map(group => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.group_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-white/70 text-sm">סוג משתמש:</span>
+                <Select value={filterUserType} onValueChange={setFilterUserType}>
+                  <SelectTrigger className="w-32 bg-white/10 border-white/20 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="student">תלמיד</SelectItem>
+                    <SelectItem value="demo">דמו</SelectItem>
+                    <SelectItem value="parent">הורה</SelectItem>
+                    <SelectItem value="all">הכל</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="text-white/70 text-sm">
+              סה״כ {students.filter(s => {
+                const typeMatch = filterUserType === 'all' || s.user_type === filterUserType;
+                if (filterGroup === 'all') return typeMatch;
+                const group = groups.find(g => g.id === filterGroup);
+                return typeMatch && group?.student_emails?.includes(s.email);
+              }).length} מ-{students.length}
+            </div>
+          </div>
+
+          {/* Students List */}
+          <Card className="bg-white/5 backdrop-blur-md border-white/10">
+            <CardHeader className="border-b border-white/10">
+              <CardTitle className="text-white text-lg">
+                ניהול תלמידים ({students.filter(s => filterUserType === 'all' || s.user_type === filterUserType).length})
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
+            <CardContent className="p-6">
+              <div className="space-y-3">
                 {students
                   .filter(student => {
                     const typeMatch = filterUserType === 'all' || student.user_type === filterUserType;
