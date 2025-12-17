@@ -923,39 +923,7 @@ ${question} = ${correctAnswer}
         </Card>
       )}
 
-      {/* Mastered Questions */}
-      {masteredCount > 0 && (
-        <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-8"> {/* Added mb-8 for spacing */}
-          <CardContent className="p-6">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <Trophy className="w-6 h-6 text-yellow-300" />
-              תרגילים ששלטת בהם ({masteredCount})
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {mathProgress
-                .filter(p => p.mastered)
-                .map((progress, index) => (
-                  <div
-                    key={index}
-                    className="bg-white/5 rounded-lg p-3 border border-white/10 text-center"
-                  >
-                    <div className="flex items-center justify-center gap-1 mb-2 text-green-300 text-xs">
-                      <Star className="w-3 h-3 fill-current" />
-                      <Star className="w-3 h-3 fill-current" />
-                      <Star className="w-3 h-3 fill-current" />
-                    </div>
-                    <p className="font-bold text-white">{progress.question}</p>
-                    <p className="text-white/60 text-sm">= {progress.correct_answer}</p>
-                    <div className="flex items-center justify-center gap-1 mt-2 text-amber-300 text-xs">
-                      <Coins className="w-3 h-3" />
-                      <span>{progress.coins_earned}</span>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
 
       {/* New Explanation Section */}
       <motion.div
