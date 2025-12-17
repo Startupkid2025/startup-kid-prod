@@ -575,6 +575,8 @@ export default function Investments() {
   const totalInvested = investments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
   const totalValue = investments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
   const unrealizedProfit = totalValue - totalInvested;
+  const realizedProfit = userData?.total_realized_investment_profit || 0;
+  const totalProfit = unrealizedProfit + realizedProfit;
   const totalProfitPercent = totalInvested > 0 ? Math.round((unrealizedProfit / totalInvested) * 100) : 0;
 
   const investmentsByBusiness = investments.reduce((acc, inv) => {
@@ -629,14 +631,14 @@ export default function Investments() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
                 <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${
-                  unrealizedProfit >= 0 ? 'from-green-400 to-emerald-400' : 'from-red-400 to-pink-400'
+                  totalProfit >= 0 ? 'from-green-400 to-emerald-400' : 'from-red-400 to-pink-400'
                 } flex items-center justify-center`}>
-                  {unrealizedProfit >= 0 ? <TrendingUp className="w-6 h-6 text-white" /> : <TrendingDown className="w-6 h-6 text-white" />}
+                  {totalProfit >= 0 ? <TrendingUp className="w-6 h-6 text-white" /> : <TrendingDown className="w-6 h-6 text-white" />}
                 </div>
                 <div>
                   <p className="text-white/70 text-sm">סה"כ רווח/הפסד</p>
-                  <p className={`text-2xl font-black ${unrealizedProfit >= 0 ? 'text-green-300' : 'text-red-300'}`}>
-                    {unrealizedProfit >= 0 ? '+' : ''}{Math.round(unrealizedProfit)} ({totalProfitPercent}%)
+                  <p className={`text-2xl font-black ${totalProfit >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                    {totalProfit >= 0 ? '+' : ''}{Math.round(totalProfit)} ({totalProfitPercent}%)
                   </p>
                 </div>
               </div>
