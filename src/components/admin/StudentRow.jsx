@@ -309,41 +309,18 @@ export default function StudentRow({
           onClick={() => setIsExpanded(!isExpanded)}
         >
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0">
-                {student.full_name?.[0] || "?"}
-              </div>
-              <div className="text-right min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-bold text-white text-base sm:text-lg truncate">
-                    {student.first_name && student.last_name 
-                      ? `${student.first_name} ${student.last_name}`
-                      : student.full_name}
-                  </p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${userTypeColors[student.user_type || "student"]}`}>
-                    {userTypeLabels[student.user_type || "student"]}
-                  </span>
-                </div>
-                <p className="text-white/60 text-xs sm:text-sm truncate">{student.email}</p>
-                {student.phone_number && (
-                  <p className="text-white/50 text-xs truncate">📱 {student.phone_number}</p>
-                )}
-              </div>
-            </div>
-
             <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-              {/* Delete User Button */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-red-400 hover:text-red-300 hover:bg-red-500/20 w-8 h-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowDeleteDialog(true);
-                }}
+                className="text-white w-8 h-8 sm:w-10 sm:h-10"
               >
-                <Trash2 className="w-4 h-4" />
+                {isExpanded ? <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" /> : <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />}
               </Button>
+              <div className="text-center">
+                <p className="text-xl sm:text-2xl font-black text-yellow-300">{totalParticipations}</p>
+                <p className="text-white/60 text-[10px] sm:text-xs">השתתפויות</p>
+              </div>
               
               {/* Edit Student Button */}
               <Button
@@ -364,17 +341,40 @@ export default function StudentRow({
                 <Edit2 className="w-4 h-4" />
               </Button>
               
-              <div className="text-center">
-                <p className="text-xl sm:text-2xl font-black text-yellow-300">{totalParticipations}</p>
-                <p className="text-white/60 text-[10px] sm:text-xs">השתתפויות</p>
-              </div>
+              {/* Delete User Button */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white w-8 h-8 sm:w-10 sm:h-10"
+                className="text-red-400 hover:text-red-300 hover:bg-red-500/20 w-8 h-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDeleteDialog(true);
+                }}
               >
-                {isExpanded ? <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" /> : <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />}
+                <Trash2 className="w-4 h-4" />
               </Button>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <div className="text-right min-w-0 flex-1">
+                <div className="flex items-center gap-2 justify-end">
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${userTypeColors[student.user_type || "student"]}`}>
+                    {userTypeLabels[student.user_type || "student"]}
+                  </span>
+                  <p className="font-bold text-white text-base sm:text-lg truncate">
+                    {student.first_name && student.last_name 
+                      ? `${student.first_name} ${student.last_name}`
+                      : student.full_name}
+                  </p>
+                </div>
+                <p className="text-white/60 text-xs sm:text-sm truncate">{student.email}</p>
+                {student.phone_number && (
+                  <p className="text-white/50 text-xs truncate">📱 {student.phone_number}</p>
+                )}
+              </div>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0">
+                {student.full_name?.[0] || "?"}
+              </div>
             </div>
           </div>
         </div>
@@ -394,22 +394,22 @@ export default function StudentRow({
                 return (
                   <div key={lesson.id} className="bg-white/5 rounded-xl p-4 border border-white/10">
                     <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1 text-right">
-                        <h4 className="font-bold text-white mb-1">{lesson.lesson_name}</h4>
-                        {lesson.description && (
-                          <p className="text-white/60 text-sm">{lesson.description}</p>
-                        )}
-                      </div>
                       {!participation && (
                         <Button
                           onClick={() => handleAddParticipation(lesson)}
                           size="sm"
                           className="bg-green-500/20 hover:bg-green-500/30 text-green-200 border border-green-500/30"
                         >
-                          <Plus className="w-4 h-4 mr-1" />
+                          <Plus className="w-4 h-4 ml-1" />
                           הוסף
                         </Button>
                       )}
+                      <div className="flex-1 text-right">
+                        <h4 className="font-bold text-white mb-1">{lesson.lesson_name}</h4>
+                        {lesson.description && (
+                          <p className="text-white/60 text-sm">{lesson.description}</p>
+                        )}
+                      </div>
                     </div>
 
                     {/* Participation info */}
