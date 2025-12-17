@@ -165,7 +165,7 @@ export default function Home() {
       
       const allParticipations = await base44.entities.LessonParticipation.filter({ student_email: user.email });
       const completedSurveys = allParticipations.filter(p => p.survey_completed === true);
-      const surveyCoins = completedSurveys.length * 20;
+      const surveyCoins = completedSurveys.length * 50;
       
       const allQuizProgress = await base44.entities.QuizProgress.filter({ student_email: user.email });
       const quizCoins = allQuizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
@@ -938,7 +938,7 @@ export default function Home() {
                   <span className="text-2xl">📝</span>
                   <span className="text-white font-bold">מילוי סקרים</span>
                 </div>
-                <p className="text-white/80 text-sm">20 מטבעות אחרי כל שיעור</p>
+                <p className="text-white/80 text-sm">50 מטבעות אחרי כל שיעור</p>
               </div>
 
               <div className="bg-white/10 rounded-lg p-3 border border-white/20">
