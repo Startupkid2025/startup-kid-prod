@@ -364,7 +364,7 @@ export default function Layout({ children }) {
   ];
 
   const visibleNavItems = navItems.filter(item => {
-    if (currentUser?.role === "admin") return item.roles.includes("admin");
+    if (currentUser?.role === "admin") return item.roles.includes("admin") || item.roles.includes("user");
     if (currentUser?.user_type === "parent") return item.roles.includes("parent");
     return item.roles.includes("user");
   });
