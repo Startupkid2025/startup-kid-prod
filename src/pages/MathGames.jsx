@@ -16,7 +16,7 @@ const FractionDisplay = ({ text }) => {
   const parts = text.split(/(\s*[+\-×÷=?]\s*)/);
   
   return (
-    <div className="flex items-center justify-center gap-2 flex-wrap" style={{ direction: 'ltr' }}>
+    <div className="flex items-center justify-center gap-2 flex-wrap" style={{ direction: 'rtl' }}>
       {parts.map((part, index) => {
         const trimmed = part.trim();
         
