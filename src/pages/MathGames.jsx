@@ -12,34 +12,41 @@ const MATH_COINS_PER_CORRECT_ANSWER = 5; // Coins per correct answer
 
 // Component to display fractions nicely
 const FractionDisplay = ({ text }) => {
-  // Replace division symbol with a more visible one
-  const normalizedText = text.replace(/÷/g, '÷').replace(/×/g, '×');
-  
   // Split by operators while keeping them - match all math operators
-  const parts = normalizedText.split(/(\s*[+\-×÷=]\s*)/);
+  const parts = text.split(/(\s*[+\-×÷=?]\s*)/);
   
   return (
-    <div className="flex items-center justify-center gap-3 flex-wrap">
+    <div className="flex items-center justify-center gap-2 flex-wrap" style={{ direction: 'ltr' }}>
       {parts.map((part, index) => {
         const trimmed = part.trim();
         
         // Skip empty parts
         if (!trimmed) return null;
         
-        // Check if this part is a fraction (contains / but no spaces)
-        if (trimmed.includes('/') && !trimmed.includes(' ') && trimmed !== '?') {
+        // Check if this part is a fraction (contains / but no spaces and not a question mark)
+        if (trimmed.includes('/') && !trimmed.includes(' ')) {
           const [numerator, denominator] = trimmed.split('/');
           return (
-            <div key={index} className="inline-flex flex-col items-center mx-2">
-              <span className="text-4xl font-black">{numerator}</span>
+            <div key={index} className="inline-flex flex-col items-center mx-1">
+              <span className="text-4xl font-black leading-none">{numerator}</span>
               <div className="w-full h-1 bg-white my-1"></div>
-              <span className="text-4xl font-black">{denominator}</span>
+              <span className="text-4xl font-black leading-none">{denominator}</span>
             </div>
           );
         }
         
+        // Make division symbol very clear
+        if (trimmed === '÷') {
+          return <span key={index} className="text-6xl font-black mx-2 text-yellow-300">÷</span>;
+        }
+        
+        // Make multiplication symbol clear
+        if (trimmed === '×') {
+          return <span key={index} className="text-6xl font-black mx-2 text-blue-300">×</span>;
+        }
+        
         // Return operators or other text as-is with proper spacing
-        return <span key={index} className="text-5xl font-black mx-1">{trimmed}</span>;
+        return <span key={index} className="text-5xl font-black mx-2">{trimmed}</span>;
       })}
     </div>
   );
