@@ -717,27 +717,105 @@ export default function Leaderboard() {
                         )}
                       </div>
 
-                      {/* Stats Grid - Hidden on mobile */}
-                      <div className="hidden sm:grid grid-cols-4 gap-2 text-xs">
-                        <div className="flex items-center gap-1">
-                          <Coins className="w-3 h-3 text-yellow-300 flex-shrink-0" />
-                          <span className="truncate text-white/80">
-                            {player.coins || 0}
-                          </span>
+                      {/* Stats Grid - Visible on desktop */}
+                      <TooltipProvider>
+                        <div className="hidden sm:flex items-center gap-2 text-xs flex-wrap">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-1 cursor-help">
+                                <span className="text-white/90">🤖</span>
+                                <span className="text-white/60">-</span>
+                                <span className="text-white/80">{player.aiTechLessons || 0}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">שיעורי בינה מלאכותית וטכנולוגיה</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-1 cursor-help">
+                                <span className="text-white/90">❤️</span>
+                                <span className="text-white/60">-</span>
+                                <span className="text-white/80">{player.socialSkillsLessons || 0}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">שיעורי מיומנויות אישיות</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-1 cursor-help">
+                                <span className="text-white/90">💸</span>
+                                <span className="text-white/60">-</span>
+                                <span className="text-white/80">{player.moneyBusinessLessons || 0}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">שיעורי כסף ועסקים</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-1 cursor-help">
+                                <span className="text-white/90 font-bold">ABC</span>
+                                <span className="text-white/60">-</span>
+                                <span className="text-white/80">{player.masteredWords || 0}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">מילים באנגלית שלוט</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-1 cursor-help">
+                                <span className="text-white/90 font-bold">123</span>
+                                <span className="text-white/60">-</span>
+                                <span className="text-white/80">{player.masteredMathQuestions || 0}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">שאלות חשבון שלוט</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          {(player.loginStreak || 0) > 0 && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-1 cursor-help">
+                                  <span className="text-white/90">🔥</span>
+                                  <span className="text-white/60">-</span>
+                                  <span className="text-white/80">{player.loginStreak || 0}</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">רצף כניסות בימים</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          
+                          {(player.collaborationCount || 0) > 0 && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-1 cursor-help">
+                                  <span className="text-white/90">🤝</span>
+                                  <span className="text-white/60">-</span>
+                                  <span className="text-white/80">{player.collaborationCount || 0}</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">שיתופי פעולה</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <BookOpen className="w-3 h-3 text-blue-300 flex-shrink-0" />
-                          <span className="text-white/80 truncate">{player.total_lessons || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3 h-3 text-purple-300 flex-shrink-0" />
-                          <span className="text-white/80 truncate">{player.masteredWords}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Handshake className="w-3 h-3 text-green-300 flex-shrink-0" />
-                          <span className="text-white/80 truncate">{player.total_collaboration_coins || 0}</span>
-                        </div>
-                      </div>
+                      </TooltipProvider>
 
                       {/* Last Login - Hidden on mobile */}
                       {player.last_login_date && (
