@@ -64,9 +64,9 @@ export default function Layout({ children }) {
   const loadUser = async () => {
     try {
       const user = await base44.auth.me();
-      
-      // Estimate work hours if missing (one-time migration)
-      if ((user.total_work_earnings || 0) > 0 && !(user.total_work_hours > 0)) {
+
+      // Estimate work hours (one-time migration - always update if earnings exist)
+      if ((user.total_work_earnings || 0) > 0) {
         const excludedEmails = ['alon@binder.co.il', 'daniel@smeianikov.com'];
         const divisor = excludedEmails.includes(user.email) ? 50 : 10;
         const estimatedHours = Math.floor((user.total_work_earnings || 0) / divisor);
