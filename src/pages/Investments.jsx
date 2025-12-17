@@ -637,8 +637,8 @@ export default function Investments() {
                 </div>
                 <div>
                   <p className="text-white/70 text-sm">סה"כ רווח/הפסד</p>
-                  <p className={`text-2xl font-black ${totalProfit >= 0 ? 'text-green-300' : 'text-red-300'}`}>
-                    {totalProfit >= 0 ? '+' : ''}{Math.round(totalProfit)} ({totalProfitPercent}%)
+                  <p className={`text-2xl font-black ${unrealizedProfit >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                    {unrealizedProfit >= 0 ? '+' : ''}{Math.round(unrealizedProfit)} ({totalProfitPercent}%)
                   </p>
                 </div>
               </div>
