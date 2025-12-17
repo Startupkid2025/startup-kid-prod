@@ -62,20 +62,20 @@ const BUSINESSES = [
     id: "tech_startup",
     name: "🚀 סטארטאפ טכנולוגי",
     icon: "🚀",
-    description: "חברת טכנולוגיה צעירה - סיכון גבוה מאוד!",
+    description: "חברת טכנולוגיה צעירה - יכול להפסיד הכל!",
     minInvestment: 100,
-    volatility: "high",
-    riskLevel: 4,
+    volatility: "extreme",
+    riskLevel: 5,
     color: "from-blue-500 to-cyan-500"
   },
   {
     id: "crypto",
     name: "₿ קריפטו",
     icon: "₿",
-    description: "מטבעות דיגיטליים - יכול להפסיד הכל!",
+    description: "מטבעות דיגיטליים - סיכון גבוה מאוד!",
     minInvestment: 50,
-    volatility: "extreme",
-    riskLevel: 5,
+    volatility: "high",
+    riskLevel: 4,
     color: "from-purple-500 to-pink-500"
   }
 ];
