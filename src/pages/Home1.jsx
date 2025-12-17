@@ -490,41 +490,67 @@ export default function Home() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Coins & Equipped Items Card */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
+              whileHover={{ scale: 1.02, y: -5 }}
             >
-              <Card className="bg-gradient-to-br from-amber-500 to-orange-500 border-0 shadow-2xl h-full">
-                <CardContent className="p-6 flex flex-col h-full">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-white/90 font-bold text-base flex items-center gap-2">
-                      💰 עובר ושב
-                    </h3>
-                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                      <Coins className="w-5 h-5 text-white" />
-                    </div>
+              <Card className="bg-gradient-to-br from-orange-400 via-amber-500 to-orange-500 border-0 shadow-2xl h-full overflow-hidden relative">
+                {/* Animated background circles */}
+                <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+
+                <CardContent className="p-6 flex flex-col h-full relative z-10">
+                  <div className="flex items-center justify-between mb-6">
+                    <motion.div
+                      className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center"
+                      whileHover={{ rotate: 360, scale: 1.1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <Coins className="w-6 h-6 text-white" />
+                    </motion.div>
+                    <h3 className="text-white font-black text-lg">עובר ושב 💰</h3>
                   </div>
 
-                  <p className="text-5xl font-black text-white mb-4">{userData?.coins || 0}</p>
-                
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="mb-6"
+                  >
+                    <p className="text-6xl font-black text-white drop-shadow-lg mb-2">
+                      {(userData?.coins || 0).toLocaleString('he-IL')}
+                    </p>
+                    <div className="flex items-center gap-2 text-white/80 text-sm">
+                      <span>💰</span>
+                      <span className="font-medium">מטבעות זמינים</span>
+                    </div>
+                  </motion.div>
+
                 <TooltipProvider>
-                  <div className="space-y-2 mb-4">
-                    <p className="text-white/90 font-bold text-sm mb-2">💸 הפסדים צפויים:</p>
+                  <div className="space-y-2 mb-6 bg-white/10 rounded-xl p-4 backdrop-blur-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-white font-bold text-sm">💸 הפסדים צפויים</span>
+                      <motion.div
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                      >
+                        <HelpCircle className="w-4 h-4 text-white/60" />
+                      </motion.div>
+                    </div>
                     {(() => {
                       const currentCoins = userData?.coins || 0;
                       const purchasedItems = userData?.purchased_items || [];
-                      
+
                       let inflationLoss = 0;
                       let incomeTax = 0;
                       let creditInterest = 0;
                       let dividendTax = 0;
-                      
-                      // Inflation: 3% on positive cash
+
                       if (currentCoins > 0) {
                         inflationLoss = Math.floor(currentCoins * 0.03);
                       }
-                      
-                      // Income tax: 2% on net worth (with body reductions)
+
                       let incomeTaxRate = 0.02;
                       for (const itemId of purchasedItems) {
                         const item = AVATAR_ITEMS[itemId];
@@ -533,27 +559,31 @@ export default function Home() {
                         }
                       }
                       incomeTax = Math.floor(netWorth * incomeTaxRate);
-                      
-                      // Credit interest: 10% per day on negative balance
+
                       if (currentCoins < 0) {
                         creditInterest = Math.floor(Math.abs(currentCoins) * 0.10);
                       }
 
-                      // Dividend tax estimation (from daily_dividend_tax)
                       dividendTax = userData?.daily_dividend_tax || 0;
-                      
+
                       return (
                         <>
                           {inflationLoss > 0 && (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="flex items-center justify-between text-white/90 text-sm cursor-help">
-                                  <div className="flex items-center gap-1">
-                                    <span>{inflationLoss} 🪙</span>
-                                    <HelpCircle className="w-3 h-3 text-white/50" />
-                                  </div>
-                                  <span>💨 אינפלציה (3%)</span>
-                                </div>
+                                <motion.div 
+                                  className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-2 cursor-help hover:bg-white/20 transition-all"
+                                  whileHover={{ x: 5 }}
+                                >
+                                  <span className="text-white font-bold flex items-center gap-2">
+                                    <span className="text-red-200">-{inflationLoss}</span>
+                                    <span className="text-xs">🪙</span>
+                                  </span>
+                                  <span className="text-white/90 text-xs flex items-center gap-1">
+                                    💨 אינפלציה
+                                    <span className="text-white/60 text-[10px]">(3%)</span>
+                                  </span>
+                                </motion.div>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="bg-slate-900 text-white border-slate-700">
                                 <p className="text-xs">אינפלציה: 3% ביום על יתרת מזומנים חיובית</p>
@@ -563,13 +593,19 @@ export default function Home() {
                           {incomeTax > 0 && (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="flex items-center justify-between text-white/90 text-sm cursor-help">
-                                  <div className="flex items-center gap-1">
-                                    <span>{incomeTax} 🪙</span>
-                                    <HelpCircle className="w-3 h-3 text-white/50" />
-                                  </div>
-                                  <span>📊 מס הכנסה ({(incomeTaxRate * 100).toFixed(1)}%)</span>
-                                </div>
+                                <motion.div 
+                                  className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-2 cursor-help hover:bg-white/20 transition-all"
+                                  whileHover={{ x: 5 }}
+                                >
+                                  <span className="text-white font-bold flex items-center gap-2">
+                                    <span className="text-red-200">-{incomeTax}</span>
+                                    <span className="text-xs">🪙</span>
+                                  </span>
+                                  <span className="text-white/90 text-xs flex items-center gap-1">
+                                    📊 מס הכנסה
+                                    <span className="text-white/60 text-[10px]">({(incomeTaxRate * 100).toFixed(1)}%)</span>
+                                  </span>
+                                </motion.div>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="bg-slate-900 text-white border-slate-700">
                                 <p className="text-xs">מס הכנסה: {(incomeTaxRate * 100).toFixed(1)}% ביום על שווי כולל</p>
@@ -580,13 +616,19 @@ export default function Home() {
                           {creditInterest > 0 && (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="flex items-center justify-between text-white/90 text-sm cursor-help">
-                                  <div className="flex items-center gap-1">
-                                    <span>{creditInterest} 🪙</span>
-                                    <HelpCircle className="w-3 h-3 text-white/50" />
-                                  </div>
-                                  <span>💳 ריבית אשראי (10%)</span>
-                                </div>
+                                <motion.div 
+                                  className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-2 cursor-help hover:bg-white/20 transition-all"
+                                  whileHover={{ x: 5 }}
+                                >
+                                  <span className="text-white font-bold flex items-center gap-2">
+                                    <span className="text-red-200">-{creditInterest}</span>
+                                    <span className="text-xs">🪙</span>
+                                  </span>
+                                  <span className="text-white/90 text-xs flex items-center gap-1">
+                                    💳 ריבית אשראי
+                                    <span className="text-white/60 text-[10px]">(10%)</span>
+                                  </span>
+                                </motion.div>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="bg-slate-900 text-white border-slate-700">
                                 <p className="text-xs">ריבית אשראי: 10% ביום על יתרת מינוס</p>
@@ -597,13 +639,19 @@ export default function Home() {
                           {dividendTax > 0 && (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="flex items-center justify-between text-white/90 text-sm cursor-help">
-                                  <div className="flex items-center gap-1">
-                                    <span>{dividendTax} 🪙</span>
-                                    <HelpCircle className="w-3 h-3 text-white/50" />
-                                  </div>
-                                  <span>📈 מס דיבידנד (25%)</span>
-                                </div>
+                                <motion.div 
+                                  className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-2 cursor-help hover:bg-white/20 transition-all"
+                                  whileHover={{ x: 5 }}
+                                >
+                                  <span className="text-white font-bold flex items-center gap-2">
+                                    <span className="text-red-200">-{dividendTax}</span>
+                                    <span className="text-xs">🪙</span>
+                                  </span>
+                                  <span className="text-white/90 text-xs flex items-center gap-1">
+                                    📈 מס דיבידנד
+                                    <span className="text-white/60 text-[10px]">(25%)</span>
+                                  </span>
+                                </motion.div>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="bg-slate-900 text-white border-slate-700">
                                 <p className="text-xs">מס דיבידנד: 25% על רווחי השקעות יומיים</p>
@@ -612,75 +660,125 @@ export default function Home() {
                             </Tooltip>
                           )}
                           {inflationLoss === 0 && incomeTax === 0 && creditInterest === 0 && dividendTax === 0 && (
-                            <p className="text-white/70 text-sm">אין הפסדים צפויים 🎉</p>
+                            <div className="text-center py-3 bg-green-500/20 rounded-lg">
+                              <p className="text-white font-medium text-sm">🎉 אין הפסדים צפויים!</p>
+                            </div>
                           )}
                         </>
                       );
                     })()}
                   </div>
                 </TooltipProvider>
-                
-                <Button
-                  onClick={() => setShowShop(true)}
-                  className="w-full bg-white/20 hover:bg-white/30 text-white font-bold border-2 border-white/40 mt-auto"
-                >
-                  🛍️ חנות
-                </Button>
-                </CardContent>
-                </Card>
+
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    onClick={() => setShowShop(true)}
+                    className="w-full bg-white/20 hover:bg-white/30 text-white font-bold border-2 border-white/40 mt-auto shadow-lg backdrop-blur-sm transition-all"
+                  >
+                    <ShoppingBag className="w-4 h-4 ml-2" />
+                    פתח חנות
+                  </Button>
                 </motion.div>
+              </CardContent>
+            </Card>
+            </motion.div>
 
                 {/* Net Worth Card */}
                 <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
+                  whileHover={{ scale: 1.02, y: -5 }}
                 >
-                <Card className="bg-gradient-to-br from-purple-500 to-pink-500 border-0 shadow-2xl h-full">
-                <CardContent className="p-6">
-                 <div className="flex items-center justify-between mb-4">
-                   <h3 className="text-white/90 font-bold text-base flex items-center gap-2">
-                     💎 שווי כולל
-                   </h3>
-                   <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                     <TrendingUp className="w-5 h-5 text-white" />
-                   </div>
-                 </div>
+                  <Card className="bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 border-0 shadow-2xl h-full overflow-hidden relative">
+                    {/* Animated background circles */}
+                    <div className="absolute top-0 left-0 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+                    <div className="absolute bottom-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
 
-                 <p className="text-5xl font-black text-white mb-4">{netWorth}</p>
+                    <CardContent className="p-6 h-full flex flex-col relative z-10">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-white font-black text-lg">שווי כולל 💎</h3>
+                        <motion.div
+                          className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center"
+                          whileHover={{ rotate: 360, scale: 1.1 }}
+                          transition={{ duration: 0.5 }}
+                        >
+                          <TrendingUp className="w-6 h-6 text-white" />
+                        </motion.div>
+                      </div>
 
-                 <div className="space-y-1.5">
-                   <div className="flex justify-between items-center text-white/90 text-xs">
-                     <span>💰 עובר ושב</span>
-                     <span className="font-bold">{userData?.coins || 0}</span>
-                   </div>
-                   <div className="flex justify-between items-center text-white/90 text-xs">
-                     <span>👕 פריטים</span>
-                     <span className="font-bold">{(() => {
-                       const purchasedItems = userData?.purchased_items || [];
-                       let itemsValue = 0;
-                       purchasedItems.forEach(itemId => {
-                         const item = AVATAR_ITEMS[itemId];
-                         if (item) itemsValue += item.price || 0;
-                       });
-                       return itemsValue;
-                     })()}</span>
-                   </div>
-                   <div className="flex justify-between items-center text-white/90 text-xs">
-                     <span>📈 השקעות</span>
-                     <span className="font-bold">{netWorth - (userData?.coins || 0) - (() => {
-                       const purchasedItems = userData?.purchased_items || [];
-                       let itemsValue = 0;
-                       purchasedItems.forEach(itemId => {
-                         const item = AVATAR_ITEMS[itemId];
-                         if (item) itemsValue += item.price || 0;
-                       });
-                       return itemsValue;
-                     })()}</span>
-                   </div>
-                 </div>
-                </CardContent>
-                </Card>
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                        className="mb-6"
+                      >
+                        <p className="text-6xl font-black text-white drop-shadow-lg mb-2">
+                          {netWorth.toLocaleString('he-IL')}
+                        </p>
+                        <div className="flex items-center gap-2 text-white/80 text-sm">
+                          <span>💎</span>
+                          <span className="font-medium">שווי נכסים כולל</span>
+                        </div>
+                      </motion.div>
+
+                      <div className="space-y-3 bg-white/10 rounded-xl p-4 backdrop-blur-sm flex-grow">
+                        <div className="text-white/90 text-xs font-bold mb-3">📊 פירוט נכסים</div>
+                        <motion.div 
+                          className="flex justify-between items-center bg-white/10 rounded-lg px-3 py-2.5 hover:bg-white/20 transition-all"
+                          whileHover={{ x: 5 }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-orange-400/30 flex items-center justify-center">
+                              <Coins className="w-4 h-4 text-orange-200" />
+                            </div>
+                            <span className="text-white/90 text-sm font-medium">עובר ושב</span>
+                          </div>
+                          <span className="font-bold text-white">{(userData?.coins || 0).toLocaleString('he-IL')}</span>
+                        </motion.div>
+                        <motion.div 
+                          className="flex justify-between items-center bg-white/10 rounded-lg px-3 py-2.5 hover:bg-white/20 transition-all"
+                          whileHover={{ x: 5 }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-blue-400/30 flex items-center justify-center">
+                              <Shirt className="w-4 h-4 text-blue-200" />
+                            </div>
+                            <span className="text-white/90 text-sm font-medium">פריטים</span>
+                          </div>
+                          <span className="font-bold text-white">{(() => {
+                            const purchasedItems = userData?.purchased_items || [];
+                            let itemsValue = 0;
+                            purchasedItems.forEach(itemId => {
+                              const item = AVATAR_ITEMS[itemId];
+                              if (item) itemsValue += item.price || 0;
+                            });
+                            return itemsValue.toLocaleString('he-IL');
+                          })()}</span>
+                        </motion.div>
+                        <motion.div 
+                          className="flex justify-between items-center bg-white/10 rounded-lg px-3 py-2.5 hover:bg-white/20 transition-all"
+                          whileHover={{ x: 5 }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-green-400/30 flex items-center justify-center">
+                              <TrendingUp className="w-4 h-4 text-green-200" />
+                            </div>
+                            <span className="text-white/90 text-sm font-medium">השקעות</span>
+                          </div>
+                          <span className="font-bold text-white">{(netWorth - (userData?.coins || 0) - (() => {
+                            const purchasedItems = userData?.purchased_items || [];
+                            let itemsValue = 0;
+                            purchasedItems.forEach(itemId => {
+                              const item = AVATAR_ITEMS[itemId];
+                              if (item) itemsValue += item.price || 0;
+                            });
+                            return itemsValue;
+                          })()).toLocaleString('he-IL')}</span>
+                        </motion.div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </motion.div>
                 </div>
 
