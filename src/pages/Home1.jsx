@@ -486,69 +486,16 @@ export default function Home() {
 
   return (
     <div className="px-4 py-8 pb-24 max-w-6xl mx-auto space-y-8">
-      {/* First Row - Net Worth and Coins */}
+      {/* First Row - Coins and Net Worth */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Net Worth Card */}
+            {/* Coins & Equipped Items Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <Card className="bg-gradient-to-br from-purple-500 to-pink-500 border-0 shadow-2xl">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-white/90 font-bold text-base flex items-center gap-2">
-                      💎 שווי כולל
-                    </h3>
-                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                      <TrendingUp className="w-5 h-5 text-white" />
-                    </div>
-                  </div>
-
-                  <p className="text-5xl font-black text-white mb-4">{netWorth}</p>
-
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center text-white/90 text-xs">
-                      <span>💰 עובר ושב</span>
-                      <span className="font-bold">{userData?.coins || 0}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-white/90 text-xs">
-                      <span>👕 פריטים</span>
-                      <span className="font-bold">{(() => {
-                        const purchasedItems = userData?.purchased_items || [];
-                        let itemsValue = 0;
-                        purchasedItems.forEach(itemId => {
-                          const item = AVATAR_ITEMS[itemId];
-                          if (item) itemsValue += item.price || 0;
-                        });
-                        return itemsValue;
-                      })()}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-white/90 text-xs">
-                      <span>📈 השקעות</span>
-                      <span className="font-bold">{netWorth - (userData?.coins || 0) - (() => {
-                        const purchasedItems = userData?.purchased_items || [];
-                        let itemsValue = 0;
-                        purchasedItems.forEach(itemId => {
-                          const item = AVATAR_ITEMS[itemId];
-                          if (item) itemsValue += item.price || 0;
-                        });
-                        return itemsValue;
-                      })()}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Coins & Equipped Items Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <Card className="bg-gradient-to-br from-amber-500 to-orange-500 border-0 shadow-2xl">
-                <CardContent className="p-6">
+              <Card className="bg-gradient-to-br from-amber-500 to-orange-500 border-0 shadow-2xl h-full">
+                <CardContent className="p-6 flex flex-col h-full">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-white/90 font-bold text-base flex items-center gap-2">
                       💰 עובר ושב
@@ -675,14 +622,67 @@ export default function Home() {
                 
                 <Button
                   onClick={() => setShowShop(true)}
-                  className="w-full bg-white/20 hover:bg-white/30 text-white font-bold border-2 border-white/40"
+                  className="w-full bg-white/20 hover:bg-white/30 text-white font-bold border-2 border-white/40 mt-auto"
                 >
                   🛍️ חנות
                 </Button>
-              </CardContent>
-            </Card>
-            </motion.div>
-      </div>
+                </CardContent>
+                </Card>
+                </motion.div>
+
+                {/* Net Worth Card */}
+                <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                >
+                <Card className="bg-gradient-to-br from-purple-500 to-pink-500 border-0 shadow-2xl h-full">
+                <CardContent className="p-6">
+                 <div className="flex items-center justify-between mb-4">
+                   <h3 className="text-white/90 font-bold text-base flex items-center gap-2">
+                     💎 שווי כולל
+                   </h3>
+                   <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                     <TrendingUp className="w-5 h-5 text-white" />
+                   </div>
+                 </div>
+
+                 <p className="text-5xl font-black text-white mb-4">{netWorth}</p>
+
+                 <div className="space-y-1.5">
+                   <div className="flex justify-between items-center text-white/90 text-xs">
+                     <span>💰 עובר ושב</span>
+                     <span className="font-bold">{userData?.coins || 0}</span>
+                   </div>
+                   <div className="flex justify-between items-center text-white/90 text-xs">
+                     <span>👕 פריטים</span>
+                     <span className="font-bold">{(() => {
+                       const purchasedItems = userData?.purchased_items || [];
+                       let itemsValue = 0;
+                       purchasedItems.forEach(itemId => {
+                         const item = AVATAR_ITEMS[itemId];
+                         if (item) itemsValue += item.price || 0;
+                       });
+                       return itemsValue;
+                     })()}</span>
+                   </div>
+                   <div className="flex justify-between items-center text-white/90 text-xs">
+                     <span>📈 השקעות</span>
+                     <span className="font-bold">{netWorth - (userData?.coins || 0) - (() => {
+                       const purchasedItems = userData?.purchased_items || [];
+                       let itemsValue = 0;
+                       purchasedItems.forEach(itemId => {
+                         const item = AVATAR_ITEMS[itemId];
+                         if (item) itemsValue += item.price || 0;
+                       });
+                       return itemsValue;
+                     })()}</span>
+                   </div>
+                 </div>
+                </CardContent>
+                </Card>
+                </motion.div>
+                </div>
 
       {/* Second Row - Avatar + Skills */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
