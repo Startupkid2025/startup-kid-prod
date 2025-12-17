@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, ShoppingBag, Shirt, Coins, TrendingUp, Clock, DollarSign, Users, Briefcase } from "lucide-react";
+import { Sparkles, ShoppingBag, Shirt, Coins, TrendingUp, Clock, DollarSign, Users, Briefcase, HelpCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import TamagotchiAvatar, { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
@@ -17,8 +18,8 @@ import GroupSelectionDialog from "../components/home/GroupSelectionDialog";
 import { toast } from "sonner";
 
 const SKILLS = [
-  { key: "ai_tech", name: "בינה מלאכותית", icon: "🤖", color: "from-blue-400 to-cyan-400" },
-  { key: "social_skills", name: "מיומנויות חברתיות", icon: "❤️", color: "from-pink-400 to-rose-400" },
+  { key: "ai_tech", name: "בינה מלאכותית וטכנולוגיה", icon: "🤖", color: "from-blue-400 to-cyan-400" },
+  { key: "social_skills", name: "מיומנויות אישיות", icon: "❤️", color: "from-pink-400 to-rose-400" },
   { key: "money_business", name: "כסף ועסקים", icon: "💸", color: "from-yellow-400 to-amber-400" }
 ];
 
@@ -618,63 +619,118 @@ export default function Home() {
 
                   <p className="text-5xl font-black text-white mb-4">{userData?.coins || 0}</p>
                 
-                <div className="space-y-2 mb-4">
-                  <p className="text-white/90 font-bold text-sm mb-2">💸 הפסדים צפויים:</p>
-                  {(() => {
-                    const currentCoins = userData?.coins || 0;
-                    const purchasedItems = userData?.purchased_items || [];
-                    
-                    let inflationLoss = 0;
-                    let incomeTax = 0;
-                    let creditInterest = 0;
-                    
-                    // Inflation: 3% on positive cash
-                    if (currentCoins > 0) {
-                      inflationLoss = Math.floor(currentCoins * 0.03);
-                    }
-                    
-                    // Income tax: 2% on net worth (with body reductions)
-                    let incomeTaxRate = 0.02;
-                    for (const itemId of purchasedItems) {
-                      const item = AVATAR_ITEMS[itemId];
-                      if (item && item.category === 'body' && item.taxReduction) {
-                        incomeTaxRate = Math.max(0, incomeTaxRate - (item.taxReduction / 100));
+                <TooltipProvider>
+                  <div className="space-y-2 mb-4">
+                    <p className="text-white/90 font-bold text-sm mb-2">💸 הפסדים צפויים:</p>
+                    {(() => {
+                      const currentCoins = userData?.coins || 0;
+                      const purchasedItems = userData?.purchased_items || [];
+                      
+                      let inflationLoss = 0;
+                      let incomeTax = 0;
+                      let creditInterest = 0;
+                      let dividendTax = 0;
+                      
+                      // Inflation: 3% on positive cash
+                      if (currentCoins > 0) {
+                        inflationLoss = Math.floor(currentCoins * 0.03);
                       }
-                    }
-                    incomeTax = Math.floor(netWorth * incomeTaxRate);
-                    
-                    // Credit interest: 10% per day on negative balance
-                    if (currentCoins < 0) {
-                      creditInterest = Math.floor(Math.abs(currentCoins) * 0.10);
-                    }
-                    
-                    return (
-                      <>
-                        {inflationLoss > 0 && (
-                          <div className="flex items-center justify-between text-white/90 text-sm">
-                            <span>{inflationLoss} 🪙</span>
-                            <span>💨 אינפלציה (3%)</span>
-                          </div>
-                        )}
-                        {incomeTax > 0 && (
-                          <div className="flex items-center justify-between text-white/90 text-sm">
-                            <span>{incomeTax} 🪙</span>
-                            <span>📊 מס הכנסה ({(incomeTaxRate * 100).toFixed(1)}%)</span>
-                          </div>
-                        )}
-                        {creditInterest > 0 && (
-                          <div className="flex items-center justify-between text-white/90 text-sm">
-                            <span>{creditInterest} 🪙</span>
-                            <span>💳 ריבית אשראי (10%)</span>
-                          </div>
-                        )}
-                        {inflationLoss === 0 && incomeTax === 0 && creditInterest === 0 && (
-                          <p className="text-white/70 text-sm">אין הפסדים צפויים 🎉</p>
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
+                      
+                      // Income tax: 2% on net worth (with body reductions)
+                      let incomeTaxRate = 0.02;
+                      for (const itemId of purchasedItems) {
+                        const item = AVATAR_ITEMS[itemId];
+                        if (item && item.category === 'body' && item.taxReduction) {
+                          incomeTaxRate = Math.max(0, incomeTaxRate - (item.taxReduction / 100));
+                        }
+                      }
+                      incomeTax = Math.floor(netWorth * incomeTaxRate);
+                      
+                      // Credit interest: 10% per day on negative balance
+                      if (currentCoins < 0) {
+                        creditInterest = Math.floor(Math.abs(currentCoins) * 0.10);
+                      }
+
+                      // Dividend tax estimation (from daily_dividend_tax)
+                      dividendTax = userData?.daily_dividend_tax || 0;
+                      
+                      return (
+                        <>
+                          {inflationLoss > 0 && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center justify-between text-white/90 text-sm cursor-help">
+                                  <div className="flex items-center gap-1">
+                                    <span>{inflationLoss} 🪙</span>
+                                    <HelpCircle className="w-3 h-3 text-white/50" />
+                                  </div>
+                                  <span>💨 אינפלציה (3%)</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="bg-slate-900 text-white border-slate-700">
+                                <p className="text-xs">אינפלציה: 3% ביום על יתרת מזומנים חיובית</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          {incomeTax > 0 && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center justify-between text-white/90 text-sm cursor-help">
+                                  <div className="flex items-center gap-1">
+                                    <span>{incomeTax} 🪙</span>
+                                    <HelpCircle className="w-3 h-3 text-white/50" />
+                                  </div>
+                                  <span>📊 מס הכנסה ({(incomeTaxRate * 100).toFixed(1)}%)</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="bg-slate-900 text-white border-slate-700">
+                                <p className="text-xs">מס הכנסה: {(incomeTaxRate * 100).toFixed(1)}% ביום על שווי כולל</p>
+                                <p className="text-xs text-slate-400 mt-1">ניתן להפחית עם צבעי גוף שונים</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          {creditInterest > 0 && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center justify-between text-white/90 text-sm cursor-help">
+                                  <div className="flex items-center gap-1">
+                                    <span>{creditInterest} 🪙</span>
+                                    <HelpCircle className="w-3 h-3 text-white/50" />
+                                  </div>
+                                  <span>💳 ריבית אשראי (10%)</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="bg-slate-900 text-white border-slate-700">
+                                <p className="text-xs">ריבית אשראי: 10% ביום על יתרת מינוס</p>
+                                <p className="text-xs text-slate-400 mt-1">מופעל רק כשיש חוב</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          {dividendTax > 0 && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center justify-between text-white/90 text-sm cursor-help">
+                                  <div className="flex items-center gap-1">
+                                    <span>{dividendTax} 🪙</span>
+                                    <HelpCircle className="w-3 h-3 text-white/50" />
+                                  </div>
+                                  <span>📈 מס דיבידנד (25%)</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="bg-slate-900 text-white border-slate-700">
+                                <p className="text-xs">מס דיבידנד: 25% על רווחי השקעות יומיים</p>
+                                <p className="text-xs text-slate-400 mt-1">ניתן להפחית עם פריטי פה שונים</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          {inflationLoss === 0 && incomeTax === 0 && creditInterest === 0 && dividendTax === 0 && (
+                            <p className="text-white/70 text-sm">אין הפסדים צפויים 🎉</p>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                </TooltipProvider>
                 
                 <Button
                   onClick={() => setShowShop(true)}
