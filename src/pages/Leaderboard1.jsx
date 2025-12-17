@@ -260,14 +260,14 @@ export default function Leaderboard() {
       const mathKing = [...usersWithAllStats].sort((a, b) => b.masteredMathQuestions - a.masteredMathQuestions)[0];
       const vocabKing = [...usersWithAllStats].sort((a, b) => b.vocabEarnings - a.vocabEarnings)[0];
       const investmentKing = [...usersWithAllStats].sort((a, b) => b.currentInvestmentValue - a.currentInvestmentValue)[0];
-      const loginStreakKing = [...usersWithAllStats].sort((a, b) => b.loginStreakEarnings - a.loginStreakEarnings)[0];
+      const loginStreakKing = [...usersWithAllStats].sort((a, b) => b.loginStreak - a.loginStreak)[0];
       const workKing = [...usersWithAllStats].sort((a, b) => b.workEarnings - a.workEarnings)[0];
 
       // Debug: Log kings
       console.log('Math King:', mathKing?.student_email, 'Questions:', mathKing?.masteredMathQuestions);
       console.log('Vocab King:', vocabKing?.student_email, 'Earnings:', vocabKing?.vocabEarnings);
       console.log('Investment King:', investmentKing?.student_email, 'Value:', investmentKing?.currentInvestmentValue);
-      console.log('Login Streak King:', loginStreakKing?.student_email, 'Earnings:', loginStreakKing?.loginStreakEarnings);
+      console.log('Login Streak King:', loginStreakKing?.student_email, 'Streak:', loginStreakKing?.loginStreak);
       console.log('Work King:', workKing?.student_email, 'Earnings:', workKing?.workEarnings);
 
       // Add crown flags to users
@@ -282,7 +282,7 @@ export default function Leaderboard() {
         if (investmentKing && u.student_email === investmentKing.student_email && investmentKing.currentInvestmentValue > 0) {
           u.crowns.push({ type: 'investment', name: '💼 מלך ההשקעות', bonus: '+0.1% תשואה יומית' });
         }
-        if (loginStreakKing && u.student_email === loginStreakKing.student_email && loginStreakKing.loginStreakEarnings > 0) {
+        if (loginStreakKing && u.student_email === loginStreakKing.student_email && loginStreakKing.loginStreak > 0) {
           u.crowns.push({ type: 'login', name: '🔥 מלך הרצף', bonus: 'פי 2 על בונוס הרצף' });
         }
         if (workKing && u.student_email === workKing.student_email && workKing.workEarnings > 0) {
