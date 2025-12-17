@@ -10,6 +10,35 @@ import { toast } from "sonner";
 const MAX_DAILY_EXERCISES = 30;
 const MATH_COINS_PER_CORRECT_ANSWER = 5; // Coins per correct answer
 
+// Component to display fractions nicely
+const FractionDisplay = ({ text }) => {
+  // Split by operators while keeping them
+  const parts = text.split(/(\s+[\+\-\×÷]\s+|\s*=\s*)/);
+  
+  return (
+    <div className="flex items-center justify-center gap-3 flex-wrap">
+      {parts.map((part, index) => {
+        const trimmed = part.trim();
+        
+        // Check if this part is a fraction
+        if (trimmed.includes('/') && !trimmed.includes(' ')) {
+          const [numerator, denominator] = trimmed.split('/');
+          return (
+            <div key={index} className="inline-flex flex-col items-center">
+              <span className="text-4xl font-black">{numerator}</span>
+              <div className="w-full h-1 bg-white my-1"></div>
+              <span className="text-4xl font-black">{denominator}</span>
+            </div>
+          );
+        }
+        
+        // Return operators or other text as-is
+        return <span key={index} className="text-5xl font-black">{part}</span>;
+      })}
+    </div>
+  );
+};
+
 export default function MathGames() {
   const [userData, setUserData] = useState(null);
   const [mathProgress, setMathProgress] = useState([]);
@@ -747,8 +776,8 @@ ${question} = ${correctAnswer}
                     </span>
                   </div>
 
-                  <div className="text-5xl font-black text-white mb-8">
-                    {currentQuestion.display}
+                  <div className="text-white mb-8">
+                    <FractionDisplay text={currentQuestion.display} />
                   </div>
 
                   {!feedback ? (
