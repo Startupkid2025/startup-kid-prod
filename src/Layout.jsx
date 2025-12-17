@@ -18,6 +18,16 @@ export default function Layout({ children }) {
     try {
       const user = await base44.auth.me();
       
+      // Estimate work hours if missing (one-time migration)
+      if ((user.total_work_earnings || 0) > 0 && !(user.total_work_hours > 0)) {
+        const estimatedHours = Math.floor((user.total_work_earnings || 0) / 50);
+        if (estimatedHours > 0) {
+          await base44.auth.updateMe({
+            total_work_hours: estimatedHours
+          });
+        }
+      }
+      
       // Check and update login streak
       await checkAndUpdateLoginStreak(user);
 
