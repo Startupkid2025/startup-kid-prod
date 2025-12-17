@@ -424,47 +424,6 @@ export default function StudentRow({
                                 : 'bg-orange-500/10 border-orange-500/20'
                           }`}
                         >
-                          <div className="flex items-center gap-2">
-                            {participation.attended ? (
-                              <>
-                                <UserCheck className="w-4 h-4 text-green-400" />
-                                <Calendar className="w-4 h-4 text-white/60" />
-                                <span className="text-white font-medium">
-                                  {new Date(participation.lesson_date).toLocaleDateString("he-IL")}
-                                </span>
-                                <span className="text-green-300 text-sm">
-                                  ✓ נוכח
-                                </span>
-                              </>
-                            ) : participation.watched_recording ? (
-                              <>
-                                <Play className="w-4 h-4 text-blue-400" />
-                                <Calendar className="w-4 h-4 text-white/60" />
-                                <span className="text-white font-medium">
-                                  {new Date(participation.lesson_date).toLocaleDateString("he-IL")}
-                                </span>
-                                <span className="text-blue-300 text-sm">
-                                  📹 צפה במוקלט
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <UserX className="w-4 h-4 text-orange-400" />
-                                <Calendar className="w-4 h-4 text-white/60" />
-                                <span className="text-white font-medium">
-                                  {new Date(participation.lesson_date).toLocaleDateString("he-IL")}
-                                </span>
-                                <span className="text-orange-300 text-sm">
-                                  ✗ לא נוכח
-                                </span>
-                              </>
-                            )}
-                            {participation.survey_completed && (
-                              <span className="text-xs bg-yellow-500/20 text-yellow-200 px-2 py-1 rounded-full">
-                                ⭐ מילא סקר
-                              </span>
-                            )}
-                          </div>
                           <div className="flex gap-2">
                             <Button
                               onClick={() => handleEditParticipation(lesson, participation)}
@@ -472,7 +431,7 @@ export default function StudentRow({
                               variant="ghost"
                               className="text-blue-300 hover:text-blue-200 hover:bg-blue-500/20"
                             >
-                              <Edit2 className="w-4 h-4" />
+                              ערוך
                             </Button>
                             <Button
                               onClick={() => handleRemoveParticipation(lesson, participation.id)}
@@ -483,42 +442,87 @@ export default function StudentRow({
                               הסר
                             </Button>
                           </div>
+                          <div className="flex items-center gap-2 text-right">
+                            {participation.survey_completed && (
+                              <span className="text-xs bg-yellow-500/20 text-yellow-200 px-2 py-1 rounded-full">
+                                ⭐ מילא סקר
+                              </span>
+                            )}
+                            {participation.attended ? (
+                              <>
+                                <span className="text-green-300 text-sm">
+                                  ✓ נוכח
+                                </span>
+                                <span className="text-white font-medium">
+                                  {new Date(participation.lesson_date).toLocaleDateString("he-IL")}
+                                </span>
+                                <Calendar className="w-4 h-4 text-white/60" />
+                                <UserCheck className="w-4 h-4 text-green-400" />
+                              </>
+                            ) : participation.watched_recording ? (
+                              <>
+                                <span className="text-blue-300 text-sm">
+                                  📹 צפה במוקלט
+                                </span>
+                                <span className="text-white font-medium">
+                                  {new Date(participation.lesson_date).toLocaleDateString("he-IL")}
+                                </span>
+                                <Calendar className="w-4 h-4 text-white/60" />
+                                <Play className="w-4 h-4 text-blue-400" />
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-orange-300 text-sm">
+                                  ✗ לא נוכח
+                                </span>
+                                <span className="text-white font-medium">
+                                  {new Date(participation.lesson_date).toLocaleDateString("he-IL")}
+                                </span>
+                                <Calendar className="w-4 h-4 text-white/60" />
+                                <UserX className="w-4 h-4 text-orange-400" />
+                              </>
+                            )}
+                          </div>
                         </div>
 
                         {/* Survey Results - Only if completed */}
                         {participation.survey_completed && (
-                          <div className="mt-2 bg-white/5 rounded-lg p-3 border border-white/10">
-                            <p className="text-xs text-white/70 font-medium mb-2">תוצאות סקר:</p>
-                            <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="mt-2 bg-purple-500/10 rounded-lg p-4 border border-purple-500/30">
+                            <div className="flex items-center justify-between mb-3">
+                              <p className="text-sm text-white font-bold">
+                                💬 ממוצע סקרים (מ-{participations.filter(p => p.student_email === student.email && p.survey_completed).length} משובים)
+                              </p>
+                            </div>
+                            <div className="grid grid-cols-4 gap-3 mb-3">
                               {participation.survey_interest && (
-                                <div className="flex items-center gap-1">
-                                  <span className="text-white/60">🎯 עניין:</span>
-                                  <span className="text-yellow-300 font-medium">{participation.survey_interest}/5</span>
+                                <div className="text-center bg-yellow-500/10 rounded-lg p-2 border border-yellow-500/20">
+                                  <p className="text-2xl font-black text-yellow-300">{participation.survey_interest}</p>
+                                  <p className="text-[10px] text-white/70 mt-1">🎯 קל להבנה</p>
                                 </div>
                               )}
                               {participation.survey_fun && (
-                                <div className="flex items-center gap-1">
-                                  <span className="text-white/60">😄 כיף:</span>
-                                  <span className="text-yellow-300 font-medium">{participation.survey_fun}/5</span>
+                                <div className="text-center bg-orange-500/10 rounded-lg p-2 border border-orange-500/20">
+                                  <p className="text-2xl font-black text-orange-300">{participation.survey_fun}</p>
+                                  <p className="text-[10px] text-white/70 mt-1">😄 כיף</p>
                                 </div>
                               )}
                               {participation.survey_learned && (
-                                <div className="flex items-center gap-1">
-                                  <span className="text-white/60">📚 למידה:</span>
-                                  <span className="text-yellow-300 font-medium">{participation.survey_learned}/5</span>
+                                <div className="text-center bg-purple-500/10 rounded-lg p-2 border border-purple-500/20">
+                                  <p className="text-2xl font-black text-purple-300">{participation.survey_learned}</p>
+                                  <p className="text-[10px] text-white/70 mt-1">📚 למידה</p>
                                 </div>
                               )}
                               {participation.survey_difficulty && (
-                                <div className="flex items-center gap-1">
-                                  <span className="text-white/60">💡 קל להבנה:</span>
-                                  <span className="text-yellow-300 font-medium">{6 - participation.survey_difficulty}/5</span>
+                                <div className="text-center bg-red-500/10 rounded-lg p-2 border border-red-500/20">
+                                  <p className="text-2xl font-black text-red-300">{participation.survey_difficulty}</p>
+                                  <p className="text-[10px] text-white/70 mt-1">💪 עניין</p>
                                 </div>
                               )}
                             </div>
                             {participation.survey_comments && (
-                              <div className="mt-2 pt-2 border-t border-white/10">
-                                <p className="text-xs text-white/60 mb-1">💬 הערות:</p>
-                                <p className="text-xs text-white/80 italic">"{participation.survey_comments}"</p>
+                              <div className="bg-white/5 rounded-lg p-2 text-right">
+                                <p className="text-xs text-white/60 mb-1">💬 נעים לשמוע</p>
+                                <p className="text-xs text-white/90">"{participation.survey_comments}"</p>
                               </div>
                             )}
                           </div>
