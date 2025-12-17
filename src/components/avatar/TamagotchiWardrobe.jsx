@@ -37,12 +37,12 @@ export default function TamagotchiWardrobe({
         ...item,
         unlockRequirement: item.unlock?.value || 0,
         isUnlocked: totalLessons >= (item.unlock?.value || 0),
-        isEquipped: equippedItems[category] === id
+        isEquipped: equippedItems?.[category] === id
       }));
   };
 
   const handleEquip = (category, itemId) => {
-    const newEquipped = { ...equippedItems };
+    const newEquipped = { ...(equippedItems || {}) };
     if (newEquipped[category] === itemId) {
       delete newEquipped[category];
     } else {

@@ -286,7 +286,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
             <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-full blur-2xl animate-pulse"></div>
             <div className="scale-90 sm:scale-100">
               <TamagotchiAvatar
-                equippedItems={equippedItems}
+                equippedItems={equippedItems || {}}
                 size="large"
                 showBackground={true}
                 avatarStage={currentLevel}

@@ -81,7 +81,7 @@ export default function AvatarShop({
         id,
         ...item,
         isPurchased: item.price === 0 || currentPurchasedItems.includes(id),
-        isEquipped: equippedItems[category] === id,
+        isEquipped: equippedItems?.[category] === id,
         canAfford: currentCoins >= item.price,
         isUnlocked: checkUnlocked(item),
         unlockText: getUnlockText(item)
@@ -136,7 +136,7 @@ export default function AvatarShop({
   };
 
   const handleEquip = (category, itemId) => {
-    const newEquipped = { ...equippedItems };
+    const newEquipped = { ...(equippedItems || {}) };
     if (newEquipped[category] === itemId) {
       delete newEquipped[category];
     } else {
