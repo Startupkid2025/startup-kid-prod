@@ -717,79 +717,78 @@ export default function Investments() {
               const profitPercent = totalInvestedInBusiness > 0 ? ((profitInBusiness / totalInvestedInBusiness) * 100).toFixed(1) : 0;
 
               return (
-                <div key={business.id} className={`bg-gradient-to-r ${business.color} rounded-lg p-2 sm:p-3`}>
-                 <div className="flex items-start gap-1.5 sm:gap-2 mb-2">
-                   <div className="text-xl sm:text-2xl">{business.icon}</div>
+                <div key={business.id} className={`bg-gradient-to-r ${business.color} rounded-lg p-3 overflow-visible`}>
+                 <div className="flex items-start gap-2 mb-2">
+                   <div className="text-2xl flex-shrink-0">{business.icon}</div>
                    <div className="flex-1 min-w-0">
-                     <h3 className="font-bold text-white text-xs sm:text-sm mb-0.5 truncate">{business.name}</h3>
-                     <p className="text-white/90 text-[10px] sm:text-xs mb-1 line-clamp-2">{business.description}</p>
-                     <div className="flex flex-wrap items-center gap-1 sm:gap-3 text-[9px] sm:text-[10px] text-white/80 mb-1">
+                     <h3 className="font-bold text-white text-sm mb-0.5 truncate">{business.name}</h3>
+                     <p className="text-white/90 text-xs mb-1 line-clamp-2">{business.description}</p>
+                     <div className="flex flex-wrap items-center gap-2 text-[10px] text-white/80 mb-1">
                        <div>מינימום: {business.minInvestment} 🪙</div>
                        <div>
                          {business.riskLevel === 0 ? '🛡️ בטוח' : '⚠️'.repeat(business.riskLevel) + ' סיכון'}
                        </div>
                      </div>
                      {yesterdayPerformance && Object.keys(yesterdayPerformance).length > 0 && (
-                       <div className={`inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full ${
+                       <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${
                          yesterdayChange >= 0 ? 'bg-green-500/30' : 'bg-red-500/30'
                        }`}>
                          {yesterdayChange >= 0 ? (
-                           <TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-green-200" />
+                           <TrendingUp className="w-3 h-3 text-green-200" />
                          ) : (
-                           <TrendingDown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-red-200" />
+                           <TrendingDown className="w-3 h-3 text-red-200" />
                          )}
-                         <span className={`font-bold text-[9px] sm:text-[10px] ${
+                         <span className={`font-bold text-[10px] ${
                            yesterdayChange >= 0 ? 'text-green-200' : 'text-red-200'
                          }`}>
                            אתמול: {yesterdayChange >= 0 ? '+' : ''}{yesterdayChange.toFixed(1)}%
                          </span>
                        </div>
                      )}
-                   </div>
-                   {hasInvestments && (
+                     </div>
+                     {hasInvestments && (
                      <div className="text-right flex-shrink-0">
-                       <p className="font-black text-white text-sm sm:text-base">{Math.round(totalValueInBusiness)}</p>
-                       <p className={`text-[9px] sm:text-[10px] font-bold ${profitInBusiness >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                       <p className="font-black text-white text-base">{Math.round(totalValueInBusiness)}</p>
+                       <p className={`text-[10px] font-bold ${profitInBusiness >= 0 ? 'text-green-200' : 'text-red-200'}`}>
                          {profitInBusiness >= 0 ? '+' : ''}{Math.round(profitInBusiness)} ({Math.round(profitPercent)}%)
                        </p>
                      </div>
-                   )}
-                 </div>
+                     )}
+                     </div>
 
-                 {/* Existing Investments */}
-                 {hasInvestments && (
-                   <div className="bg-white/10 rounded-lg p-2 mb-2 space-y-2">
+                     {/* Existing Investments */}
+                     {hasInvestments && (
+                     <div className="bg-white/10 rounded-lg p-3 mb-3 space-y-3 overflow-visible">
                      <div>
-                       <p className="text-white/80 text-[9px] sm:text-[10px] mb-1">{businessInvestments.length} השקעות פעילות</p>
-                       <div className="flex items-center justify-between">
-                         <div>
-                           <p className="text-white/70 text-[9px] sm:text-[10px]">מושקע:</p>
-                           <p className="text-white font-bold text-xs sm:text-sm">{Math.round(totalInvestedInBusiness)} 🪙</p>
+                       <p className="text-white/80 text-xs mb-2 font-bold">{businessInvestments.length} השקעות פעילות</p>
+                       <div className="grid grid-cols-3 gap-2">
+                         <div className="text-center">
+                           <p className="text-white/70 text-[10px] mb-1">מושקע</p>
+                           <p className="text-white font-bold text-sm">{Math.round(totalInvestedInBusiness)} 🪙</p>
                          </div>
-                         <div className="text-right">
-                           <p className="text-white/70 text-[9px] sm:text-[10px]">שווי:</p>
-                           <p className="text-white font-bold text-xs sm:text-sm">{Math.round(totalValueInBusiness)} 🪙</p>
+                         <div className="text-center">
+                           <p className="text-white/70 text-[10px] mb-1">שווי</p>
+                           <p className="text-white font-bold text-sm">{Math.round(totalValueInBusiness)} 🪙</p>
                          </div>
-                         <div className="text-right">
-                           <p className="text-white/70 text-[9px] sm:text-[10px]">רווח:</p>
-                           <p className={`font-bold text-xs sm:text-sm ${profitInBusiness >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                         <div className="text-center">
+                           <p className="text-white/70 text-[10px] mb-1">רווח</p>
+                           <p className={`font-bold text-sm ${profitInBusiness >= 0 ? 'text-green-300' : 'text-red-300'}`}>
                              {profitInBusiness >= 0 ? '+' : ''}{Math.round(profitInBusiness)} 🪙
                            </p>
                          </div>
                        </div>
                      </div>
-                     <div className="flex gap-1.5 sm:gap-2 items-end">
-                       <div className="flex-1 min-w-0">
-                         <Input
-                           type="number"
-                           placeholder={`מכור עד ${Math.round(totalValueInBusiness)} 🪙`}
-                           value={sellAmounts[business.id] || ''}
-                           onChange={(e) => setSellAmounts({
-                             ...sellAmounts,
-                             [business.id]: parseInt(e.target.value) || 0
-                           })}
-                           className="bg-white/20 border-white/30 text-white placeholder:text-white/50 h-7 sm:h-8 text-xs sm:text-sm"
-                         />
+                     <div className="space-y-2">
+                       <Input
+                         type="number"
+                         placeholder={`מכור עד ${Math.round(totalValueInBusiness)} 🪙`}
+                         value={sellAmounts[business.id] || ''}
+                         onChange={(e) => setSellAmounts({
+                           ...sellAmounts,
+                           [business.id]: parseInt(e.target.value) || 0
+                         })}
+                         className="bg-white/20 border-white/30 text-white placeholder:text-white/50 h-9 text-sm w-full"
+                       />
                          {sellAmounts[business.id] > 0 && (() => {
                           const sellValue = sellAmounts[business.id];
                           const afterFee = sellValue - TRANSACTION_FEE;
@@ -800,7 +799,7 @@ export default function Investments() {
                           const netAmount = afterFee - tax;
 
                            return (
-                             <div className="text-[9px] sm:text-[10px] mt-0.5 space-y-0.5">
+                             <div className="text-[10px] mt-1 space-y-1 bg-black/20 p-2 rounded">
                                <p className="text-white/70">
                                 עמלה: {TRANSACTION_FEE} 🪙
                                </p>
@@ -815,44 +814,40 @@ export default function Investments() {
                              </div>
                            );
                          })()}
-                       </div>
-                       <Button
-                         onClick={() => openConfirmDialog(business.id, sellAmounts[business.id] || totalValueInBusiness)}
-                         disabled={isSelling[business.id]}
-                         size="sm"
-                         className="bg-white/20 hover:bg-white/30 text-white font-bold text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-                       >
-                         {isSelling[business.id] ? '⏳' : '💰'} מכור
-                       </Button>
-                     </div>
-                   </div>
-                 )}
+                         <Button
+                           onClick={() => openConfirmDialog(business.id, sellAmounts[business.id] || totalValueInBusiness)}
+                           disabled={isSelling[business.id]}
+                           className="bg-white/20 hover:bg-white/30 text-white font-bold text-sm h-10 w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                         >
+                           {isSelling[business.id] ? '⏳ מוכר...' : '💰 מכור השקעה'}
+                         </Button>
+                         </div>
+                         </div>
+                         )}
 
                   {/* New Investment Input */}
-                  <div className="flex gap-1.5 sm:gap-2 items-end">
-                    <div className="flex-1 min-w-0">
-                      <Input
-                        type="number"
-                        placeholder={`השקע ${business.minInvestment}+ 🪙`}
-                        value={investmentAmounts[business.id] || ''}
-                        onChange={(e) => setInvestmentAmounts({
-                          ...investmentAmounts,
-                          [business.id]: parseInt(e.target.value) || 0
-                        })}
-                        className="bg-white/20 border-white/30 text-white placeholder:text-white/50 h-7 sm:h-8 text-xs sm:text-sm"
-                      />
-                      {totalCost > 0 && (
-                        <p className="text-white/70 text-[9px] sm:text-[10px] mt-0.5">
-                          סה"כ: {totalCost} מטבעות (כולל עמלה)
-                        </p>
-                      )}
-                    </div>
+                  <div className="space-y-2">
+                    <Input
+                      type="number"
+                      placeholder={`השקע ${business.minInvestment}+ 🪙`}
+                      value={investmentAmounts[business.id] || ''}
+                      onChange={(e) => setInvestmentAmounts({
+                        ...investmentAmounts,
+                        [business.id]: parseInt(e.target.value) || 0
+                      })}
+                      className="bg-white/20 border-white/30 text-white placeholder:text-white/50 h-9 text-sm w-full"
+                    />
+                    {totalCost > 0 && (
+                      <p className="text-white/70 text-[10px]">
+                        סה"כ: {totalCost} מטבעות (כולל עמלה)
+                      </p>
+                    )}
                     <Button
                       onClick={() => handleInvest(business.id)}
                       disabled={!investmentAmounts[business.id] || investmentAmounts[business.id] < business.minInvestment || isInvesting[business.id]}
-                      className="bg-white/20 hover:bg-white/30 text-white font-bold text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                      className="bg-white/20 hover:bg-white/30 text-white font-bold text-sm h-10 w-full disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isInvesting[business.id] ? '⏳' : '💰'} השקע
+                      {isInvesting[business.id] ? '⏳ משקיע...' : '💰 השקע כעת'}
                     </Button>
                   </div>
                 </div>
