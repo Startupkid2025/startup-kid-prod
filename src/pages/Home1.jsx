@@ -519,68 +519,142 @@ export default function Home() {
         </div>
 
         <div className="space-y-6">
+          {/* Net Worth Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+            <Card className="bg-gradient-to-br from-purple-500 to-pink-500 border-0 shadow-2xl">
               <CardContent className="p-6">
-                <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                  <Coins className="w-5 h-5 text-yellow-300" />
-                  המשאבים שלי
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white/90 font-bold text-lg flex items-center gap-2">
+                    💎 שווי כולל
+                  </h3>
+                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                    <TrendingUp className="w-6 h-6 text-white" />
+                  </div>
+                </div>
                 
-                <div className="space-y-3">
-                  <div className="bg-gradient-to-r from-yellow-500/20 to-amber-500/20 rounded-xl p-4 border border-yellow-500/30">
-                    <p className="text-white/70 text-sm mb-1">מטבעות זמינים</p>
-                    <p className="text-3xl font-black text-white">{userData?.coins || 0} 🪙</p>
+                <p className="text-6xl font-black text-white mb-6">{netWorth}</p>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-white/90">
+                    <span className="text-sm">💰 עובר ושב</span>
+                    <span className="font-bold">{userData?.coins || 0}</span>
                   </div>
-
-                  <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl p-4 border border-green-500/30">
-                    <p className="text-white/70 text-sm mb-1">שווי נטו (כולל נכסים)</p>
-                    <p className="text-2xl font-black text-white">{netWorth} 🪙</p>
+                  <div className="flex justify-between items-center text-white/90">
+                    <span className="text-sm">👕 פריטים</span>
+                    <span className="font-bold">{(() => {
+                      const purchasedItems = userData?.purchased_items || [];
+                      let itemsValue = 0;
+                      purchasedItems.forEach(itemId => {
+                        const item = AVATAR_ITEMS[itemId];
+                        if (item) itemsValue += item.price || 0;
+                      });
+                      return itemsValue;
+                    })()}</span>
                   </div>
-
-                  {expectedDailyLoss > 0 && (
-                    <div className="bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-xl p-4 border border-red-500/30">
-                      <p className="text-white/70 text-sm mb-1">צפי להפסד יומי</p>
-                      <p className="text-xl font-black text-white">-{expectedDailyLoss} 🪙</p>
-                      <p className="text-white/60 text-xs mt-1">
-                        (אינפלציה, מס הכנסה{(userData?.coins || 0) < 0 ? ', ריבית אשראי' : ''})
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="space-y-2 mt-4">
-                    <Button
-                      onClick={() => setShowShop(true)}
-                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold flex items-center justify-center gap-2"
-                    >
-                      <ShoppingBag className="w-5 h-5" />
-                      חנות הפריטים 🛍️
-                    </Button>
-
-                    <Button
-                      onClick={() => setShowWardrobe(true)}
-                      className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold flex items-center justify-center gap-2"
-                    >
-                      <Shirt className="w-5 h-5" />
-                      הארון שלי 👕
-                    </Button>
-
-                    <Link to={createPageUrl("Investments1")}>
-                      <Button
-                        className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold flex items-center justify-center gap-2"
-                      >
-                        <TrendingUp className="w-5 h-5" />
-                        תיק ההשקעות 💼
-                      </Button>
-                    </Link>
+                  <div className="flex justify-between items-center text-white/90">
+                    <span className="text-sm">📈 השקעות</span>
+                    <span className="font-bold">{netWorth - (userData?.coins || 0) - (() => {
+                      const purchasedItems = userData?.purchased_items || [];
+                      let itemsValue = 0;
+                      purchasedItems.forEach(itemId => {
+                        const item = AVATAR_ITEMS[itemId];
+                        if (item) itemsValue += item.price || 0;
+                      });
+                      return itemsValue;
+                    })()}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
+          </motion.div>
+
+          {/* Coins & Equipped Items Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Card className="bg-gradient-to-br from-amber-500 to-orange-500 border-0 shadow-2xl">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white/90 font-bold text-lg flex items-center gap-2">
+                    💰 עובר ושב
+                  </h3>
+                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                    <Coins className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                
+                <p className="text-6xl font-black text-white mb-6">{userData?.coins || 0}</p>
+                
+                <div className="space-y-2 mb-4">
+                  <p className="text-white/90 font-bold text-sm mb-2">🎨 הפריטים שצוידו:</p>
+                  {(() => {
+                    const equippedItems = userData?.equipped_items || {};
+                    const equipped = Object.entries(equippedItems).map(([category, itemId]) => {
+                      const item = AVATAR_ITEMS[itemId];
+                      if (!item) return null;
+                      
+                      let bonusText = "";
+                      if (item.hourlyBonus) bonusText = `${item.hourlyBonus}+`;
+                      else if (item.taxReduction) bonusText = `${item.taxReduction}+`;
+                      else if (item.mathBonus) bonusText = `${item.mathBonus}+`;
+                      else if (item.wordBonus) bonusText = `${item.wordBonus}+`;
+                      else if (item.dividendTaxReduction) bonusText = `${item.dividendTaxReduction}+`;
+                      else if (item.passiveIncome) bonusText = `${item.passiveIncome}+`;
+                      
+                      return (
+                        <div key={category} className="flex items-center gap-2 text-white/90 text-sm">
+                          <span className="text-green-300">✓</span>
+                          <span>{bonusText}</span>
+                          <span>{item.name}</span>
+                        </div>
+                      );
+                    }).filter(Boolean);
+                    
+                    return equipped.length > 0 ? equipped : (
+                      <p className="text-white/70 text-sm">אין פריטים מצוידים</p>
+                    );
+                  })()}
+                </div>
+                
+                <Button
+                  onClick={() => setShowShop(true)}
+                  className="w-full bg-white/20 hover:bg-white/30 text-white font-bold border-2 border-white/40"
+                >
+                  🛍️ חנות
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Quick Action Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="space-y-2"
+          >
+            <Button
+              onClick={() => setShowWardrobe(true)}
+              className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold flex items-center justify-center gap-2"
+            >
+              <Shirt className="w-5 h-5" />
+              הארון שלי 👕
+            </Button>
+
+            <Link to={createPageUrl("Investments1")}>
+              <Button
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold flex items-center justify-center gap-2"
+              >
+                <TrendingUp className="w-5 h-5" />
+                תיק ההשקעות 💼
+              </Button>
+            </Link>
           </motion.div>
 
           {!userGroup && userData?.user_type === 'student' && (
