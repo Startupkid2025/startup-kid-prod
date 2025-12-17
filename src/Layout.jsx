@@ -32,8 +32,8 @@ export default function Layout({ children }) {
       for (let i = 0; i < students.length; i++) {
         const user = students[i];
         
-        // Skip if already has work hours or no work earnings
-        if ((user.total_work_hours || 0) > 0 || !(user.total_work_earnings > 0)) {
+        // Skip if no work earnings
+        if (!(user.total_work_earnings > 0)) {
           continue;
         }
         
