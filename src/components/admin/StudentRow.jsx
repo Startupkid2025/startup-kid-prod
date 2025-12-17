@@ -53,7 +53,8 @@ export default function StudentRow({
     first_name: student.first_name || "",
     last_name: student.last_name || "",
     full_name: student.full_name || "",
-    user_type: student.user_type || "student"
+    user_type: student.user_type || "student",
+    total_work_hours: student.total_work_hours || 0
   });
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -215,7 +216,8 @@ export default function StudentRow({
         first_name: editedStudent.first_name.trim(),
         last_name: editedStudent.last_name.trim(),
         full_name: fullName,
-        user_type: editedStudent.user_type
+        user_type: editedStudent.user_type,
+        total_work_hours: Number(editedStudent.total_work_hours) || 0
       });
       
       console.log("Updated user name to:", fullName);
@@ -333,7 +335,8 @@ export default function StudentRow({
                     first_name: student.first_name || "",
                     last_name: student.last_name || "",
                     full_name: student.full_name || "",
-                    user_type: student.user_type || "student"
+                    user_type: student.user_type || "student",
+                    total_work_hours: student.total_work_hours || 0
                   });
                   setShowEditStudentDialog(true);
                 }}
@@ -736,6 +739,20 @@ export default function StudentRow({
                   <SelectItem value="teacher">מורה</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-gray-700 font-medium">
+                שעות עבודה 💼
+              </Label>
+              <Input
+                type="number"
+                value={editedStudent.total_work_hours}
+                onChange={(e) => setEditedStudent({...editedStudent, total_work_hours: e.target.value})}
+                className="border-2 border-purple-200"
+                placeholder="0"
+                min="0"
+              />
             </div>
 
             {editedStudent.user_type === "parent" && (
