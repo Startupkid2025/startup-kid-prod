@@ -583,7 +583,7 @@ export default function Home() {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <motion.div 
-                                  className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-2 cursor-help hover:bg-white/20 transition-all"
+                                  className="flex items-center justify-between bg-white/15 rounded-lg px-3 py-2.5 cursor-help hover:bg-white/25 transition-all border border-white/10"
                                   whileHover={{ x: 5 }}
                                 >
                                   <span className="text-white/90 text-xs flex items-center gap-1">
@@ -605,7 +605,7 @@ export default function Home() {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <motion.div 
-                                  className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-2 cursor-help hover:bg-white/20 transition-all"
+                                  className="flex items-center justify-between bg-white/15 rounded-lg px-3 py-2.5 cursor-help hover:bg-white/25 transition-all border border-white/10"
                                   whileHover={{ x: 5 }}
                                 >
                                   <span className="text-white/90 text-xs flex items-center gap-1">
@@ -628,7 +628,7 @@ export default function Home() {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <motion.div 
-                                  className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-2 cursor-help hover:bg-white/20 transition-all"
+                                  className="flex items-center justify-between bg-white/15 rounded-lg px-3 py-2.5 cursor-help hover:bg-white/25 transition-all border border-white/10"
                                   whileHover={{ x: 5 }}
                                 >
                                   <span className="text-white/90 text-xs flex items-center gap-1">
@@ -651,7 +651,7 @@ export default function Home() {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <motion.div 
-                                  className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-2 cursor-help hover:bg-white/20 transition-all"
+                                  className="flex items-center justify-between bg-white/15 rounded-lg px-3 py-2.5 cursor-help hover:bg-white/25 transition-all border border-white/10"
                                   whileHover={{ x: 5 }}
                                 >
                                   <span className="text-white/90 text-xs flex items-center gap-1">
@@ -671,7 +671,7 @@ export default function Home() {
                             </Tooltip>
                           )}
                           {inflationLoss === 0 && incomeTax === 0 && creditInterest === 0 && dividendTax === 0 && (
-                            <div className="text-center py-3 bg-green-500/20 rounded-lg">
+                            <div className="text-center py-3 bg-green-500/20 rounded-lg border border-green-400/30">
                               <p className="text-white font-medium text-sm">🎉 אין הפסדים צפויים!</p>
                             </div>
                           )}
