@@ -138,6 +138,9 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     });
 
     const totalCoinsToEarn = job.coinsPerHour + hourlyBonus;
+    
+    // Increment work hours counter (number of times sent to work)
+    const currentWorkHours = userData.total_work_hours || 0;
 
     await base44.auth.updateMe({
       work_status: {
@@ -146,7 +149,8 @@ export default function AvatarWork({ userData, onWorkComplete }) {
         jobName: job.name,
         coinsToEarn: totalCoinsToEarn,
         returnTime: returnTime
-      }
+      },
+      total_work_hours: currentWorkHours + 1
     });
 
     setWorkStatus({
