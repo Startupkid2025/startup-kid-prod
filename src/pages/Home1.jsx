@@ -122,7 +122,6 @@ export default function Home() {
 
       const counts = {
         ai_tech_lessons: 0,
-        personal_dev_lessons: 0,
         social_skills_lessons: 0,
         money_business_lessons: 0
       };
@@ -132,10 +131,10 @@ export default function Home() {
           const lesson = lessonMap[participation.lesson_id];
           if (!lesson) return;
 
-          if ((lesson.ai_tech_xp || 0) > 0) counts.ai_tech_lessons++;
-          if ((lesson.personal_dev_xp || 0) > 0) counts.personal_dev_lessons++;
-          if ((lesson.social_skills_xp || 0) > 0) counts.social_skills_lessons++;
-          if ((lesson.money_business_xp || 0) > 0) counts.money_business_lessons++;
+          // Count based on lesson category
+          if (lesson.category === 'ai_tech') counts.ai_tech_lessons++;
+          if (lesson.category === 'personal_skills' || lesson.category === 'social_skills') counts.social_skills_lessons++;
+          if (lesson.category === 'money_business') counts.money_business_lessons++;
         }
       });
 
@@ -144,7 +143,6 @@ export default function Home() {
       console.error("Error calculating lesson counts:", error);
       return {
         ai_tech_lessons: 0,
-        personal_dev_lessons: 0,
         social_skills_lessons: 0,
         money_business_lessons: 0
       };
