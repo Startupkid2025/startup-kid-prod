@@ -103,6 +103,13 @@ export default function Home() {
     }
   };
 
+  // Update net worth when data changes
+  React.useEffect(() => {
+    if (userData) {
+      calculateNetWorth().then(setNetWorth);
+    }
+  }, [userData]);
+
   const calculateLessonCounts = async (user) => {
     try {
       const allParticipations = await base44.entities.LessonParticipation.filter({ student_email: user.email });
