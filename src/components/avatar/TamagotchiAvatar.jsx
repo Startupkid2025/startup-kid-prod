@@ -9,8 +9,8 @@ export const AVATAR_ITEMS = {
     color: "#60A5FA",
     category: "body",
     price: 0,
-    taxReduction: 0.05,
-    description: "מפחית 0.05% מס הכנסה יומי"
+    taxReduction: 0.1,
+    description: "מפחית 0.1% מס הכנסה יומי"
   },
   "body_pink": {
     name: "ורוד מתוק",
@@ -18,8 +18,8 @@ export const AVATAR_ITEMS = {
     color: "#F472B6",
     category: "body",
     price: 200,
-    taxReduction: 0.10,
-    description: "מפחית 0.10% מס הכנסה יומי"
+    taxReduction: 0.2,
+    description: "מפחית 0.2% מס הכנסה יומי"
   },
   "body_purple": {
     name: "סגול מיסטי",
@@ -27,8 +27,8 @@ export const AVATAR_ITEMS = {
     color: "#A855F7",
     category: "body",
     price: 400,
-    taxReduction: 0.15,
-    description: "מפחית 0.15% מס הכנסה יומי"
+    taxReduction: 0.3,
+    description: "מפחית 0.3% מס הכנסה יומי"
   },
   "body_green": {
     name: "ירוק עשבי",
@@ -37,8 +37,8 @@ export const AVATAR_ITEMS = {
     category: "body",
     price: 600,
     unlock: { type: "lessons", value: 8 },
-    taxReduction: 0.20,
-    description: "מפחית 0.20% מס הכנסה יומי"
+    taxReduction: 0.4,
+    description: "מפחית 0.4% מס הכנסה יומי"
   },
   "body_orange": {
     name: "כתום חם",
@@ -47,8 +47,8 @@ export const AVATAR_ITEMS = {
     category: "body",
     price: 800,
     unlock: { type: "lessons", value: 16 },
-    taxReduction: 0.25,
-    description: "מפחית 0.25% מס הכנסה יומי"
+    taxReduction: 0.5,
+    description: "מפחית 0.5% מס הכנסה יומי"
   },
   "body_red": {
     name: "אדום לוהט",
@@ -57,8 +57,8 @@ export const AVATAR_ITEMS = {
     category: "body",
     price: 1000,
     unlock: { type: "lessons", value: 24 },
-    taxReduction: 0.30,
-    description: "מפחית 0.30% מס הכנסה יומי"
+    taxReduction: 0.6,
+    description: "מפחית 0.6% מס הכנסה יומי"
   },
   "body_gold": {
     name: "זהב מלכותי",
@@ -67,8 +67,8 @@ export const AVATAR_ITEMS = {
     category: "body",
     price: 1500,
     unlock: { type: "lessons", value: 32 },
-    taxReduction: 0.35,
-    description: "מפחית 0.35% מס הכנסה יומי"
+    taxReduction: 0.7,
+    description: "מפחית 0.7% מס הכנסה יומי"
   },
   "body_rainbow": {
     name: "קשת בענן",
@@ -77,8 +77,8 @@ export const AVATAR_ITEMS = {
     category: "body",
     price: 2000,
     unlock: { type: "lessons", value: 40 },
-    taxReduction: 0.40,
-    description: "מפחית 0.40% מס הכנסה יומי"
+    taxReduction: 0.8,
+    description: "מפחית 0.8% מס הכנסה יומי"
   },
 
   // 8 סוגי עיניים
