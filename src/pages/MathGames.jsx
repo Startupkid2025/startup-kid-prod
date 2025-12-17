@@ -528,12 +528,16 @@ ${question} = ${correctAnswer}
       setDailyCount(prev => prev + 1);
       
       // Update LeaderboardEntry as well
-      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
-      if (leaderboardEntries.length > 0) {
-        await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-          coins: newCoins,
-          total_math_earnings: (userData.total_math_earnings || 0) + coinsEarned
-        });
+      try {
+        const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+        if (leaderboardEntries.length > 0) {
+          await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+            coins: newCoins,
+            total_math_earnings: (userData.total_math_earnings || 0) + coinsEarned
+          });
+        }
+      } catch (leaderboardError) {
+        console.error("Error updating leaderboard:", leaderboardError);
       }
     }
 
