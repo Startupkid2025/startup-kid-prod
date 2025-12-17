@@ -591,7 +591,7 @@ export default function Home() {
                                     <span className="text-white/60 text-[10px]">(3%)</span>
                                   </span>
                                   <span className="text-white font-bold flex items-center gap-2">
-                                    <span className="text-red-200">-{inflationLoss}</span>
+                                    <span className="text-white">-{inflationLoss}</span>
                                     <span className="text-xs">🪙</span>
                                   </span>
                                 </motion.div>
@@ -613,7 +613,7 @@ export default function Home() {
                                     <span className="text-white/60 text-[10px]">({(incomeTaxRate * 100).toFixed(1)}%)</span>
                                   </span>
                                   <span className="text-white font-bold flex items-center gap-2">
-                                    <span className="text-red-200">-{incomeTax}</span>
+                                    <span className="text-white">-{incomeTax}</span>
                                     <span className="text-xs">🪙</span>
                                   </span>
                                 </motion.div>
@@ -636,7 +636,7 @@ export default function Home() {
                                     <span className="text-white/60 text-[10px]">(10%)</span>
                                   </span>
                                   <span className="text-white font-bold flex items-center gap-2">
-                                    <span className="text-red-200">-{creditInterest}</span>
+                                    <span className="text-white">-{creditInterest}</span>
                                     <span className="text-xs">🪙</span>
                                   </span>
                                 </motion.div>
@@ -659,7 +659,7 @@ export default function Home() {
                                     <span className="text-white/60 text-[10px]">(25%)</span>
                                   </span>
                                   <span className="text-white font-bold flex items-center gap-2">
-                                    <span className="text-red-200">-{dividendTax}</span>
+                                    <span className="text-white">-{dividendTax}</span>
                                     <span className="text-xs">🪙</span>
                                   </span>
                                 </motion.div>
@@ -734,7 +734,9 @@ export default function Home() {
                       </motion.div>
 
                       <div className="space-y-3 bg-white/10 rounded-xl p-4 backdrop-blur-sm flex-grow">
-                        <div className="text-white/90 text-xs font-bold mb-3">📊 פירוט נכסים</div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-white font-bold text-sm">📊 פירוט נכסים</span>
+                        </div>
                         <motion.div 
                           className="flex justify-between items-center bg-white/10 rounded-lg px-3 py-2.5 hover:bg-white/20 transition-all"
                           whileHover={{ x: 5 }}
