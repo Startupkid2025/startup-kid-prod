@@ -12,76 +12,13 @@ export default function Layout({ children }) {
 
   React.useEffect(() => {
     loadUser();
-    
-    // One-time migration: estimate work hours for all users - FORCE UPDATE NOW
-    const hasRunMigration = localStorage.getItem('workHoursMigrationV3Done');
-    if (!hasRunMigration) {
-      console.log("Starting work hours migration...");
-      estimateWorkHoursForAllUsers().then(() => {
-        localStorage.setItem('workHoursMigrationV3Done', 'true');
-        console.log("Migration completed successfully!");
-      }).catch(error => {
-        console.error("Error running work hours migration:", error);
-      });
-    }
   }, []);
 
-  const estimateWorkHoursForAllUsers = async () => {
-    try {
-      const allUsers = await base44.entities.User.list();
-      const students = allUsers.filter(u => u.user_type === 'student');
-      
-      console.log(`Processing ${students.length} students...`);
-      
-      for (let i = 0; i < students.length; i++) {
-        const user = students[i];
-        
-        // Skip if no work earnings
-        if (!(user.total_work_earnings > 0)) {
-          continue;
-        }
-        
-        const excludedEmails = ['alon@binder.co.il', 'daniel@smeianikov.com'];
-        const divisor = excludedEmails.includes(user.email) ? 50 : 10;
-        const estimatedHours = Math.floor((user.total_work_earnings || 0) / divisor);
-        
-        console.log(`${user.email}: ${user.total_work_earnings} coins ÷ ${divisor} = ${estimatedHours} hours`);
-        
-        if (estimatedHours > 0) {
-          try {
-            await base44.entities.User.update(user.id, {
-              total_work_hours: estimatedHours
-            });
-            console.log(`✓ Updated ${user.email}`);
-            // Add delay to avoid rate limiting
-            await new Promise(resolve => setTimeout(resolve, 300));
-          } catch (error) {
-            console.error(`✗ Error updating ${user.email}:`, error);
-          }
-        }
-      }
-      
-      console.log("Work hours migration completed for all users!");
-    } catch (error) {
-      console.error("Error in work hours migration:", error);
-    }
-  };
+
 
   const loadUser = async () => {
     try {
       const user = await base44.auth.me();
-
-      // Estimate work hours (one-time migration - always update if earnings exist)
-      if ((user.total_work_earnings || 0) > 0) {
-        const excludedEmails = ['alon@binder.co.il', 'daniel@smeianikov.com'];
-        const divisor = excludedEmails.includes(user.email) ? 50 : 10;
-        const estimatedHours = Math.floor((user.total_work_earnings || 0) / divisor);
-        if (estimatedHours > 0) {
-          await base44.auth.updateMe({
-            total_work_hours: estimatedHours
-          });
-        }
-      }
       
       // Check and update login streak
       await checkAndUpdateLoginStreak(user);
