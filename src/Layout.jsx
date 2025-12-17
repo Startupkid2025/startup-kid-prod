@@ -12,7 +12,54 @@ export default function Layout({ children }) {
 
   React.useEffect(() => {
     loadUser();
+    
+    // One-time migration: estimate work hours for all users
+    const hasRunMigration = localStorage.getItem('workHoursMigrationDone');
+    if (!hasRunMigration) {
+      estimateWorkHoursForAllUsers().then(() => {
+        localStorage.setItem('workHoursMigrationDone', 'true');
+      }).catch(error => {
+        console.error("Error running work hours migration:", error);
+      });
+    }
   }, []);
+
+  const estimateWorkHoursForAllUsers = async () => {
+    try {
+      const allUsers = await base44.entities.User.list();
+      const students = allUsers.filter(u => u.user_type === 'student');
+      
+      for (let i = 0; i < students.length; i++) {
+        const user = students[i];
+        
+        // Skip if already has work hours or no work earnings
+        if ((user.total_work_hours || 0) > 0 || !(user.total_work_earnings > 0)) {
+          continue;
+        }
+        
+        const excludedEmails = ['alon@binder.co.il', 'daniel@smeianikov.com'];
+        const divisor = excludedEmails.includes(user.email) ? 50 : 10;
+        const estimatedHours = Math.floor((user.total_work_earnings || 0) / divisor);
+        
+        if (estimatedHours > 0) {
+          try {
+            await base44.entities.User.update(user.id, {
+              total_work_hours: estimatedHours
+            });
+            console.log(`Updated work hours for ${user.email}: ${estimatedHours}`);
+            // Add delay to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 300));
+          } catch (error) {
+            console.error("Error updating work hours for user:", user.email, error);
+          }
+        }
+      }
+      
+      console.log("Work hours migration completed");
+    } catch (error) {
+      console.error("Error in work hours migration:", error);
+    }
+  };
 
   const loadUser = async () => {
     try {
