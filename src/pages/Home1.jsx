@@ -910,6 +910,110 @@ export default function Home() {
           loadData();
         }}
       />
-    </div>
-  );
-}
+
+      {/* How to Earn Money Guide */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+      >
+        <Card className="bg-gradient-to-br from-purple-500/30 to-blue-500/30 backdrop-blur-md border-2 border-purple-400/50">
+          <CardHeader>
+            <CardTitle className="text-white text-2xl flex items-center gap-2">
+              💰 איך להרוויח מטבעות?
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="bg-white/10 rounded-lg p-3 border border-white/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl">📚</span>
+                  <span className="text-white font-bold">השתתפות בשיעורים</span>
+                </div>
+                <p className="text-white/80 text-sm">100 מטבעות לכל שיעור + נסיון</p>
+              </div>
+
+              <div className="bg-white/10 rounded-lg p-3 border border-white/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl">📝</span>
+                  <span className="text-white font-bold">מילוי סקרים</span>
+                </div>
+                <p className="text-white/80 text-sm">20 מטבעות אחרי כל שיעור</p>
+              </div>
+
+              <div className="bg-white/10 rounded-lg p-3 border border-white/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl">🎯</span>
+                  <span className="text-white font-bold">חידונים</span>
+                </div>
+                <p className="text-white/80 text-sm">מטבעות לפי הציון שלך</p>
+              </div>
+
+              <div className="bg-white/10 rounded-lg p-3 border border-white/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl">ABC</span>
+                  <span className="text-white font-bold">תרגילי אנגלית</span>
+                </div>
+                <p className="text-white/80 text-sm">מטבעות + בונוס מפריטי פה</p>
+              </div>
+
+              <div className="bg-white/10 rounded-lg p-3 border border-white/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl">123</span>
+                  <span className="text-white font-bold">תרגילי חשבון</span>
+                </div>
+                <p className="text-white/80 text-sm">מטבעות + בונוס מנעליים</p>
+              </div>
+
+              <div className="bg-white/10 rounded-lg p-3 border border-white/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl">💼</span>
+                  <span className="text-white font-bold">עבודות</span>
+                </div>
+                <p className="text-white/80 text-sm">מטבעות לשעה + בונוס מפריטים</p>
+              </div>
+
+              <div className="bg-white/10 rounded-lg p-3 border border-white/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl">🔥</span>
+                  <span className="text-white font-bold">רצף כניסות</span>
+                </div>
+                <p className="text-white/80 text-sm">10-20-30... מטבעות כל יום!</p>
+              </div>
+
+              <div className="bg-white/10 rounded-lg p-3 border border-white/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl">🏠</span>
+                  <span className="text-white font-bold">רקעים</span>
+                </div>
+                <p className="text-white/80 text-sm">הכנסה פסיבית אוטומטית ליום</p>
+              </div>
+
+              <div className="bg-white/10 rounded-lg p-3 border border-white/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl">📈</span>
+                  <span className="text-white font-bold">השקעות</span>
+                </div>
+                <p className="text-white/80 text-sm">רווחים (או הפסדים) מהשוק</p>
+              </div>
+
+              <div className="bg-white/10 rounded-lg p-3 border border-white/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl">💬</span>
+                  <span className="text-white font-bold">קהילה</span>
+                </div>
+                <p className="text-white/80 text-sm">פוסטים, לייקים ותגובות</p>
+              </div>
+            </div>
+
+            <div className="mt-4 bg-gradient-to-r from-yellow-500/30 to-orange-500/30 rounded-lg p-4 border-2 border-yellow-400/50">
+              <p className="text-white text-center font-bold text-lg">
+                💡 טיפ: פריטים מהחנות נותנים בונוסים שיעזרו לך להרוויח יותר!
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+      </div>
+      );
+      }
