@@ -304,7 +304,7 @@ export default function MathGames() {
       const percent = [15, 20, 25, 30, 40, 60, 75, 80][Math.floor(Math.random() * 8)];
       const number = [120, 150, 180, 200, 240, 300, 350, 400][Math.floor(Math.random() * 8)];
       const answer = (number * percent) / 100;
-      
+
       return {
         question: `${percent}% מ-${number}`,
         answer: answer.toString(),
@@ -316,7 +316,7 @@ export default function MathGames() {
       const percent = [12, 18, 22, 28, 35, 42, 55, 65, 72, 85][Math.floor(Math.random() * 10)];
       const number = Math.floor(Math.random() * 20 + 8) * 50; // 400-1350, multiples of 50
       const answer = (number * percent) / 100;
-      
+
       return {
         question: `${percent}% מ-${number}`,
         answer: answer.toString(),
@@ -326,13 +326,13 @@ export default function MathGames() {
     } else {
       // Hard: complex percentages or reverse questions
       const choice = Math.random() < 0.7;
-      
+
       if (choice) {
         // Forward: unusual percentages
         const percent = Math.floor(Math.random() * 88) + 7; // 7-94
         const number = Math.floor(Math.random() * 30 + 10) * 20; // 200-780, multiples of 20
-        const answer = Math.round((number * percent) / 100);
-        
+        const answer = (number * percent) / 100;
+
         return {
           question: `${percent}% מ-${number}`,
           answer: answer.toString(),
@@ -344,7 +344,7 @@ export default function MathGames() {
         const base = Math.floor(Math.random() * 20 + 10) * 10; // 100-290, multiples of 10
         const percent = [20, 25, 30, 40, 50, 60, 75, 80][Math.floor(Math.random() * 8)];
         const part = (base * percent) / 100;
-        
+
         return {
           question: `${part} זה כמה אחוז מ-${base}?`,
           answer: `${percent}%`,
