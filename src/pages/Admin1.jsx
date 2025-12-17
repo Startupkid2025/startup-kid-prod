@@ -403,36 +403,36 @@ export default function Admin() {
                 {lessons.map(lesson => (
                   <div key={lesson.id} className="bg-white/5 rounded-lg p-4">
                     <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1 text-right">
-                        <h3 className="text-white font-bold text-lg">{lesson.lesson_name}</h3>
-                        <p className="text-white/70 text-sm">{lesson.description}</p>
-                        <p className="text-white/50 text-xs mt-1">{lesson.lesson_date}</p>
-                      </div>
                       <div className="flex gap-2">
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => setManagingQuizLesson(lesson)}
-                          className="text-blue-400 border-blue-400"
+                          className="text-blue-300 hover:text-blue-200 w-9 h-9 hover:bg-gradient-to-br hover:from-blue-500/30 hover:to-cyan-500/30 transition-all duration-300 hover:shadow-lg border border-transparent hover:border-blue-400/50 rounded-xl"
                         >
                           <FileText className="w-4 h-4" />
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => setEditingLesson(lesson)}
-                          className="text-yellow-400 border-yellow-400"
+                          className="text-yellow-300 hover:text-yellow-200 w-9 h-9 hover:bg-gradient-to-br hover:from-yellow-500/30 hover:to-orange-500/30 transition-all duration-300 hover:shadow-lg border border-transparent hover:border-yellow-400/50 rounded-xl"
                         >
                           <Edit2 className="w-4 h-4" />
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => setDeletingLesson(lesson)}
-                          className="text-red-400 border-red-400"
+                          className="text-red-300 hover:text-red-200 w-9 h-9 hover:bg-gradient-to-br hover:from-red-500/30 hover:to-pink-500/30 transition-all duration-300 hover:shadow-lg border border-transparent hover:border-red-400/50 rounded-xl"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
+                      </div>
+                      <div className="flex-1 text-right">
+                        <h3 className="text-white font-bold text-lg">{lesson.lesson_name}</h3>
+                        <p className="text-white/70 text-sm">{lesson.description}</p>
+                        <p className="text-white/50 text-xs mt-1">{lesson.lesson_date}</p>
                       </div>
                     </div>
                     <LessonStudentsList

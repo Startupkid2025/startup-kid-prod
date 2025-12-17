@@ -309,28 +309,6 @@ export default function StudentRow({
           onClick={() => setIsExpanded(!isExpanded)}
         >
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-              <div className="text-right min-w-0 flex-1">
-                <div className="flex items-center gap-2 justify-end">
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${userTypeColors[student.user_type || "student"]}`}>
-                    {userTypeLabels[student.user_type || "student"]}
-                  </span>
-                  <p className="font-bold text-white text-base sm:text-lg truncate">
-                    {student.first_name && student.last_name 
-                      ? `${student.first_name} ${student.last_name}`
-                      : student.full_name}
-                  </p>
-                </div>
-                <p className="text-white/60 text-xs sm:text-sm truncate">{student.email}</p>
-                {student.phone_number && (
-                  <p className="text-white/50 text-xs truncate">📱 {student.phone_number}</p>
-                )}
-              </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0">
-                {student.full_name?.[0] || "?"}
-              </div>
-            </div>
-
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <Button
                 variant="ghost"
@@ -375,6 +353,28 @@ export default function StudentRow({
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <div className="text-right min-w-0 flex-1">
+                <div className="flex items-center gap-2 justify-end">
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${userTypeColors[student.user_type || "student"]}`}>
+                    {userTypeLabels[student.user_type || "student"]}
+                  </span>
+                  <p className="font-bold text-white text-base sm:text-lg truncate">
+                    {student.first_name && student.last_name 
+                      ? `${student.first_name} ${student.last_name}`
+                      : student.full_name}
+                  </p>
+                </div>
+                <p className="text-white/60 text-xs sm:text-sm truncate">{student.email}</p>
+                {student.phone_number && (
+                  <p className="text-white/50 text-xs truncate">📱 {student.phone_number}</p>
+                )}
+              </div>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0">
+                {student.full_name?.[0] || "?"}
+              </div>
             </div>
           </div>
         </div>
