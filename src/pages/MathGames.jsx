@@ -347,7 +347,7 @@ export default function MathGames() {
         
         return {
           question: `${part} זה כמה אחוז מ-${base}?`,
-          answer: percent.toString(),
+          answer: `${percent}%`,
           display: `${part} זה כמה אחוז מ-${base}?`,
           category: "percentages"
         };
@@ -408,12 +408,16 @@ export default function MathGames() {
   const getExplanation = async (question, correctAnswer) => {
     try {
       const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `הסבר בעברית בצורה פשוטה וברורה איך לפתור את התרגיל הבא:
+        prompt: `הסבר בעברית פשוטה וברורה איך לפתור את התרגיל הבא:
 ${question} = ${correctAnswer}
 
-תן הסבר קצר עם השלבים (עד 3 משפטים), מתאים לילדים בגילאי 10-16.
-השתמש באימוג'ים רלוונטיים.
-אל תכתוב את השאלה שוב, רק את ההסבר.`,
+חשוב מאוד:
+- הסבר קצר ופשוט (2-3 משפטים)
+- השתמש רק במילים בעברית פשוטה, ללא מושגים באנגלית
+- מתאים לילדים בגילאי 10-16
+- השתמש באימוג'ים רלוונטיים (🔢 ➗ ✖️ ➕)
+- אל תכתוב את השאלה שוב, רק את ההסבר
+- הסבר את השלבים בצורה הכי פשוטה`,
         response_json_schema: {
           type: "object",
           properties: {
