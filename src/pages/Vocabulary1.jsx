@@ -195,8 +195,11 @@ export default function Vocabulary() {
         const isMastered = newStreak >= 2;
 
         let coinsEarned = 0;
+        let bonusBreakdown = [];
         if (isMastered && !existingWordProg.mastered) {
-          coinsEarned = getCoinsForDifficulty(currentWord.difficulty);
+          const baseCoins = getCoinsForDifficulty(currentWord.difficulty);
+          coinsEarned = baseCoins;
+          bonusBreakdown.push({ type: 'base', amount: baseCoins, label: 'בסיס' });
           
           // Check for eyes and mouth bonus
           const purchasedItems = userData.purchased_items || [];
@@ -205,18 +208,18 @@ export default function Vocabulary() {
           const equippedMouth = equippedItems.mouth;
           
           if (equippedEyes && purchasedItems.includes(equippedEyes)) {
-            const { AVATAR_ITEMS } = await import('../components/avatar/TamagotchiAvatar');
             const eyesItem = AVATAR_ITEMS[equippedEyes];
             if (eyesItem && eyesItem.wordBonus) {
               coinsEarned += eyesItem.wordBonus;
+              bonusBreakdown.push({ type: 'eyes', amount: eyesItem.wordBonus, label: 'בונוס עיניים' });
             }
           }
           
           if (equippedMouth && purchasedItems.includes(equippedMouth)) {
-            const { AVATAR_ITEMS } = await import('../components/avatar/TamagotchiAvatar');
             const mouthItem = AVATAR_ITEMS[equippedMouth];
             if (mouthItem && mouthItem.wordBonus) {
               coinsEarned += mouthItem.wordBonus;
+              bonusBreakdown.push({ type: 'mouth', amount: mouthItem.wordBonus, label: 'בונוס פה' });
             }
           }
           
@@ -237,7 +240,8 @@ export default function Vocabulary() {
           });
           
           if (vocabKingEmail === userData.email && maxVocabEarnings > 0) {
-            coinsEarned += 5; // Vocab king bonus!
+            coinsEarned += 5;
+            bonusBreakdown.push({ type: 'king', amount: 5, label: 'בונוס מלך אנגלית' });
           }
 
           // הסר את המילה מהרשימה היומית
@@ -287,6 +291,7 @@ export default function Vocabulary() {
           isCorrect,
           correctAnswer: currentWord.hebrew,
           coinsEarned: coinsEarned,
+          bonusBreakdown: bonusBreakdown,
           mastered: isMastered,
           isDontKnow: false
         });
@@ -415,7 +420,7 @@ export default function Vocabulary() {
       </motion.div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card className="bg-white/10 backdrop-blur-md border-white/20">
           <CardContent className="pt-6 text-center">
             <BookOpen className="w-8 h-8 text-blue-300 mx-auto mb-2" />
@@ -445,39 +450,6 @@ export default function Vocabulary() {
             <Coins className="w-8 h-8 text-amber-300 mx-auto mb-2" />
             <p className="text-2xl font-black text-white">{totalCoinsEarned}</p>
             <p className="text-white/70 text-sm">מטבעות צברת</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-md border-2 border-yellow-500/30">
-          <CardContent className="pt-6 text-center">
-            <Coins className="w-8 h-8 text-yellow-300 mx-auto mb-2" />
-            {(() => {
-              const equippedMouth = userData?.equipped_items?.mouth;
-              const mouthItem = equippedMouth ? AVATAR_ITEMS[equippedMouth] : null;
-              const vocabBonus = mouthItem?.vocabBonus || 0;
-              
-              return (
-                <>
-                  <div className="flex items-center justify-center gap-1 text-white text-lg font-black mb-1">
-                    {currentWord ? (
-                      <>
-                        <span className="text-white/60">{getCoinsForDifficulty(currentWord.difficulty)}</span>
-                        {vocabBonus > 0 && (
-                          <>
-                            <span className="text-yellow-300">+{vocabBonus}</span>
-                          </>
-                        )}
-                      </>
-                    ) : (
-                      <span>-</span>
-                    )}
-                  </div>
-                  <p className="text-yellow-200 text-xs">
-                    {vocabBonus > 0 ? `בסיס + בונוס פה` : 'מטבעות למילה'}
-                  </p>
-                </>
-              );
-            })()}
           </CardContent>
         </Card>
       </div>
@@ -511,29 +483,10 @@ export default function Vocabulary() {
                       <span className="mr-1">עניתי נכון</span>
                     </span>
                   )}
-                  {(() => {
-                    const equippedMouth = userData?.equipped_items?.mouth;
-                    const mouthItem = equippedMouth ? AVATAR_ITEMS[equippedMouth] : null;
-                    const vocabBonus = mouthItem?.vocabBonus || 0;
-                    const baseCoins = getCoinsForDifficulty(currentWord.difficulty);
-                    const totalCoins = baseCoins + vocabBonus;
-                    
-                    return (
-                      <span className="bg-amber-500/20 text-amber-200 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2">
-                        <Coins className="w-4 h-4" />
-                        {vocabBonus > 0 ? (
-                          <>
-                            <span className="text-white/60">{baseCoins}</span>
-                            <span className="text-yellow-300">+{vocabBonus}</span>
-                            <span className="text-white/60">=</span>
-                            <span>{totalCoins}</span>
-                          </>
-                        ) : (
-                          <span>{baseCoins} {baseCoins === 1 ? "מטבע" : "מטבעות"}</span>
-                        )}
-                      </span>
-                    );
-                  })()}
+                  <span className="bg-amber-500/20 text-amber-200 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2">
+                    <Coins className="w-4 h-4" />
+                    {getCoinsForDifficulty(currentWord.difficulty)} {currentWord.difficulty === 1 ? "מטבע" : "מטבעות"}
+                  </span>
                 </div>
 
                 <div className="flex items-center justify-center gap-4 mb-6 sm:mb-8">
@@ -604,9 +557,25 @@ export default function Vocabulary() {
                             initial={{ scale: 0, rotate: -180 }}
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ type: "spring", duration: 0.6 }}
-                            className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white font-black text-2xl py-4 px-8 rounded-2xl inline-block"
+                            className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white py-4 px-8 rounded-2xl inline-block"
                           >
-                            🎊 שלטת במילה! +{feedback.coinsEarned} מטבעות! 🎊
+                            <div className="font-black text-2xl mb-2">
+                              🎊 שלטת במילה! 🎊
+                            </div>
+                            {feedback.bonusBreakdown && feedback.bonusBreakdown.length > 0 && (
+                              <div className="bg-white/20 rounded-lg p-3 text-sm space-y-1">
+                                {feedback.bonusBreakdown.map((bonus, idx) => (
+                                  <div key={idx} className="flex justify-between items-center">
+                                    <span className="text-white/90">{bonus.label}:</span>
+                                    <span className="font-bold">+{bonus.amount}</span>
+                                  </div>
+                                ))}
+                                <div className="border-t border-white/30 pt-1 mt-2 flex justify-between items-center font-black text-lg">
+                                  <span>סה"כ:</span>
+                                  <span>+{feedback.coinsEarned} 🪙</span>
+                                </div>
+                              </div>
+                            )}
                           </motion.div>
                         )}
                       </div>
