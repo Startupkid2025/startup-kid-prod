@@ -509,19 +509,19 @@ export default function Home() {
                     >
                       <Coins className="w-6 h-6 text-white" />
                     </motion.div>
-                    <h3 className="text-white font-black text-lg">עובר ושב 💰</h3>
+                    <h3 className="text-white font-black text-lg">💰 עובר ושב</h3>
                   </div>
 
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.3 }}
-                    className="mb-6"
+                    className="mb-6 text-center"
                   >
                     <p className="text-6xl font-black text-white drop-shadow-lg mb-2">
                       {(userData?.coins || 0).toLocaleString('he-IL')}
                     </p>
-                    <div className="flex items-center gap-2 text-white/80 text-sm">
+                    <div className="flex items-center justify-center gap-2 text-white/80 text-sm">
                       <span>💰</span>
                       <span className="font-medium">מטבעות זמינים</span>
                     </div>
@@ -576,8 +576,8 @@ export default function Home() {
                                   whileHover={{ x: 5 }}
                                 >
                                   <span className="text-white font-bold flex items-center gap-2">
-                                    <span className="text-red-200">-{inflationLoss}</span>
                                     <span className="text-xs">🪙</span>
+                                    <span className="text-red-200">-{inflationLoss}</span>
                                   </span>
                                   <span className="text-white/90 text-xs flex items-center gap-1">
                                     💨 אינפלציה
@@ -598,8 +598,8 @@ export default function Home() {
                                   whileHover={{ x: 5 }}
                                 >
                                   <span className="text-white font-bold flex items-center gap-2">
-                                    <span className="text-red-200">-{incomeTax}</span>
                                     <span className="text-xs">🪙</span>
+                                    <span className="text-red-200">-{incomeTax}</span>
                                   </span>
                                   <span className="text-white/90 text-xs flex items-center gap-1">
                                     📊 מס הכנסה
@@ -621,8 +621,8 @@ export default function Home() {
                                   whileHover={{ x: 5 }}
                                 >
                                   <span className="text-white font-bold flex items-center gap-2">
-                                    <span className="text-red-200">-{creditInterest}</span>
                                     <span className="text-xs">🪙</span>
+                                    <span className="text-red-200">-{creditInterest}</span>
                                   </span>
                                   <span className="text-white/90 text-xs flex items-center gap-1">
                                     💳 ריבית אשראי
@@ -644,8 +644,8 @@ export default function Home() {
                                   whileHover={{ x: 5 }}
                                 >
                                   <span className="text-white font-bold flex items-center gap-2">
-                                    <span className="text-red-200">-{dividendTax}</span>
                                     <span className="text-xs">🪙</span>
+                                    <span className="text-red-200">-{dividendTax}</span>
                                   </span>
                                   <span className="text-white/90 text-xs flex items-center gap-1">
                                     📈 מס דיבידנד
@@ -711,12 +711,12 @@ export default function Home() {
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.4 }}
-                        className="mb-6"
+                        className="mb-6 text-center"
                       >
                         <p className="text-6xl font-black text-white drop-shadow-lg mb-2">
                           {netWorth.toLocaleString('he-IL')}
                         </p>
-                        <div className="flex items-center gap-2 text-white/80 text-sm">
+                        <div className="flex items-center justify-center gap-2 text-white/80 text-sm">
                           <span>💎</span>
                           <span className="font-medium">שווי נכסים כולל</span>
                         </div>
