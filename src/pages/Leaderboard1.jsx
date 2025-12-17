@@ -257,14 +257,14 @@ export default function Leaderboard() {
       usersWithAllStats.sort((a, b) => b.totalValue - a.totalValue);
 
       // Find kings in each category
-      const mathKing = [...usersWithAllStats].sort((a, b) => b.mathEarnings - a.mathEarnings)[0];
+      const mathKing = [...usersWithAllStats].sort((a, b) => b.masteredMathQuestions - a.masteredMathQuestions)[0];
       const vocabKing = [...usersWithAllStats].sort((a, b) => b.vocabEarnings - a.vocabEarnings)[0];
       const investmentKing = [...usersWithAllStats].sort((a, b) => b.currentInvestmentValue - a.currentInvestmentValue)[0];
       const loginStreakKing = [...usersWithAllStats].sort((a, b) => b.loginStreakEarnings - a.loginStreakEarnings)[0];
       const workKing = [...usersWithAllStats].sort((a, b) => b.workEarnings - a.workEarnings)[0];
 
       // Debug: Log kings
-      console.log('Math King:', mathKing?.student_email, 'Earnings:', mathKing?.mathEarnings);
+      console.log('Math King:', mathKing?.student_email, 'Questions:', mathKing?.masteredMathQuestions);
       console.log('Vocab King:', vocabKing?.student_email, 'Earnings:', vocabKing?.vocabEarnings);
       console.log('Investment King:', investmentKing?.student_email, 'Value:', investmentKing?.currentInvestmentValue);
       console.log('Login Streak King:', loginStreakKing?.student_email, 'Earnings:', loginStreakKing?.loginStreakEarnings);
@@ -273,7 +273,7 @@ export default function Leaderboard() {
       // Add crown flags to users
       usersWithAllStats.forEach(u => {
         u.crowns = [];
-        if (mathKing && u.student_email === mathKing.student_email && mathKing.mathEarnings > 0) {
+        if (mathKing && u.student_email === mathKing.student_email && mathKing.masteredMathQuestions > 0) {
           u.crowns.push({ type: 'math', name: '🔢 מלך החשבון', bonus: '+5 מטבעות לתרגיל' });
         }
         if (vocabKing && u.student_email === vocabKing.student_email && vocabKing.vocabEarnings > 0) {
