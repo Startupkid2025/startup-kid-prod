@@ -31,6 +31,8 @@ export default function Layout({ children }) {
       const allUsers = await base44.entities.User.list();
       const students = allUsers.filter(u => u.user_type === 'student');
       
+      console.log(`Processing ${students.length} students...`);
+      
       for (let i = 0; i < students.length; i++) {
         const user = students[i];
         
@@ -43,21 +45,23 @@ export default function Layout({ children }) {
         const divisor = excludedEmails.includes(user.email) ? 50 : 10;
         const estimatedHours = Math.floor((user.total_work_earnings || 0) / divisor);
         
+        console.log(`${user.email}: ${user.total_work_earnings} coins ÷ ${divisor} = ${estimatedHours} hours`);
+        
         if (estimatedHours > 0) {
           try {
             await base44.entities.User.update(user.id, {
               total_work_hours: estimatedHours
             });
-            console.log(`Updated work hours for ${user.email}: ${estimatedHours}`);
+            console.log(`✓ Updated ${user.email}`);
             // Add delay to avoid rate limiting
             await new Promise(resolve => setTimeout(resolve, 300));
           } catch (error) {
-            console.error("Error updating work hours for user:", user.email, error);
+            console.error(`✗ Error updating ${user.email}:`, error);
           }
         }
       }
       
-      console.log("Work hours migration completed");
+      console.log("Work hours migration completed for all users!");
     } catch (error) {
       console.error("Error in work hours migration:", error);
     }
