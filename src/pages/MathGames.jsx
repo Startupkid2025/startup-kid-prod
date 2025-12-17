@@ -463,148 +463,138 @@ ${question} = ${correctAnswer}
 
     setIsChecking(true);
 
-    try {
-      const answer = userAnswer.trim();
-      const correctAnswer = currentQuestion.answer.trim();
+    const answer = userAnswer.trim();
+    const correctAnswer = currentQuestion.answer.trim();
+    
+    // Use fraction comparison for better accuracy, even for non-fraction answers
+    // It handles integers correctly because parseFraction converts them to X/1
+    const isCorrect = compareFractions(answer, correctAnswer);
+
+    const now = new Date().toISOString();
+    const freshProgress = await base44.entities.MathProgress.filter({ student_email: userData.email });
+
+    const existingProgress = freshProgress.find(p =>
+      p.question === currentQuestion.question &&
+      p.category === currentQuestion.category
+    );
+
+    // Get explanation for wrong answers
+    let explanation = null;
+    if (!isCorrect) {
+      explanation = await getExplanation(currentQuestion.question, correctAnswer);
+    }
+
+    // Award coins for correct answer
+    let coinsEarned = 0;
+    if (isCorrect) {
+      coinsEarned = MATH_COINS_PER_CORRECT_ANSWER;
       
-      // Use fraction comparison for better accuracy, even for non-fraction answers
-      // It handles integers correctly because parseFraction converts them to X/1
-      const isCorrect = compareFractions(answer, correctAnswer);
-
-      const now = new Date().toISOString();
-      const freshProgress = await base44.entities.MathProgress.filter({ student_email: userData.email });
-
-      const existingProgress = freshProgress.find(p =>
-        p.question === currentQuestion.question &&
-        p.category === currentQuestion.category
-      );
-
-      // Get explanation for wrong answers
-      let explanation = null;
-      if (!isCorrect) {
-        explanation = await getExplanation(currentQuestion.question, correctAnswer);
+      // Check for shoes bonus
+      const purchasedItems = userData.purchased_items || [];
+      const equippedItems = userData.equipped_items || {};
+      const equippedShoes = equippedItems.shoes;
+      
+      if (equippedShoes && purchasedItems.includes(equippedShoes)) {
+        const { AVATAR_ITEMS } = await import('../components/avatar/TamagotchiAvatar');
+        const shoesItem = AVATAR_ITEMS[equippedShoes];
+        if (shoesItem && shoesItem.mathBonus) {
+          coinsEarned += shoesItem.mathBonus;
+        }
       }
-
-      // Award coins for correct answer
-      let coinsEarned = 0;
-      if (isCorrect) {
-        coinsEarned = MATH_COINS_PER_CORRECT_ANSWER;
-        
-        // Check for shoes bonus
-        const purchasedItems = userData.purchased_items || [];
-        const equippedItems = userData.equipped_items || {};
-        const equippedShoes = equippedItems.shoes;
-        
-        if (equippedShoes && purchasedItems.includes(equippedShoes)) {
-          const { AVATAR_ITEMS } = await import('../components/avatar/TamagotchiAvatar');
-          const shoesItem = AVATAR_ITEMS[equippedShoes];
-          if (shoesItem && shoesItem.mathBonus) {
-            coinsEarned += shoesItem.mathBonus;
-          }
+      
+      // Check if user is math king and add bonus
+      const allUsers = await base44.entities.User.list();
+      let maxMathEarnings = 0;
+      let mathKingEmail = null;
+      
+      allUsers.forEach(user => {
+        const earnings = user.total_math_earnings || 0;
+        if (earnings > maxMathEarnings) {
+          maxMathEarnings = earnings;
+          mathKingEmail = user.email;
         }
-        
-        // Check if user is math king and add bonus
-        const allUsers = await base44.entities.User.list();
-        let maxMathEarnings = 0;
-        let mathKingEmail = null;
-        
-        allUsers.forEach(user => {
-          const earnings = user.total_math_earnings || 0;
-          if (earnings > maxMathEarnings) {
-            maxMathEarnings = earnings;
-            mathKingEmail = user.email;
-          }
-        });
-        
-        if (mathKingEmail === userData.email && maxMathEarnings > 0) {
-          coinsEarned += 5; // Math king bonus!
-        }
-        
-        const newCoins = (userData.coins || 0) + coinsEarned;
-        await base44.auth.updateMe({
+      });
+      
+      if (mathKingEmail === userData.email && maxMathEarnings > 0) {
+        coinsEarned += 5; // Math king bonus!
+      }
+      
+      const newCoins = (userData.coins || 0) + coinsEarned;
+      await base44.auth.updateMe({
+        coins: newCoins,
+        daily_math_count: (userData.daily_math_count || 0) + 1,
+        total_math_earnings: (userData.total_math_earnings || 0) + coinsEarned
+      });
+      setDailyCount(prev => prev + 1);
+      
+      // Update LeaderboardEntry as well
+      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+      if (leaderboardEntries.length > 0) {
+        await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
           coins: newCoins,
-          daily_math_count: (userData.daily_math_count || 0) + 1,
           total_math_earnings: (userData.total_math_earnings || 0) + coinsEarned
         });
-        setDailyCount(prev => prev + 1);
-        
-        // Update LeaderboardEntry as well
-        try {
-          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
-          if (leaderboardEntries.length > 0) {
-            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-              coins: newCoins,
-              total_math_earnings: (userData.total_math_earnings || 0) + coinsEarned
-            });
-          }
-        } catch (leaderboardError) {
-          console.error("Error updating leaderboard:", leaderboardError);
+      }
+    }
+
+    if (existingProgress) {
+      const newStreak = isCorrect ? (existingProgress.correct_streak + 1) : 0;
+      const isMastered = newStreak >= 3;
+
+      await base44.entities.MathProgress.update(existingProgress.id, {
+        correct_streak: newStreak,
+        total_attempts: existingProgress.total_attempts + 1,
+        mastered: isMastered,
+        last_seen: now,
+        coins_earned: (existingProgress.coins_earned || 0) + coinsEarned
+      });
+
+      setFeedback({
+        isCorrect,
+        correctAnswer: currentQuestion.answer,
+        coinsEarned,
+        mastered: isMastered,
+        explanation
+      });
+    } else {
+      await base44.entities.MathProgress.create({
+        student_email: userData.email,
+        category: currentQuestion.category,
+        question: currentQuestion.question,
+        correct_answer: currentQuestion.answer,
+        difficulty_level: currentQuestion.difficulty,
+        correct_streak: isCorrect ? 1 : 0,
+        total_attempts: 1,
+        last_seen: now,
+        mastered: false,
+        coins_earned: coinsEarned
+      });
+
+      setFeedback({
+        isCorrect,
+        correctAnswer: currentQuestion.answer,
+        coinsEarned,
+        mastered: false,
+        explanation
+      });
+    }
+
+    const latestUserData = await base44.auth.me();
+    setUserData(latestUserData);
+    const latestProgress = await base44.entities.MathProgress.filter({ student_email: userData.email });
+    setMathProgress(latestProgress);
+
+    // Auto-continue only for correct answers
+    if (isCorrect) {
+      setTimeout(() => {
+        setUserAnswer("");
+        setFeedback(null);
+        if (dailyCount < MAX_DAILY_EXERCISES) {
+          generateQuestion();
+        } else {
+          setCurrentQuestion(null);
         }
-      }
-
-      if (existingProgress) {
-        const newStreak = isCorrect ? (existingProgress.correct_streak + 1) : 0;
-        const isMastered = newStreak >= 3;
-
-        await base44.entities.MathProgress.update(existingProgress.id, {
-          correct_streak: newStreak,
-          total_attempts: existingProgress.total_attempts + 1,
-          mastered: isMastered,
-          last_seen: now,
-          coins_earned: (existingProgress.coins_earned || 0) + coinsEarned
-        });
-
-        setFeedback({
-          isCorrect,
-          correctAnswer: currentQuestion.answer,
-          coinsEarned,
-          mastered: isMastered,
-          explanation
-        });
-      } else {
-        await base44.entities.MathProgress.create({
-          student_email: userData.email,
-          category: currentQuestion.category,
-          question: currentQuestion.question,
-          correct_answer: currentQuestion.answer,
-          difficulty_level: currentQuestion.difficulty,
-          correct_streak: isCorrect ? 1 : 0,
-          total_attempts: 1,
-          last_seen: now,
-          mastered: false,
-          coins_earned: coinsEarned
-        });
-
-        setFeedback({
-          isCorrect,
-          correctAnswer: currentQuestion.answer,
-          coinsEarned,
-          mastered: false,
-          explanation
-        });
-      }
-
-      const latestUserData = await base44.auth.me();
-      setUserData(latestUserData);
-      const latestProgress = await base44.entities.MathProgress.filter({ student_email: userData.email });
-      setMathProgress(latestProgress);
-
-      // Auto-continue only for correct answers
-      if (isCorrect) {
-        setTimeout(() => {
-          setUserAnswer("");
-          setFeedback(null);
-          if (dailyCount < MAX_DAILY_EXERCISES) {
-            generateQuestion();
-          } else {
-            setCurrentQuestion(null);
-          }
-        }, 2000);
-      }
-
-    } catch (error) {
-      console.error("Error checking answer:", error);
-      toast.error("שגיאה בבדיקת התשובה");
+      }, 2000);
     }
 
     setIsChecking(false);
