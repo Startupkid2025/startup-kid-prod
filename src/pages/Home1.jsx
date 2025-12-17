@@ -685,32 +685,33 @@ export default function Home() {
                 </Button>
               </CardContent>
             </Card>
-          </motion.div>
+            </motion.div>
+            </div>
 
-          {/* Quick Action Buttons */}
-          <motion.div
+            {/* Quick Action Buttons */}
+            <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
             className="space-y-2"
-          >
-            <Button
-              onClick={() => setShowWardrobe(true)}
-              className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold flex items-center justify-center gap-2"
             >
-              <Shirt className="w-5 h-5" />
-              הארון שלי 👕
+            <Button
+            onClick={() => setShowWardrobe(true)}
+            className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold flex items-center justify-center gap-2"
+            >
+            <Shirt className="w-5 h-5" />
+            הארון שלי 👕
             </Button>
 
             <Link to={createPageUrl("Investments1")}>
-              <Button
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold flex items-center justify-center gap-2"
-              >
-                <TrendingUp className="w-5 h-5" />
-                תיק ההשקעות 💼
-              </Button>
+            <Button
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold flex items-center justify-center gap-2"
+            >
+              <TrendingUp className="w-5 h-5" />
+              תיק ההשקעות 💼
+            </Button>
             </Link>
-          </motion.div>
+            </motion.div>
 
           {!userGroup && userData?.user_type === 'student' && (
             <motion.div
