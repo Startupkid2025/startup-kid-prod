@@ -841,9 +841,18 @@ ${question} = ${correctAnswer}
                           <h3 className="text-3xl font-bold text-red-300 mb-2">
                             לא נכון 😅
                           </h3>
-                          <p className="text-white/70 text-xl mb-4">
-                            התשובה הנכונה: <span className="font-bold text-white">{feedback.correctAnswer}</span>
-                          </p>
+                          <div className="text-white/70 text-base mb-4">
+                            <p className="mb-2">התשובה הנכונה:</p>
+                            {feedback.correctAnswer.includes('/') ? (
+                              <div className="inline-flex flex-col items-center">
+                                <span className="text-3xl font-black text-white">{feedback.correctAnswer.split('/')[0]}</span>
+                                <div className="w-full h-1 bg-white my-1"></div>
+                                <span className="text-3xl font-black text-white">{feedback.correctAnswer.split('/')[1]}</span>
+                              </div>
+                            ) : (
+                              <span className="font-bold text-white text-3xl">{feedback.correctAnswer}</span>
+                            )}
+                          </div>
                           {feedback.explanation && (
                             <motion.div
                               initial={{ opacity: 0, y: 20 }}
