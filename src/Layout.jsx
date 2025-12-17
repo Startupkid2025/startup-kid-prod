@@ -232,6 +232,23 @@ export default function Layout({ children }) {
 
       for (let i = 0; i < students.length; i++) {
         const user = students[i];
+        
+        // Estimate work hours if missing (one-time migration)
+        if ((user.total_work_earnings || 0) > 0 && !(user.total_work_hours > 0)) {
+          const estimatedHours = Math.floor((user.total_work_earnings || 0) / 50);
+          if (estimatedHours > 0) {
+            try {
+              await base44.entities.User.update(user.id, {
+                total_work_hours: estimatedHours
+              });
+              // Add a small delay to avoid rate limiting
+              await new Promise(resolve => setTimeout(resolve, 100));
+            } catch (error) {
+              console.error("Error updating work hours for user:", user.email, error);
+            }
+          }
+        }
+        
         const lastTaxDate = user.last_tax_date;
 
         if (!lastTaxDate || lastTaxDate < today) {
