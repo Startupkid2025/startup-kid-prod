@@ -931,6 +931,7 @@ export default function Home() {
                   <span className="text-white font-bold">השתתפות בשיעורים</span>
                 </div>
                 <p className="text-white/80 text-sm">100 מטבעות לכל שיעור + נסיון</p>
+                <p className="text-white/60 text-xs mt-1">📍 עמוד שיעורים</p>
               </div>
 
               <div className="bg-white/10 rounded-lg p-3 border border-white/20">
@@ -939,6 +940,7 @@ export default function Home() {
                   <span className="text-white font-bold">מילוי סקרים</span>
                 </div>
                 <p className="text-white/80 text-sm">50 מטבעות אחרי כל שיעור</p>
+                <p className="text-white/60 text-xs mt-1">📍 עמוד שיעורים</p>
               </div>
 
               <div className="bg-white/10 rounded-lg p-3 border border-white/20">
@@ -947,6 +949,7 @@ export default function Home() {
                   <span className="text-white font-bold">חידונים</span>
                 </div>
                 <p className="text-white/80 text-sm">מטבעות לפי הציון שלך</p>
+                <p className="text-white/60 text-xs mt-1">📍 עמוד שיעורים</p>
               </div>
 
               <div className="bg-white/10 rounded-lg p-3 border border-white/20">
@@ -955,6 +958,7 @@ export default function Home() {
                   <span className="text-white font-bold">תרגילי אנגלית</span>
                 </div>
                 <p className="text-white/80 text-sm">מטבעות + בונוס מפריטי פה</p>
+                <p className="text-white/60 text-xs mt-1">📍 עמוד אנגלית</p>
               </div>
 
               <div className="bg-white/10 rounded-lg p-3 border border-white/20">
@@ -963,14 +967,7 @@ export default function Home() {
                   <span className="text-white font-bold">תרגילי חשבון</span>
                 </div>
                 <p className="text-white/80 text-sm">מטבעות + בונוס מנעליים</p>
-              </div>
-
-              <div className="bg-white/10 rounded-lg p-3 border border-white/20">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-2xl">💼</span>
-                  <span className="text-white font-bold">עבודות</span>
-                </div>
-                <p className="text-white/80 text-sm">מטבעות לשעה + בונוס מפריטים</p>
+                <p className="text-white/60 text-xs mt-1">📍 עמוד חשבון</p>
               </div>
 
               <div className="bg-white/10 rounded-lg p-3 border border-white/20">
@@ -979,14 +976,16 @@ export default function Home() {
                   <span className="text-white font-bold">רצף כניסות</span>
                 </div>
                 <p className="text-white/80 text-sm">10-20-30... מטבעות כל יום!</p>
+                <p className="text-white/60 text-xs mt-1">📍 אוטומטי בכניסה</p>
               </div>
 
               <div className="bg-white/10 rounded-lg p-3 border border-white/20">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-2xl">🏠</span>
-                  <span className="text-white font-bold">רקעים</span>
+                  <span className="text-white font-bold">מגורים</span>
                 </div>
                 <p className="text-white/80 text-sm">הכנסה פסיבית אוטומטית ליום</p>
+                <p className="text-white/60 text-xs mt-1">📍 חנות - פריטי מגורים</p>
               </div>
 
               <div className="bg-white/10 rounded-lg p-3 border border-white/20">
@@ -995,14 +994,7 @@ export default function Home() {
                   <span className="text-white font-bold">השקעות</span>
                 </div>
                 <p className="text-white/80 text-sm">רווחים (או הפסדים) מהשוק</p>
-              </div>
-
-              <div className="bg-white/10 rounded-lg p-3 border border-white/20">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-2xl">💬</span>
-                  <span className="text-white font-bold">קהילה</span>
-                </div>
-                <p className="text-white/80 text-sm">פוסטים, לייקים ותגובות</p>
+                <p className="text-white/60 text-xs mt-1">📍 עמוד השקעות</p>
               </div>
             </div>
 
