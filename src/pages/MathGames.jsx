@@ -12,19 +12,25 @@ const MATH_COINS_PER_CORRECT_ANSWER = 5; // Coins per correct answer
 
 // Component to display fractions nicely
 const FractionDisplay = ({ text }) => {
-  // Split by operators while keeping them
-  const parts = text.split(/(\s+[\+\-\×÷]\s+|\s*=\s*)/);
+  // Replace division symbol with a more visible one
+  const normalizedText = text.replace(/÷/g, '÷').replace(/×/g, '×');
+  
+  // Split by operators while keeping them - match all math operators
+  const parts = normalizedText.split(/(\s*[+\-×÷=]\s*)/);
   
   return (
     <div className="flex items-center justify-center gap-3 flex-wrap">
       {parts.map((part, index) => {
         const trimmed = part.trim();
         
-        // Check if this part is a fraction
-        if (trimmed.includes('/') && !trimmed.includes(' ')) {
+        // Skip empty parts
+        if (!trimmed) return null;
+        
+        // Check if this part is a fraction (contains / but no spaces)
+        if (trimmed.includes('/') && !trimmed.includes(' ') && trimmed !== '?') {
           const [numerator, denominator] = trimmed.split('/');
           return (
-            <div key={index} className="inline-flex flex-col items-center">
+            <div key={index} className="inline-flex flex-col items-center mx-2">
               <span className="text-4xl font-black">{numerator}</span>
               <div className="w-full h-1 bg-white my-1"></div>
               <span className="text-4xl font-black">{denominator}</span>
@@ -32,8 +38,8 @@ const FractionDisplay = ({ text }) => {
           );
         }
         
-        // Return operators or other text as-is
-        return <span key={index} className="text-5xl font-black">{part}</span>;
+        // Return operators or other text as-is with proper spacing
+        return <span key={index} className="text-5xl font-black mx-1">{trimmed}</span>;
       })}
     </div>
   );
