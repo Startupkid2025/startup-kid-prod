@@ -43,6 +43,33 @@ export default function Leaderboard() {
     return () => clearInterval(timer);
   }, []);
 
+  // Check for pending collaboration requests
+  useEffect(() => {
+    if (!currentUser || !users.length) return;
+    
+    const today = new Date().toISOString().split('T')[0];
+    let pendingCount = 0;
+    
+    users.forEach(user => {
+      if (user.student_email === currentUser.email) return;
+      
+      const userCollaborations = user.daily_collaborations || [];
+      const hasPendingRequest = userCollaborations.some(
+        c => c && c.email === currentUser.email && c.date === today && !c.completed
+      );
+      
+      if (hasPendingRequest) {
+        pendingCount++;
+      }
+    });
+    
+    if (pendingCount > 0) {
+      toast.info(`🤝 יש לך ${pendingCount} בקשות שיתוף פעולה! לחץ על "שתף פעולה" כדי לקבל 25 מטבעות! 💰`, {
+        duration: 8000
+      });
+    }
+  }, [currentUser, users]);
+
   const calculateTotalValue = (user, investmentsValue) => {
     const purchasedItems = user.purchased_items || [];
 
@@ -452,6 +479,17 @@ export default function Leaderboard() {
     return collab.completed ? 'completed' : 'pending';
   };
 
+  const hasPendingRequestFromUser = (targetUser) => {
+    if (!currentUser) return false;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const targetCollaborations = targetUser.daily_collaborations || [];
+    
+    return targetCollaborations.some(
+      c => c && c.email === currentUser.email && c.date === today && !c.completed
+    );
+  };
+
   const getRankColor = (index) => {
     if (index === 0) return "from-yellow-400 to-orange-400";
     if (index === 1) return "from-gray-300 to-gray-400";
@@ -837,39 +875,54 @@ export default function Leaderboard() {
                       {/* Collaborate Button - Only for OTHER users */}
                       {!isCurrentUser && (() => {
                         const collabStatus = getCollaborationStatus(player.student_email);
+                        const hasPendingRequest = hasPendingRequestFromUser(player);
+
                         return (
-                          <Button
-                            onClick={(e) => handleCollaborate(player, e)}
-                            disabled={collabStatus !== 'none'}
-                            size="sm"
-                            className={`text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 font-bold ${
-                              collabStatus === 'completed'
-                                ? "bg-green-500/40 text-green-200 cursor-not-allowed border-green-500/30"
-                                : collabStatus === 'pending'
-                                ? "bg-orange-500/40 text-orange-200 cursor-not-allowed border-orange-500/30"
-                                : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
-                            }`}
-                          >
-                            {collabStatus === 'completed' ? (
-                              <>
-                                <Check className="w-3 h-3 sm:mr-1" />
-                                <span className="hidden sm:inline">קיבלתם 25🪙</span>
-                                <span className="sm:hidden">25🪙</span>
-                              </>
-                            ) : collabStatus === 'pending' ? (
-                              <>
-                                <Check className="w-3 h-3 sm:mr-1" />
-                                <span className="hidden sm:inline">שלחת בקשה</span>
-                                <span className="sm:hidden">נשלח</span>
-                              </>
-                            ) : (
-                              <>
-                                <Handshake className="w-3 h-3 sm:mr-1" />
-                                <span className="hidden sm:inline">שתף פעולה</span>
-                                <span className="sm:hidden">שתף</span>
-                              </>
+                          <div className="relative">
+                            {hasPendingRequest && collabStatus === 'none' && (
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse z-10 border border-white"></div>
                             )}
-                          </Button>
+                            <Button
+                              onClick={(e) => handleCollaborate(player, e)}
+                              disabled={collabStatus !== 'none'}
+                              size="sm"
+                              className={`text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 font-bold relative ${
+                                collabStatus === 'completed'
+                                  ? "bg-green-500/40 text-green-200 cursor-not-allowed border-green-500/30"
+                                  : collabStatus === 'pending'
+                                  ? "bg-orange-500/40 text-orange-200 cursor-not-allowed border-orange-500/30"
+                                  : hasPendingRequest
+                                  ? "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white animate-pulse"
+                                  : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+                              }`}
+                            >
+                              {collabStatus === 'completed' ? (
+                                <>
+                                  <Check className="w-3 h-3 sm:mr-1" />
+                                  <span className="hidden sm:inline">קיבלתם 25🪙</span>
+                                  <span className="sm:hidden">25🪙</span>
+                                </>
+                              ) : collabStatus === 'pending' ? (
+                                <>
+                                  <Check className="w-3 h-3 sm:mr-1" />
+                                  <span className="hidden sm:inline">שלחת בקשה</span>
+                                  <span className="sm:hidden">נשלח</span>
+                                </>
+                              ) : hasPendingRequest ? (
+                                <>
+                                  <Heart className="w-3 h-3 sm:mr-1" />
+                                  <span className="hidden sm:inline">שלח לי! קבל 25🪙</span>
+                                  <span className="sm:hidden">25🪙!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Handshake className="w-3 h-3 sm:mr-1" />
+                                  <span className="hidden sm:inline">שתף פעולה</span>
+                                  <span className="sm:hidden">שתף</span>
+                                </>
+                              )}
+                            </Button>
+                          </div>
                         );
                       })()}
                     </div>
