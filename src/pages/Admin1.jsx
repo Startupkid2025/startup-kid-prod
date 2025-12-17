@@ -39,20 +39,7 @@ export default function Admin() {
 
   useEffect(() => {
     loadData();
-    fixDanielWorkHours();
   }, []);
-
-  const fixDanielWorkHours = async () => {
-    try {
-      const allUsers = await base44.entities.User.list();
-      const daniel = allUsers.find(u => u.email === 'daniel@smeianikov.com');
-      if (daniel && daniel.total_work_hours !== 19) {
-        await base44.entities.User.update(daniel.id, { total_work_hours: 19 });
-      }
-    } catch (error) {
-      console.error("Error fixing Daniel's work hours:", error);
-    }
-  };
 
   const loadData = async () => {
     try {
