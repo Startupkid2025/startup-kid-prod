@@ -237,12 +237,12 @@ export default function AvatarWork({ userData, onWorkComplete }) {
               </div>
 
               {/* Coins */}
-              <div className="flex-shrink-0 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-xl px-4 py-3 border-2 border-yellow-300/50 shadow-lg">
-                <div className="flex items-center gap-2">
-                  <Coins className="w-6 h-6 text-white" />
-                  <p className="text-white font-black text-xl">
-                    +{workStatus.coinsToEarn}
+              <div className="flex-shrink-0 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-xl px-3 py-2 border-2 border-yellow-300/50 shadow-lg">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-white font-black text-lg whitespace-nowrap">
+                    {workStatus.coinsToEarn}+
                   </p>
+                  <Coins className="w-5 h-5 text-white" />
                 </div>
               </div>
             </div>
