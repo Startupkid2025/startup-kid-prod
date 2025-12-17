@@ -9,7 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import TamagotchiAvatar from "../avatar/TamagotchiAvatar";
 
-export default function CommunityFeed({ currentUser }) {
+export default function CommunityFeed({ userData, onRefresh }) {
+  const currentUser = userData;
   const [posts, setPosts] = useState([]);
   const [newPostContent, setNewPostContent] = useState("");
   const [commentTexts, setCommentTexts] = useState({});
