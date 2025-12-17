@@ -20,6 +20,11 @@ export default function Layout({ children }) {
     try {
       const user = await base44.auth.me();
       
+      // One-time fix for Daniel's work hours
+      if (user.email === 'daniel@smeianikov.com' && user.total_work_hours !== 19) {
+        await base44.auth.updateMe({ total_work_hours: 19 });
+      }
+      
       // Check and update login streak
       await checkAndUpdateLoginStreak(user);
 
