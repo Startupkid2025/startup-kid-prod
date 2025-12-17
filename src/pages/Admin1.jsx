@@ -388,6 +388,7 @@ export default function Admin() {
           <Card className="bg-white/10 backdrop-blur-md border-white/20">
             <CardHeader>
               <CardTitle className="text-white flex items-center justify-between">
+                <span>ניהול שיעורים ({lessons.length})</span>
                 <Button
                   onClick={() => setShowAddLesson(true)}
                   className="bg-green-600 hover:bg-green-700"
@@ -395,7 +396,6 @@ export default function Admin() {
                   <Plus className="w-4 h-4 ml-2" />
                   שיעור חדש
                 </Button>
-                <span>ניהול שיעורים ({lessons.length})</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -403,6 +403,11 @@ export default function Admin() {
                 {lessons.map(lesson => (
                   <div key={lesson.id} className="bg-white/5 rounded-lg p-4">
                     <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 text-right">
+                        <h3 className="text-white font-bold text-lg">{lesson.lesson_name}</h3>
+                        <p className="text-white/70 text-sm">{lesson.description}</p>
+                        <p className="text-white/50 text-xs mt-1">{lesson.lesson_date}</p>
+                      </div>
                       <div className="flex gap-2">
                         <Button
                           size="sm"
@@ -428,11 +433,6 @@ export default function Admin() {
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
-                      </div>
-                      <div className="flex-1 text-right">
-                        <h3 className="text-white font-bold text-lg">{lesson.lesson_name}</h3>
-                        <p className="text-white/70 text-sm">{lesson.description}</p>
-                        <p className="text-white/50 text-xs mt-1">{lesson.lesson_date}</p>
                       </div>
                     </div>
                     <LessonStudentsList
