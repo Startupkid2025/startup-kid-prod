@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Lock, Check } from "lucide-react";
-import { AVATAR_ITEMS, UNLOCK_LEVELS } from "./TamagotchiAvatar";
+import { AVATAR_ITEMS } from "./TamagotchiAvatar";
 
 const categories = {
   body: { name: "גוף", icon: "🎨" },
@@ -35,8 +35,8 @@ export default function TamagotchiWardrobe({
       .map(([id, item]) => ({
         id,
         ...item,
-        unlockRequirement: UNLOCK_LEVELS[id] || 0,
-        isUnlocked: totalLessons >= (UNLOCK_LEVELS[id] || 0),
+        unlockRequirement: item.unlock?.value || 0,
+        isUnlocked: totalLessons >= (item.unlock?.value || 0),
         isEquipped: equippedItems[category] === id
       }));
   };
