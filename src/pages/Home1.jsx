@@ -490,7 +490,7 @@ export default function Home() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-right"
+        className="text-center"
       >
         <h1 className="text-3xl font-black text-white">
           שלום {userData?.first_name || userData?.full_name?.split(' ')[0] || 'חבר'}! 👋
