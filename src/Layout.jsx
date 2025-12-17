@@ -20,7 +20,9 @@ export default function Layout({ children }) {
       
       // Estimate work hours if missing (one-time migration)
       if ((user.total_work_earnings || 0) > 0 && !(user.total_work_hours > 0)) {
-        const estimatedHours = Math.floor((user.total_work_earnings || 0) / 50);
+        const excludedEmails = ['alon@binder.co.il', 'daniel@smeianikov.com'];
+        const divisor = excludedEmails.includes(user.email) ? 50 : 10;
+        const estimatedHours = Math.floor((user.total_work_earnings || 0) / divisor);
         if (estimatedHours > 0) {
           await base44.auth.updateMe({
             total_work_hours: estimatedHours
@@ -235,7 +237,9 @@ export default function Layout({ children }) {
         
         // Estimate work hours if missing (one-time migration)
         if ((user.total_work_earnings || 0) > 0 && !(user.total_work_hours > 0)) {
-          const estimatedHours = Math.floor((user.total_work_earnings || 0) / 50);
+          const excludedEmails = ['alon@binder.co.il', 'daniel@smeianikov.com'];
+          const divisor = excludedEmails.includes(user.email) ? 50 : 10;
+          const estimatedHours = Math.floor((user.total_work_earnings || 0) / divisor);
           if (estimatedHours > 0) {
             try {
               await base44.entities.User.update(user.id, {
