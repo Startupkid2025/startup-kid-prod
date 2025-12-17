@@ -502,6 +502,7 @@ export default function Home() {
 
                 <CardContent className="p-6 flex flex-col h-full relative z-10">
                   <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-white font-black text-lg">💰 עובר ושב</h3>
                     <motion.div
                       className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center"
                       whileHover={{ rotate: 360, scale: 1.1 }}
@@ -509,7 +510,6 @@ export default function Home() {
                     >
                       <Coins className="w-6 h-6 text-white" />
                     </motion.div>
-                    <h3 className="text-white font-black text-lg">💰 עובר ושב</h3>
                   </div>
 
                   <motion.div
@@ -575,13 +575,13 @@ export default function Home() {
                                   className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-2 cursor-help hover:bg-white/20 transition-all"
                                   whileHover={{ x: 5 }}
                                 >
-                                  <span className="text-white font-bold flex items-center gap-2">
-                                    <span className="text-xs">🪙</span>
-                                    <span className="text-red-200">-{inflationLoss}</span>
-                                  </span>
                                   <span className="text-white/90 text-xs flex items-center gap-1">
                                     💨 אינפלציה
                                     <span className="text-white/60 text-[10px]">(3%)</span>
+                                  </span>
+                                  <span className="text-white font-bold flex items-center gap-2">
+                                    <span className="text-red-200">-{inflationLoss}</span>
+                                    <span className="text-xs">🪙</span>
                                   </span>
                                 </motion.div>
                               </TooltipTrigger>
@@ -597,13 +597,13 @@ export default function Home() {
                                   className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-2 cursor-help hover:bg-white/20 transition-all"
                                   whileHover={{ x: 5 }}
                                 >
-                                  <span className="text-white font-bold flex items-center gap-2">
-                                    <span className="text-xs">🪙</span>
-                                    <span className="text-red-200">-{incomeTax}</span>
-                                  </span>
                                   <span className="text-white/90 text-xs flex items-center gap-1">
                                     📊 מס הכנסה
                                     <span className="text-white/60 text-[10px]">({(incomeTaxRate * 100).toFixed(1)}%)</span>
+                                  </span>
+                                  <span className="text-white font-bold flex items-center gap-2">
+                                    <span className="text-red-200">-{incomeTax}</span>
+                                    <span className="text-xs">🪙</span>
                                   </span>
                                 </motion.div>
                               </TooltipTrigger>
@@ -620,13 +620,13 @@ export default function Home() {
                                   className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-2 cursor-help hover:bg-white/20 transition-all"
                                   whileHover={{ x: 5 }}
                                 >
-                                  <span className="text-white font-bold flex items-center gap-2">
-                                    <span className="text-xs">🪙</span>
-                                    <span className="text-red-200">-{creditInterest}</span>
-                                  </span>
                                   <span className="text-white/90 text-xs flex items-center gap-1">
                                     💳 ריבית אשראי
                                     <span className="text-white/60 text-[10px]">(10%)</span>
+                                  </span>
+                                  <span className="text-white font-bold flex items-center gap-2">
+                                    <span className="text-red-200">-{creditInterest}</span>
+                                    <span className="text-xs">🪙</span>
                                   </span>
                                 </motion.div>
                               </TooltipTrigger>
@@ -643,13 +643,13 @@ export default function Home() {
                                   className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-2 cursor-help hover:bg-white/20 transition-all"
                                   whileHover={{ x: 5 }}
                                 >
-                                  <span className="text-white font-bold flex items-center gap-2">
-                                    <span className="text-xs">🪙</span>
-                                    <span className="text-red-200">-{dividendTax}</span>
-                                  </span>
                                   <span className="text-white/90 text-xs flex items-center gap-1">
                                     📈 מס דיבידנד
                                     <span className="text-white/60 text-[10px]">(25%)</span>
+                                  </span>
+                                  <span className="text-white font-bold flex items-center gap-2">
+                                    <span className="text-red-200">-{dividendTax}</span>
+                                    <span className="text-xs">🪙</span>
                                   </span>
                                 </motion.div>
                               </TooltipTrigger>
