@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Coins, TrendingUp, BookOpen, Star, Crown, Handshake, Check } from "lucide-react";
+import { Trophy, Coins, TrendingUp, BookOpen, Star, Crown, Handshake, Check, Heart, Flame, Calculator, MessageSquare } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import TamagotchiAvatar from "../components/avatar/TamagotchiAvatar";
 import { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
 import StudentProfileDialog from "../components/leaderboard/StudentProfileDialog";
@@ -125,6 +126,29 @@ export default function Leaderboard() {
         return u.user_type === 'student';
       });
 
+      // Fetch lesson participations and lessons for accurate counts
+      let allLessonParticipations = [];
+      let allLessons = [];
+      let allMathProgress = [];
+      
+      try {
+        allLessonParticipations = await base44.entities.LessonParticipation.list();
+      } catch (e) {
+        console.error("Error loading LessonParticipation:", e);
+      }
+      
+      try {
+        allLessons = await base44.entities.Lesson.list();
+      } catch (e) {
+        console.error("Error loading Lessons:", e);
+      }
+      
+      try {
+        allMathProgress = await base44.entities.MathProgress.list();
+      } catch (e) {
+        console.error("Error loading MathProgress:", e);
+      }
+
       const usersWithAllStats = filteredUsersForLeaderboard.map((u) => {
         const masteredWords = allWordProgress.filter(
           w => w.student_email === u.student_email && w.mastered
@@ -138,6 +162,36 @@ export default function Leaderboard() {
         const actualPersonalDevLevel = userRecord?.personal_dev_level || u.personal_dev_level || 1;
         const actualSocialSkillsLevel = userRecord?.social_skills_level || u.social_skills_level || 1;
         const actualMoneyBusinessLevel = userRecord?.money_business_level || u.money_business_level || 1;
+        
+        // Calculate lesson counts by category
+        const userParticipations = allLessonParticipations.filter(p => p.student_email === u.student_email && p.attended);
+        const lessonMap = {};
+        allLessons.forEach(lesson => {
+          lessonMap[lesson.id] = lesson;
+        });
+        
+        let aiTechLessons = 0;
+        let socialSkillsLessons = 0;
+        let moneyBusinessLessons = 0;
+        
+        userParticipations.forEach(participation => {
+          const lesson = lessonMap[participation.lesson_id];
+          if (!lesson) return;
+          
+          if (lesson.category === 'ai_tech') aiTechLessons++;
+          if (lesson.category === 'personal_skills' || lesson.category === 'social_skills') socialSkillsLessons++;
+          if (lesson.category === 'money_business') moneyBusinessLessons++;
+        });
+        
+        // Count mastered math questions
+        const userMathProgress = allMathProgress.filter(m => m.student_email === u.student_email && m.mastered);
+        const masteredMathQuestions = userMathProgress.length;
+        
+        // Login streak
+        const loginStreak = userRecord?.login_streak || 0;
+        
+        // Collaboration count
+        const collaborationCount = Math.floor((userRecord?.total_collaboration_coins || 0) / 25);
 
         const averageLevel = Math.round(
           (actualAiTechLevel +
@@ -189,7 +243,13 @@ export default function Leaderboard() {
           mathEarnings,
           currentInvestmentValue,
           loginStreakEarnings,
-          workEarnings
+          workEarnings,
+          aiTechLessons,
+          socialSkillsLessons,
+          moneyBusinessLessons,
+          masteredMathQuestions,
+          loginStreak,
+          collaborationCount
         };
       });
 
@@ -701,18 +761,91 @@ export default function Leaderboard() {
                         </div>
                       )}
 
-                      {/* Level Badges */}
-                      <div className="flex gap-0.5 sm:gap-1 mt-1 sm:mt-2 flex-wrap">
-                        <div className="text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded-full bg-blue-500/30 text-blue-200">
-                          🤖{player.ai_tech_level || 1}
+                      {/* Stats Badges with Tooltips */}
+                      <TooltipProvider>
+                        <div className="flex gap-0.5 sm:gap-1 mt-1 sm:mt-2 flex-wrap">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded-full bg-blue-500/30 text-blue-200 cursor-help">
+                                🤖{player.aiTechLessons || 0}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">בינה מלאכותית וטכנולוגיה: {player.aiTechLessons || 0} שיעורים</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded-full bg-red-500/30 text-red-200 cursor-help">
+                                ❤️{player.socialSkillsLessons || 0}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">מיומנויות אישיות: {player.socialSkillsLessons || 0} שיעורים</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded-full bg-yellow-500/30 text-yellow-200 cursor-help">
+                                💸{player.moneyBusinessLessons || 0}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">כסף ועסקים: {player.moneyBusinessLessons || 0} שיעורים</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 cursor-help">
+                                ABC{player.masteredWords || 0}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">אנגלית: {player.masteredWords || 0} מילים שלוט</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded-full bg-green-500/30 text-green-200 cursor-help">
+                                123{player.masteredMathQuestions || 0}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">חשבון: {player.masteredMathQuestions || 0} שאלות שלוט</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          {(player.loginStreak || 0) > 0 && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded-full bg-orange-500/30 text-orange-200 cursor-help">
+                                  🔥{player.loginStreak || 0}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">רצף כניסות: {player.loginStreak || 0} ימים</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          
+                          {(player.collaborationCount || 0) > 0 && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded-full bg-pink-500/30 text-pink-200 cursor-help">
+                                  🤝{player.collaborationCount || 0}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">שיתופי פעולה: {player.collaborationCount || 0}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
                         </div>
-                        <div className="text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded-full bg-green-500/30 text-green-200">
-                          🌱{Math.max(player.personal_dev_level || 1, player.social_skills_level || 1)}
-                        </div>
-                        <div className="text-[8px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded-full bg-yellow-500/30 text-yellow-200">
-                          💸{player.money_business_level || 1}
-                        </div>
-                      </div>
+                      </TooltipProvider>
                     </div>
 
                     {/* Right Side: Networth + Collaborate Button */}
