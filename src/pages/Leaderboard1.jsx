@@ -411,9 +411,9 @@ export default function Leaderboard() {
         // MUTUAL COLLABORATION! Both users get 25 coins!
         const coinsReward = 25;
 
-        // Mark both collaborations as completed
+        // Mark both collaborations as completed - keep ALL previous collaborations
         const updatedCurrentCollaborations = [
-          ...(dailyCollaborations.filter(c => c && c.date === today) || []),
+          ...dailyCollaborations,
           { email: targetUser.student_email, date: today, completed: true }
         ];
 
@@ -482,9 +482,9 @@ export default function Leaderboard() {
 
         toast.success(`🎉 שיתוף פעולה הדדי! ${targetUser.full_name} ואתה קיבלתם ${coinsReward} מטבעות כל אחד! 💰✨`);
       } else {
-        // Just send collaboration request (no coins yet)
+        // Just send collaboration request (no coins yet) - keep ALL previous collaborations
         const updatedCollaborations = [
-          ...(dailyCollaborations.filter(c => c && c.date === today) || []),
+          ...dailyCollaborations,
           { email: targetUser.student_email, date: today, completed: false }
         ];
 
