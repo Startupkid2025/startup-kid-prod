@@ -17,6 +17,7 @@ export default function CommunityFeed({ userData, onRefresh }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isPosting, setIsPosting] = useState(false);
   const [editingComment, setEditingComment] = useState(null); // { postId, commentIndex, text }
+  const [editingPost, setEditingPost] = useState(null); // { postId, text }
 
   useEffect(() => {
     loadPosts();
@@ -194,6 +195,27 @@ export default function CommunityFeed({ userData, onRefresh }) {
     }
   };
 
+  const handleEditPost = async (post) => {
+    if (!editingPost?.text?.trim()) {
+      toast.error("אנא כתוב משהו");
+      return;
+    }
+
+    try {
+      await base44.entities.Post.update(post.id, {
+        content: editingPost.text,
+        edited: true
+      });
+
+      setEditingPost(null);
+      toast.success("הפוסט עודכן! ✏️");
+      await loadPosts();
+    } catch (error) {
+      console.error("Error editing post:", error);
+      toast.error("שגיאה בעריכת הפוסט");
+    }
+  };
+
   const handleEditComment = async (post, commentIndex) => {
     if (!editingComment?.text?.trim()) {
       toast.error("אנא כתוב תגובה");
@@ -291,25 +313,66 @@ export default function CommunityFeed({ userData, onRefresh }) {
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <p className="text-white font-bold text-sm">{post.author_name}</p>
-                        {isOwnPost && (
-                          <Button
-                            onClick={() => handleDeletePost(post.id)}
-                            size="sm"
-                            variant="ghost"
-                            className="text-red-300 hover:text-red-200 h-6 px-2"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
+                        {isOwnPost && editingPost?.postId !== post.id && (
+                          <div className="flex gap-1">
+                            <Button
+                              onClick={() => setEditingPost({ postId: post.id, text: post.content })}
+                              size="sm"
+                              variant="ghost"
+                              className="text-white/50 hover:text-white/80 h-6 px-2"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              onClick={() => handleDeletePost(post.id)}
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-300 hover:text-red-200 h-6 px-2"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
                         )}
                       </div>
                       <p className="text-white/50 text-xs">
                         {new Date(post.created_date).toLocaleDateString('he-IL')} {new Date(post.created_date).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                        {post.edited && <span className="mr-1">(נערך)</span>}
                       </p>
                     </div>
                   </div>
 
                   {/* Post Content */}
-                  <p className="text-white mb-3 whitespace-pre-wrap">{post.content}</p>
+                  {editingPost?.postId === post.id ? (
+                    <div className="mb-3">
+                      <Textarea
+                        value={editingPost.text}
+                        onChange={(e) => setEditingPost({ ...editingPost, text: e.target.value })}
+                        className="bg-white/10 border-white/20 text-white mb-2"
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleEditPost(post)}
+                          size="sm"
+                          className="bg-green-500/30 hover:bg-green-500/50"
+                        >
+                          <Check className="w-3 h-3 mr-1" />
+                          שמור
+                        </Button>
+                        <Button
+                          onClick={() => setEditingPost(null)}
+                          size="sm"
+                          variant="ghost"
+                          className="text-white/50 hover:text-white/80"
+                        >
+                          <X className="w-3 h-3 mr-1" />
+                          ביטול
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-white mb-3 whitespace-pre-wrap">{post.content}</p>
+                  )}
 
                   {/* Like Button */}
                   <div className="flex items-center gap-4 mb-3">
