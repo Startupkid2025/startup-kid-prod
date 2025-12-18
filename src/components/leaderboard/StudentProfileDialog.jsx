@@ -26,6 +26,8 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
   const [isLoadingInvestments, setIsLoadingInvestments] = useState(true);
   const [financeReport, setFinanceReport] = useState(null);
   const [hasError, setHasError] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (isOpen && student && (student.email || student.student_email)) {
@@ -48,6 +50,16 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
     }
 
     const studentEmail = student.email || student.student_email;
+    
+    // Check if current user is admin
+    try {
+      const user = await base44.auth.me();
+      setCurrentUser(user);
+      setIsAdmin(user.role === 'admin');
+    } catch (error) {
+      console.error("Error loading current user:", error);
+      setIsAdmin(false);
+    }
     
     try {
       // Fetch all investments and filter for student
@@ -96,40 +108,42 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         investmentProfits: totalInvestmentProfit
       };
 
-      // Try to get full user data for profile tasks/details
+      // Try to get full user data for profile tasks/details (only if admin)
       let fullUserData = student;
-      try {
-        const allUsers = await base44.entities.User.list();
-        const foundUser = allUsers.find(u => u.email === studentEmail);
-        if (foundUser) {
-          fullUserData = foundUser;
+      if (isAdmin) {
+        try {
+          const allUsers = await base44.entities.User.list();
+          const foundUser = allUsers.find(u => u.email === studentEmail);
+          if (foundUser) {
+            fullUserData = foundUser;
+          }
+        } catch (e) {
+          console.log("Cannot access User.list, using student data from leaderboard");
         }
-      } catch (e) {
-        console.log("Cannot access User.list, using student data from leaderboard");
+
+        // Profile tasks (only visible to admin)
+        if (fullUserData.completed_instagram_follow) income.profileTasks += 50;
+        if (fullUserData.completed_youtube_subscribe) income.profileTasks += 50;
+        if (fullUserData.completed_facebook_follow) income.profileTasks += 50;
+        if (fullUserData.completed_discord_join) income.profileTasks += 50;
+        if (fullUserData.completed_share) income.profileTasks += 100;
+
+        // Profile details (only visible to admin)
+        if (fullUserData.age) income.profileDetails += 20;
+        if (fullUserData.bio && fullUserData.bio.length > 10) income.profileDetails += 30;
+        if (fullUserData.phone_number) income.profileDetails += 20;
+
+        // Collaboration coins (only visible to admin)
+        const collaborationCoins = fullUserData.total_collaboration_coins || student.total_collaboration_coins || 0;
+        income.collaboration = collaborationCoins;
+
+        // Login streak coins (only visible to admin)
+        const loginStreakCoins = fullUserData.total_login_streak_coins || student.total_login_streak_coins || 0;
+        income.loginStreak = loginStreakCoins;
+
+        // Work earnings (only visible to admin)
+        income.work = fullUserData.total_work_earnings || 0;
       }
-
-      // Profile tasks
-      if (fullUserData.completed_instagram_follow) income.profileTasks += 50;
-      if (fullUserData.completed_youtube_subscribe) income.profileTasks += 50;
-      if (fullUserData.completed_facebook_follow) income.profileTasks += 50;
-      if (fullUserData.completed_discord_join) income.profileTasks += 50;
-      if (fullUserData.completed_share) income.profileTasks += 100;
-
-      // Profile details
-      if (fullUserData.age) income.profileDetails += 20;
-      if (fullUserData.bio && fullUserData.bio.length > 10) income.profileDetails += 30;
-      if (fullUserData.phone_number) income.profileDetails += 20;
-
-      // Collaboration coins
-      const collaborationCoins = fullUserData.total_collaboration_coins || student.total_collaboration_coins || 0;
-      income.collaboration = collaborationCoins;
-
-      // Login streak coins
-      const loginStreakCoins = fullUserData.total_login_streak_coins || student.total_login_streak_coins || 0;
-      income.loginStreak = loginStreakCoins;
-
-      // Work earnings - MUST use fullUserData as it has the real data
-      income.work = fullUserData.total_work_earnings || 0;
 
       // Assets
       const purchasedItems = fullUserData.purchased_items || student.purchased_items || [];
@@ -147,8 +161,8 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         investments: totalInvestmentValue
       };
 
-      // Losses - Show TOTAL accumulated losses
-      const losses = {
+      // Losses - Show TOTAL accumulated losses (only to admin)
+      const losses = isAdmin ? {
         inflation: fullUserData.total_inflation_lost || student.total_inflation_lost || 0,
         incomeTax: fullUserData.total_income_tax || student.total_income_tax || 0,
         dividendTax: fullUserData.total_dividend_tax || student.total_dividend_tax || 0,
@@ -156,6 +170,14 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         creditInterest: fullUserData.total_credit_interest || student.total_credit_interest || 0,
         investmentFees: fullUserData.total_investment_fees || student.total_investment_fees || 0,
         itemSaleLosses: fullUserData.total_item_sale_losses || student.total_item_sale_losses || 0
+      } : {
+        inflation: 0,
+        incomeTax: 0,
+        dividendTax: 0,
+        capitalGainsTax: 0,
+        creditInterest: 0,
+        investmentFees: 0,
+        itemSaleLosses: 0
       };
 
       const totalIncome = Object.values(income).reduce((sum, val) => sum + val, 0);
@@ -330,11 +352,11 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                     <div className="flex justify-between"><span className="text-white/70">🔢 חשבון:</span><span className="text-white font-bold">{Math.round(financeReport.income.math)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">📝 סקרים:</span><span className="text-white font-bold">{Math.round(financeReport.income.surveys)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">❓ חידונים:</span><span className="text-white font-bold">{Math.round(financeReport.income.quizzes)}</span></div>
-                    <div className="flex justify-between"><span className="text-white/70">💼 עבודות:</span><span className="text-white font-bold">{Math.round(financeReport.income.work)}</span></div>
-                    <div className="flex justify-between"><span className="text-white/70">✅ משימות:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileTasks)}</span></div>
-                    <div className="flex justify-between"><span className="text-white/70">👤 פרטי פרופיל:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileDetails)}</span></div>
-                    <div className="flex justify-between"><span className="text-white/70">🤝 שיתופי פעולה:</span><span className="text-white font-bold">{Math.round(financeReport.income.collaboration)}</span></div>
-                    <div className="flex justify-between"><span className="text-white/70">🔥 רצף כניסות:</span><span className="text-white font-bold">{Math.round(financeReport.income.loginStreak)}</span></div>
+                    {isAdmin && <div className="flex justify-between"><span className="text-white/70">💼 עבודות:</span><span className="text-white font-bold">{Math.round(financeReport.income.work)}</span></div>}
+                    {isAdmin && <div className="flex justify-between"><span className="text-white/70">✅ משימות:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileTasks)}</span></div>}
+                    {isAdmin && <div className="flex justify-between"><span className="text-white/70">👤 פרטי פרופיל:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileDetails)}</span></div>}
+                    {isAdmin && <div className="flex justify-between"><span className="text-white/70">🤝 שיתופי פעולה:</span><span className="text-white font-bold">{Math.round(financeReport.income.collaboration)}</span></div>}
+                    {isAdmin && <div className="flex justify-between"><span className="text-white/70">🔥 רצף כניסות:</span><span className="text-white font-bold">{Math.round(financeReport.income.loginStreak)}</span></div>}
                     <div className="flex justify-between"><span className="text-white/70">📈 רווחי השקעות:</span><span className="text-white font-bold">{Math.round(financeReport.income.investmentProfits)}</span></div>
                   </div>
                 </div>
@@ -355,8 +377,8 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                   </div>
                 </div>
 
-                {/* Total Losses */}
-                {financeReport.totalLosses > 0 && (
+                {/* Total Losses - Only visible to admin */}
+                {isAdmin && financeReport.totalLosses > 0 && (
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-red-300 font-bold flex items-center gap-1">
