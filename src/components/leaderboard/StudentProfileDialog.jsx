@@ -108,18 +108,19 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         investmentProfits: totalInvestmentProfit
       };
 
-      // Try to get full user data for profile tasks/details
+      // Use student data directly (it already has all the info from Leaderboard)
       let fullUserData = student;
       
-      // If viewing own profile, use me() to get full data
+      // If viewing own profile, use me() to get latest data
       if (currentUser && currentUser.email === studentEmail) {
         try {
           fullUserData = await base44.auth.me();
         } catch (e) {
           console.log("Error fetching own user data:", e);
+          fullUserData = student; // fallback to student data
         }
-      } else {
-        // Try to get from User.list (admin only)
+      } else if (isAdmin) {
+        // Admin can try to get from User.list
         try {
           const allUsers = await base44.entities.User.list();
           const foundUser = allUsers.find(u => u.email === studentEmail);
@@ -130,29 +131,30 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
           console.log("Cannot access User.list, using student data from leaderboard");
         }
       }
+      // For regular users viewing others: fullUserData = student (from leaderboard, already has the data)
 
-      // Profile tasks - try both fullUserData and student
+      // Profile tasks
       if (fullUserData.completed_instagram_follow || student.completed_instagram_follow) income.profileTasks += 50;
       if (fullUserData.completed_youtube_subscribe || student.completed_youtube_subscribe) income.profileTasks += 50;
       if (fullUserData.completed_facebook_follow || student.completed_facebook_follow) income.profileTasks += 50;
       if (fullUserData.completed_discord_join || student.completed_discord_join) income.profileTasks += 50;
       if (fullUserData.completed_share || student.completed_share) income.profileTasks += 100;
 
-      // Profile details - try both sources
+      // Profile details
       if (fullUserData.age || student.age || student.user_age) income.profileDetails += 20;
       if ((fullUserData.bio && fullUserData.bio.length > 10) || (student.bio && student.bio.length > 10) || (student.user_bio && student.user_bio.length > 10)) income.profileDetails += 30;
       if (fullUserData.phone_number || student.phone_number) income.profileDetails += 20;
 
-      // Collaboration coins - try both sources
-      const collaborationCoins = fullUserData.total_collaboration_coins || student.total_collaboration_coins || 0;
+      // Collaboration coins - use student data (from leaderboard calculation)
+      const collaborationCoins = student.total_collaboration_coins || fullUserData.total_collaboration_coins || 0;
       income.collaboration = collaborationCoins;
 
-      // Login streak coins - try both sources
-      const loginStreakCoins = fullUserData.total_login_streak_coins || student.total_login_streak_coins || 0;
+      // Login streak coins - use student data (from leaderboard calculation)
+      const loginStreakCoins = student.total_login_streak_coins || fullUserData.total_login_streak_coins || 0;
       income.loginStreak = loginStreakCoins;
 
-      // Work earnings - try both sources
-      income.work = fullUserData.total_work_earnings || student.total_work_earnings || 0;
+      // Work earnings - use student data (from leaderboard calculation)
+      income.work = student.total_work_earnings || fullUserData.total_work_earnings || 0;
 
       // Assets
       const purchasedItems = fullUserData.purchased_items || student.purchased_items || [];
