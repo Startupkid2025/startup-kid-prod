@@ -154,11 +154,24 @@ export default function Leaderboard() {
 
       // Filter: Show ONLY students, exclude admins (unless current user is admin viewing themselves)
       const isCurrentUserAdmin = user?.role === 'admin';
-      
+
+      // Only load User entity if current user is admin (for admin filtering)
+      let allUsers = [];
+      if (isCurrentUserAdmin) {
+        try {
+          allUsers = await base44.entities.User.list();
+        } catch (e) {
+          console.log("Admin: Cannot load User.list for filtering");
+        }
+      }
+
       let filteredUsersForLeaderboard = allEntries.filter(u => {
-        // Check if this entry belongs to an admin
-        const userRecord = allUsers.find(usr => usr.email === u.student_email);
-        const isEntryAdmin = userRecord?.role === 'admin';
+        // Check if this entry belongs to an admin (only if we have User data)
+        let isEntryAdmin = false;
+        if (allUsers.length > 0) {
+          const userRecord = allUsers.find(usr => usr.email === u.student_email);
+          isEntryAdmin = userRecord?.role === 'admin';
+        }
 
         // Current user can always see themselves
         if (user && u.student_email === user.email) {
