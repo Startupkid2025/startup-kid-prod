@@ -182,21 +182,25 @@ export default function AvatarWork({ userData, onWorkComplete }) {
 
     let coinsToAdd = workStatus.coinsToEarn;
     
-    // Check if user is work king and add bonus
-    const allUsers = await base44.entities.User.list();
-    let maxWorkEarnings = 0;
-    let workKingEmail = null;
-    
-    allUsers.forEach(user => {
-      const earnings = user.total_work_earnings || 0;
-      if (earnings > maxWorkEarnings) {
-        maxWorkEarnings = earnings;
-        workKingEmail = user.email;
+    // Check if user is work king and add bonus - use LeaderboardEntry instead of User
+    try {
+      const allLeaderboardEntries = await base44.entities.LeaderboardEntry.list();
+      let maxWorkEarnings = 0;
+      let workKingEmail = null;
+      
+      allLeaderboardEntries.forEach(entry => {
+        const earnings = entry.total_work_earnings || 0;
+        if (earnings > maxWorkEarnings) {
+          maxWorkEarnings = earnings;
+          workKingEmail = entry.student_email;
+        }
+      });
+      
+      if (workKingEmail === userData.email && maxWorkEarnings > 0) {
+        coinsToAdd += 5; // Work king bonus!
       }
-    });
-    
-    if (workKingEmail === userData.email && maxWorkEarnings > 0) {
-      coinsToAdd += 5; // Work king bonus!
+    } catch (error) {
+      console.error("Error checking work king:", error);
     }
     
     const totalWorkEarnings = (userData.total_work_earnings || 0) + coinsToAdd;
