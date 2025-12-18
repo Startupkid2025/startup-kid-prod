@@ -74,6 +74,21 @@ export default function Profile() {
       ...editData,
       coins: (userData.coins || 0) + coinsToAdd
     });
+
+    // Update leaderboard with profile details
+    try {
+      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+      if (leaderboardEntries.length > 0) {
+        await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+          coins: (userData.coins || 0) + coinsToAdd,
+          age: editData.age,
+          bio: editData.bio,
+          phone_number: editData.phone_number
+        });
+      }
+    } catch (error) {
+      console.error("Error updating leaderboard:", error);
+    }
     
     setIsEditing(false);
     loadUserData();
@@ -108,12 +123,13 @@ export default function Profile() {
       updates.coins = (userData.coins || 0) + coinsToAdd;
       await base44.auth.updateMe(updates);
       
-      // Update leaderboard
+      // Update leaderboard with ALL task completion data
       try {
         const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
         if (leaderboardEntries.length > 0) {
           await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-            coins: (userData.coins || 0) + coinsToAdd
+            coins: (userData.coins || 0) + coinsToAdd,
+            ...updates
           });
         }
       } catch (error) {
