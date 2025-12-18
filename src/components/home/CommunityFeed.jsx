@@ -26,16 +26,28 @@ export default function CommunityFeed({ userData, onRefresh }) {
     try {
       const allPosts = await base44.entities.Post.list("-created_date", 50);
       
-      // Fetch user data for avatars
-      const allUsers = await base44.entities.User.list();
-      const usersMap = {};
-      allUsers.forEach(u => {
-        usersMap[u.email] = {
-          equipped_items: u.equipped_items || {},
-          first_name: u.first_name,
-          last_name: u.last_name
-        };
-      });
+      // Try to fetch user data for avatars, but don't fail if not allowed
+      let usersMap = {};
+      try {
+        const allUsers = await base44.entities.User.list();
+        allUsers.forEach(u => {
+          usersMap[u.email] = {
+            equipped_items: u.equipped_items || {},
+            first_name: u.first_name,
+            last_name: u.last_name
+          };
+        });
+      } catch (userError) {
+        console.log("Could not load user data (normal for non-admin users)");
+        // For current user, use their own data
+        if (userData) {
+          usersMap[userData.email] = {
+            equipped_items: userData.equipped_items || {},
+            first_name: userData.first_name,
+            last_name: userData.last_name
+          };
+        }
+      }
       
       const postsWithUserData = allPosts.map(post => ({
         ...post,
