@@ -361,14 +361,27 @@ export default function Leaderboard() {
     try {
       const today = new Date().toISOString().split('T')[0];
       
-      // Fetch fresh user data - use me() for current user to avoid permission issues
+      // Fetch fresh user data - use me() for current user
       const currentUserFull = await base44.auth.me();
-      const allUsers = await base44.entities.User.list();
-      const targetUserFull = allUsers.find(u => u.email === targetUser.student_email);
       
       if (!currentUserFull) {
         toast.error("לא מצאתי את המשתמש שלך במערכת");
         return;
+      }
+
+      // For target user, try to get from User entity, but if that fails (non-admin), use LeaderboardEntry data
+      let targetUserFull = null;
+      try {
+        const allUsers = await base44.entities.User.list();
+        targetUserFull = allUsers.find(u => u.email === targetUser.student_email);
+      } catch (e) {
+        console.log("Cannot access User.list, using LeaderboardEntry data");
+        // Use the targetUser object from leaderboard entry
+        targetUserFull = {
+          id: targetUser.id,
+          email: targetUser.student_email,
+          daily_collaborations: targetUser.daily_collaborations || []
+        };
       }
 
       if (!targetUserFull) {
@@ -409,19 +422,32 @@ export default function Leaderboard() {
             : c
         );
 
-        // Update both users with coins
-        await Promise.all([
-          base44.auth.updateMe({
-            coins: (currentUserFull.coins || 0) + coinsReward,
-            daily_collaborations: updatedCurrentCollaborations,
-            total_collaboration_coins: (currentUserFull.total_collaboration_coins || 0) + coinsReward
-          }),
-          base44.entities.User.update(targetUserFull.id, {
+        // Update current user
+        await base44.auth.updateMe({
+          coins: (currentUserFull.coins || 0) + coinsReward,
+          daily_collaborations: updatedCurrentCollaborations,
+          total_collaboration_coins: (currentUserFull.total_collaboration_coins || 0) + coinsReward
+        });
+
+        // Update target user - try User entity first, fall back to LeaderboardEntry
+        try {
+          await base44.entities.User.update(targetUserFull.id, {
             coins: (targetUserFull.coins || 0) + coinsReward,
             daily_collaborations: updatedTargetCollaborations,
             total_collaboration_coins: (targetUserFull.total_collaboration_coins || 0) + coinsReward
-          })
-        ]);
+          });
+        } catch (userUpdateError) {
+          console.log("Cannot update User entity, updating LeaderboardEntry only");
+          // Update via LeaderboardEntry if User update fails
+          const targetLeaderboard = await base44.entities.LeaderboardEntry.filter({ 
+            student_email: targetUser.student_email 
+          });
+          if (targetLeaderboard.length > 0) {
+            await base44.entities.LeaderboardEntry.update(targetLeaderboard[0].id, {
+              coins: (targetUserFull.coins || 0) + coinsReward
+            });
+          }
+        }
 
         // Update leaderboards
         try {
