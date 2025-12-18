@@ -341,10 +341,7 @@ export default function Layout({ children }) {
               total_inflation_lost: (user.total_inflation_lost || 0) + totalInflationLoss,
               total_income_tax: (user.total_income_tax || 0) + totalIncomeTax,
               total_credit_interest: (user.total_credit_interest || 0) + totalCreditInterest,
-              total_passive_income: (user.total_passive_income || 0) + totalPassiveIncome,
-              daily_inflation_lost: lastDayInflation,
-              daily_income_tax: lastDayIncomeTax,
-              daily_credit_interest: lastDayCreditInterest
+              total_passive_income: (user.total_passive_income || 0) + totalPassiveIncome
             });
 
             // Update leaderboard
