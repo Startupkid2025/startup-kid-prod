@@ -238,15 +238,17 @@ export default function Leaderboard() {
           collaborationCount = completedCollabs.length;
         }
 
-        // Work hours - try User entity first, then fall back to calculating from earnings
+        // Work hours and earnings - prioritize actual User entity data
         let workHours = 0;
-        if (userRecord?.total_work_hours !== undefined) {
-          workHours = userRecord.total_work_hours;
-        } else if (userRecord?.total_work_earnings) {
-          // Estimate from earnings (most users earn 10-50 per hour)
-          workHours = Math.floor(userRecord.total_work_earnings / 20);
-        } else if (u.student_email === user?.email && user.total_work_hours !== undefined) {
-          workHours = user.total_work_hours;
+        let workEarnings = 0;
+
+        if (userRecord) {
+          workHours = userRecord.total_work_hours || 0;
+          workEarnings = userRecord.total_work_earnings || 0;
+        } else if (u.student_email === user?.email) {
+          // For current user, use their own data
+          workHours = user.total_work_hours || 0;
+          workEarnings = user.total_work_earnings || 0;
         }
 
         const averageLevel = Math.round(
@@ -259,7 +261,7 @@ export default function Leaderboard() {
         // Calculate net worth including investments (NO pending taxes!)
         const userInvestments = allInvestments.filter(inv => inv.student_email === u.student_email);
         const investmentsValue = userInvestments.reduce((sum, inv) => sum + inv.current_value, 0);
-        
+
         const totalValue = calculateTotalValue(u, investmentsValue);
 
         const totalXP =
@@ -271,11 +273,10 @@ export default function Leaderboard() {
         // Calculate category earnings for crowns
         const userWordProgress = allWordProgress.filter(w => w.student_email === u.student_email);
         const vocabEarnings = userWordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
-        
+
         const mathEarnings = userRecord?.total_math_earnings || u.total_math_earnings || 0;
         const currentInvestmentValue = investmentsValue; // Already calculated above
         const loginStreakEarnings = userRecord?.total_login_streak_coins || u.total_login_streak_coins || 0;
-        const workEarnings = userRecord?.total_work_earnings || u.total_work_earnings || 0;
 
         return {
           ...u,
