@@ -242,18 +242,9 @@ export default function Leaderboard() {
           collaborationCount = completedCollabs.length;
         }
 
-        // Work hours and earnings - prioritize actual User entity data
-        let workHours = 0;
-        let workEarnings = 0;
-
-        if (userRecord) {
-          workHours = userRecord.total_work_hours || 0;
-          workEarnings = userRecord.total_work_earnings || 0;
-        } else if (u.student_email === user?.email) {
-          // For current user, use their own data
-          workHours = user.total_work_hours || 0;
-          workEarnings = user.total_work_earnings || 0;
-        }
+        // Work hours and earnings - ALWAYS use LeaderboardEntry data (accessible to all)
+        const workHours = u.total_work_hours || 0;
+        const workEarnings = u.total_work_earnings || 0;
 
         const averageLevel = Math.round(
           (actualAiTechLevel +
