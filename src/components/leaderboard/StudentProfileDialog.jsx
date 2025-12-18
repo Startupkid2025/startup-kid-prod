@@ -108,10 +108,10 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         investmentProfits: totalInvestmentProfit
       };
 
-      // Use student data directly (it already has all the info from Leaderboard)
+      // ALWAYS use student data (from LeaderboardEntry) - it has all the data we need
       let fullUserData = student;
       
-      // If viewing own profile, use me() to get latest data
+      // If viewing own profile, use me() to get the most up-to-date data
       if (currentUser && currentUser.email === studentEmail) {
         try {
           fullUserData = await base44.auth.me();
@@ -119,19 +119,8 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
           console.log("Error fetching own user data:", e);
           fullUserData = student; // fallback to student data
         }
-      } else if (isAdmin) {
-        // Admin can try to get from User.list
-        try {
-          const allUsers = await base44.entities.User.list();
-          const foundUser = allUsers.find(u => u.email === studentEmail);
-          if (foundUser) {
-            fullUserData = foundUser;
-          }
-        } catch (e) {
-          console.log("Cannot access User.list, using student data from leaderboard");
-        }
       }
-      // For regular users viewing others: fullUserData = student (from leaderboard, already has the data)
+      // For everyone else (including admins viewing other users): use student data from LeaderboardEntry
 
       // Profile tasks
       if (fullUserData.completed_instagram_follow || student.completed_instagram_follow) income.profileTasks += 50;
