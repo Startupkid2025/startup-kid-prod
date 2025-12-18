@@ -307,12 +307,13 @@ export default function Leaderboard() {
       // Sort by totalValue (Networth) instead of totalXP
       usersWithAllStats.sort((a, b) => b.totalValue - a.totalValue);
 
-      // Find kings in each category
-      const mathKing = [...usersWithAllStats].sort((a, b) => b.masteredMathQuestions - a.masteredMathQuestions)[0];
-      const vocabKing = [...usersWithAllStats].sort((a, b) => b.vocabEarnings - a.vocabEarnings)[0];
-      const investmentKing = [...usersWithAllStats].sort((a, b) => b.currentInvestmentValue - a.currentInvestmentValue)[0];
-      const loginStreakKing = [...usersWithAllStats].sort((a, b) => b.loginStreak - a.loginStreak)[0];
-      const workKing = [...usersWithAllStats].sort((a, b) => b.workHours - a.workHours)[0];
+      // Find kings in each category - ONLY from real students (not demo users)
+      const realStudents = usersWithAllStats.filter(u => u.user_type === 'student');
+      const mathKing = [...realStudents].sort((a, b) => b.masteredMathQuestions - a.masteredMathQuestions)[0];
+      const vocabKing = [...realStudents].sort((a, b) => b.vocabEarnings - a.vocabEarnings)[0];
+      const investmentKing = [...realStudents].sort((a, b) => b.currentInvestmentValue - a.currentInvestmentValue)[0];
+      const loginStreakKing = [...realStudents].sort((a, b) => b.loginStreak - a.loginStreak)[0];
+      const workKing = [...realStudents].sort((a, b) => b.workHours - a.workHours)[0];
 
       // Debug: Log kings
       console.log('Math King:', mathKing?.student_email, 'Questions:', mathKing?.masteredMathQuestions);
