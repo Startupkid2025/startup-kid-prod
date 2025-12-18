@@ -77,23 +77,44 @@ export default function Admin() {
     setIsRecalculatingCoins(true);
     try {
       const allUsers = await base44.entities.User.list();
+      const students = allUsers.filter(u => u.user_type === 'student');
       
-      for (const user of allUsers) {
-        if (user.user_type !== 'student') continue;
+      for (let i = 0; i < students.length; i++) {
+        const user = students[i];
         
         const recalculatedCoins = await recalculateUserCoins(user);
         if (recalculatedCoins !== null) {
           await base44.entities.User.update(user.id, { coins: recalculatedCoins });
+          
+          // Update leaderboard
+          try {
+            const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
+              student_email: user.email 
+            });
+            if (leaderboardEntries.length > 0) {
+              await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+                coins: recalculatedCoins
+              });
+            }
+          } catch (error) {
+            console.error("Error updating leaderboard:", error);
+          }
+        }
+        
+        // Add delay between users to avoid rate limiting
+        if (i < students.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
       
-      toast.success("חישוב מחדש הושלם בהצלחה!");
+      toast.success(`חישוב מחדש הושלם בהצלחה! עודכנו ${students.length} תלמידים`);
       await loadData();
     } catch (error) {
       console.error("Error recalculating coins:", error);
       toast.error("שגיאה בחישוב מחדש");
+    } finally {
+      setIsRecalculatingCoins(false);
     }
-    setIsRecalculatingCoins(false);
   };
 
   const recalculateUserCoins = async (user) => {
