@@ -110,14 +110,25 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
 
       // Try to get full user data for profile tasks/details
       let fullUserData = student;
-      try {
-        const allUsers = await base44.entities.User.list();
-        const foundUser = allUsers.find(u => u.email === studentEmail);
-        if (foundUser) {
-          fullUserData = foundUser;
+      
+      // If viewing own profile, use me() to get full data
+      if (currentUser && currentUser.email === studentEmail) {
+        try {
+          fullUserData = await base44.auth.me();
+        } catch (e) {
+          console.log("Error fetching own user data:", e);
         }
-      } catch (e) {
-        console.log("Cannot access User.list, using student data from leaderboard");
+      } else {
+        // Try to get from User.list (admin only)
+        try {
+          const allUsers = await base44.entities.User.list();
+          const foundUser = allUsers.find(u => u.email === studentEmail);
+          if (foundUser) {
+            fullUserData = foundUser;
+          }
+        } catch (e) {
+          console.log("Cannot access User.list, using student data from leaderboard");
+        }
       }
 
       // Profile tasks
