@@ -34,7 +34,12 @@ export default function GroupManagement() {
       const allLessons = await base44.entities.Lesson.list();
       const allUsers = await base44.entities.User.list();
 
-      setGroups(allGroups);
+      // Sort groups by name (א', ב', ג', etc.)
+      const sortedGroups = allGroups.sort((a, b) => {
+        return a.group_name.localeCompare(b.group_name, 'he');
+      });
+
+      setGroups(sortedGroups);
       setLessons(allLessons);
       setStudents(allUsers);
     } catch (error) {
