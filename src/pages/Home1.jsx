@@ -405,7 +405,8 @@ export default function Home() {
         await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
           purchased_items: newPurchasedItems,
           coins: newCoins,
-          equipped_items: newEquippedItems
+          equipped_items: newEquippedItems,
+          total_item_sale_losses: (userData.total_item_sale_losses || 0) + lossDueToSale
         });
       }
     } catch (error) {
