@@ -122,28 +122,26 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       }
       // For everyone else (including admins viewing other users): use student data from LeaderboardEntry
 
-      // Profile tasks
-      if (fullUserData.completed_instagram_follow || student.completed_instagram_follow) income.profileTasks += 50;
-      if (fullUserData.completed_youtube_subscribe || student.completed_youtube_subscribe) income.profileTasks += 50;
-      if (fullUserData.completed_facebook_follow || student.completed_facebook_follow) income.profileTasks += 50;
-      if (fullUserData.completed_discord_join || student.completed_discord_join) income.profileTasks += 50;
-      if (fullUserData.completed_share || student.completed_share) income.profileTasks += 100;
+      // Profile tasks - ALWAYS use LeaderboardEntry (student) data
+      if (student.completed_instagram_follow) income.profileTasks += 50;
+      if (student.completed_youtube_subscribe) income.profileTasks += 50;
+      if (student.completed_facebook_follow) income.profileTasks += 50;
+      if (student.completed_discord_join) income.profileTasks += 50;
+      if (student.completed_share) income.profileTasks += 100;
 
-      // Profile details
-      if (fullUserData.age || student.age || student.user_age) income.profileDetails += 20;
-      if ((fullUserData.bio && fullUserData.bio.length > 10) || (student.bio && student.bio.length > 10) || (student.user_bio && student.user_bio.length > 10)) income.profileDetails += 30;
-      if (fullUserData.phone_number || student.phone_number) income.profileDetails += 20;
+      // Profile details - ALWAYS use LeaderboardEntry (student) data
+      if (student.age || student.user_age) income.profileDetails += 20;
+      if ((student.bio && student.bio.length > 10) || (student.user_bio && student.user_bio.length > 10)) income.profileDetails += 30;
+      if (student.phone_number) income.profileDetails += 20;
 
-      // Collaboration coins - use student data (from leaderboard calculation)
-      const collaborationCoins = student.total_collaboration_coins || fullUserData.total_collaboration_coins || 0;
-      income.collaboration = collaborationCoins;
+      // Collaboration coins - ALWAYS prioritize LeaderboardEntry
+      income.collaboration = student.total_collaboration_coins || 0;
 
-      // Login streak coins - use student data (from leaderboard calculation)
-      const loginStreakCoins = student.total_login_streak_coins || fullUserData.total_login_streak_coins || 0;
-      income.loginStreak = loginStreakCoins;
+      // Login streak coins - ALWAYS prioritize LeaderboardEntry
+      income.loginStreak = student.total_login_streak_coins || 0;
 
-      // Work earnings - use student data (from leaderboard calculation)
-      income.work = student.total_work_earnings || fullUserData.total_work_earnings || 0;
+      // Work earnings - ALWAYS prioritize student data (LeaderboardEntry)
+      income.work = student.total_work_earnings || 0;
 
       // Assets
       const purchasedItems = fullUserData.purchased_items || student.purchased_items || [];
@@ -156,24 +154,26 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       });
 
       const assets = {
-        cash: fullUserData.coins || student.coins || 0,
+        cash: student.coins || 0,  // ALWAYS use LeaderboardEntry
         items: calculatedItemsValue,
         investments: totalInvestmentValue
       };
 
-      // Losses - Show TOTAL accumulated losses from student data (LeaderboardEntry)
-      // ALWAYS prioritize student data since it's the data source for non-admins
+      // Losses - ALWAYS use LeaderboardEntry data (accessible to all users)
       const losses = {
-        inflation: student.total_inflation_lost || fullUserData.total_inflation_lost || 0,
-        incomeTax: student.total_income_tax || fullUserData.total_income_tax || 0,
-        dividendTax: student.total_dividend_tax || fullUserData.total_dividend_tax || 0,
-        capitalGainsTax: student.total_capital_gains_tax || fullUserData.total_capital_gains_tax || 0,
-        creditInterest: student.total_credit_interest || fullUserData.total_credit_interest || 0,
-        investmentFees: student.total_investment_fees || fullUserData.total_investment_fees || 0,
-        itemSaleLosses: student.total_item_sale_losses || fullUserData.total_item_sale_losses || 0
+        inflation: student.total_inflation_lost || 0,
+        incomeTax: student.total_income_tax || 0,
+        dividendTax: student.total_dividend_tax || 0,
+        capitalGainsTax: student.total_capital_gains_tax || 0,
+        creditInterest: student.total_credit_interest || 0,
+        investmentFees: student.total_investment_fees || 0,
+        itemSaleLosses: student.total_item_sale_losses || 0
       };
       
-      console.log("Loading losses for student:", studentEmail, losses);
+      console.log("📊 Finance Report - Student:", studentEmail);
+      console.log("💰 Income breakdown:", income);
+      console.log("📉 Losses breakdown:", losses);
+      console.log("🏦 Assets:", assets);
 
       const totalIncome = Object.values(income).reduce((sum, val) => sum + val, 0);
       const totalAssets = Object.values(assets).reduce((sum, val) => sum + val, 0);
