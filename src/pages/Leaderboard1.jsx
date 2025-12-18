@@ -450,7 +450,7 @@ export default function Leaderboard() {
           }
         }
 
-        // Update leaderboards
+        // Update leaderboards with coins AND daily_collaborations
         try {
           const [currentUserLeaderboard, targetUserLeaderboard] = await Promise.all([
             base44.entities.LeaderboardEntry.filter({ student_email: currentUser.email }),
@@ -461,14 +461,16 @@ export default function Leaderboard() {
           if (currentUserLeaderboard.length > 0) {
             leaderboardUpdates.push(
               base44.entities.LeaderboardEntry.update(currentUserLeaderboard[0].id, {
-                coins: (currentUserFull.coins || 0) + coinsReward
+                coins: (currentUserFull.coins || 0) + coinsReward,
+                daily_collaborations: updatedCurrentCollaborations
               })
             );
           }
           if (targetUserLeaderboard.length > 0) {
             leaderboardUpdates.push(
               base44.entities.LeaderboardEntry.update(targetUserLeaderboard[0].id, {
-                coins: (targetUserFull.coins || 0) + coinsReward
+                coins: (targetUserFull.coins || 0) + coinsReward,
+                daily_collaborations: updatedTargetCollaborations
               })
             );
           }
@@ -491,6 +493,20 @@ export default function Leaderboard() {
         await base44.auth.updateMe({
           daily_collaborations: updatedCollaborations
         });
+
+        // Also update leaderboard entry with daily_collaborations
+        try {
+          const currentUserLeaderboard = await base44.entities.LeaderboardEntry.filter({ 
+            student_email: currentUser.email 
+          });
+          if (currentUserLeaderboard.length > 0) {
+            await base44.entities.LeaderboardEntry.update(currentUserLeaderboard[0].id, {
+              daily_collaborations: updatedCollaborations
+            });
+          }
+        } catch (leaderboardError) {
+          console.error("Error updating leaderboard:", leaderboardError);
+        }
 
         toast.info(`📤 שלחת בקשת שיתוף פעולה ל-${targetUser.full_name}! אם גם הם ישלחו לך, תקבלו 25 מטבעות כל אחד! 🤝`);
       }
