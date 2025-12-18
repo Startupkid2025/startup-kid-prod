@@ -95,6 +95,9 @@ export default function Leaderboard() {
       let allUsers = [];
       let allWordProgress = [];
       let allInvestments = [];
+      let allLessonParticipations = [];
+      let allLessons = [];
+      let allMathProgress = [];
 
       try {
         allEntries = await base44.entities.LeaderboardEntry.list();
@@ -120,6 +123,24 @@ export default function Leaderboard() {
         allInvestments = await base44.entities.Investment.list();
       } catch (e) {
         console.error("Error loading Investments:", e);
+      }
+
+      try {
+        allLessonParticipations = await base44.entities.LessonParticipation.list();
+      } catch (e) {
+        console.error("Error loading LessonParticipation:", e);
+      }
+
+      try {
+        allLessons = await base44.entities.Lesson.list();
+      } catch (e) {
+        console.error("Error loading Lessons:", e);
+      }
+
+      try {
+        allMathProgress = await base44.entities.MathProgress.list();
+      } catch (e) {
+        console.error("Error loading MathProgress:", e);
       }
 
       console.log("Loaded entries:", allEntries.length, "users:", allUsers.length);
@@ -153,35 +174,13 @@ export default function Leaderboard() {
         return u.user_type === 'student';
       });
 
-      // Fetch lesson participations and lessons for accurate counts
-      let allLessonParticipations = [];
-      let allLessons = [];
-      let allMathProgress = [];
-      
-      try {
-        allLessonParticipations = await base44.entities.LessonParticipation.list();
-      } catch (e) {
-        console.error("Error loading LessonParticipation:", e);
-      }
-      
-      try {
-        allLessons = await base44.entities.Lesson.list();
-      } catch (e) {
-        console.error("Error loading Lessons:", e);
-      }
-      
-      try {
-        allMathProgress = await base44.entities.MathProgress.list();
-      } catch (e) {
-        console.error("Error loading MathProgress:", e);
-      }
-
       const usersWithAllStats = filteredUsersForLeaderboard.map((u) => {
         const masteredWords = allWordProgress.filter(
           w => w.student_email === u.student_email && w.mastered
         ).length;
 
         // Get actual data from User entity (real source of truth)
+        // If we can't access User entity (regular users), use LeaderboardEntry data
         const userRecord = allUsers.find(usr => usr.email === u.student_email);
         const last_login_date = userRecord?.last_login_date;
         const actualTotalLessons = userRecord?.total_lessons || u.total_lessons || 0;
@@ -210,15 +209,45 @@ export default function Leaderboard() {
           if (lesson.category === 'money_business') moneyBusinessLessons++;
         });
         
-        // Count completed math questions (any question with attempts)
+        // Count completed math questions directly from MathProgress
         const userMathProgress = allMathProgress.filter(m => m.student_email === u.student_email && (m.total_attempts || 0) > 0);
         const masteredMathQuestions = userMathProgress.length;
         
-        // Login streak
-        const loginStreak = userRecord?.login_streak || 0;
+        // Login streak - if User entity not available, calculate from daily_collaborations
+        let loginStreak = 0;
+        if (userRecord?.login_streak !== undefined) {
+          loginStreak = userRecord.login_streak;
+        } else {
+          // Fallback: Try to get from user's own data if this is the current user
+          if (u.student_email === user?.email) {
+            loginStreak = user.login_streak || 0;
+          }
+        }
         
-        // Collaboration count
-        const collaborationCount = Math.floor((userRecord?.total_collaboration_coins || 0) / 25);
+        // Collaboration count - calculate from daily_collaborations
+        let collaborationCount = 0;
+        if (userRecord?.total_collaboration_coins !== undefined) {
+          collaborationCount = Math.floor(userRecord.total_collaboration_coins / 25);
+        } else if (userRecord?.daily_collaborations) {
+          // Count completed collaborations
+          const completedCollabs = (userRecord.daily_collaborations || []).filter(c => c && c.completed);
+          collaborationCount = completedCollabs.length;
+        } else if (u.student_email === user?.email && user.daily_collaborations) {
+          // If this is current user, use their data
+          const completedCollabs = (user.daily_collaborations || []).filter(c => c && c.completed);
+          collaborationCount = completedCollabs.length;
+        }
+
+        // Work hours - try User entity first, then fall back to calculating from earnings
+        let workHours = 0;
+        if (userRecord?.total_work_hours !== undefined) {
+          workHours = userRecord.total_work_hours;
+        } else if (userRecord?.total_work_earnings) {
+          // Estimate from earnings (most users earn 10-50 per hour)
+          workHours = Math.floor(userRecord.total_work_earnings / 20);
+        } else if (u.student_email === user?.email && user.total_work_hours !== undefined) {
+          workHours = user.total_work_hours;
+        }
 
         const averageLevel = Math.round(
           (actualAiTechLevel +
@@ -243,17 +272,10 @@ export default function Leaderboard() {
         const userWordProgress = allWordProgress.filter(w => w.student_email === u.student_email);
         const vocabEarnings = userWordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
         
-        // Debug for alon
-        if (u.student_email === 'alon@binder.co.il') {
-          console.log('Alon LeaderboardEntry:', u);
-          console.log('Alon UserRecord:', userRecord);
-        }
-        
         const mathEarnings = userRecord?.total_math_earnings || u.total_math_earnings || 0;
         const currentInvestmentValue = investmentsValue; // Already calculated above
         const loginStreakEarnings = userRecord?.total_login_streak_coins || u.total_login_streak_coins || 0;
         const workEarnings = userRecord?.total_work_earnings || u.total_work_earnings || 0;
-        const workHours = userRecord?.total_work_hours || u.total_work_hours || 0;
 
         return {
           ...u,
