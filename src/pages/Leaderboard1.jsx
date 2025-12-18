@@ -506,14 +506,10 @@ export default function Leaderboard() {
 
   const handleStudentClick = async (student) => {
     try {
-      // Fetch full user data as LeaderboardEntry doesn't contain all User fields
-      const allUsers = await base44.entities.User.list();
-      const fullUserData = allUsers.find(u => u.email === student.student_email);
-      
-      if (fullUserData) {
-        setSelectedStudent(fullUserData);
-        setShowProfileDialog(true);
-      }
+      // For regular users, we can't access other users' full data
+      // So we'll just use the student object we already have
+      setSelectedStudent(student);
+      setShowProfileDialog(true);
     } catch (error) {
       console.error("Error fetching student details:", error);
       toast.error("שגיאה בטעינת פרטי התלמיד");

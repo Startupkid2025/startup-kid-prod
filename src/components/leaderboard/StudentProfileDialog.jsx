@@ -40,27 +40,31 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
   }, [isOpen, student]);
 
   const loadData = async () => {
-    if (!student || !student.email) {
+    if (!student || !student.email && !student.student_email) {
       console.error("Student data is missing or invalid:", student);
       setIsLoadingInvestments(false);
       setHasError(true);
       return;
     }
+
+    const studentEmail = student.email || student.student_email;
     
     try {
       const [
-        studentInvestments,
+        allInvestments,
         participations,
         wordProgress,
         mathProgress,
         quizProgress
       ] = await Promise.all([
-        base44.entities.Investment.filter({ student_email: student.email }),
-        base44.entities.LessonParticipation.filter({ student_email: student.email }),
-        base44.entities.WordProgress.filter({ student_email: student.email }),
-        base44.entities.MathProgress.filter({ student_email: student.email }),
-        base44.entities.QuizProgress.filter({ student_email: student.email })
+        base44.entities.Investment.list(),
+        base44.entities.LessonParticipation.filter({ student_email: studentEmail }),
+        base44.entities.WordProgress.filter({ student_email: studentEmail }),
+        base44.entities.MathProgress.filter({ student_email: studentEmail }),
+        base44.entities.QuizProgress.filter({ student_email: studentEmail })
       ]);
+
+      const studentInvestments = allInvestments.filter(inv => inv.student_email === studentEmail);
 
       setInvestments(studentInvestments);
 
