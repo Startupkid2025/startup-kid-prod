@@ -28,7 +28,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    if (isOpen && student && student.email) {
+    if (isOpen && student && (student.email || student.student_email)) {
       setHasError(false);
       setIsLoadingInvestments(true);
       loadData().catch((error) => {
@@ -197,7 +197,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
   const totalProfit = totalValue - totalInvested;
   const hasInvestments = investments.length > 0;
 
-  if (!student || !student.email) {
+  if (!student || (!student.email && !student.student_email)) {
     return null;
   }
 
@@ -238,7 +238,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                   equippedItems={student.equipped_items || {}} 
                   size="large"
                   showBackground={true}
-                  userEmail={student.email}
+                  userEmail={student.email || student.student_email}
                 />
               </div>
             </div>
