@@ -236,7 +236,8 @@ export default function Investments() {
       setYesterdayPerformance(yesterdayMarket);
 
       // Load investments
-      const myInvestments = await base44.entities.Investment.filter({ student_email: user.email });
+      const allInvestments = await base44.entities.Investment.list();
+      const myInvestments = allInvestments.filter(inv => inv.student_email === user.email);
       
       // Check if any investments need updating
       const today = getTodayDate();
@@ -246,13 +247,12 @@ export default function Investments() {
       });
 
       // Check if current user is investment king
-      const allUsers = await base44.entities.User.list();
-      const allInvestments = await base44.entities.Investment.list();
+      const allInvestmentsForKing = await base44.entities.Investment.list();
       let maxInvestmentValue = 0;
       let investmentKingEmail = null;
 
       const investmentsByUser = {};
-      allInvestments.forEach(inv => {
+      allInvestmentsForKing.forEach(inv => {
         if (!investmentsByUser[inv.student_email]) {
           investmentsByUser[inv.student_email] = 0;
         }
@@ -298,7 +298,8 @@ export default function Investments() {
         }
 
         // Reload investments after updates
-        const updatedInvestments = await base44.entities.Investment.filter({ student_email: user.email });
+        const allInvestmentsReload = await base44.entities.Investment.list();
+        const updatedInvestments = allInvestmentsReload.filter(inv => inv.student_email === user.email);
         setInvestments(updatedInvestments);
       } else {
         setInvestments(myInvestments);
@@ -498,21 +499,26 @@ export default function Investments() {
       const capitalGainsTax = investmentProfit > 0 ? investmentProfit * 0.25 : 0;
 
       // Check if user is investment king and add bonus
-      const allUsers = await base44.entities.User.list();
-      let maxInvestmentEarnings = 0;
-      let investmentKingEmail = null;
-
-      allUsers.forEach(user => {
-        const earnings = user.total_realized_investment_profit || 0;
-        if (earnings > maxInvestmentEarnings) {
-          maxInvestmentEarnings = earnings;
-          investmentKingEmail = user.email;
-        }
-      });
-
       let kingBonus = 0;
-      if (investmentKingEmail === userData.email && maxInvestmentEarnings > 0 && investmentProfit > 0) {
-        kingBonus = Math.round(investmentProfit * 0.10); // Investment king gets 10% bonus on profits!
+      try {
+        const allUsers = await base44.entities.User.list();
+        let maxInvestmentEarnings = 0;
+        let investmentKingEmail = null;
+
+        allUsers.forEach(user => {
+          const earnings = user.total_realized_investment_profit || 0;
+          if (earnings > maxInvestmentEarnings) {
+            maxInvestmentEarnings = earnings;
+            investmentKingEmail = user.email;
+          }
+        });
+
+        if (investmentKingEmail === userData.email && maxInvestmentEarnings > 0 && investmentProfit > 0) {
+          kingBonus = Math.round(investmentProfit * 0.10); // Investment king gets 10% bonus on profits!
+        }
+      } catch (error) {
+        console.error("Error checking investment king status:", error);
+        // Continue without king bonus if can't access User entity
       }
 
       const netAmount = amountAfterFee - capitalGainsTax + kingBonus;
@@ -550,7 +556,8 @@ export default function Investments() {
       setSellAmounts({ ...sellAmounts, [businessId]: 0 });
       
       // Update local state instead of full reload
-      const updatedInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
+      const allInvestmentsReload = await base44.entities.Investment.list();
+      const updatedInvestments = allInvestmentsReload.filter(inv => inv.student_email === userData.email);
       setInvestments(updatedInvestments);
       setUserData({ ...userData, coins: newCoins });
     } catch (error) {

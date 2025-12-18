@@ -184,7 +184,8 @@ export default function Home() {
       const collaborationCoins = user.total_collaboration_coins || 0;
       const loginStreakCoins = user.total_login_streak_coins || 0;
 
-      const userInvestments = await base44.entities.Investment.filter({ student_email: user.email });
+      const allInvestments = await base44.entities.Investment.list();
+      const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
       const totalInvested = userInvestments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
       const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
       const unrealizedProfit = investmentsValue - totalInvested;
@@ -424,8 +425,9 @@ export default function Home() {
 
     // Get investments value
     try {
-      const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
-      const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      const userInvestments = await base44.entities.Investment.list();
+      const myInvestments = userInvestments.filter(inv => inv.student_email === userData.email);
+      const investmentsValue = myInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
       return currentCoins + itemsValue + investmentsValue;
     } catch (error) {
       console.error("Error calculating net worth:", error);
