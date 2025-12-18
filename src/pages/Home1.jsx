@@ -42,6 +42,12 @@ export default function Home() {
     try {
       const user = await base44.auth.me();
       
+      // Check if user needs to select group/name - only if they DON'T have these fields
+      const needsOnboarding = !user.has_selected_group && (!user.first_name || !user.last_name);
+      if (needsOnboarding) {
+        setShowGroupSelection(true);
+      }
+      
       // Calculate lesson counts
       const lessonCounts = await calculateLessonCounts(user);
       
@@ -849,31 +855,7 @@ export default function Home() {
         <CommunityFeed userData={userData} onRefresh={loadData} />
       </motion.div>
 
-      {!userGroup && userData?.user_type === 'student' && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Card className="bg-gradient-to-br from-orange-500/30 to-red-500/30 backdrop-blur-md border-2 border-orange-400/50">
-            <CardContent className="p-6 text-center">
-              <Users className="w-12 h-12 text-orange-200 mx-auto mb-3" />
-              <h3 className="text-xl font-bold text-white mb-2">
-                אתה עדיין לא בקבוצה! 🤔
-              </h3>
-              <p className="text-white/80 text-sm mb-4">
-                הצטרף לקבוצה כדי לקבל גישה לשיעורים!
-              </p>
-              <Button
-                onClick={() => setShowGroupSelection(true)}
-                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold"
-              >
-                בחר קבוצה 👥
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+
 
       <TamagotchiWardrobe
         isOpen={showWardrobe}
@@ -903,9 +885,7 @@ export default function Home() {
 
       <GroupSelectionDialog
         isOpen={showGroupSelection}
-        onClose={() => setShowGroupSelection(false)}
-        userEmail={userData?.email}
-        onGroupSelected={() => {
+        onComplete={() => {
           setShowGroupSelection(false);
           loadData();
         }}
