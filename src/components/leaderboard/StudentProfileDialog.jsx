@@ -131,28 +131,28 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         }
       }
 
-      // Profile tasks
-      if (fullUserData.completed_instagram_follow) income.profileTasks += 50;
-      if (fullUserData.completed_youtube_subscribe) income.profileTasks += 50;
-      if (fullUserData.completed_facebook_follow) income.profileTasks += 50;
-      if (fullUserData.completed_discord_join) income.profileTasks += 50;
-      if (fullUserData.completed_share) income.profileTasks += 100;
+      // Profile tasks - try both fullUserData and student
+      if (fullUserData.completed_instagram_follow || student.completed_instagram_follow) income.profileTasks += 50;
+      if (fullUserData.completed_youtube_subscribe || student.completed_youtube_subscribe) income.profileTasks += 50;
+      if (fullUserData.completed_facebook_follow || student.completed_facebook_follow) income.profileTasks += 50;
+      if (fullUserData.completed_discord_join || student.completed_discord_join) income.profileTasks += 50;
+      if (fullUserData.completed_share || student.completed_share) income.profileTasks += 100;
 
-      // Profile details
-      if (fullUserData.age) income.profileDetails += 20;
-      if (fullUserData.bio && fullUserData.bio.length > 10) income.profileDetails += 30;
-      if (fullUserData.phone_number) income.profileDetails += 20;
+      // Profile details - try both sources
+      if (fullUserData.age || student.age || student.user_age) income.profileDetails += 20;
+      if ((fullUserData.bio && fullUserData.bio.length > 10) || (student.bio && student.bio.length > 10) || (student.user_bio && student.user_bio.length > 10)) income.profileDetails += 30;
+      if (fullUserData.phone_number || student.phone_number) income.profileDetails += 20;
 
-      // Collaboration coins
+      // Collaboration coins - try both sources
       const collaborationCoins = fullUserData.total_collaboration_coins || student.total_collaboration_coins || 0;
       income.collaboration = collaborationCoins;
 
-      // Login streak coins
+      // Login streak coins - try both sources
       const loginStreakCoins = fullUserData.total_login_streak_coins || student.total_login_streak_coins || 0;
       income.loginStreak = loginStreakCoins;
 
-      // Work earnings
-      income.work = fullUserData.total_work_earnings || 0;
+      // Work earnings - try both sources
+      income.work = fullUserData.total_work_earnings || student.total_work_earnings || 0;
 
       // Assets
       const purchasedItems = fullUserData.purchased_items || student.purchased_items || [];
@@ -170,7 +170,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         investments: totalInvestmentValue
       };
 
-      // Losses - Show TOTAL accumulated losses
+      // Losses - Show TOTAL accumulated losses (try both sources)
       const losses = {
         inflation: fullUserData.total_inflation_lost || student.total_inflation_lost || 0,
         incomeTax: fullUserData.total_income_tax || student.total_income_tax || 0,
