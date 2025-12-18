@@ -40,7 +40,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
   }, [isOpen, student]);
 
   const loadData = async () => {
-    if (!student || !student.email && !student.student_email) {
+    if (!student || (!student.email && !student.student_email)) {
       console.error("Student data is missing or invalid:", student);
       setIsLoadingInvestments(false);
       setHasError(true);
@@ -96,28 +96,40 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         investmentProfits: totalInvestmentProfit
       };
 
+      // Try to get full user data for profile tasks/details
+      let fullUserData = student;
+      try {
+        const allUsers = await base44.entities.User.list();
+        const foundUser = allUsers.find(u => u.email === studentEmail);
+        if (foundUser) {
+          fullUserData = foundUser;
+        }
+      } catch (e) {
+        console.log("Cannot access User.list, using student data from leaderboard");
+      }
+
       // Profile tasks
-      if (student.completed_instagram_follow) income.profileTasks += 50;
-      if (student.completed_youtube_subscribe) income.profileTasks += 50;
-      if (student.completed_facebook_follow) income.profileTasks += 50;
-      if (student.completed_discord_join) income.profileTasks += 50;
-      if (student.completed_share) income.profileTasks += 100;
+      if (fullUserData.completed_instagram_follow) income.profileTasks += 50;
+      if (fullUserData.completed_youtube_subscribe) income.profileTasks += 50;
+      if (fullUserData.completed_facebook_follow) income.profileTasks += 50;
+      if (fullUserData.completed_discord_join) income.profileTasks += 50;
+      if (fullUserData.completed_share) income.profileTasks += 100;
 
       // Profile details
-      if (student.age) income.profileDetails += 20;
-      if (student.bio && student.bio.length > 10) income.profileDetails += 30;
-      if (student.phone_number) income.profileDetails += 20;
+      if (fullUserData.age) income.profileDetails += 20;
+      if (fullUserData.bio && fullUserData.bio.length > 10) income.profileDetails += 30;
+      if (fullUserData.phone_number) income.profileDetails += 20;
 
       // Collaboration coins
-      const collaborationCoins = student.total_collaboration_coins || 0;
+      const collaborationCoins = fullUserData.total_collaboration_coins || student.total_collaboration_coins || 0;
       income.collaboration = collaborationCoins;
 
       // Login streak coins
-      const loginStreakCoins = student.total_login_streak_coins || 0;
+      const loginStreakCoins = fullUserData.total_login_streak_coins || student.total_login_streak_coins || 0;
       income.loginStreak = loginStreakCoins;
 
       // Assets
-      const purchasedItems = student.purchased_items || [];
+      const purchasedItems = fullUserData.purchased_items || student.purchased_items || [];
       let calculatedItemsValue = 0;
       purchasedItems.forEach(itemId => {
         const item = AVATAR_ITEMS[itemId];
@@ -127,20 +139,20 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       });
 
       const assets = {
-        cash: student.coins || 0,
+        cash: fullUserData.coins || student.coins || 0,
         items: calculatedItemsValue,
         investments: totalInvestmentValue
       };
 
       // Losses - Show TOTAL accumulated losses
       const losses = {
-        inflation: student.total_inflation_lost || 0,
-        incomeTax: student.total_income_tax || 0,
-        dividendTax: student.total_dividend_tax || 0,
-        capitalGainsTax: student.total_capital_gains_tax || 0,
-        creditInterest: student.total_credit_interest || 0,
-        investmentFees: student.total_investment_fees || 0,
-        itemSaleLosses: student.total_item_sale_losses || 0
+        inflation: fullUserData.total_inflation_lost || student.total_inflation_lost || 0,
+        incomeTax: fullUserData.total_income_tax || student.total_income_tax || 0,
+        dividendTax: fullUserData.total_dividend_tax || student.total_dividend_tax || 0,
+        capitalGainsTax: fullUserData.total_capital_gains_tax || student.total_capital_gains_tax || 0,
+        creditInterest: fullUserData.total_credit_interest || student.total_credit_interest || 0,
+        investmentFees: fullUserData.total_investment_fees || student.total_investment_fees || 0,
+        itemSaleLosses: fullUserData.total_item_sale_losses || student.total_item_sale_losses || 0
       };
 
       const totalIncome = Object.values(income).reduce((sum, val) => sum + val, 0);
@@ -247,7 +259,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
           </Card>
 
           {/* Age */}
-          {student.age && (
+          {(student.age || student.user_age) && (
             <Card className="bg-white/20 backdrop-blur-md border-white/30">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
@@ -256,7 +268,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                   </div>
                   <div className="flex-1">
                     <p className="text-white/70 text-sm">גיל</p>
-                    <p className="text-white font-bold text-lg">{student.age}</p>
+                    <p className="text-white font-bold text-lg">{student.age || student.user_age}</p>
                   </div>
                 </div>
               </CardContent>
@@ -266,7 +278,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
 
 
           {/* Bio */}
-          {student.bio && (
+          {(student.bio || student.user_bio) && (
             <Card className="bg-white/20 backdrop-blur-md border-white/30">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
@@ -275,7 +287,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                   </div>
                   <div className="flex-1">
                     <p className="text-white/70 text-sm mb-2">קצת עליי</p>
-                    <p className="text-white text-sm leading-relaxed">{student.bio}</p>
+                    <p className="text-white text-sm leading-relaxed">{student.bio || student.user_bio}</p>
                   </div>
                 </div>
               </CardContent>
