@@ -134,7 +134,7 @@ export default function Leaderboard() {
         console.error("Error loading MathProgress:", e);
       }
 
-      console.log("Loaded entries:", allEntries.length, "users:", allUsers.length);
+      console.log("Loaded entries:", allEntries.length);
 
       // If no entries loaded, show error
       if (allEntries.length === 0) {
