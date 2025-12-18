@@ -371,18 +371,27 @@ export default function Leaderboard() {
         return;
       }
 
-      // For target user, try to get from User entity, but if that fails (non-admin), use LeaderboardEntry data
+      // For non-admin users: ALWAYS use LeaderboardEntry data (no User entity access)
+      // For admins: Try User entity, fall back to LeaderboardEntry
       let targetUserFull = null;
-      try {
-        const allUsers = await base44.entities.User.list();
-        targetUserFull = allUsers.find(u => u.email === targetUser.student_email);
-      } catch (e) {
-        console.log("Cannot access User.list, using LeaderboardEntry data");
-        // Use the targetUser object from leaderboard entry
+
+      if (currentUserFull.role === 'admin') {
+        try {
+          const allUsers = await base44.entities.User.list();
+          targetUserFull = allUsers.find(u => u.email === targetUser.student_email);
+        } catch (e) {
+          console.log("Admin: Cannot access User.list, using LeaderboardEntry data");
+        }
+      }
+
+      // If not found or not admin, use LeaderboardEntry data
+      if (!targetUserFull) {
         targetUserFull = {
           id: targetUser.id,
           email: targetUser.student_email,
-          daily_collaborations: targetUser.daily_collaborations || []
+          coins: targetUser.coins,
+          daily_collaborations: targetUser.daily_collaborations || [],
+          total_collaboration_coins: targetUser.total_collaboration_coins || 0
         };
       }
 
