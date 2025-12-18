@@ -90,7 +90,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         math: mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0),
         surveys: participations.filter(p => p.survey_completed).length * 20,
         quizzes: quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0),
-        work: student.total_work_earnings || 0,
+        work: 0,
         profileTasks: 0,
         profileDetails: 0,
         investmentProfits: totalInvestmentProfit
@@ -127,6 +127,9 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       // Login streak coins
       const loginStreakCoins = fullUserData.total_login_streak_coins || student.total_login_streak_coins || 0;
       income.loginStreak = loginStreakCoins;
+
+      // Work earnings - MUST use fullUserData as it has the real data
+      income.work = fullUserData.total_work_earnings || 0;
 
       // Assets
       const purchasedItems = fullUserData.purchased_items || student.purchased_items || [];
