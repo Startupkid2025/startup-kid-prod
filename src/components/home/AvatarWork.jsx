@@ -153,6 +153,18 @@ export default function AvatarWork({ userData, onWorkComplete }) {
       total_work_hours: currentWorkHours + 1
     });
 
+    // Update leaderboard with work hours
+    try {
+      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+      if (leaderboardEntries.length > 0) {
+        await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+          total_work_hours: currentWorkHours + 1
+        });
+      }
+    } catch (error) {
+      console.error("Error updating leaderboard:", error);
+    }
+
     setWorkStatus({
       isWorking: true,
       jobId: job.id,
@@ -194,6 +206,19 @@ export default function AvatarWork({ userData, onWorkComplete }) {
       total_work_earnings: totalWorkEarnings,
       work_status: null
     });
+
+    // Update leaderboard with work earnings
+    try {
+      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+      if (leaderboardEntries.length > 0) {
+        await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+          coins: (userData.coins || 0) + coinsToAdd,
+          total_work_earnings: totalWorkEarnings
+        });
+      }
+    } catch (error) {
+      console.error("Error updating leaderboard:", error);
+    }
 
     toast.success(`${userData.avatar_name} חזר מהעבודה! קיבלת ${coinsToAdd} מטבעות! 🎉`);
     setWorkStatus(null);
