@@ -92,7 +92,6 @@ export default function Leaderboard() {
 
       // Fetch all data in a single batch to prevent rate limiting
       let allEntries = [];
-      let allUsers = [];
       let allWordProgress = [];
       let allInvestments = [];
       let allLessonParticipations = [];
@@ -103,14 +102,6 @@ export default function Leaderboard() {
         allEntries = await base44.entities.LeaderboardEntry.list();
       } catch (e) {
         console.error("Error loading LeaderboardEntry:", e);
-      }
-
-      try {
-        allUsers = await base44.entities.User.list();
-      } catch (e) {
-        console.error("Error loading Users:", e);
-        // If User.list fails, just use an empty array
-        allUsers = [];
       }
 
       try {
