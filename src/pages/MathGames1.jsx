@@ -553,22 +553,8 @@ ${question} = ${correctAnswer}
           }
         }
         
-        // Check if user is math king and add bonus
-        const allUsers = await base44.entities.User.list();
-        let maxMathEarnings = 0;
-        let mathKingEmail = null;
-        
-        allUsers.forEach(user => {
-          const earnings = user.total_math_earnings || 0;
-          if (earnings > maxMathEarnings) {
-            maxMathEarnings = earnings;
-            mathKingEmail = user.email;
-          }
-        });
-        
-        if (mathKingEmail === userData.email && maxMathEarnings > 0) {
-          coinsEarned += 5; // Math king bonus!
-        }
+        // Math king bonus is already included in the daily calculation in Layout
+        // No need to add it again here
         
         const newCoins = (userData.coins || 0) + coinsEarned;
         await base44.auth.updateMe({
