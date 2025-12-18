@@ -118,14 +118,15 @@ export default function Layout({ children }) {
           daily_dividend_tax: dividendTax
         });
 
-        // Update leaderboard
+        // Update leaderboard with ALL financial data
         try {
           const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
             student_email: user.email 
           });
           if (leaderboardEntries.length > 0) {
             await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-              coins: newCoins
+              coins: newCoins,
+              total_dividend_tax: (user.total_dividend_tax || 0) + dividendTax
             });
           }
         } catch (error) {
@@ -202,12 +203,13 @@ export default function Layout({ children }) {
         total_login_streak_coins: (user.total_login_streak_coins || 0) + finalBonus
       });
 
-      // Update leaderboard entry if exists
+      // Update leaderboard entry with ALL data
       try {
         const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: user.email });
         if (leaderboardEntries.length > 0) {
           await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-            coins: (user.coins || 0) + streakBonus
+            coins: (user.coins || 0) + finalBonus,
+            total_login_streak_coins: (user.total_login_streak_coins || 0) + finalBonus
           });
         }
       } catch (error) {
@@ -344,12 +346,15 @@ export default function Layout({ children }) {
               total_passive_income: (user.total_passive_income || 0) + totalPassiveIncome
             });
 
-            // Update leaderboard
+            // Update leaderboard with ALL financial data
             try {
               const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: user.email });
               if (leaderboardEntries.length > 0) {
                 await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-                  coins: newCoins
+                  coins: newCoins,
+                  total_inflation_lost: (user.total_inflation_lost || 0) + totalInflationLoss,
+                  total_income_tax: (user.total_income_tax || 0) + totalIncomeTax,
+                  total_credit_interest: (user.total_credit_interest || 0) + totalCreditInterest
                 });
               }
             } catch (error) {
