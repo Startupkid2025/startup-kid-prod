@@ -16,7 +16,7 @@ const FractionDisplay = ({ text }) => {
   const parts = text.split(/(\s*[+\-×÷=?]\s*)/);
   
   return (
-    <div className="flex items-center justify-center gap-2 flex-wrap" style={{ direction: 'ltr' }}>
+    <div className="flex items-center justify-center gap-2 flex-wrap" style={{ direction: 'rtl' }}>
       {parts.map((part, index) => {
         const trimmed = part.trim();
         
@@ -224,7 +224,7 @@ export default function MathGames() {
       return {
         question: `${num1}/${denominator} + ${num2}/${denominator}`,
         answer: `${answer / divisor}/${denominator / divisor}`,
-        display: `${num1}/${denominator} + ${num2}/${denominator} = ?`,
+        display: `? = ${num2}/${denominator} + ${num1}/${denominator}`,
         category: "fractions"
       };
     } else if (level === 2) {
@@ -251,7 +251,7 @@ export default function MathGames() {
         return {
           question: `${num1}/${den1} × ${num2}/${den2}`,
           answer: `${answerNum / divisor}/${answerDen / divisor}`,
-          display: `${num1}/${den1} × ${num2}/${den2} = ?`,
+          display: `? = ${num2}/${den2} × ${num1}/${den1}`,
           category: "fractions"
         };
       } else {
@@ -268,7 +268,7 @@ export default function MathGames() {
         return {
           question: `${num1}/${den1} + ${num2}/${den2}`,
           answer: `${answerNum / divisor}/${commonDen / divisor}`,
-          display: `${num1}/${den1} + ${num2}/${den2} = ?`,
+          display: `? = ${num2}/${den2} + ${num1}/${den1}`,
           category: "fractions"
         };
       }
@@ -292,7 +292,7 @@ export default function MathGames() {
       return {
         question: `${num1}/${den1} ÷ ${num2}/${den2}`,
         answer: `${answerNum / divisor}/${answerDen / divisor}`,
-        display: `${num1}/${den1} ÷ ${num2}/${den2} = ?`,
+        display: `? = ${num2}/${den2} ÷ ${num1}/${den1}`,
         category: "fractions"
       };
     }
