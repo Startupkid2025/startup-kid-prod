@@ -354,7 +354,8 @@ export default function Investments() {
         const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
         if (leaderboardEntries.length > 0) {
           await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-            coins: newCoinsBalance
+            coins: newCoinsBalance,
+            total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE
           });
         }
       } catch (error) {
@@ -536,8 +537,9 @@ export default function Investments() {
         if (leaderboardEntries.length > 0) {
           await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
             coins: newCoins,
-            purchased_items: userData.purchased_items || [],
-            equipped_items: userData.equipped_items || {}
+            total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE,
+            total_capital_gains_tax: (userData.total_capital_gains_tax || 0) + Math.round(capitalGainsTax),
+            total_realized_investment_profit: (userData.total_realized_investment_profit || 0) + Math.round(investmentProfit)
           });
         }
       } catch (error) {
