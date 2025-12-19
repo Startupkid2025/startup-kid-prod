@@ -9,7 +9,7 @@ import TamagotchiAvatar from "../components/avatar/TamagotchiAvatar";
 import { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
 import StudentProfileDialog from "../components/leaderboard/StudentProfileDialog";
 import { toast } from "sonner";
-import { syncLeaderboardEntry } from "../utils/leaderboardSync";
+import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
 
 export default function Leaderboard() {
   const [users, setUsers] = useState([]);

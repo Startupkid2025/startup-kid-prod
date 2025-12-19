@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Edit2, Save, LogOut, Coins } from "lucide-react";
 import MissionsCard from "../components/profile/MissionsCard";
-import { syncLeaderboardEntry } from "../utils/leaderboardSync";
+import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
 
 export default function Profile() {
   const [userData, setUserData] = useState(null);

@@ -5,7 +5,7 @@ import { Home, BookOpen, TrendingUp, User, Shield, Trophy } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { AVATAR_ITEMS } from "./components/avatar/TamagotchiAvatar";
-import { syncLeaderboardEntry } from "./utils/leaderboardSync";
+import { syncLeaderboardEntry } from "./components/utils/leaderboardSync";
 
 export default function Layout({ children }) {
   const location = useLocation();
