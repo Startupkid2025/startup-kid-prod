@@ -1,9 +1,13 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Edit2, Check, X } from "lucide-react";
 import TamagotchiAvatar from "../avatar/TamagotchiAvatar";
 import { base44 } from "@/api/base44Client";
 import { AVATAR_ITEMS } from "../avatar/TamagotchiAvatar";
+import { toast } from "sonner";
 
 // Calculate level based on PROGRESSIVE lesson requirements
 const calculateLevel = (totalLessons) => {
@@ -198,6 +202,8 @@ const generateSmartTip = async (user, equippedItems) => {
 export default function Avatar({ stage, totalLessons, equippedItems }) {
   const [currentMessage, setCurrentMessage] = React.useState("טוען...");
   const [user, setUser] = React.useState(null);
+  const [isEditingName, setIsEditingName] = React.useState(false);
+  const [newAvatarName, setNewAvatarName] = React.useState("");
 
   React.useEffect(() => {
     loadUser();
@@ -207,12 +213,33 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
     try {
       const userData = await base44.auth.me();
       setUser(userData);
+      setNewAvatarName(userData.avatar_name || "");
       
       // Generate smart tip
       const tip = await generateSmartTip(userData, equippedItems);
       setCurrentMessage(tip);
     } catch (error) {
       console.error("Error loading user:", error);
+    }
+  };
+
+  const handleSaveAvatarName = async () => {
+    if (!newAvatarName.trim()) {
+      toast.error("השם לא יכול להיות ריק");
+      return;
+    }
+
+    try {
+      await base44.auth.updateMe({
+        avatar_name: newAvatarName.trim()
+      });
+
+      toast.success(`השם השתנה ל-${newAvatarName.trim()}! 🎉`);
+      setIsEditingName(false);
+      loadUser();
+    } catch (error) {
+      console.error("Error updating avatar name:", error);
+      toast.error("שגיאה בשינוי השם");
     }
   };
 
@@ -232,9 +259,56 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
         <div className="relative p-4 sm:p-6">
           {/* Avatar Name & Level */}
           <div className="text-center mb-3 sm:mb-4">
-            <h2 className="text-xl sm:text-2xl font-black text-white mb-1">
-              {user?.avatar_name || "טוען..."}
-            </h2>
+            {isEditingName ? (
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Input
+                  value={newAvatarName}
+                  onChange={(e) => setNewAvatarName(e.target.value)}
+                  className="bg-white/20 border-white/30 text-white placeholder:text-white/50 h-9 text-center font-bold max-w-[200px]"
+                  placeholder="שם האווטאר"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveAvatarName();
+                    if (e.key === 'Escape') {
+                      setIsEditingName(false);
+                      setNewAvatarName(user?.avatar_name || "");
+                    }
+                  }}
+                />
+                <Button
+                  onClick={handleSaveAvatarName}
+                  size="sm"
+                  className="bg-green-500/30 hover:bg-green-500/50 h-9 w-9 p-0"
+                >
+                  <Check className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsEditingName(false);
+                    setNewAvatarName(user?.avatar_name || "");
+                  }}
+                  size="sm"
+                  variant="ghost"
+                  className="text-white/70 hover:text-white h-9 w-9 p-0"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <h2 className="text-xl sm:text-2xl font-black text-white">
+                  {user?.avatar_name || "טוען..."}
+                </h2>
+                <Button
+                  onClick={() => setIsEditingName(true)}
+                  size="sm"
+                  variant="ghost"
+                  className="text-white/50 hover:text-white/80 h-7 w-7 p-0"
+                >
+                  <Edit2 className="w-3 h-3" />
+                </Button>
+              </div>
+            )}
             {isMaxLevel ? (
               <>
                 <p className="text-yellow-300 font-bold text-lg">
