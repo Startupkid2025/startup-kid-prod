@@ -108,43 +108,32 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         investmentProfits: totalInvestmentProfit
       };
 
-      // ALWAYS use student data (from LeaderboardEntry) - it has all the data we need
+      // ALWAYS use student data (from LeaderboardEntry) - accessible to ALL users
       let fullUserData = student;
-      
-      // If viewing own profile, use me() to get the most up-to-date data
-      if (currentUser && currentUser.email === studentEmail) {
-        try {
-          fullUserData = await base44.auth.me();
-        } catch (e) {
-          console.log("Error fetching own user data:", e);
-          fullUserData = student; // fallback to student data
-        }
-      }
-      // For everyone else (including admins viewing other users): use student data from LeaderboardEntry
 
-      // Profile tasks - ALWAYS use LeaderboardEntry (student) data
+      // Profile tasks - use LeaderboardEntry data (accessible to all)
       if (student.completed_instagram_follow) income.profileTasks += 50;
       if (student.completed_youtube_subscribe) income.profileTasks += 50;
       if (student.completed_facebook_follow) income.profileTasks += 50;
       if (student.completed_discord_join) income.profileTasks += 50;
       if (student.completed_share) income.profileTasks += 100;
 
-      // Profile details - ALWAYS use LeaderboardEntry (student) data
+      // Profile details - use LeaderboardEntry data
       if (student.age || student.user_age) income.profileDetails += 20;
       if ((student.bio && student.bio.length > 10) || (student.user_bio && student.user_bio.length > 10)) income.profileDetails += 30;
       if (student.phone_number) income.profileDetails += 20;
 
-      // Collaboration coins - ALWAYS prioritize LeaderboardEntry
+      // Collaboration coins - use LeaderboardEntry
       income.collaboration = student.total_collaboration_coins || 0;
 
-      // Login streak coins - ALWAYS prioritize LeaderboardEntry
+      // Login streak coins - use LeaderboardEntry
       income.loginStreak = student.total_login_streak_coins || 0;
 
-      // Work earnings - ALWAYS prioritize student data (LeaderboardEntry)
+      // Work earnings - use LeaderboardEntry
       income.work = student.total_work_earnings || 0;
 
-      // Assets
-      const purchasedItems = fullUserData.purchased_items || student.purchased_items || [];
+      // Assets - use LeaderboardEntry data (accessible to all)
+      const purchasedItems = student.purchased_items || [];
       let calculatedItemsValue = 0;
       purchasedItems.forEach(itemId => {
         const item = AVATAR_ITEMS[itemId];
@@ -154,20 +143,20 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       });
 
       const assets = {
-        cash: student.coins || 0,  // ALWAYS use LeaderboardEntry
+        cash: student.coins || 0,
         items: calculatedItemsValue,
         investments: totalInvestmentValue
       };
 
-      // Losses - prioritize fullUserData if viewing own profile (most up-to-date)
+      // Losses - use LeaderboardEntry data (accessible to all)
       const losses = {
-        inflation: fullUserData.total_inflation_lost || student.total_inflation_lost || 0,
-        incomeTax: fullUserData.total_income_tax || student.total_income_tax || 0,
-        dividendTax: fullUserData.total_dividend_tax || student.total_dividend_tax || 0,
-        capitalGainsTax: fullUserData.total_capital_gains_tax || student.total_capital_gains_tax || 0,
-        creditInterest: fullUserData.total_credit_interest || student.total_credit_interest || 0,
-        investmentFees: fullUserData.total_investment_fees || student.total_investment_fees || 0,
-        itemSaleLosses: fullUserData.total_item_sale_losses || student.total_item_sale_losses || 0
+        inflation: student.total_inflation_lost || 0,
+        incomeTax: student.total_income_tax || 0,
+        dividendTax: student.total_dividend_tax || 0,
+        capitalGainsTax: student.total_capital_gains_tax || 0,
+        creditInterest: student.total_credit_interest || 0,
+        investmentFees: student.total_investment_fees || 0,
+        itemSaleLosses: student.total_item_sale_losses || 0
       };
       
       console.log("📊 Finance Report - Student:", studentEmail);
