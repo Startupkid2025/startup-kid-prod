@@ -5,6 +5,7 @@ import { Home, BookOpen, TrendingUp, User, Shield, Trophy } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { AVATAR_ITEMS } from "./components/avatar/TamagotchiAvatar";
+import { syncLeaderboardEntry } from "./utils/leaderboardSync";
 
 export default function Layout({ children }) {
   const location = useLocation();
@@ -118,20 +119,11 @@ export default function Layout({ children }) {
           daily_dividend_tax: dividendTax
         });
 
-        // Update leaderboard with ALL financial data
-        try {
-          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
-            student_email: user.email 
-          });
-          if (leaderboardEntries.length > 0) {
-            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-              coins: newCoins,
-              total_dividend_tax: (user.total_dividend_tax || 0) + dividendTax
-            });
-          }
-        } catch (error) {
-          console.error("Error updating leaderboard:", error);
-        }
+        // Sync to LeaderboardEntry for public visibility
+        await syncLeaderboardEntry(user.email, {
+          coins: newCoins,
+          total_dividend_tax: (user.total_dividend_tax || 0) + dividendTax
+        });
       } else {
         await base44.auth.updateMe({
           last_dividend_date: today,
@@ -203,19 +195,12 @@ export default function Layout({ children }) {
         total_login_streak_coins: (user.total_login_streak_coins || 0) + finalBonus
       });
 
-      // Update leaderboard entry with ALL data (including login_streak!)
-      try {
-        const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: user.email });
-        if (leaderboardEntries.length > 0) {
-          await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-            coins: (user.coins || 0) + finalBonus,
-            total_login_streak_coins: (user.total_login_streak_coins || 0) + finalBonus,
-            login_streak: newStreak
-          });
-        }
-      } catch (error) {
-        console.error("Error updating leaderboard:", error);
-      }
+      // Sync to LeaderboardEntry for public visibility
+      await syncLeaderboardEntry(user.email, {
+        coins: (user.coins || 0) + finalBonus,
+        total_login_streak_coins: (user.total_login_streak_coins || 0) + finalBonus,
+        login_streak: newStreak
+      });
     } catch (error) {
       console.error("Error checking login streak:", error);
     }
@@ -347,20 +332,13 @@ export default function Layout({ children }) {
               total_passive_income: (user.total_passive_income || 0) + totalPassiveIncome
             });
 
-            // Update leaderboard with ALL financial data
-            try {
-              const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: user.email });
-              if (leaderboardEntries.length > 0) {
-                await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-                  coins: newCoins,
-                  total_inflation_lost: (user.total_inflation_lost || 0) + totalInflationLoss,
-                  total_income_tax: (user.total_income_tax || 0) + totalIncomeTax,
-                  total_credit_interest: (user.total_credit_interest || 0) + totalCreditInterest
-                });
-              }
-            } catch (error) {
-              console.error("Error updating leaderboard for user:", user.email, error);
-            }
+            // Sync to LeaderboardEntry for public visibility
+            await syncLeaderboardEntry(user.email, {
+              coins: newCoins,
+              total_inflation_lost: (user.total_inflation_lost || 0) + totalInflationLoss,
+              total_income_tax: (user.total_income_tax || 0) + totalIncomeTax,
+              total_credit_interest: (user.total_credit_interest || 0) + totalCreditInterest
+            });
 
             // Add delay between user updates to avoid rate limiting
             if (i < students.length - 1) {

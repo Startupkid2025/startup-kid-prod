@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Edit2, Save, LogOut, Coins } from "lucide-react";
 import MissionsCard from "../components/profile/MissionsCard";
+import { syncLeaderboardEntry } from "../utils/leaderboardSync";
 
 export default function Profile() {
   const [userData, setUserData] = useState(null);
@@ -75,20 +76,13 @@ export default function Profile() {
       coins: (userData.coins || 0) + coinsToAdd
     });
 
-    // Update leaderboard with profile details
-    try {
-      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
-      if (leaderboardEntries.length > 0) {
-        await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-          coins: (userData.coins || 0) + coinsToAdd,
-          age: editData.age,
-          bio: editData.bio,
-          phone_number: editData.phone_number
-        });
-      }
-    } catch (error) {
-      console.error("Error updating leaderboard:", error);
-    }
+    // Sync to LeaderboardEntry for public visibility
+    await syncLeaderboardEntry(userData.email, {
+      coins: (userData.coins || 0) + coinsToAdd,
+      age: editData.age,
+      bio: editData.bio,
+      phone_number: editData.phone_number
+    });
     
     setIsEditing(false);
     loadUserData();
@@ -123,18 +117,11 @@ export default function Profile() {
       updates.coins = (userData.coins || 0) + coinsToAdd;
       await base44.auth.updateMe(updates);
       
-      // Update leaderboard with ALL task completion data
-      try {
-        const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
-        if (leaderboardEntries.length > 0) {
-          await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-            coins: (userData.coins || 0) + coinsToAdd,
-            ...updates
-          });
-        }
-      } catch (error) {
-        console.error("Error updating leaderboard:", error);
-      }
+      // Sync to LeaderboardEntry for public visibility
+      await syncLeaderboardEntry(userData.email, {
+        coins: (userData.coins || 0) + coinsToAdd,
+        ...updates
+      });
       
       loadUserData();
     }

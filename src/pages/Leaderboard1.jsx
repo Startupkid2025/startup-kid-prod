@@ -9,6 +9,7 @@ import TamagotchiAvatar from "../components/avatar/TamagotchiAvatar";
 import { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
 import StudentProfileDialog from "../components/leaderboard/StudentProfileDialog";
 import { toast } from "sonner";
+import { syncLeaderboardEntry } from "../utils/leaderboardSync";
 
 export default function Leaderboard() {
   const [users, setUsers] = useState([]);
@@ -433,7 +434,7 @@ export default function Leaderboard() {
           total_collaboration_coins: (currentUserFull.total_collaboration_coins || 0) + coinsReward
         });
 
-        // Update target user - admins update User entity, non-admins update LeaderboardEntry only
+        // Update target user - admins update User entity
         if (currentUserFull.role === 'admin') {
           try {
             await base44.entities.User.update(targetUserFull.id, {
@@ -442,53 +443,30 @@ export default function Leaderboard() {
               total_collaboration_coins: (targetUserFull.total_collaboration_coins || 0) + coinsReward
             });
           } catch (userUpdateError) {
-            console.log("Admin: Cannot update User entity, updating LeaderboardEntry only");
+            console.log("Admin: Cannot update User entity");
           }
         }
 
-        // Always update LeaderboardEntry (both admin and non-admin)
-        const targetLeaderboard = await base44.entities.LeaderboardEntry.filter({ 
-          student_email: targetUser.student_email 
+        // Sync to LeaderboardEntry for public visibility
+        await syncLeaderboardEntry(targetUser.student_email, {
+          coins: (targetUserFull.coins || 0) + coinsReward,
+          daily_collaborations: updatedTargetCollaborations,
+          total_collaboration_coins: (targetUserFull.total_collaboration_coins || 0) + coinsReward
         });
-        if (targetLeaderboard.length > 0) {
-          await base44.entities.LeaderboardEntry.update(targetLeaderboard[0].id, {
+
+        // Sync both users to LeaderboardEntry for public visibility
+        await Promise.all([
+          syncLeaderboardEntry(currentUser.email, {
+            coins: (currentUserFull.coins || 0) + coinsReward,
+            daily_collaborations: updatedCurrentCollaborations,
+            total_collaboration_coins: (currentUserFull.total_collaboration_coins || 0) + coinsReward
+          }),
+          syncLeaderboardEntry(targetUser.student_email, {
             coins: (targetUserFull.coins || 0) + coinsReward,
             daily_collaborations: updatedTargetCollaborations,
             total_collaboration_coins: (targetUserFull.total_collaboration_coins || 0) + coinsReward
-          });
-        }
-
-        // Update leaderboards with coins AND daily_collaborations
-        try {
-          const [currentUserLeaderboard, targetUserLeaderboard] = await Promise.all([
-            base44.entities.LeaderboardEntry.filter({ student_email: currentUser.email }),
-            base44.entities.LeaderboardEntry.filter({ student_email: targetUser.student_email })
-          ]);
-
-          const leaderboardUpdates = [];
-          if (currentUserLeaderboard.length > 0) {
-            leaderboardUpdates.push(
-              base44.entities.LeaderboardEntry.update(currentUserLeaderboard[0].id, {
-                coins: (currentUserFull.coins || 0) + coinsReward,
-                daily_collaborations: updatedCurrentCollaborations
-              })
-            );
-          }
-          if (targetUserLeaderboard.length > 0) {
-            leaderboardUpdates.push(
-              base44.entities.LeaderboardEntry.update(targetUserLeaderboard[0].id, {
-                coins: (targetUserFull.coins || 0) + coinsReward,
-                daily_collaborations: updatedTargetCollaborations
-              })
-            );
-          }
-          
-          if (leaderboardUpdates.length > 0) {
-            await Promise.all(leaderboardUpdates);
-          }
-        } catch (leaderboardError) {
-          console.error("Error updating leaderboard:", leaderboardError);
-        }
+          })
+        ]);
 
         toast.success(`🎉 שיתוף פעולה הדדי! ${targetUser.full_name} ואתה קיבלתם ${coinsReward} מטבעות כל אחד! 💰✨`);
       } else {
@@ -502,19 +480,10 @@ export default function Leaderboard() {
           daily_collaborations: updatedCollaborations
         });
 
-        // Also update leaderboard entry with daily_collaborations
-        try {
-          const currentUserLeaderboard = await base44.entities.LeaderboardEntry.filter({ 
-            student_email: currentUser.email 
-          });
-          if (currentUserLeaderboard.length > 0) {
-            await base44.entities.LeaderboardEntry.update(currentUserLeaderboard[0].id, {
-              daily_collaborations: updatedCollaborations
-            });
-          }
-        } catch (leaderboardError) {
-          console.error("Error updating leaderboard:", leaderboardError);
-        }
+        // Sync to LeaderboardEntry for public visibility
+        await syncLeaderboardEntry(currentUser.email, {
+          daily_collaborations: updatedCollaborations
+        });
 
         toast.info(`📤 שלחת בקשת שיתוף פעולה ל-${targetUser.full_name}! אם גם הם ישלחו לך, תקבלו 25 מטבעות כל אחד! 🤝`);
       }
