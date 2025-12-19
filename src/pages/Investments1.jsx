@@ -350,17 +350,11 @@ export default function Investments() {
         total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE
       });
 
-      try {
-        const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
-        if (leaderboardEntries.length > 0) {
-          await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-            coins: newCoinsBalance,
-            total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE
-          });
-        }
-      } catch (error) {
-        console.error("Error updating leaderboard:", error);
-      }
+      // Sync to LeaderboardEntry for public visibility
+      await syncLeaderboardEntry(userData.email, {
+        coins: newCoinsBalance,
+        total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE
+      });
 
       toast.success(`השקעת ${amount} מטבעות ב${business.name}! (עמלה: ${TRANSACTION_FEE}) 🎉`);
       setInvestmentAmounts({ ...investmentAmounts, [businessId]: 0 });
@@ -524,27 +518,24 @@ export default function Investments() {
 
       const netAmount = amountAfterFee - capitalGainsTax + kingBonus;
       const newCoins = userData.coins + Math.round(netAmount);
+      const newCapitalGainsTax = (userData.total_capital_gains_tax || 0) + Math.round(capitalGainsTax);
+      const newRealizedProfit = (userData.total_realized_investment_profit || 0) + Math.round(investmentProfit);
+      const newTotalFees = (userData.total_investment_fees || 0) + TRANSACTION_FEE;
 
       await base44.auth.updateMe({ 
         coins: newCoins,
-        total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE,
-        total_capital_gains_tax: (userData.total_capital_gains_tax || 0) + Math.round(capitalGainsTax),
-        total_realized_investment_profit: (userData.total_realized_investment_profit || 0) + Math.round(investmentProfit)
+        total_investment_fees: newTotalFees,
+        total_capital_gains_tax: newCapitalGainsTax,
+        total_realized_investment_profit: newRealizedProfit
       });
 
-      try {
-        const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
-        if (leaderboardEntries.length > 0) {
-          await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-            coins: newCoins,
-            total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE,
-            total_capital_gains_tax: (userData.total_capital_gains_tax || 0) + Math.round(capitalGainsTax),
-            total_realized_investment_profit: (userData.total_realized_investment_profit || 0) + Math.round(investmentProfit)
-          });
-        }
-      } catch (error) {
-        console.error("Error updating leaderboard:", error);
-      }
+      // Sync to LeaderboardEntry for public visibility
+      await syncLeaderboardEntry(userData.email, {
+        coins: newCoins,
+        total_investment_fees: newTotalFees,
+        total_capital_gains_tax: newCapitalGainsTax,
+        total_realized_investment_profit: newRealizedProfit
+      });
 
       const grossProfit = investmentProfit;
       const netProfit = netAmount - TRANSACTION_FEE;
