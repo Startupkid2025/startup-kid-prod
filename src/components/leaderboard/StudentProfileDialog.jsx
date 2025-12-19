@@ -141,9 +141,9 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       if (student.completed_share) income.profileTasks += 100;
 
       // Profile details - use LeaderboardEntry data
-      if (student.age || student.user_age) income.profileDetails += 20;
-      if ((student.bio && student.bio.length > 10) || (student.user_bio && student.user_bio.length > 10)) income.profileDetails += 30;
-      if (student.phone_number) income.profileDetails += 20;
+      if (student.age || student.user_age) income.profileDetails += 10;
+      if ((student.bio && student.bio.length > 10) || (student.user_bio && student.user_bio.length > 10)) income.profileDetails += 15;
+      if (student.phone_number) income.profileDetails += 10;
 
       // Collaboration coins - prioritize fullUserData (most accurate)
       income.collaboration = fullUserData.total_collaboration_coins || student.total_collaboration_coins || 0;
