@@ -50,12 +50,15 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
     }
 
     const studentEmail = student.email || student.student_email;
-    
-    // Check if current user is admin
+
+    // Check if current user is admin - USE LOCAL VARIABLES!
+    let me = null;
+    let isAdminLocal = false;
     try {
-      const user = await base44.auth.me();
-      setCurrentUser(user);
-      setIsAdmin(user.role === 'admin');
+      me = await base44.auth.me();
+      isAdminLocal = me.role === 'admin';
+      setCurrentUser(me);
+      setIsAdmin(isAdminLocal);
     } catch (error) {
       console.error("Error loading current user:", error);
       setIsAdmin(false);
@@ -113,20 +116,18 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
 
       // Try to get User entity data if available (for more accurate data)
       // Admins can access User entity, and own profile always uses me()
-      if (currentUser && currentUser.email === studentEmail) {
-        // Viewing own profile - use me() for most up-to-date data
-        try {
-          fullUserData = await base44.auth.me();
-        } catch (e) {
-          console.log("Cannot fetch own data, using LeaderboardEntry");
-        }
-      } else if (isAdmin) {
+      if (me && me.email === studentEmail) {
+        // Viewing own profile - use me() for most up-to-date data (already fetched)
+        fullUserData = me;
+        console.log("Using me() data for own profile");
+      } else if (isAdminLocal) {
         // Admin viewing others - try to get User entity for accurate data
         try {
           const allUsers = await base44.entities.User.list();
           const userEntity = allUsers.find(u => u.email === studentEmail);
           if (userEntity) {
             fullUserData = userEntity;
+            console.log("Admin: Using User entity data");
           }
         } catch (e) {
           console.log("Admin: Cannot access User entity, using LeaderboardEntry");
