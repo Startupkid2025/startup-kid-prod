@@ -337,8 +337,12 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                     <div className="flex justify-between"><span className="text-white/70">📝 סקרים:</span><span className="text-white font-bold">{Math.round(financeReport.income.surveys)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">❓ חידונים:</span><span className="text-white font-bold">{Math.round(financeReport.income.quizzes)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">💼 עבודות:</span><span className="text-white font-bold">{Math.round(financeReport.income.work)}</span></div>
-                    <div className="flex justify-between"><span className="text-white/70">✅ משימות:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileTasks)}</span></div>
-                    <div className="flex justify-between"><span className="text-white/70">👤 פרטי פרופיל:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileDetails)}</span></div>
+                    {financeReport.income.profileTasks > 0 && (
+                      <div className="flex justify-between"><span className="text-white/70">✅ משימות פרופיל:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileTasks)}</span></div>
+                    )}
+                    {financeReport.income.profileDetails > 0 && (
+                      <div className="flex justify-between"><span className="text-white/70">👤 פרטי פרופיל:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileDetails)}</span></div>
+                    )}
                     <div className="flex justify-between"><span className="text-white/70">🤝 שיתופי פעולה:</span><span className="text-white font-bold">{Math.round(financeReport.income.collaboration)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">🔥 רצף כניסות:</span><span className="text-white font-bold">{Math.round(financeReport.income.loginStreak)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">📈 רווחי השקעות:</span><span className="text-white font-bold">{Math.round(financeReport.income.investmentProfits)}</span></div>
