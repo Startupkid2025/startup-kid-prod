@@ -41,6 +41,23 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
     }
   }, [isOpen, student]);
 
+  // Helper: safe number conversion (0 if null/undefined/"", otherwise Number(v))
+  const safeNum = (v) => (v == null || v === '') ? 0 : Number(v);
+
+  // Helper: merge objects, only non-null/undefined values overwrite
+  const mergeDefined = (...objs) => {
+    const result = {};
+    objs.forEach(obj => {
+      if (!obj) return;
+      Object.keys(obj).forEach(key => {
+        if (obj[key] != null) {
+          result[key] = obj[key];
+        }
+      });
+    });
+    return result;
+  };
+
   const loadData = async () => {
     if (!student || (!student.email && !student.student_email)) {
       console.error("Student data is missing or invalid:", student);
@@ -62,6 +79,18 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
     } catch (error) {
       console.error("Error loading current user:", error);
       setIsAdmin(false);
+    }
+
+    // ALWAYS fetch full LeaderboardEntry from DB (accessible to ALL users)
+    let leaderboardData = null;
+    try {
+      const entries = await base44.entities.LeaderboardEntry.filter({ student_email: studentEmail });
+      if (entries.length > 0) {
+        leaderboardData = entries[0];
+        console.log("Fetched LeaderboardEntry from DB:", leaderboardData);
+      }
+    } catch (e) {
+      console.error("Error fetching LeaderboardEntry:", e);
     }
     
     try {
@@ -111,28 +140,33 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         investmentProfits: totalInvestmentProfit
       };
 
-      // ALWAYS use student data (from LeaderboardEntry) - accessible to ALL users
-      let fullUserData = student;
+      // Merge data sources with priority: DB LeaderboardEntry → student prop → me() → User entity
+      let fullUserData = mergeDefined(
+        student,           // Base from prop (might be "light")
+        leaderboardData    // Full data from DB (preferred for regular users)
+      );
 
-      // Try to get User entity data if available (for more accurate data)
-      // Admins can access User entity, and own profile always uses me()
+      // If viewing own profile - merge with me() (most up-to-date)
       if (me && me.email === studentEmail) {
-        // Viewing own profile - use me() for most up-to-date data (already fetched)
-        fullUserData = me;
-        console.log("Using me() data for own profile");
-      } else if (isAdminLocal) {
-        // Admin viewing others - try to get User entity for accurate data
+        fullUserData = mergeDefined(fullUserData, me);
+        console.log("Merged with me() for own profile");
+      }
+
+      // If admin - try to get User entity for even more accurate data
+      if (isAdminLocal) {
         try {
           const allUsers = await base44.entities.User.list();
           const userEntity = allUsers.find(u => u.email === studentEmail);
           if (userEntity) {
-            fullUserData = userEntity;
-            console.log("Admin: Using User entity data");
+            fullUserData = mergeDefined(fullUserData, userEntity);
+            console.log("Admin: Merged with User entity data");
           }
         } catch (e) {
-          console.log("Admin: Cannot access User entity, using LeaderboardEntry");
+          console.log("Admin: Cannot access User entity");
         }
       }
+
+      console.log("Final merged fullUserData:", fullUserData);
 
       // Profile tasks - use LeaderboardEntry data (accessible to all)
       if (student.completed_instagram_follow) income.profileTasks += 50;
@@ -141,22 +175,18 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       if (student.completed_discord_join) income.profileTasks += 50;
       if (student.completed_share) income.profileTasks += 100;
 
-      // Profile details - prioritize fullUserData for accurate data
-      if (fullUserData.age || student.age || student.user_age) income.profileDetails += 20;
-      if ((fullUserData.bio && fullUserData.bio.length > 10) || (student.bio && student.bio.length > 10) || (student.user_bio && student.user_bio.length > 10)) income.profileDetails += 30;
-      if (fullUserData.phone_number || student.phone_number) income.profileDetails += 20;
+      // Profile details - use merged fullUserData (includes DB data)
+      if (fullUserData.age) income.profileDetails += 20;
+      if (fullUserData.bio && fullUserData.bio.length > 10) income.profileDetails += 30;
+      if (fullUserData.phone_number) income.profileDetails += 20;
 
-      // Collaboration coins - prioritize fullUserData (most accurate)
-      income.collaboration = fullUserData.total_collaboration_coins || student.total_collaboration_coins || 0;
+      // Use safeNum to handle 0 values correctly (not falsy!)
+      income.collaboration = safeNum(fullUserData.total_collaboration_coins);
+      income.loginStreak = safeNum(fullUserData.total_login_streak_coins);
+      income.work = safeNum(fullUserData.total_work_earnings);
 
-      // Login streak coins - prioritize fullUserData (most accurate)
-      income.loginStreak = fullUserData.total_login_streak_coins || student.total_login_streak_coins || 0;
-
-      // Work earnings - prioritize fullUserData (most accurate)
-      income.work = fullUserData.total_work_earnings || student.total_work_earnings || 0;
-
-      // Assets - prioritize fullUserData (most accurate)
-      const purchasedItems = fullUserData.purchased_items || student.purchased_items || [];
+      // Assets - use merged fullUserData
+      const purchasedItems = fullUserData.purchased_items ?? [];
       let calculatedItemsValue = 0;
       purchasedItems.forEach(itemId => {
         const item = AVATAR_ITEMS[itemId];
@@ -166,20 +196,20 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       });
 
       const assets = {
-        cash: fullUserData.coins || student.coins || 0,
+        cash: safeNum(fullUserData.coins),
         items: calculatedItemsValue,
         investments: totalInvestmentValue
       };
 
-      // Losses - prioritize fullUserData (most accurate)
+      // Losses - use merged fullUserData with safeNum
       const losses = {
-        inflation: fullUserData.total_inflation_lost || student.total_inflation_lost || 0,
-        incomeTax: fullUserData.total_income_tax || student.total_income_tax || 0,
-        dividendTax: fullUserData.total_dividend_tax || student.total_dividend_tax || 0,
-        capitalGainsTax: fullUserData.total_capital_gains_tax || student.total_capital_gains_tax || 0,
-        creditInterest: fullUserData.total_credit_interest || student.total_credit_interest || 0,
-        investmentFees: fullUserData.total_investment_fees || student.total_investment_fees || 0,
-        itemSaleLosses: fullUserData.total_item_sale_losses || student.total_item_sale_losses || 0
+        inflation: safeNum(fullUserData.total_inflation_lost),
+        incomeTax: safeNum(fullUserData.total_income_tax),
+        dividendTax: safeNum(fullUserData.total_dividend_tax),
+        capitalGainsTax: safeNum(fullUserData.total_capital_gains_tax),
+        creditInterest: safeNum(fullUserData.total_credit_interest),
+        investmentFees: safeNum(fullUserData.total_investment_fees),
+        itemSaleLosses: safeNum(fullUserData.total_item_sale_losses)
       };
       
       console.log("📊 Finance Report - Student:", studentEmail);
