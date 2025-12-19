@@ -203,13 +203,14 @@ export default function Layout({ children }) {
         total_login_streak_coins: (user.total_login_streak_coins || 0) + finalBonus
       });
 
-      // Update leaderboard entry with ALL data
+      // Update leaderboard entry with ALL data (including login_streak!)
       try {
         const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: user.email });
         if (leaderboardEntries.length > 0) {
           await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
             coins: (user.coins || 0) + finalBonus,
-            total_login_streak_coins: (user.total_login_streak_coins || 0) + finalBonus
+            total_login_streak_coins: (user.total_login_streak_coins || 0) + finalBonus,
+            login_streak: newStreak
           });
         }
       } catch (error) {

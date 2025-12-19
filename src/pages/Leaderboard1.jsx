@@ -217,15 +217,13 @@ export default function Leaderboard() {
         const userMathProgress = allMathProgress.filter(m => m.student_email === u.student_email && (m.total_attempts || 0) > 0);
         const masteredMathQuestions = userMathProgress.length;
         
-        // Login streak - if User entity not available, calculate from daily_collaborations
-        let loginStreak = 0;
+        // Login streak - prefer LeaderboardEntry (always accessible)
+        let loginStreak = u.login_streak || 0;
         if (userRecord?.login_streak !== undefined) {
           loginStreak = userRecord.login_streak;
-        } else {
+        } else if (u.student_email === user?.email && user.login_streak !== undefined) {
           // Fallback: Try to get from user's own data if this is the current user
-          if (u.student_email === user?.email) {
-            loginStreak = user.login_streak || 0;
-          }
+          loginStreak = user.login_streak;
         }
         
         // Collaboration count - calculate from daily_collaborations
