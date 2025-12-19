@@ -159,15 +159,15 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         investments: totalInvestmentValue
       };
 
-      // Losses - ALWAYS use LeaderboardEntry data (accessible to all users)
+      // Losses - prioritize fullUserData if viewing own profile (most up-to-date)
       const losses = {
-        inflation: student.total_inflation_lost || 0,
-        incomeTax: student.total_income_tax || 0,
-        dividendTax: student.total_dividend_tax || 0,
-        capitalGainsTax: student.total_capital_gains_tax || 0,
-        creditInterest: student.total_credit_interest || 0,
-        investmentFees: student.total_investment_fees || 0,
-        itemSaleLosses: student.total_item_sale_losses || 0
+        inflation: fullUserData.total_inflation_lost || student.total_inflation_lost || 0,
+        incomeTax: fullUserData.total_income_tax || student.total_income_tax || 0,
+        dividendTax: fullUserData.total_dividend_tax || student.total_dividend_tax || 0,
+        capitalGainsTax: fullUserData.total_capital_gains_tax || student.total_capital_gains_tax || 0,
+        creditInterest: fullUserData.total_credit_interest || student.total_credit_interest || 0,
+        investmentFees: fullUserData.total_investment_fees || student.total_investment_fees || 0,
+        itemSaleLosses: fullUserData.total_item_sale_losses || student.total_item_sale_losses || 0
       };
       
       console.log("📊 Finance Report - Student:", studentEmail);
