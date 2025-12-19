@@ -59,16 +59,6 @@ const BUSINESSES = [
     color: "from-indigo-500 to-blue-500"
   },
   {
-    id: "tech_startup",
-    name: "🚀 סטארטאפ טכנולוגי",
-    icon: "🚀",
-    description: "חברת טכנולוגיה צעירה - יכול להפסיד הכל!",
-    minInvestment: 100,
-    volatility: "extreme",
-    riskLevel: 5,
-    color: "from-blue-500 to-cyan-500"
-  },
-  {
     id: "crypto",
     name: "₿ קריפטו",
     icon: "₿",
@@ -77,6 +67,16 @@ const BUSINESSES = [
     volatility: "high",
     riskLevel: 4,
     color: "from-purple-500 to-pink-500"
+  },
+  {
+    id: "tech_startup",
+    name: "🚀 סטארטאפ טכנולוגי",
+    icon: "🚀",
+    description: "חברת טכנולוגיה צעירה - יכול להפסיד הכל!",
+    minInvestment: 100,
+    volatility: "extreme",
+    riskLevel: 5,
+    color: "from-blue-500 to-cyan-500"
   }
 ];
 
@@ -110,12 +110,12 @@ export default function Investments() {
 
   const calculateDailyChange = (volatility) => {
     const ranges = {
-      ultra_safe: { min: 0.8, max: 1.2 },
-      very_low: { min: -1.8, max: 2.0 },
-      low: { min: -3, max: 5 },
-      optimal_medium: { min: -4, max: 10 },
-      high: { min: -12, max: 15 },
-      extreme: { min: -25, max: 20 }
+      ultra_safe: { min: 0.3, max: 0.5 },
+      very_low: { min: -0.8, max: 1.0 },
+      low: { min: -1.5, max: 2.0 },
+      optimal_medium: { min: -2, max: 4 },
+      high: { min: -4, max: 4 },
+      extreme: { min: -8, max: 4 }
     };
 
     const range = ranges[volatility];
