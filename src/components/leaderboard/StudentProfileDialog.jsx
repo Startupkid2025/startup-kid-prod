@@ -140,10 +140,10 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       if (student.completed_discord_join) income.profileTasks += 50;
       if (student.completed_share) income.profileTasks += 100;
 
-      // Profile details - use LeaderboardEntry data
-      if (student.age || student.user_age) income.profileDetails += 10;
-      if ((student.bio && student.bio.length > 10) || (student.user_bio && student.user_bio.length > 10)) income.profileDetails += 15;
-      if (student.phone_number) income.profileDetails += 10;
+      // Profile details - prioritize fullUserData for accurate data
+      if (fullUserData.age || student.age || student.user_age) income.profileDetails += 20;
+      if ((fullUserData.bio && fullUserData.bio.length > 10) || (student.bio && student.bio.length > 10) || (student.user_bio && student.user_bio.length > 10)) income.profileDetails += 30;
+      if (fullUserData.phone_number || student.phone_number) income.profileDetails += 20;
 
       // Collaboration coins - prioritize fullUserData (most accurate)
       income.collaboration = fullUserData.total_collaboration_coins || student.total_collaboration_coins || 0;
@@ -359,12 +359,8 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                     <div className="flex justify-between"><span className="text-white/70">📝 סקרים:</span><span className="text-white font-bold">{Math.round(financeReport.income.surveys)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">❓ חידונים:</span><span className="text-white font-bold">{Math.round(financeReport.income.quizzes)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">💼 עבודות:</span><span className="text-white font-bold">{Math.round(financeReport.income.work)}</span></div>
-                    {financeReport.income.profileTasks > 0 && (
-                      <div className="flex justify-between"><span className="text-white/70">✅ משימות פרופיל:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileTasks)}</span></div>
-                    )}
-                    {financeReport.income.profileDetails > 0 && (
-                      <div className="flex justify-between"><span className="text-white/70">👤 פרטי פרופיל:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileDetails)}</span></div>
-                    )}
+                    <div className="flex justify-between"><span className="text-white/70">✅ משימות פרופיל:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileTasks)}</span></div>
+                    <div className="flex justify-between"><span className="text-white/70">👤 פרטי פרופיל:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileDetails)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">🤝 שיתופי פעולה:</span><span className="text-white font-bold">{Math.round(financeReport.income.collaboration)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">🔥 רצף כניסות:</span><span className="text-white font-bold">{Math.round(financeReport.income.loginStreak)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">📈 רווחי השקעות:</span><span className="text-white font-bold">{Math.round(financeReport.income.investmentProfits)}</span></div>

@@ -54,19 +54,19 @@ export default function Profile() {
     // Calculate coins for completing profile fields
     let coinsToAdd = 0;
     
-    // Age: 10 coins if just filled
+    // Age: 20 coins if just filled
     if (!oldUserData.age && editData.age) {
-      coinsToAdd += 10;
+      coinsToAdd += 20;
     }
     
-    // Bio: 15 coins if just filled with more than 10 characters
+    // Bio: 30 coins if just filled with more than 10 characters
     if ((!oldUserData.bio || oldUserData.bio.length <= 10) && editData.bio && editData.bio.length > 10) {
-      coinsToAdd += 15;
+      coinsToAdd += 30;
     }
     
-    // Phone: 10 coins if just filled
+    // Phone: 20 coins if just filled
     if (!oldUserData.phone_number && editData.phone_number) {
-      coinsToAdd += 10;
+      coinsToAdd += 20;
     }
     
     // Update user data with new coins
@@ -223,7 +223,7 @@ export default function Profile() {
                 {!userData?.age && (
                   <span className="bg-yellow-500/20 text-yellow-200 text-xs px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
                     <Coins className="w-3 h-3" />
-                    +10
+                    +20
                   </span>
                 )}
               </Label>
@@ -249,7 +249,7 @@ export default function Profile() {
                 {(!userData?.bio || userData.bio.length <= 10) && (
                   <span className="bg-yellow-500/20 text-yellow-200 text-xs px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
                     <Coins className="w-3 h-3" />
-                    +15
+                    +30
                   </span>
                 )}
               </Label>
@@ -273,7 +273,7 @@ export default function Profile() {
                 {!userData?.phone_number && (
                   <span className="bg-yellow-500/20 text-yellow-200 text-xs px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
                     <Coins className="w-3 h-3" />
-                    +10
+                    +20
                   </span>
                 )}
               </Label>
