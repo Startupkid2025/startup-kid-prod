@@ -12,8 +12,47 @@ export function normalizeDailyCollabs(collabs) {
     .map(c => ({
       email: c.email,
       date: c.date,
-      completed: c.completed === true
+      completed: c.completed === true || c.completed === 'true' || c.completed === 1
     }));
+}
+
+/**
+ * Sanitizes patch object before LeaderboardEntry.update to prevent validation errors
+ */
+export function sanitizeLeaderboardPatch(patch) {
+  const cleanPatch = { ...patch };
+  
+  // Normalize daily_collaborations if present
+  if ('daily_collaborations' in cleanPatch) {
+    cleanPatch.daily_collaborations = normalizeDailyCollabs(cleanPatch.daily_collaborations);
+  }
+  
+  // Clean age: remove if invalid, convert to number if valid
+  if ('age' in cleanPatch) {
+    const age = cleanPatch.age;
+    if (age === '' || age === null || age === undefined || (typeof age === 'number' && isNaN(age))) {
+      delete cleanPatch.age;
+    } else {
+      const numAge = Number(age);
+      if (isNaN(numAge)) {
+        delete cleanPatch.age;
+      } else {
+        cleanPatch.age = numAge;
+      }
+    }
+  }
+  
+  // Clean bio: remove if empty string
+  if ('bio' in cleanPatch && cleanPatch.bio === '') {
+    delete cleanPatch.bio;
+  }
+  
+  // Clean phone_number: remove if empty string
+  if ('phone_number' in cleanPatch && cleanPatch.phone_number === '') {
+    delete cleanPatch.phone_number;
+  }
+  
+  return cleanPatch;
 }
 
 /**
@@ -26,13 +65,10 @@ export async function syncLeaderboardEntry(studentEmail, patch) {
       student_email: studentEmail 
     });
     
-    // Normalize daily_collaborations if present in patch
-    if (patch.daily_collaborations) {
-      patch.daily_collaborations = normalizeDailyCollabs(patch.daily_collaborations);
-    }
+    const cleanPatch = sanitizeLeaderboardPatch(patch);
     
     if (entries && entries.length > 0) {
-      await base44.entities.LeaderboardEntry.update(entries[0].id, patch);
+      await base44.entities.LeaderboardEntry.update(entries[0].id, cleanPatch);
     }
   } catch (error) {
     console.error("Error syncing LeaderboardEntry:", error);

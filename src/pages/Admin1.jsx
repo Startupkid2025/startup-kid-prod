@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { syncLeaderboardEntry, normalizeDailyCollabs } from "../components/utils/leaderboardSync";
+import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
 
 import StudentRow from "../components/admin/StudentRow";
 import AddLessonDialog from "../components/admin/AddLessonDialog";
@@ -132,6 +132,7 @@ export default function Admin() {
         const results = await Promise.allSettled(
           batch.map(async (user) => {
             // Sync ALL relevant fields from User to LeaderboardEntry
+            // sanitizeLeaderboardPatch will clean all fields automatically
             await syncLeaderboardEntry(user.email, {
               coins: user.coins || 0,
               total_collaboration_coins: user.total_collaboration_coins || 0,
@@ -150,7 +151,7 @@ export default function Admin() {
               total_lessons: user.total_lessons || 0,
               equipped_items: user.equipped_items || {},
               purchased_items: user.purchased_items || [],
-              daily_collaborations: normalizeDailyCollabs(user.daily_collaborations || []),
+              daily_collaborations: user.daily_collaborations || [],
               age: user.age,
               bio: user.bio,
               phone_number: user.phone_number,
