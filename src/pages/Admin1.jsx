@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
 
 import StudentRow from "../components/admin/StudentRow";
 import AddLessonDialog from "../components/admin/AddLessonDialog";
@@ -86,19 +87,10 @@ export default function Admin() {
         if (recalculatedCoins !== null) {
           await base44.entities.User.update(user.id, { coins: recalculatedCoins });
           
-          // Update leaderboard
-          try {
-            const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
-              student_email: user.email 
-            });
-            if (leaderboardEntries.length > 0) {
-              await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-                coins: recalculatedCoins
-              });
-            }
-          } catch (error) {
-            console.error("Error updating leaderboard:", error);
-          }
+          // Sync to LeaderboardEntry for public visibility
+          await syncLeaderboardEntry(user.email, {
+            coins: recalculatedCoins
+          });
         }
         
         // Add delay between users to avoid rate limiting
@@ -112,6 +104,67 @@ export default function Admin() {
     } catch (error) {
       console.error("Error recalculating coins:", error);
       toast.error("שגיאה בחישוב מחדש");
+    } finally {
+      setIsRecalculatingCoins(false);
+    }
+  };
+
+  const migrateAllDataToLeaderboard = async () => {
+    setIsRecalculatingCoins(true);
+    try {
+      const allUsers = await base44.entities.User.list();
+      const students = allUsers.filter(u => u.user_type === 'student');
+      
+      for (let i = 0; i < students.length; i++) {
+        const user = students[i];
+        
+        try {
+          // Sync ALL relevant fields from User to LeaderboardEntry
+          await syncLeaderboardEntry(user.email, {
+            coins: user.coins || 0,
+            total_collaboration_coins: user.total_collaboration_coins || 0,
+            total_login_streak_coins: user.total_login_streak_coins || 0,
+            login_streak: user.login_streak || 0,
+            total_capital_gains_tax: user.total_capital_gains_tax || 0,
+            total_investment_fees: user.total_investment_fees || 0,
+            total_inflation_lost: user.total_inflation_lost || 0,
+            total_income_tax: user.total_income_tax || 0,
+            total_dividend_tax: user.total_dividend_tax || 0,
+            total_credit_interest: user.total_credit_interest || 0,
+            total_item_sale_losses: user.total_item_sale_losses || 0,
+            total_realized_investment_profit: user.total_realized_investment_profit || 0,
+            total_work_earnings: user.total_work_earnings || 0,
+            total_work_hours: user.total_work_hours || 0,
+            total_lessons: user.total_lessons || 0,
+            equipped_items: user.equipped_items || {},
+            purchased_items: user.purchased_items || [],
+            daily_collaborations: user.daily_collaborations || [],
+            age: user.age,
+            bio: user.bio,
+            phone_number: user.phone_number,
+            completed_instagram_follow: user.completed_instagram_follow || false,
+            completed_youtube_subscribe: user.completed_youtube_subscribe || false,
+            completed_facebook_follow: user.completed_facebook_follow || false,
+            completed_discord_join: user.completed_discord_join || false,
+            completed_share: user.completed_share || false
+          });
+          
+          console.log(`Synced user ${user.email} to LeaderboardEntry`);
+        } catch (error) {
+          console.error(`Error syncing user ${user.email}:`, error);
+        }
+        
+        // Add delay between users to avoid rate limiting
+        if (i < students.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 150));
+        }
+      }
+      
+      toast.success(`✅ סנכרון הושלם! עודכנו ${students.length} תלמידים ב-LeaderboardEntry`);
+      await loadData();
+    } catch (error) {
+      console.error("Error migrating data:", error);
+      toast.error("שגיאה בסנכרון");
     } finally {
       setIsRecalculatingCoins(false);
     }
@@ -488,6 +541,13 @@ export default function Admin() {
                 className="w-full bg-blue-600 hover:bg-blue-700"
               >
                 {isRecalculatingCoins ? "מחשב מחדש..." : "חשב מחדש מטבעות לכל המשתמשים"}
+              </Button>
+              <Button
+                onClick={migrateAllDataToLeaderboard}
+                disabled={isRecalculatingCoins}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                {isRecalculatingCoins ? "מסנכרן..." : "🔄 סנכרן כל נתוני User ל-LeaderboardEntry (מיגרציה)"}
               </Button>
             </CardContent>
           </Card>
