@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Heart, MessageCircle, Send, Trash2, Edit2, Check, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -18,6 +19,8 @@ export default function CommunityFeed({ userData, onRefresh }) {
   const [isPosting, setIsPosting] = useState(false);
   const [editingComment, setEditingComment] = useState(null); // { postId, commentIndex, text }
   const [editingPost, setEditingPost] = useState(null); // { postId, text }
+  const [showLikesDialog, setShowLikesDialog] = useState(null); // postId or null
+  const [likesUserData, setLikesUserData] = useState({}); // { email: { name, equipped_items } }
 
   useEffect(() => {
     loadPosts();
@@ -49,6 +52,9 @@ export default function CommunityFeed({ userData, onRefresh }) {
           };
         }
       }
+      
+      // Store user data for likes dialog
+      setLikesUserData(usersMap);
       
       const postsWithUserData = allPosts.map(post => ({
         ...post,
@@ -383,7 +389,17 @@ export default function CommunityFeed({ userData, onRefresh }) {
                       className={`h-8 px-3 ${hasLiked ? 'text-red-400' : 'text-white/70'} hover:text-red-300`}
                     >
                       <Heart className={`w-4 h-4 mr-1 ${hasLiked ? 'fill-current' : ''}`} />
-                      {likes.length > 0 && likes.length}
+                      {likes.length > 0 && (
+                        <span 
+                          className="cursor-pointer hover:underline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowLikesDialog(post.id);
+                          }}
+                        >
+                          {likes.length}
+                        </span>
+                      )}
                     </Button>
                     <div className="text-white/50 text-sm flex items-center gap-1">
                       <MessageCircle className="w-4 h-4" />
@@ -487,6 +503,44 @@ export default function CommunityFeed({ userData, onRefresh }) {
           )}
         </div>
       </CardContent>
+
+      {/* Likes Dialog */}
+      <Dialog open={!!showLikesDialog} onClose={() => setShowLikesDialog(null)}>
+        <DialogContent className="bg-gradient-to-br from-purple-500/95 to-pink-500/95 backdrop-blur-xl border-2 border-white/30 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-white text-center">
+              💙 לייקים
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            {showLikesDialog && posts.find(p => p.id === showLikesDialog)?.likes?.map((email, idx) => {
+              const userData = likesUserData[email] || {};
+              const displayName = userData.first_name && userData.last_name
+                ? `${userData.first_name} ${userData.last_name}`
+                : email.split('@')[0];
+              
+              return (
+                <div key={idx} className="bg-white/20 backdrop-blur-md border border-white/30 rounded-lg p-3 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 flex-shrink-0">
+                    <div className="scale-[0.55] -mt-2 -mr-2">
+                      <TamagotchiAvatar
+                        equippedItems={userData.equipped_items || {}}
+                        size="small"
+                        showBackground={false}
+                        userEmail={email}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-white font-bold text-sm">{displayName}</p>
+                </div>
+              );
+            })}
+            {showLikesDialog && posts.find(p => p.id === showLikesDialog)?.likes?.length === 0 && (
+              <p className="text-white/70 text-center py-4">אין עדיין לייקים</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
