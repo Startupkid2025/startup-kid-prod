@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
 
 const BUSINESSES = [
   {
