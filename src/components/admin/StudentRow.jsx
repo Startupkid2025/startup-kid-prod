@@ -240,7 +240,9 @@ export default function StudentRow({
           // Add/update leaderboard if a student
           const leaderboardData = {
             student_email: student.email,
-            full_name: fullName, // Updated name
+            full_name: fullName,
+            first_name: editedStudent.first_name.trim(),
+            last_name: editedStudent.last_name.trim(),
             ai_tech_level: freshUserData?.ai_tech_level || student.ai_tech_level || 1,
             ai_tech_xp: freshUserData?.ai_tech_xp || student.ai_tech_xp || 0,
             personal_dev_level: freshUserData?.personal_dev_level || student.personal_dev_level || 1,
