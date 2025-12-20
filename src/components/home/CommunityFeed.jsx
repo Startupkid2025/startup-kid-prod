@@ -505,7 +505,7 @@ export default function CommunityFeed({ userData, onRefresh }) {
       </CardContent>
 
       {/* Likes Dialog */}
-      <Dialog open={!!showLikesDialog} onClose={() => setShowLikesDialog(null)}>
+      <Dialog open={!!showLikesDialog} onOpenChange={(open) => !open && setShowLikesDialog(null)}>
         <DialogContent className="bg-gradient-to-br from-purple-500/95 to-pink-500/95 backdrop-blur-xl border-2 border-white/30 max-w-sm">
           <DialogHeader>
             <DialogTitle className="text-xl font-black text-white text-center">
