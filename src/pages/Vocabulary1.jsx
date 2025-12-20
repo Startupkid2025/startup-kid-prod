@@ -194,18 +194,9 @@ export default function Vocabulary() {
         const newStreak = isCorrect ? (existingWordProg.correct_streak + 1) : 0;
         const isMastered = newStreak >= 2;
 
-        // Show feedback immediately for better UX
-        setFeedback({
-          isCorrect,
-          correctAnswer: currentWord.hebrew,
-          coinsEarned: 0,
-          bonusBreakdown: [],
-          mastered: isMastered,
-          isDontKnow: false
-        });
-
         let coinsEarned = 0;
         let bonusBreakdown = [];
+        
         if (isMastered && !existingWordProg.mastered) {
           const baseCoins = getCoinsForDifficulty(currentWord.difficulty);
           coinsEarned = baseCoins;
@@ -234,8 +225,10 @@ export default function Vocabulary() {
           }
           
           // Check if user is vocab king using LeaderboardEntry (public access)
-          const allLeaderboardEntries = await base44.entities.LeaderboardEntry.list();
-          const allWordProgress = await base44.entities.WordProgress.list();
+          const [allLeaderboardEntries, allWordProgress] = await Promise.all([
+            base44.entities.LeaderboardEntry.list(),
+            base44.entities.WordProgress.list()
+          ]);
           
           let maxVocabEarnings = 0;
           let vocabKingEmail = null;
@@ -253,59 +246,66 @@ export default function Vocabulary() {
             coinsEarned += 5;
             bonusBreakdown.push({ type: 'king', amount: 5, label: 'בונוס מלך אנגלית' });
           }
+        }
 
-          // הסר את המילה מהרשימה היומית
+        // Show feedback immediately with calculated coins
+        setFeedback({
+          isCorrect,
+          correctAnswer: currentWord.hebrew,
+          coinsEarned: coinsEarned,
+          bonusBreakdown: bonusBreakdown,
+          mastered: isMastered,
+          isDontKnow: false
+        });
+
+        // Update data in background (don't wait)
+        if (isMastered && !existingWordProg.mastered && coinsEarned > 0) {
           const updatedDailyWords = (userData.daily_vocabulary_words || []).filter(
             w => w.toLowerCase() !== currentWord.english.toLowerCase()
           );
 
-          // עדכן גם את המילים הזמינות
           const updatedAvailableWords = availableVocabWords.filter(
             w => w.word_english.toLowerCase() !== currentWord.english.toLowerCase()
           );
           setAvailableVocabWords(updatedAvailableWords);
 
-          await base44.auth.updateMe({
-            coins: (userData.coins || 0) + coinsEarned,
-            daily_vocabulary_words: updatedDailyWords
+          Promise.all([
+            base44.auth.updateMe({
+              coins: (userData.coins || 0) + coinsEarned,
+              daily_vocabulary_words: updatedDailyWords
+            }),
+            base44.entities.WordProgress.update(existingWordProg.id, {
+              correct_streak: newStreak,
+              total_attempts: existingWordProg.total_attempts + 1,
+              mastered: isMastered,
+              last_seen: now,
+              difficulty_level: currentWord.difficulty,
+              coins_earned: (existingWordProg.coins_earned || 0) + coinsEarned
+            })
+          ]).then(() => {
+            setUserData(prev => ({ 
+              ...prev, 
+              coins: (prev.coins || 0) + coinsEarned,
+              daily_vocabulary_words: updatedDailyWords
+            }));
+            
+            // Update leaderboard
+            base44.entities.LeaderboardEntry.filter({ student_email: userData.email }).then(leaderboardEntries => {
+              if (leaderboardEntries.length > 0) {
+                base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+                  coins: (userData.coins || 0) + coinsEarned
+                });
+              }
+            });
           });
-          setUserData(prev => ({ 
-            ...prev, 
-            coins: (prev.coins || 0) + coinsEarned,
-            daily_vocabulary_words: updatedDailyWords
-          }));
-
-          // Update leaderboard
-          try {
-            const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
-            if (leaderboardEntries.length > 0) {
-              await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-                coins: (userData.coins || 0) + coinsEarned
-              });
-            }
-          } catch (error) {
-            console.error("Error updating leaderboard:", error);
-          }
-        }
-
-        await base44.entities.WordProgress.update(existingWordProg.id, {
-          correct_streak: newStreak,
-          total_attempts: existingWordProg.total_attempts + 1,
-          mastered: isMastered,
-          last_seen: now,
-          difficulty_level: currentWord.difficulty,
-          coins_earned: (existingWordProg.coins_earned || 0) + coinsEarned
-        });
-
-        // Update feedback with final coins
-        if (coinsEarned > 0) {
-          setFeedback({
-            isCorrect,
-            correctAnswer: currentWord.hebrew,
-            coinsEarned: coinsEarned,
-            bonusBreakdown: bonusBreakdown,
+        } else {
+          await base44.entities.WordProgress.update(existingWordProg.id, {
+            correct_streak: newStreak,
+            total_attempts: existingWordProg.total_attempts + 1,
             mastered: isMastered,
-            isDontKnow: false
+            last_seen: now,
+            difficulty_level: currentWord.difficulty,
+            coins_earned: (existingWordProg.coins_earned || 0) + coinsEarned
           });
         }
       } else {
