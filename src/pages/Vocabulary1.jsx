@@ -194,6 +194,16 @@ export default function Vocabulary() {
         const newStreak = isCorrect ? (existingWordProg.correct_streak + 1) : 0;
         const isMastered = newStreak >= 2;
 
+        // Show feedback immediately for better UX
+        setFeedback({
+          isCorrect,
+          correctAnswer: currentWord.hebrew,
+          coinsEarned: 0,
+          bonusBreakdown: [],
+          mastered: isMastered,
+          isDontKnow: false
+        });
+
         let coinsEarned = 0;
         let bonusBreakdown = [];
         if (isMastered && !existingWordProg.mastered) {
@@ -287,14 +297,17 @@ export default function Vocabulary() {
           coins_earned: (existingWordProg.coins_earned || 0) + coinsEarned
         });
 
-        setFeedback({
-          isCorrect,
-          correctAnswer: currentWord.hebrew,
-          coinsEarned: coinsEarned,
-          bonusBreakdown: bonusBreakdown,
-          mastered: isMastered,
-          isDontKnow: false
-        });
+        // Update feedback with final coins
+        if (coinsEarned > 0) {
+          setFeedback({
+            isCorrect,
+            correctAnswer: currentWord.hebrew,
+            coinsEarned: coinsEarned,
+            bonusBreakdown: bonusBreakdown,
+            mastered: isMastered,
+            isDontKnow: false
+          });
+        }
       } else {
         await base44.entities.WordProgress.create({
           student_email: userData.email,
@@ -317,15 +330,14 @@ export default function Vocabulary() {
         });
       }
 
-      const latestUserData = await base44.auth.me();
-      setUserData(latestUserData);
+      // Update local state
       const latestProgress = await base44.entities.WordProgress.filter({ student_email: userData.email });
       setWordProgress(latestProgress);
 
-      // Auto-continue after delay
+      // Auto-continue after short delay
       setTimeout(() => {
         handleContinue();
-      }, 500);
+      }, 200);
 
     } catch (error) {
       console.error("Error checking answer:", error);
