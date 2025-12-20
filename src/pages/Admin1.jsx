@@ -74,48 +74,167 @@ export default function Admin() {
     }
   };
 
+  const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const retryWithBackoff = async (fn, maxRetries = 5) => {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await fn();
+      } catch (error) {
+        if (error?.response?.status === 429 || error?.message?.includes('429')) {
+          const retryAfter = error?.response?.headers?.['retry-after'];
+          const delay = retryAfter ? parseInt(retryAfter) * 1000 : Math.min(500 * Math.pow(2, i), 8000);
+          if (i < maxRetries - 1) {
+            await sleep(delay);
+            continue;
+          }
+        }
+        throw error;
+      }
+    }
+  };
+
   const recalculateAllCoinsAccurately = async () => {
     setIsRecalculatingCoins(true);
     
     try {
-      const allUsers = await base44.entities.User.list();
+      const [
+        allUsers,
+        allWordProgress,
+        allMathProgress,
+        allParticipations,
+        allQuizProgress,
+        allInvestments
+      ] = await Promise.all([
+        base44.entities.User.list(),
+        base44.entities.WordProgress.list(),
+        base44.entities.MathProgress.list(),
+        base44.entities.LessonParticipation.list(),
+        base44.entities.QuizProgress.list(),
+        base44.entities.Investment.list()
+      ]);
+
       const students = allUsers.filter(u => u.user_type === 'student');
       
-      const BATCH_SIZE = 5;
-      const batches = [];
-      for (let i = 0; i < students.length; i += BATCH_SIZE) {
-        batches.push(students.slice(i, i + BATCH_SIZE));
-      }
+      const wordProgressMap = new Map();
+      const mathProgressMap = new Map();
+      const participationsMap = new Map();
+      const quizProgressMap = new Map();
+      const investmentsMap = new Map();
+      
+      allWordProgress.forEach(w => {
+        if (!wordProgressMap.has(w.student_email)) wordProgressMap.set(w.student_email, []);
+        wordProgressMap.get(w.student_email).push(w);
+      });
+      
+      allMathProgress.forEach(m => {
+        if (!mathProgressMap.has(m.student_email)) mathProgressMap.set(m.student_email, []);
+        mathProgressMap.get(m.student_email).push(m);
+      });
+      
+      allParticipations.forEach(p => {
+        if (!participationsMap.has(p.student_email)) participationsMap.set(p.student_email, []);
+        participationsMap.get(p.student_email).push(p);
+      });
+      
+      allQuizProgress.forEach(q => {
+        if (!quizProgressMap.has(q.student_email)) quizProgressMap.set(q.student_email, []);
+        quizProgressMap.get(q.student_email).push(q);
+      });
+      
+      allInvestments.forEach(inv => {
+        if (!investmentsMap.has(inv.student_email)) investmentsMap.set(inv.student_email, []);
+        investmentsMap.get(inv.student_email).push(inv);
+      });
       
       let successCount = 0;
       let failCount = 0;
       
-      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
-        const batch = batches[batchIndex];
+      for (let i = 0; i < students.length; i++) {
+        const user = students[i];
         
-        const results = await Promise.allSettled(
-          batch.map(async (user) => {
-            const recalculatedCoins = await recalculateUserCoins(user);
-            if (recalculatedCoins !== null) {
-              await base44.entities.User.update(user.id, { coins: recalculatedCoins });
-              await syncLeaderboardEntry(user.email, { coins: recalculatedCoins });
+        try {
+          const baseCoins = 500;
+          const lessonsCoins = (user.total_lessons || 0) * 100;
+          
+          const userWordProgress = wordProgressMap.get(user.email) || [];
+          const wordCoins = userWordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
+          
+          const userMathProgress = mathProgressMap.get(user.email) || [];
+          const mathCoins = userMathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
+          
+          const userParticipations = participationsMap.get(user.email) || [];
+          const completedSurveys = userParticipations.filter(p => p.survey_completed === true);
+          const surveyCoins = completedSurveys.length * 20;
+          
+          const userQuizProgress = quizProgressMap.get(user.email) || [];
+          const quizCoins = userQuizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
+          
+          let profileTasksCoins = 0;
+          if (user.completed_instagram_follow) profileTasksCoins += 50;
+          if (user.completed_youtube_subscribe) profileTasksCoins += 50;
+          if (user.completed_facebook_follow) profileTasksCoins += 50;
+          if (user.completed_discord_join) profileTasksCoins += 50;
+          if (user.completed_share) profileTasksCoins += 100;
+          
+          let profileDetailsCoins = 0;
+          if (user.age) profileDetailsCoins += 20;
+          if (user.bio && user.bio.length > 10) profileDetailsCoins += 30;
+          if (user.phone_number) profileDetailsCoins += 20;
+          
+          const workCoins = user.total_work_earnings || 0;
+          const collaborationCoins = user.total_collaboration_coins || 0;
+          const loginStreakCoins = user.total_login_streak_coins || 0;
+
+          const userInvestments = investmentsMap.get(user.email) || [];
+          const totalInvested = userInvestments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
+          const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+          const unrealizedProfit = investmentsValue - totalInvested;
+          const realizedProfit = user.total_realized_investment_profit || 0;
+          const totalInvestmentProfit = unrealizedProfit + realizedProfit;
+
+          const totalIncome = baseCoins + lessonsCoins + wordCoins + mathCoins + 
+                             surveyCoins + quizCoins + profileTasksCoins + 
+                             profileDetailsCoins + workCoins + collaborationCoins + 
+                             loginStreakCoins + totalInvestmentProfit;
+
+          const purchasedItems = user.purchased_items || [];
+          let itemsValue = 0;
+          purchasedItems.forEach(itemId => {
+            const item = AVATAR_ITEMS[itemId];
+            if (item && item.price) {
+              itemsValue += item.price;
             }
-            return user.email;
-          })
-        );
-        
-        results.forEach((result) => {
-          if (result.status === 'fulfilled') {
-            successCount++;
-          } else {
-            failCount++;
-            console.error('Failed:', result.reason);
+          });
+
+          const inflationLoss = user.total_inflation_lost || 0;
+          const incomeTax = user.total_income_tax || 0;
+          const capitalGainsTax = user.total_capital_gains_tax || 0;
+          const creditInterest = user.total_credit_interest || 0;
+          const itemSaleLosses = user.total_item_sale_losses || 0;
+          const investmentFees = user.total_investment_fees || 0;
+          const dividendTax = user.total_dividend_tax || 0;
+
+          const totalLosses = inflationLoss + incomeTax + capitalGainsTax + creditInterest + itemSaleLosses + investmentFees + dividendTax;
+          const correctCoins = Math.round(totalIncome - itemsValue - investmentsValue - totalLosses);
+
+          await retryWithBackoff(async () => {
+            await base44.entities.User.update(user.id, { coins: correctCoins });
+          });
+          
+          await sleep(100);
+          
+          await retryWithBackoff(async () => {
+            await syncLeaderboardEntry(user.email, { coins: correctCoins });
+          });
+          
+          successCount++;
+          
+          if (i < students.length - 1) {
+            await sleep(400);
           }
-        });
-        
-        // Delay between batches
-        if (batchIndex < batches.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 300));
+        } catch (error) {
+          failCount++;
         }
       }
       
@@ -127,7 +246,6 @@ export default function Admin() {
       
       await loadData();
     } catch (error) {
-      console.error("Error recalculating coins:", error);
       toast.error("שגיאה קריטית בחישוב מחדש");
     } finally {
       setIsRecalculatingCoins(false);
@@ -225,79 +343,7 @@ export default function Admin() {
     }
   };
 
-  const recalculateUserCoins = async (user) => {
-    try {
-      const baseCoins = 500;
-      const lessonsCoins = (user.total_lessons || 0) * 100;
-      
-      const allWordProgress = await base44.entities.WordProgress.filter({ student_email: user.email });
-      const wordCoins = allWordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
-      
-      const allMathProgress = await base44.entities.MathProgress.filter({ student_email: user.email });
-      const mathCoins = allMathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
-      
-      const allParticipations = await base44.entities.LessonParticipation.filter({ student_email: user.email });
-      const completedSurveys = allParticipations.filter(p => p.survey_completed === true);
-      const surveyCoins = completedSurveys.length * 20;
-      
-      const allQuizProgress = await base44.entities.QuizProgress.filter({ student_email: user.email });
-      const quizCoins = allQuizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
-      
-      let profileTasksCoins = 0;
-      if (user.completed_instagram_follow) profileTasksCoins += 50;
-      if (user.completed_youtube_subscribe) profileTasksCoins += 50;
-      if (user.completed_facebook_follow) profileTasksCoins += 50;
-      if (user.completed_discord_join) profileTasksCoins += 50;
-      if (user.completed_share) profileTasksCoins += 100;
-      
-      let profileDetailsCoins = 0;
-      if (user.age) profileDetailsCoins += 20;
-      if (user.bio && user.bio.length > 10) profileDetailsCoins += 30;
-      if (user.phone_number) profileDetailsCoins += 20;
-      
-      const workCoins = user.total_work_earnings || 0;
-      const collaborationCoins = user.total_collaboration_coins || 0;
-      const loginStreakCoins = user.total_login_streak_coins || 0;
 
-      const userInvestments = await base44.entities.Investment.filter({ student_email: user.email });
-      const totalInvested = userInvestments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
-      const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-      const unrealizedProfit = investmentsValue - totalInvested;
-      const realizedProfit = user.total_realized_investment_profit || 0;
-      const totalInvestmentProfit = unrealizedProfit + realizedProfit;
-
-      const totalIncome = baseCoins + lessonsCoins + wordCoins + mathCoins + 
-                         surveyCoins + quizCoins + profileTasksCoins + 
-                         profileDetailsCoins + workCoins + collaborationCoins + 
-                         loginStreakCoins + totalInvestmentProfit;
-
-      const purchasedItems = user.purchased_items || [];
-      let itemsValue = 0;
-      purchasedItems.forEach(itemId => {
-        const item = AVATAR_ITEMS[itemId];
-        if (item && item.price) {
-          itemsValue += item.price;
-        }
-      });
-
-      const inflationLoss = user.total_inflation_lost || 0;
-      const incomeTax = user.total_income_tax || 0;
-      const capitalGainsTax = user.total_capital_gains_tax || 0;
-      const creditInterest = user.total_credit_interest || 0;
-      const itemSaleLosses = user.total_item_sale_losses || 0;
-      const investmentFees = user.total_investment_fees || 0;
-      const dividendTax = user.total_dividend_tax || 0;
-
-      const totalLosses = inflationLoss + incomeTax + capitalGainsTax + creditInterest + itemSaleLosses + investmentFees + dividendTax;
-
-      const correctCoins = Math.round(totalIncome - itemsValue - investmentsValue - totalLosses);
-
-      return correctCoins;
-    } catch (error) {
-      console.error("Error recalculating user coins:", error);
-      return null;
-    }
-  };
 
   if (isLoading) {
     return (
