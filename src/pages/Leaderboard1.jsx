@@ -581,7 +581,7 @@ export default function Leaderboard() {
         className="text-center mb-8"
       >
         <h1 className="text-4xl font-black text-white mb-2">
-          🎯 BUILD_TEST_123 טבלת שיאים 🎯
+          🎯 טבלת שיאים 🎯
         </h1>
         <p className="text-white/80 text-lg">
           מי הכי עשיר? 💰
