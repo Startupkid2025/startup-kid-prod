@@ -196,39 +196,96 @@ export default function Vocabulary() {
 
         let coinsEarned = 0;
         let bonusBreakdown = [];
-        
         if (isMastered && !existingWordProg.mastered) {
-          const result = await base44.functions.awardPointsForSolvedWord({
-            wordId: existingWordProg.id,
-            difficulty: currentWord.difficulty,
-            wordEnglish: currentWord.english
-          });
-
-          if (result.awarded) {
-            coinsEarned = result.coinsEarned;
-            bonusBreakdown = result.bonusBreakdown;
-            
-            setUserData(prev => ({ 
-              ...prev, 
-              coins: result.newCoins,
-              daily_vocabulary_words: result.updatedDailyWords
-            }));
-
-            const updatedAvailableWords = availableVocabWords.filter(
-              w => w.word_english.toLowerCase() !== currentWord.english.toLowerCase()
-            );
-            setAvailableVocabWords(updatedAvailableWords);
+          const baseCoins = getCoinsForDifficulty(currentWord.difficulty);
+          coinsEarned = baseCoins;
+          bonusBreakdown.push({ type: 'base', amount: baseCoins, label: 'בסיס' });
+          
+          // Check for eyes and mouth bonus
+          const purchasedItems = userData.purchased_items || [];
+          const equippedItems = userData.equipped_items || {};
+          const equippedEyes = equippedItems.eyes;
+          const equippedMouth = equippedItems.mouth;
+          
+          if (equippedEyes && purchasedItems.includes(equippedEyes)) {
+            const eyesItem = AVATAR_ITEMS[equippedEyes];
+            if (eyesItem && eyesItem.wordBonus) {
+              coinsEarned += eyesItem.wordBonus;
+              bonusBreakdown.push({ type: 'eyes', amount: eyesItem.wordBonus, label: 'בונוס עיניים' });
+            }
           }
-        } else {
-          await base44.entities.WordProgress.update(existingWordProg.id, {
-            correct_streak: newStreak,
-            total_attempts: existingWordProg.total_attempts + 1,
-            mastered: isMastered,
-            last_seen: now,
-            difficulty_level: currentWord.difficulty,
-            coins_earned: existingWordProg.coins_earned || 0
+          
+          if (equippedMouth && purchasedItems.includes(equippedMouth)) {
+            const mouthItem = AVATAR_ITEMS[equippedMouth];
+            if (mouthItem && mouthItem.wordBonus) {
+              coinsEarned += mouthItem.wordBonus;
+              bonusBreakdown.push({ type: 'mouth', amount: mouthItem.wordBonus, label: 'בונוס פה' });
+            }
+          }
+          
+          // Check if user is vocab king using LeaderboardEntry (public access)
+          const allLeaderboardEntries = await base44.entities.LeaderboardEntry.list();
+          const allWordProgress = await base44.entities.WordProgress.list();
+          
+          let maxVocabEarnings = 0;
+          let vocabKingEmail = null;
+          
+          allLeaderboardEntries.forEach(entry => {
+            const userWords = allWordProgress.filter(w => w.student_email === entry.student_email);
+            const earnings = userWords.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
+            if (earnings > maxVocabEarnings) {
+              maxVocabEarnings = earnings;
+              vocabKingEmail = entry.student_email;
+            }
           });
+          
+          if (vocabKingEmail === userData.email && maxVocabEarnings > 0) {
+            coinsEarned += 5;
+            bonusBreakdown.push({ type: 'king', amount: 5, label: 'בונוס מלך אנגלית' });
+          }
+
+          // הסר את המילה מהרשימה היומית
+          const updatedDailyWords = (userData.daily_vocabulary_words || []).filter(
+            w => w.toLowerCase() !== currentWord.english.toLowerCase()
+          );
+
+          // עדכן גם את המילים הזמינות
+          const updatedAvailableWords = availableVocabWords.filter(
+            w => w.word_english.toLowerCase() !== currentWord.english.toLowerCase()
+          );
+          setAvailableVocabWords(updatedAvailableWords);
+
+          await base44.auth.updateMe({
+            coins: (userData.coins || 0) + coinsEarned,
+            daily_vocabulary_words: updatedDailyWords
+          });
+          setUserData(prev => ({ 
+            ...prev, 
+            coins: (prev.coins || 0) + coinsEarned,
+            daily_vocabulary_words: updatedDailyWords
+          }));
+
+          // Update leaderboard
+          try {
+            const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+            if (leaderboardEntries.length > 0) {
+              await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+                coins: (userData.coins || 0) + coinsEarned
+              });
+            }
+          } catch (error) {
+            console.error("Error updating leaderboard:", error);
+          }
         }
+
+        await base44.entities.WordProgress.update(existingWordProg.id, {
+          correct_streak: newStreak,
+          total_attempts: existingWordProg.total_attempts + 1,
+          mastered: isMastered,
+          last_seen: now,
+          difficulty_level: currentWord.difficulty,
+          coins_earned: (existingWordProg.coins_earned || 0) + coinsEarned
+        });
 
         setFeedback({
           isCorrect,
