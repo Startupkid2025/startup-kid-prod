@@ -334,10 +334,10 @@ export default function Vocabulary() {
       const latestProgress = await base44.entities.WordProgress.filter({ student_email: userData.email });
       setWordProgress(latestProgress);
 
-      // Auto-continue after short delay
+      // Auto-continue after delay to let user read feedback
       setTimeout(() => {
         handleContinue();
-      }, 200);
+      }, 1500);
 
     } catch (error) {
       console.error("Error checking answer:", error);
