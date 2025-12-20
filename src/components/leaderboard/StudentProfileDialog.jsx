@@ -84,9 +84,9 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
     // ALWAYS fetch full LeaderboardEntry from DB (accessible to ALL users)
     let leaderboardData = null;
     try {
-      const entries = await base44.entities.LeaderboardEntry.filter({ student_email: studentEmail });
-      if (entries.length > 0) {
-        leaderboardData = entries[0];
+      const allEntries = await base44.entities.LeaderboardEntry.list();
+      leaderboardData = allEntries.find(e => e.student_email === studentEmail);
+      if (leaderboardData) {
         console.log("Fetched LeaderboardEntry from DB:", leaderboardData);
       }
     } catch (e) {
