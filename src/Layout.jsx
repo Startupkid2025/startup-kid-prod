@@ -293,9 +293,9 @@ export default function Layout({ children }) {
                 }
               }
 
-              // Income tax: 2% on total net worth (taken from cash)
+              // Income tax: 1.5% on total net worth (taken from cash)
               // But can be reduced by owning body colors! Each color has different reduction
-              let incomeTaxRate = 0.02; // Base rate: 2%
+              let incomeTaxRate = 0.015; // Base rate: 1.5%
 
               // Calculate tax reduction based on owned body colors
               for (const itemId of purchasedItems) {
