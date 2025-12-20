@@ -457,7 +457,7 @@ export default function Home() {
     }
 
     const purchasedItems = userData.purchased_items || [];
-    let incomeTaxRate = 0.02;
+    let incomeTaxRate = 0.015;
 
     for (const itemId of purchasedItems) {
       const item = AVATAR_ITEMS[itemId];
@@ -569,7 +569,7 @@ export default function Home() {
                         inflationLoss = Math.floor(currentCoins * 0.03);
                       }
 
-                      let incomeTaxRate = 0.02;
+                      let incomeTaxRate = 0.015;
                       for (const itemId of purchasedItems) {
                         const item = AVATAR_ITEMS[itemId];
                         if (item && item.category === 'body' && item.taxReduction) {
