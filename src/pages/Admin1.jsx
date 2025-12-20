@@ -76,34 +76,59 @@ export default function Admin() {
 
   const recalculateAllCoinsAccurately = async () => {
     setIsRecalculatingCoins(true);
+    
     try {
       const allUsers = await base44.entities.User.list();
       const students = allUsers.filter(u => u.user_type === 'student');
       
-      for (let i = 0; i < students.length; i++) {
-        const user = students[i];
+      const BATCH_SIZE = 5;
+      const batches = [];
+      for (let i = 0; i < students.length; i += BATCH_SIZE) {
+        batches.push(students.slice(i, i + BATCH_SIZE));
+      }
+      
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batch = batches[batchIndex];
         
-        const recalculatedCoins = await recalculateUserCoins(user);
-        if (recalculatedCoins !== null) {
-          await base44.entities.User.update(user.id, { coins: recalculatedCoins });
-          
-          // Sync to LeaderboardEntry for public visibility
-          await syncLeaderboardEntry(user.email, {
-            coins: recalculatedCoins
-          });
-        }
+        const results = await Promise.allSettled(
+          batch.map(async (user) => {
+            const recalculatedCoins = await recalculateUserCoins(user);
+            if (recalculatedCoins !== null) {
+              await base44.entities.User.update(user.id, { coins: recalculatedCoins });
+              await syncLeaderboardEntry(user.email, { coins: recalculatedCoins });
+            }
+            return user.email;
+          })
+        );
         
-        // Add delay between users to avoid rate limiting
-        if (i < students.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 200));
+        results.forEach((result) => {
+          if (result.status === 'fulfilled') {
+            successCount++;
+          } else {
+            failCount++;
+            console.error('Failed:', result.reason);
+          }
+        });
+        
+        // Delay between batches
+        if (batchIndex < batches.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
       }
       
-      toast.success(`חישוב מחדש הושלם בהצלחה! עודכנו ${students.length} תלמידים`);
+      if (failCount === 0) {
+        toast.success(`✅ חישוב מחדש הושלם! ${successCount} תלמידים עודכנו`);
+      } else {
+        toast.warning(`⚠️ הסתיים: ${successCount} הצליחו, ${failCount} נכשלו`);
+      }
+      
       await loadData();
     } catch (error) {
       console.error("Error recalculating coins:", error);
-      toast.error("שגיאה בחישוב מחדש");
+      toast.error("שגיאה קריטית בחישוב מחדש");
     } finally {
       setIsRecalculatingCoins(false);
     }
