@@ -111,60 +111,89 @@ export default function Admin() {
 
   const migrateAllDataToLeaderboard = async () => {
     setIsRecalculatingCoins(true);
+    
     try {
       const allUsers = await base44.entities.User.list();
       const students = allUsers.filter(u => u.user_type === 'student');
       
-      for (let i = 0; i < students.length; i++) {
-        const user = students[i];
+      const BATCH_SIZE = 10;
+      const batches = [];
+      for (let i = 0; i < students.length; i += BATCH_SIZE) {
+        batches.push(students.slice(i, i + BATCH_SIZE));
+      }
+      
+      let successCount = 0;
+      let failCount = 0;
+      const errors = [];
+      
+      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batch = batches[batchIndex];
         
-        try {
-          // Sync ALL relevant fields from User to LeaderboardEntry
-          await syncLeaderboardEntry(user.email, {
-            coins: user.coins || 0,
-            total_collaboration_coins: user.total_collaboration_coins || 0,
-            total_login_streak_coins: user.total_login_streak_coins || 0,
-            login_streak: user.login_streak || 0,
-            total_capital_gains_tax: user.total_capital_gains_tax || 0,
-            total_investment_fees: user.total_investment_fees || 0,
-            total_inflation_lost: user.total_inflation_lost || 0,
-            total_income_tax: user.total_income_tax || 0,
-            total_dividend_tax: user.total_dividend_tax || 0,
-            total_credit_interest: user.total_credit_interest || 0,
-            total_item_sale_losses: user.total_item_sale_losses || 0,
-            total_realized_investment_profit: user.total_realized_investment_profit || 0,
-            total_work_earnings: user.total_work_earnings || 0,
-            total_work_hours: user.total_work_hours || 0,
-            total_lessons: user.total_lessons || 0,
-            equipped_items: user.equipped_items || {},
-            purchased_items: user.purchased_items || [],
-            daily_collaborations: user.daily_collaborations || [],
-            age: user.age,
-            bio: user.bio,
-            phone_number: user.phone_number,
-            completed_instagram_follow: user.completed_instagram_follow || false,
-            completed_youtube_subscribe: user.completed_youtube_subscribe || false,
-            completed_facebook_follow: user.completed_facebook_follow || false,
-            completed_discord_join: user.completed_discord_join || false,
-            completed_share: user.completed_share || false
-          });
-          
-          console.log(`Synced user ${user.email} to LeaderboardEntry`);
-        } catch (error) {
-          console.error(`Error syncing user ${user.email}:`, error);
-        }
+        const results = await Promise.allSettled(
+          batch.map(async (user) => {
+            // Sync ALL relevant fields from User to LeaderboardEntry
+            await syncLeaderboardEntry(user.email, {
+              coins: user.coins || 0,
+              total_collaboration_coins: user.total_collaboration_coins || 0,
+              total_login_streak_coins: user.total_login_streak_coins || 0,
+              login_streak: user.login_streak || 0,
+              total_capital_gains_tax: user.total_capital_gains_tax || 0,
+              total_investment_fees: user.total_investment_fees || 0,
+              total_inflation_lost: user.total_inflation_lost || 0,
+              total_income_tax: user.total_income_tax || 0,
+              total_dividend_tax: user.total_dividend_tax || 0,
+              total_credit_interest: user.total_credit_interest || 0,
+              total_item_sale_losses: user.total_item_sale_losses || 0,
+              total_realized_investment_profit: user.total_realized_investment_profit || 0,
+              total_work_earnings: user.total_work_earnings || 0,
+              total_work_hours: user.total_work_hours || 0,
+              total_lessons: user.total_lessons || 0,
+              equipped_items: user.equipped_items || {},
+              purchased_items: user.purchased_items || [],
+              daily_collaborations: user.daily_collaborations || [],
+              age: user.age,
+              bio: user.bio,
+              phone_number: user.phone_number,
+              completed_instagram_follow: user.completed_instagram_follow || false,
+              completed_youtube_subscribe: user.completed_youtube_subscribe || false,
+              completed_facebook_follow: user.completed_facebook_follow || false,
+              completed_discord_join: user.completed_discord_join || false,
+              completed_share: user.completed_share || false
+            });
+            
+            return user.email;
+          })
+        );
         
-        // Add delay between users to avoid rate limiting
-        if (i < students.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 150));
+        results.forEach((result, idx) => {
+          if (result.status === 'fulfilled') {
+            successCount++;
+            console.log(`✅ Synced: ${result.value}`);
+          } else {
+            failCount++;
+            const email = batch[idx].email;
+            errors.push({ email, error: result.reason?.message || 'Unknown error' });
+            console.error(`❌ Failed: ${email}`, result.reason);
+          }
+        });
+        
+        // Delay between batches
+        if (batchIndex < batches.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
       
-      toast.success(`✅ סנכרון הושלם! עודכנו ${students.length} תלמידים ב-LeaderboardEntry`);
+      if (failCount === 0) {
+        toast.success(`✅ סנכרון הושלם בהצלחה! ${successCount} תלמידים עודכנו`);
+      } else {
+        toast.warning(`⚠️ סנכרון הסתיים: ${successCount} הצליחו, ${failCount} נכשלו`);
+        console.error("Failed users:", errors);
+      }
+      
       await loadData();
     } catch (error) {
       console.error("Error migrating data:", error);
-      toast.error("שגיאה בסנכרון");
+      toast.error("שגיאה קריטית בסנכרון");
     } finally {
       setIsRecalculatingCoins(false);
     }
