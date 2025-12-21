@@ -551,6 +551,39 @@ export default function Admin() {
                       student={student}
                       lessons={lessons}
                       participations={participations}
+                      onToggleParticipation={async (student, lesson, lessonDate, participationId, wasAttended) => {
+                        try {
+                          if (participationId) {
+                            await base44.entities.LessonParticipation.delete(participationId);
+                            toast.success("ההשתתפות הוסרה");
+                          } else if (lessonDate) {
+                            await base44.entities.LessonParticipation.create({
+                              student_email: student.email,
+                              lesson_id: lesson.id,
+                              lesson_date: lessonDate,
+                              attended: wasAttended
+                            });
+                            toast.success("השתתפות נוספה");
+                          }
+                          await loadData();
+                        } catch (error) {
+                          console.error("Error toggling participation:", error);
+                          toast.error("שגיאה");
+                        }
+                      }}
+                      onUpdateParticipation={async (participationId, lessonDate, wasAttended) => {
+                        try {
+                          await base44.entities.LessonParticipation.update(participationId, {
+                            lesson_date: lessonDate,
+                            attended: wasAttended
+                          });
+                          toast.success("ההשתתפות עודכנה");
+                          await loadData();
+                        } catch (error) {
+                          console.error("Error updating participation:", error);
+                          toast.error("שגיאה בעדכון");
+                        }
+                      }}
                       onRefresh={loadData}
                     />
                   ))}
