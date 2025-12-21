@@ -23,7 +23,7 @@ const categories = [
   { key: "money_business", name: "כסף ועסקים", icon: "💸" }
 ];
 
-export default function EditLessonDialog({ isOpen, onClose, lesson, onSubmit }) {
+export default function EditLessonDialog({ isOpen, onClose, lesson, onSuccess }) {
   const [lessonData, setLessonData] = useState({
     lesson_name: "",
     description: "",
@@ -44,9 +44,24 @@ export default function EditLessonDialog({ isOpen, onClose, lesson, onSubmit }) 
     }
   }, [lesson]);
 
-  const handleSubmit = () => {
-    if (lessonData.lesson_name && lessonData.category) {
-      onSubmit(lessonData);
+  const handleSubmit = async () => {
+    if (lessonData.lesson_name && lessonData.category && lesson?.id) {
+      try {
+        const { base44 } = await import("@/api/base44Client");
+        const { toast } = await import("sonner");
+        
+        await base44.entities.Lesson.update(lesson.id, lessonData);
+        toast.success("השיעור עודכן בהצלחה! ✨");
+        
+        if (onSuccess) {
+          onSuccess();
+        }
+        onClose();
+      } catch (error) {
+        const { toast } = await import("sonner");
+        console.error("Error updating lesson:", error);
+        toast.error("שגיאה בעדכון השיעור");
+      }
     }
   };
 
