@@ -197,7 +197,7 @@ export default function Admin() {
           const totalIncome = baseCoins + lessonsCoins + wordCoins + mathCoins + 
                              surveyCoins + quizCoins + profileTasksCoins + 
                              profileDetailsCoins + workCoins + collaborationCoins + 
-                             loginStreakCoins + totalInvestmentProfit + adminCoins;
+                             loginStreakCoins + totalInvestmentProfit + (user.total_admin_coins || 0);
 
           const purchasedItems = user.purchased_items || [];
           let itemsValue = 0;
