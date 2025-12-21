@@ -125,12 +125,14 @@ export default function StudentRow({
     try {
       // Update User entity
       await base44.entities.User.update(student.id, {
-        coins: (student.coins || 0) + amount
+        coins: (student.coins || 0) + amount,
+        total_admin_coins: (student.total_admin_coins || 0) + amount
       });
       
       // Sync to LeaderboardEntry
       await syncLeaderboardEntry(student.email, {
-        coins: (student.coins || 0) + amount
+        coins: (student.coins || 0) + amount,
+        total_admin_coins: (student.total_admin_coins || 0) + amount
       });
       
       const action = amount > 0 ? "נוספו" : "הופחתו";

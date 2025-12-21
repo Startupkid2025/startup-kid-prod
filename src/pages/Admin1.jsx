@@ -185,6 +185,7 @@ export default function Admin() {
           const workCoins = user.total_work_earnings || 0;
           const collaborationCoins = user.total_collaboration_coins || 0;
           const loginStreakCoins = user.total_login_streak_coins || 0;
+          const adminCoins = user.total_admin_coins || 0;
 
           const userInvestments = investmentsMap.get(user.email) || [];
           const totalInvested = userInvestments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
@@ -196,7 +197,7 @@ export default function Admin() {
           const totalIncome = baseCoins + lessonsCoins + wordCoins + mathCoins + 
                              surveyCoins + quizCoins + profileTasksCoins + 
                              profileDetailsCoins + workCoins + collaborationCoins + 
-                             loginStreakCoins + totalInvestmentProfit;
+                             loginStreakCoins + totalInvestmentProfit + adminCoins;
 
           const purchasedItems = user.purchased_items || [];
           let itemsValue = 0;
