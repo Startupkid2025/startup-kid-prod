@@ -42,10 +42,8 @@ export default function Lessons() {
   const getGoogleDriveThumbnail = (url) => {
     if (!url) return null;
     
-    console.log("Processing thumbnail URL:", url);
-    
-    // If it's already a thumbnail or direct link, return it
-    if (url.includes('/thumbnail') || url.includes('/uc?')) {
+    // If it's already a direct uc link, return it
+    if (url.includes('/uc?')) {
       return url;
     }
     
@@ -57,7 +55,6 @@ export default function Lessons() {
     const fileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
     if (fileMatch) {
       fileId = fileMatch[1];
-      console.log("Extracted FILE_ID from /file/d/ format:", fileId);
     }
     
     // Format: /open?id=FILE_ID or ?id=FILE_ID
@@ -65,18 +62,22 @@ export default function Lessons() {
       const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
       if (idMatch) {
         fileId = idMatch[1];
-        console.log("Extracted FILE_ID from ?id= format:", fileId);
       }
     }
     
-    // If we found a file ID, convert to thumbnail URL
-    if (fileId) {
-      const thumbnailUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
-      console.log("Generated thumbnail URL:", thumbnailUrl);
-      return thumbnailUrl;
+    // Format: /thumbnail?id=FILE_ID
+    if (!fileId) {
+      const thumbMatch = url.match(/\/thumbnail\?id=([a-zA-Z0-9_-]+)/);
+      if (thumbMatch) {
+        fileId = thumbMatch[1];
+      }
     }
     
-    console.log("Could not extract FILE_ID, returning original URL");
+    // If we found a file ID, convert to direct download URL (works without permissions)
+    if (fileId) {
+      return `https://drive.google.com/uc?export=view&id=${fileId}`;
+    }
+    
     // If not a Google Drive link or couldn't extract ID, return original URL
     return url;
   };
