@@ -175,8 +175,8 @@ export default function Leaderboard() {
           return false;
         }
 
-        // For others, only show students
-        return u.user_type === 'student';
+        // For others, show students or users without user_type defined (default to student)
+        return !u.user_type || u.user_type === 'student';
       });
 
       const usersWithAllStats = filteredUsersForLeaderboard.map((u) => {
