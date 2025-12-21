@@ -253,6 +253,145 @@ export default function Admin() {
     }
   };
 
+  const fixAdminCoins = async () => {
+    setIsRecalculatingCoins(true);
+    
+    try {
+      const [
+        allUsers,
+        allWordProgress,
+        allMathProgress,
+        allParticipations,
+        allQuizProgress,
+        allInvestments
+      ] = await Promise.all([
+        base44.entities.User.list(),
+        base44.entities.WordProgress.list(),
+        base44.entities.MathProgress.list(),
+        base44.entities.LessonParticipation.list(),
+        base44.entities.QuizProgress.list(),
+        base44.entities.Investment.list()
+      ]);
+
+      const students = allUsers.filter(u => u.user_type === 'student');
+      
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (let i = 0; i < students.length; i++) {
+        const user = students[i];
+        
+        try {
+          // Calculate expected income from all sources (WITHOUT admin coins)
+          const baseCoins = 500;
+          const lessonsCoins = (user.total_lessons || 0) * 100;
+          
+          const userWordProgress = allWordProgress.filter(w => w.student_email === user.email);
+          const wordCoins = userWordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
+          
+          const userMathProgress = allMathProgress.filter(m => m.student_email === user.email);
+          const mathCoins = userMathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
+          
+          const userParticipations = allParticipations.filter(p => p.student_email === user.email);
+          const surveyCoins = userParticipations.filter(p => p.survey_completed === true).length * 20;
+          
+          const userQuizProgress = allQuizProgress.filter(q => q.student_email === user.email);
+          const quizCoins = userQuizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
+          
+          let profileTasksCoins = 0;
+          if (user.completed_instagram_follow) profileTasksCoins += 50;
+          if (user.completed_youtube_subscribe) profileTasksCoins += 50;
+          if (user.completed_facebook_follow) profileTasksCoins += 50;
+          if (user.completed_discord_join) profileTasksCoins += 50;
+          if (user.completed_share) profileTasksCoins += 100;
+          
+          let profileDetailsCoins = 0;
+          if (user.age) profileDetailsCoins += 20;
+          if (user.bio && user.bio.length > 10) profileDetailsCoins += 30;
+          if (user.phone_number) profileDetailsCoins += 20;
+          
+          const workCoins = user.total_work_earnings || 0;
+          const collaborationCoins = user.total_collaboration_coins || 0;
+          const loginStreakCoins = user.total_login_streak_coins || 0;
+
+          const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
+          const totalInvested = userInvestments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
+          const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+          const unrealizedProfit = investmentsValue - totalInvested;
+          const realizedProfit = user.total_realized_investment_profit || 0;
+          const totalInvestmentProfit = unrealizedProfit + realizedProfit;
+
+          // Calculate expected income WITHOUT admin coins
+          const expectedIncome = baseCoins + lessonsCoins + wordCoins + mathCoins + 
+                             surveyCoins + quizCoins + profileTasksCoins + 
+                             profileDetailsCoins + workCoins + collaborationCoins + 
+                             loginStreakCoins + totalInvestmentProfit;
+
+          // Calculate assets
+          const purchasedItems = user.purchased_items || [];
+          let itemsValue = 0;
+          purchasedItems.forEach(itemId => {
+            const item = AVATAR_ITEMS[itemId];
+            if (item && item.price) {
+              itemsValue += item.price;
+            }
+          });
+
+          // Calculate losses
+          const totalLosses = (user.total_inflation_lost || 0) + 
+                            (user.total_income_tax || 0) + 
+                            (user.total_capital_gains_tax || 0) + 
+                            (user.total_credit_interest || 0) + 
+                            (user.total_item_sale_losses || 0) + 
+                            (user.total_investment_fees || 0) + 
+                            (user.total_dividend_tax || 0);
+
+          // Current coins + items + investments = what they actually have
+          const actualAssets = (user.coins || 0) + itemsValue + investmentsValue;
+          
+          // The difference between actual assets and expected income (minus losses) is admin coins
+          const calculatedAdminCoins = Math.round(actualAssets + totalLosses - expectedIncome);
+
+          await retryWithBackoff(async () => {
+            await base44.entities.User.update(user.id, { 
+              total_admin_coins: calculatedAdminCoins
+            });
+          });
+          
+          await sleep(100);
+          
+          await retryWithBackoff(async () => {
+            await syncLeaderboardEntry(user.email, { 
+              total_admin_coins: calculatedAdminCoins
+            });
+          });
+          
+          successCount++;
+          
+          if (i < students.length - 1) {
+            await sleep(400);
+          }
+        } catch (error) {
+          failCount++;
+          console.error(`Failed to fix admin coins for ${user.email}:`, error);
+        }
+      }
+      
+      if (failCount === 0) {
+        toast.success(`✅ תיקון הושלם! ${successCount} תלמידים עודכנו`);
+      } else {
+        toast.warning(`⚠️ הסתיים: ${successCount} הצליחו, ${failCount} נכשלו`);
+      }
+      
+      await loadData();
+    } catch (error) {
+      console.error("Error fixing admin coins:", error);
+      toast.error("שגיאה בתיקון");
+    } finally {
+      setIsRecalculatingCoins(false);
+    }
+  };
+
   const migrateAllDataToLeaderboard = async () => {
     setIsRecalculatingCoins(true);
     
@@ -676,6 +815,13 @@ export default function Admin() {
                 className="w-full bg-blue-600 hover:bg-blue-700"
               >
                 {isRecalculatingCoins ? "מחשב מחדש..." : "חשב מחדש מטבעות לכל המשתמשים"}
+              </Button>
+              <Button
+                onClick={fixAdminCoins}
+                disabled={isRecalculatingCoins}
+                className="w-full bg-yellow-600 hover:bg-yellow-700"
+              >
+                {isRecalculatingCoins ? "מתקן..." : "👑 תקן עדכוני אדמין (חשב לפי הפרש)"}
               </Button>
               <Button
                 onClick={migrateAllDataToLeaderboard}
