@@ -33,7 +33,7 @@ const DAYS_OF_WEEK = [
   { value: 6, label: "שבת" }
 ];
 
-export default function AddLessonDialog({ isOpen, onClose, onSubmit }) {
+export default function AddLessonDialog({ isOpen, onClose, onSuccess }) {
   const getTodayDate = () => {
     const now = new Date();
     const year = now.getFullYear();
@@ -59,17 +59,33 @@ export default function AddLessonDialog({ isOpen, onClose, onSubmit }) {
   const selectedDayOfWeek = lessonData.lesson_date ? getDayOfWeek(lessonData.lesson_date) : null;
   const selectedDayLabel = selectedDayOfWeek !== null ? DAYS_OF_WEEK[selectedDayOfWeek]?.label : "";
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (lessonData.lesson_name && lessonData.category && lessonData.lesson_date) {
-      onSubmit(lessonData);
-      setLessonData({
-        lesson_name: "",
-        description: "",
-        thumbnail_url: "",
-        recorded_lesson_url: "",
-        category: "ai_tech",
-        lesson_date: getTodayDate()
-      });
+      try {
+        const { base44 } = await import("@/api/base44Client");
+        const { toast } = await import("sonner");
+        
+        await base44.entities.Lesson.create(lessonData);
+        toast.success("השיעור נוצר בהצלחה! 🎉");
+        
+        setLessonData({
+          lesson_name: "",
+          description: "",
+          thumbnail_url: "",
+          recorded_lesson_url: "",
+          category: "ai_tech",
+          lesson_date: getTodayDate()
+        });
+        
+        if (onSuccess) {
+          onSuccess();
+        }
+        onClose();
+      } catch (error) {
+        const { toast } = await import("sonner");
+        console.error("Error creating lesson:", error);
+        toast.error("שגיאה ביצירת השיעור");
+      }
     }
   };
 
