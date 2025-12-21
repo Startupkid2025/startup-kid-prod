@@ -228,36 +228,15 @@ export default function Lessons() {
         survey_comments: ratings.comments || ""
       });
 
-      // Give 20 XP bonus
-      const userLevels = [
-        { key: "ai_tech", level: currentUser.ai_tech_level || 1 },
-        { key: "personal_dev", level: currentUser.personal_dev_level || 1 },
-        { key: "social_skills", level: currentUser.social_skills_level || 1 },
-        { key: "money_business", level: currentUser.money_business_level || 1 }
-      ];
-      
-      const highestSkill = userLevels.reduce((max, skill) => 
-        skill.level > max.level ? skill : max
-      );
-
-      const xpKey = `${highestSkill.key}_xp`;
-      const levelKey = `${highestSkill.key}_level`;
-      
-      const currentXP = currentUser[xpKey] || 0;
-      const currentLevel = currentUser[levelKey] || 1;
-      
-      const totalXP = (currentLevel - 1) * 100 + currentXP + 20;
-      const newLevel = Math.floor(totalXP / 100) + 1;
-      const newXP = totalXP % 100;
-      
+      // Give 70 coins for completing survey
+      const currentCoins = currentUser.coins || 0;
       await base44.auth.updateMe({
-        [xpKey]: newXP,
-        [levelKey]: newLevel
+        coins: currentCoins + 70
       });
 
       setSurveyLesson(null);
       setSurveyParticipation(null);
-      toast.success("תודה על המשוב! קיבלת 20 נקודות! 🎉");
+      toast.success("תודה על המשוב! קיבלת 70 מטבעות! 🎉");
       loadData();
     } catch (error) {
       console.error("Failed to submit survey:", error);
