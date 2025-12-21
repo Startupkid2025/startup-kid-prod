@@ -123,34 +123,28 @@ export default function Lessons() {
 
       let myLessons;
       
-      // Demo users don't see any lessons, regular students see only their assigned lessons
-      if (user.user_type === "demo") {
+      // Show lessons for users who are assigned to them
+      if (myParticipations.length === 0) {
+        console.log("No participations found for user:", user.email);
         myLessons = [];
-        console.log("Demo user - no lessons shown");
       } else {
-        // For regular students, show only lessons they're assigned to
-        if (myParticipations.length === 0) {
-          console.log("No participations found for user:", user.email);
-          myLessons = [];
-        } else {
-          const participatedLessonIds = myParticipations.map(p => p.lesson_id);
-          console.log("Participated lesson IDs:", participatedLessonIds);
-          
-          myLessons = allLessons.filter(lesson => 
-            participatedLessonIds.includes(lesson.id)
-          );
-          console.log("Filtered lessons:", myLessons.length);
+        const participatedLessonIds = myParticipations.map(p => p.lesson_id);
+        console.log("Participated lesson IDs:", participatedLessonIds);
+        
+        myLessons = allLessons.filter(lesson => 
+          participatedLessonIds.includes(lesson.id)
+        );
+        console.log("Filtered lessons:", myLessons.length);
 
-          // Sort by participation date for regular students
-          myLessons.sort((a, b) => {
-            const participationA = myParticipations.find(p => p.lesson_id === a.id);
-            const participationB = myParticipations.find(p => p.lesson_id === b.id);
-            
-            if (!participationA || !participationB) return 0;
-            
-            return new Date(participationB.lesson_date) - new Date(participationA.lesson_date);
-          });
-        }
+        // Sort by participation date
+        myLessons.sort((a, b) => {
+          const participationA = myParticipations.find(p => p.lesson_id === a.id);
+          const participationB = myParticipations.find(p => p.lesson_id === b.id);
+          
+          if (!participationA || !participationB) return 0;
+          
+          return new Date(participationB.lesson_date) - new Date(participationA.lesson_date);
+        });
       }
 
       console.log("Final lessons to display:", myLessons.length);
