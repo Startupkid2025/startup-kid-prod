@@ -396,9 +396,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                     <div className="flex justify-between"><span className="text-white/70">🤝 שיתופי פעולה:</span><span className="text-white font-bold">{Math.round(financeReport.income.collaboration)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">🔥 רצף כניסות:</span><span className="text-white font-bold">{Math.round(financeReport.income.loginStreak)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">📈 רווחי השקעות:</span><span className="text-white font-bold">{Math.round(financeReport.income.investmentProfits)}</span></div>
-                    {financeReport.income.adminCoins !== 0 && (
-                      <div className="flex justify-between"><span className="text-white/70">👑 עדכוני אדמין:</span><span className="text-white font-bold">{Math.round(financeReport.income.adminCoins)}</span></div>
-                    )}
+                    <div className="flex justify-between"><span className="text-white/70">👑 עדכוני אדמין:</span><span className="text-white font-bold">{Math.round(financeReport.income.adminCoins || 0)}</span></div>
                   </div>
                 </div>
 
