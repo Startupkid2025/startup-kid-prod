@@ -51,7 +51,7 @@ export default function LessonSurveyDialog({ isOpen, onClose, lesson, onSubmit }
           <div className="bg-gradient-to-r from-yellow-100 to-orange-100 p-3 rounded-lg mt-4">
             <p className="text-center font-bold text-orange-800 flex items-center justify-center gap-2">
               <Sparkles className="w-5 h-5" />
-              מלא את הסקר וקבל 20 נקודות! 🎉
+              מלא את הסקר וקבל 70 מטבעות! 🎉
             </p>
           </div>
         </DialogHeader>
@@ -111,7 +111,7 @@ export default function LessonSurveyDialog({ isOpen, onClose, lesson, onSubmit }
               disabled={!isComplete}
               className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold"
             >
-              שלח סקר וקבל 20 נקודות! ⭐
+              שלח סקר וקבל 70 מטבעות! ⭐
             </Button>
           </div>
         </div>
