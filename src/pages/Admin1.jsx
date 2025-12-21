@@ -240,8 +240,12 @@ export default function Admin() {
           console.log(`    - פריטים: ${itemsValue}`);
           console.log(`    - השקעות: ${investmentsValue}`);
           console.log(`  📉 הפסדים: ${totalLosses}`);
-          console.log(`  ✅ מטבעות נכונים: ${correctCoins}\n`);
+          console.log(`  💸 חישוב: ${totalIncome} - ${itemsValue} - ${investmentsValue} - ${totalLosses} = ${correctCoins}`);
+          console.log(`  ✅ מטבעות נכונים: ${correctCoins}`);
+          console.log(`  🔍 אימות: הכנסות (${totalIncome}) = נכסים (${correctCoins + itemsValue + investmentsValue}) + הפסדים (${totalLosses})`);
+          console.log(`  ${totalIncome} = ${correctCoins + itemsValue + investmentsValue + totalLosses} ✓\n`);
 
+          // Update only coins, NOT total_admin_coins (it should remain constant)
           await retryWithBackoff(async () => {
             await base44.entities.User.update(user.id, { coins: correctCoins });
           });
