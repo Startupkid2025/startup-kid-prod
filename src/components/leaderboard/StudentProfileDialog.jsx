@@ -184,6 +184,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       income.collaboration = safeNum(fullUserData.total_collaboration_coins);
       income.loginStreak = safeNum(fullUserData.total_login_streak_coins);
       income.work = safeNum(fullUserData.total_work_earnings);
+      income.adminCoins = safeNum(fullUserData.total_admin_coins);
 
       // Assets - use merged fullUserData
       const purchasedItems = fullUserData.purchased_items ?? [];
@@ -395,6 +396,9 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                     <div className="flex justify-between"><span className="text-white/70">🤝 שיתופי פעולה:</span><span className="text-white font-bold">{Math.round(financeReport.income.collaboration)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">🔥 רצף כניסות:</span><span className="text-white font-bold">{Math.round(financeReport.income.loginStreak)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">📈 רווחי השקעות:</span><span className="text-white font-bold">{Math.round(financeReport.income.investmentProfits)}</span></div>
+                    {financeReport.income.adminCoins !== 0 && (
+                      <div className="flex justify-between"><span className="text-white/70">👑 עדכוני אדמין:</span><span className="text-white font-bold">{Math.round(financeReport.income.adminCoins)}</span></div>
+                    )}
                   </div>
                 </div>
 
