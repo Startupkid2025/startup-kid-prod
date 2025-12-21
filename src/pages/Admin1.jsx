@@ -199,6 +199,23 @@ export default function Admin() {
                              profileDetailsCoins + workCoins + collaborationCoins + 
                              loginStreakCoins + totalInvestmentProfit + (user.total_admin_coins || 0);
 
+          console.log(`\n📊 ${user.full_name} (${user.email}):`);
+          console.log(`  💰 הכנסות:`);
+          console.log(`    - בסיס: ${baseCoins}`);
+          console.log(`    - שיעורים: ${lessonsCoins} (${user.total_lessons || 0} × 100)`);
+          console.log(`    - אנגלית: ${wordCoins}`);
+          console.log(`    - חשבון: ${mathCoins}`);
+          console.log(`    - סקרים: ${surveyCoins}`);
+          console.log(`    - חידונים: ${quizCoins}`);
+          console.log(`    - משימות פרופיל: ${profileTasksCoins}`);
+          console.log(`    - פרטי פרופיל: ${profileDetailsCoins}`);
+          console.log(`    - עבודה: ${workCoins}`);
+          console.log(`    - שיתופי פעולה: ${collaborationCoins}`);
+          console.log(`    - רצף כניסות: ${loginStreakCoins}`);
+          console.log(`    - רווחי השקעות: ${totalInvestmentProfit}`);
+          console.log(`    - 👑 עדכוני אדמין: ${user.total_admin_coins || 0}`);
+          console.log(`  📈 סה"כ הכנסות: ${totalIncome}`);
+
           const purchasedItems = user.purchased_items || [];
           let itemsValue = 0;
           purchasedItems.forEach(itemId => {
@@ -218,6 +235,12 @@ export default function Admin() {
 
           const totalLosses = inflationLoss + incomeTax + capitalGainsTax + creditInterest + itemSaleLosses + investmentFees + dividendTax;
           const correctCoins = Math.round(totalIncome - itemsValue - investmentsValue - totalLosses);
+          
+          console.log(`  📦 נכסים:`);
+          console.log(`    - פריטים: ${itemsValue}`);
+          console.log(`    - השקעות: ${investmentsValue}`);
+          console.log(`  📉 הפסדים: ${totalLosses}`);
+          console.log(`  ✅ מטבעות נכונים: ${correctCoins}\n`);
 
           await retryWithBackoff(async () => {
             await base44.entities.User.update(user.id, { coins: correctCoins });
