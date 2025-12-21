@@ -114,7 +114,8 @@ export default function Vocabulary() {
   };
 
   const getCoinsForDifficulty = (difficulty) => {
-    return difficulty * 6;
+    const coins = { 1: 6, 2: 9, 3: 12 };
+    return coins[difficulty] || 6;
   };
 
   const calculateTotalCoinsForWord = (difficulty) => {
