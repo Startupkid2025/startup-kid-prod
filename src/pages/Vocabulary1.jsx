@@ -501,6 +501,13 @@ export default function Vocabulary() {
                       <span className="mr-1">עניתי נכון</span>
                     </span>
                   )}
+                  <span className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2 font-bold ${
+                    currentWord.difficulty === 1 ? 'bg-green-500/20 text-green-200 border-2 border-green-500/40' :
+                    currentWord.difficulty === 2 ? 'bg-orange-500/20 text-orange-200 border-2 border-orange-500/40' :
+                    'bg-red-500/20 text-red-200 border-2 border-red-500/40'
+                  }`}>
+                    {currentWord.difficulty === 1 ? '😊 קל' : currentWord.difficulty === 2 ? '💪 בינוני' : '🔥 קשה'}
+                  </span>
                   <span className="bg-amber-500/20 text-amber-200 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2">
                     <Coins className="w-4 h-4" />
                     {getCoinsForDifficulty(currentWord.difficulty)} {currentWord.difficulty === 1 ? "מטבע" : "מטבעות"}
