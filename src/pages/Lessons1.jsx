@@ -42,11 +42,6 @@ export default function Lessons() {
   const getGoogleDriveThumbnail = (url) => {
     if (!url) return null;
     
-    // If it's already a direct uc link, return it
-    if (url.includes('/uc?')) {
-      return url;
-    }
-    
     let fileId = null;
     
     // Try to extract FILE_ID from various Google Drive URL formats
@@ -73,9 +68,17 @@ export default function Lessons() {
       }
     }
     
-    // If we found a file ID, convert to direct download URL (works without permissions)
+    // Format: /uc?id=FILE_ID
+    if (!fileId) {
+      const ucMatch = url.match(/\/uc\?.*id=([a-zA-Z0-9_-]+)/);
+      if (ucMatch) {
+        fileId = ucMatch[1];
+      }
+    }
+    
+    // If we found a file ID, use thumbnail format with size parameter
     if (fileId) {
-      return `https://drive.google.com/uc?export=view&id=${fileId}`;
+      return `https://lh3.googleusercontent.com/d/${fileId}=w400`;
     }
     
     // If not a Google Drive link or couldn't extract ID, return original URL
