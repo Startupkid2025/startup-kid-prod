@@ -39,9 +39,9 @@ export default function Vocabulary() {
       let dailyWords = [];
       
       if (user.daily_vocabulary_date !== today || !user.daily_vocabulary_words || user.daily_vocabulary_words.length === 0) {
-        // בחר 200 מילים רנדומליות להיום
+        // בחר 100 מילים רנדומליות להיום
         const shuffled = [...allVocabWords].sort(() => Math.random() - 0.5);
-        const selected = shuffled.slice(0, 200);
+        const selected = shuffled.slice(0, 100);
         dailyWords = selected.map(w => w.word_english);
         
         // שמור על המשתמש
