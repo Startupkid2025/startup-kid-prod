@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, UserCheck, Calendar, Plus, UserX, Edit2, Users, Play, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, UserCheck, Calendar, Plus, UserX, Edit2, Users, Play, Trash2, Coins } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { syncLeaderboardEntry } from "../utils/leaderboardSync";
 
 export default function StudentRow({ 
   student, 
@@ -32,9 +33,12 @@ export default function StudentRow({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDateDialog, setShowDateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showEditStudentDialog, setShowEditStudentDialog] = useState(false); // NEW
+  const [showEditStudentDialog, setShowEditStudentDialog] = useState(false);
+  const [showAddCoinsDialog, setShowAddCoinsDialog] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [editingParticipation, setEditingParticipation] = useState(null);
+  const [coinsToAdd, setCoinsToAdd] = useState("");
+  const [coinsReason, setCoinsReason] = useState("");
   
   // Get today's date in YYYY-MM-DD format for Israel timezone
   const getTodayDate = () => {
@@ -106,6 +110,40 @@ export default function StudentRow({
       } else {
         console.error("Error removing participation:", error);
       }
+    }
+  };
+
+  // Handle adding coins
+  const handleAddCoins = async () => {
+    if (!coinsToAdd || isNaN(coinsToAdd) || Number(coinsToAdd) === 0) {
+      toast.error("הזן מספר מטבעות תקין");
+      return;
+    }
+    
+    const amount = Number(coinsToAdd);
+    
+    try {
+      // Update User entity
+      await base44.entities.User.update(student.id, {
+        coins: (student.coins || 0) + amount
+      });
+      
+      // Sync to LeaderboardEntry
+      await syncLeaderboardEntry(student.email, {
+        coins: (student.coins || 0) + amount
+      });
+      
+      const action = amount > 0 ? "נוספו" : "הופחתו";
+      const absAmount = Math.abs(amount);
+      toast.success(`${action} ${absAmount} מטבעות ל-${student.full_name} ${coinsReason ? `(${coinsReason})` : ""} ✨`);
+      
+      setShowAddCoinsDialog(false);
+      setCoinsToAdd("");
+      setCoinsReason("");
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error("Error adding coins:", error);
+      toast.error("שגיאה בהוספת מטבעות");
     }
   };
 
@@ -326,6 +364,21 @@ export default function StudentRow({
                 <p className="text-white/60 text-[10px] sm:text-xs whitespace-nowrap">השתתפויות</p>
               </div>
               
+              {/* Add Coins Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-yellow-300 hover:text-yellow-200 w-9 h-9 hover:bg-gradient-to-br hover:from-yellow-500/30 hover:to-amber-500/30 transition-all duration-300 hover:shadow-lg border border-transparent hover:border-yellow-400/50 rounded-xl"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCoinsToAdd("");
+                  setCoinsReason("");
+                  setShowAddCoinsDialog(true);
+                }}
+              >
+                <Coins className="w-4 h-4" />
+              </Button>
+
               {/* Edit Student Button */}
               <Button
                 variant="ghost"
@@ -345,7 +398,7 @@ export default function StudentRow({
               >
                 <Edit2 className="w-4 h-4" />
               </Button>
-              
+
               {/* Delete User Button */}
               <Button
                 variant="ghost"
@@ -795,6 +848,75 @@ export default function StudentRow({
                 disabled={!editedStudent.first_name.trim() || !editedStudent.last_name.trim()}
               >
                 שמור שינויים
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Coins Dialog */}
+      <Dialog open={showAddCoinsDialog} onOpenChange={setShowAddCoinsDialog}>
+        <DialogContent className="bg-white/95 backdrop-blur-xl border-2 border-yellow-300">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-yellow-600">
+              הוסף/הפחת מטבעות
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-yellow-50 rounded-lg p-3 mb-4">
+              <p className="text-sm font-medium text-yellow-900">
+                {student.full_name}
+              </p>
+              <p className="text-xs text-yellow-600 mt-1">
+                יתרה נוכחית: {student.coins || 0} מטבעות
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-gray-700 font-medium">
+                כמות מטבעות (חיובי להוסיף, שלילי להפחית)
+              </Label>
+              <Input
+                type="number"
+                value={coinsToAdd}
+                onChange={(e) => setCoinsToAdd(e.target.value)}
+                className="border-2 border-yellow-200"
+                placeholder="לדוגמה: 100 או -50"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-gray-700 font-medium">
+                סיבה (אופציונלי)
+              </Label>
+              <Input
+                value={coinsReason}
+                onChange={(e) => setCoinsReason(e.target.value)}
+                className="border-2 border-yellow-200"
+                placeholder="לדוגמה: עדכון מיוחד"
+              />
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-800">
+                💡 זה ישפיע על היתרה ועל מיקום בטבלת השיאים
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowAddCoinsDialog(false)}
+                variant="outline"
+                className="flex-1"
+              >
+                ביטול
+              </Button>
+              <Button
+                onClick={handleAddCoins}
+                className="flex-1 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600"
+                disabled={!coinsToAdd || isNaN(coinsToAdd) || Number(coinsToAdd) === 0}
+              >
+                אישור
               </Button>
             </div>
           </div>
