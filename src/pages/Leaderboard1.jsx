@@ -176,6 +176,11 @@ export default function Leaderboard() {
           return false;
         }
 
+        // Filter out demo users from leaderboard
+        if (u.user_type === 'demo') {
+          return false;
+        }
+
         // For others, show students or users without user_type defined (default to student)
         return !u.user_type || u.user_type === 'student';
       });
