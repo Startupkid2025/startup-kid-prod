@@ -157,6 +157,7 @@ export default function Leaderboard() {
         }
       }
 
+      // Start with entries from LeaderboardEntry
       let filteredUsersForLeaderboard = allEntries.filter(u => {
         // Check if this entry belongs to an admin (only if we have User data)
         let isEntryAdmin = false;
@@ -178,6 +179,45 @@ export default function Leaderboard() {
         // For others, show students or users without user_type defined (default to student)
         return !u.user_type || u.user_type === 'student';
       });
+
+      // If admin, add students from User entity that are missing from LeaderboardEntry
+      if (isCurrentUserAdmin && allUsers.length > 0) {
+        const existingEmails = new Set(filteredUsersForLeaderboard.map(u => u.student_email));
+        
+        allUsers.forEach(userRecord => {
+          // Skip if already in leaderboard or not a student
+          if (existingEmails.has(userRecord.email)) return;
+          if (userRecord.role === 'admin') return;
+          if (userRecord.user_type && userRecord.user_type !== 'student') return;
+          
+          // Add missing student with default LeaderboardEntry-like structure
+          filteredUsersForLeaderboard.push({
+            student_email: userRecord.email,
+            full_name: userRecord.full_name || userRecord.email,
+            first_name: userRecord.first_name,
+            last_name: userRecord.last_name,
+            coins: userRecord.coins || 0,
+            ai_tech_level: userRecord.ai_tech_level || 1,
+            ai_tech_xp: userRecord.ai_tech_xp || 0,
+            personal_dev_level: userRecord.personal_dev_level || 1,
+            personal_dev_xp: userRecord.personal_dev_xp || 0,
+            social_skills_level: userRecord.social_skills_level || 1,
+            social_skills_xp: userRecord.social_skills_xp || 0,
+            money_business_level: userRecord.money_business_level || 1,
+            money_business_xp: userRecord.money_business_xp || 0,
+            total_lessons: userRecord.total_lessons || 0,
+            equipped_items: userRecord.equipped_items || {},
+            purchased_items: userRecord.purchased_items || [],
+            user_type: userRecord.user_type || 'student',
+            daily_collaborations: userRecord.daily_collaborations || [],
+            total_collaboration_coins: userRecord.total_collaboration_coins || 0,
+            total_work_hours: userRecord.total_work_hours || 0,
+            total_work_earnings: userRecord.total_work_earnings || 0,
+            login_streak: userRecord.login_streak || 0,
+            total_login_streak_coins: userRecord.total_login_streak_coins || 0
+          });
+        });
+      }
 
       const usersWithAllStats = filteredUsersForLeaderboard.map((u) => {
         const masteredWords = allWordProgress.filter(
