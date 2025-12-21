@@ -429,6 +429,11 @@ export default function Vocabulary() {
         <p className="text-white/80 text-lg">
           למד מילים חדשות והרווח מטבעות!
         </p>
+        <div className="bg-yellow-500/20 border-2 border-yellow-500/40 rounded-xl p-3 mt-4 max-w-2xl mx-auto">
+          <p className="text-yellow-200 text-sm font-bold">
+            💡 שים לב - בשביל לזכות במטבעות אתה צריך להצליח פעמיים את המילה באנגלית
+          </p>
+        </div>
       </motion.div>
 
       {/* Stats */}
