@@ -18,9 +18,31 @@ export default function Vocabulary() {
   const [isChecking, setIsChecking] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [feedback, setFeedback] = useState(null);
+  const [timeUntilReset, setTimeUntilReset] = useState("");
 
   useEffect(() => {
     loadData();
+  }, []);
+
+  useEffect(() => {
+    const updateTimer = () => {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      
+      const diff = tomorrow - now;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      setTimeUntilReset(`${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+    };
+    
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const loadData = async () => {
@@ -39,9 +61,9 @@ export default function Vocabulary() {
       let dailyWords = [];
       
       if (user.daily_vocabulary_date !== today || !user.daily_vocabulary_words || user.daily_vocabulary_words.length === 0) {
-        // בחר 100 מילים רנדומליות להיום
+        // בחר 150 מילים רנדומליות להיום
         const shuffled = [...allVocabWords].sort(() => Math.random() - 0.5);
-        const selected = shuffled.slice(0, 100);
+        const selected = shuffled.slice(0, 150);
         dailyWords = selected.map(w => w.word_english);
         
         // שמור על המשתמש
@@ -430,7 +452,19 @@ export default function Vocabulary() {
         <p className="text-white/80 text-lg">
           למד מילים חדשות והרווח מטבעות!
         </p>
-        <div className="bg-yellow-500/20 border-2 border-yellow-500/40 rounded-xl p-3 mt-4 max-w-2xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 max-w-2xl mx-auto">
+          <div className="bg-blue-500/20 border-2 border-blue-500/40 rounded-xl p-3">
+            <p className="text-blue-200 text-sm font-bold">
+              📦 {availableVocabWords.length} / 150 מילים זמינות היום
+            </p>
+          </div>
+          <div className="bg-purple-500/20 border-2 border-purple-500/40 rounded-xl p-3">
+            <p className="text-purple-200 text-sm font-bold">
+              ⏰ התחדשות בעוד: {timeUntilReset}
+            </p>
+          </div>
+        </div>
+        <div className="bg-yellow-500/20 border-2 border-yellow-500/40 rounded-xl p-3 mt-3 max-w-2xl mx-auto">
           <p className="text-yellow-200 text-sm font-bold">
             💡 שים לב - בשביל לזכות במטבעות אתה צריך להצליח פעמיים את המילה באנגלית
           </p>
