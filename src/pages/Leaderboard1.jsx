@@ -947,12 +947,6 @@ export default function Leaderboard() {
                           <div className="text-base sm:text-2xl">{player.totalValue}</div>
                           <div className="text-[8px] sm:text-[10px] opacity-80">מטבעות</div>
                         </div>
-                        {/* Percentage from first place */}
-                        {index > 0 && (
-                          <div className="text-[10px] sm:text-xs text-white/70 mt-1">
-                            {calculatePercentageFromFirst(player.totalValue)}%
-                          </div>
-                        )}
                       </div>
 
                       {/* Collaborate Button - Only for OTHER users */}
