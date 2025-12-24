@@ -60,24 +60,25 @@ export default function Vocabulary() {
       const today = new Date().toISOString().split('T')[0];
       let dailyWords = [];
       let updatedUser = user;
-      
+
       if (user.daily_vocabulary_date !== today || !user.daily_vocabulary_words || user.daily_vocabulary_words.length === 0) {
         // בחר 150 מילים רנדומליות להיום
         const shuffled = [...allVocabWords].sort(() => Math.random() - 0.5);
         const selected = shuffled.slice(0, 150);
         dailyWords = selected.map(w => w.word_english);
-        
+
         // שמור על המשתמש
         await base44.auth.updateMe({
           daily_vocabulary_date: today,
           daily_vocabulary_words: dailyWords
         });
-        
+
         // טען את המשתמש מחדש כדי לקבל את הנתונים המעודכנים
         updatedUser = await base44.auth.me();
         setUserData(updatedUser);
       } else {
-        dailyWords = user.daily_vocabulary_words;
+        // וודא שיש בדיוק 150 מילים (תיקון למקרה של נתונים לא עקביים)
+        dailyWords = (user.daily_vocabulary_words || []).slice(0, 150);
       }
       
       // סנן רק למילים של היום
