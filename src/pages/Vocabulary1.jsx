@@ -80,12 +80,8 @@ export default function Vocabulary() {
         dailyWords = user.daily_vocabulary_words;
       }
       
-      // סנן רק למילים של היום, ללא מילים שכבר שלטנו בהן
-      const masteredWords = progress.filter(w => w.mastered).map(w => w.word_english.toLowerCase());
-      const todaysVocabWords = allVocabWords.filter(w => 
-        dailyWords.includes(w.word_english) && 
-        !masteredWords.includes(w.word_english.toLowerCase())
-      );
+      // סנן רק למילים של היום
+      const todaysVocabWords = allVocabWords.filter(w => dailyWords.includes(w.word_english));
       setAvailableVocabWords(todaysVocabWords);
 
       // Generate first word
