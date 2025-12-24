@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,62 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Check, X, Trophy, Coins, BookOpen, Star } from "lucide-react";
 import { toast } from "sonner";
 import { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
+
+// קבועים
+const DAILY_WORDS_COUNT = 150;
+const RESET_HOUR = 8;
+const VOCAB_SCHEME_VERSION = 2;
+
+// פונקציות עזר לתאריך לוקאלי
+const pad2 = (n) => String(n).padStart(2, '0');
+
+const formatLocalDate = (date) => {
+  const year = date.getFullYear();
+  const month = pad2(date.getMonth() + 1);
+  const day = pad2(date.getDate());
+  return `${year}-${month}-${day}`;
+};
+
+// מחזיר את מפתח היום לפי שעה 08:00
+const getVocabDayKey = (now) => {
+  const hours = now.getHours();
+  if (hours < RESET_HOUR) {
+    // לפני 08:00 - זה עדיין "אתמול"
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return formatLocalDate(yesterday);
+  }
+  return formatLocalDate(now);
+};
+
+// מחזיר את הזמן הבא של 08:00
+const getNextResetAt = (now) => {
+  const next = new Date(now);
+  next.setHours(RESET_HOUR, 0, 0, 0);
+  
+  if (now >= next) {
+    // אם כבר עברנו את 08:00 היום, הבא הוא מחר
+    next.setDate(next.getDate() + 1);
+  }
+  
+  return next;
+};
+
+// ערבוב מערך
+const shuffle = (arr) => {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+};
+
+// בחירה רנדומלית ייחודית
+const pickRandomUnique = (arr, count) => {
+  const shuffled = shuffle(arr);
+  return shuffled.slice(0, Math.min(count, arr.length));
+};
 
 export default function Vocabulary() {
   const [userData, setUserData] = useState(null);
@@ -19,6 +75,9 @@ export default function Vocabulary() {
   const [isLoading, setIsLoading] = useState(true);
   const [feedback, setFeedback] = useState(null);
   const [timeUntilReset, setTimeUntilReset] = useState("");
+  
+  const resetInProgressRef = useRef(false);
+  const lastResetAttemptRef = useRef(0);
 
   useEffect(() => {
     loadData();
@@ -27,73 +86,145 @@ export default function Vocabulary() {
   useEffect(() => {
     const updateTimer = () => {
       const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
+      const nextReset = getNextResetAt(now);
       
-      const diff = tomorrow - now;
+      const diff = nextReset - now;
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
       
-      setTimeUntilReset(`${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+      setTimeUntilReset(`${hours}:${pad2(minutes)}:${pad2(seconds)}`);
+      
+      // בדוק אם צריך רענון אוטומטי
+      if (userData) {
+        const expectedDayKey = getVocabDayKey(now);
+        if (userData.daily_vocabulary_date !== expectedDayKey) {
+          // הגיע זמן רענון!
+          const timeSinceLastAttempt = Date.now() - lastResetAttemptRef.current;
+          if (!resetInProgressRef.current && timeSinceLastAttempt > 30000) {
+            lastResetAttemptRef.current = Date.now();
+            resetInProgressRef.current = true;
+            loadData({ silent: true }).finally(() => {
+              resetInProgressRef.current = false;
+            });
+          }
+        }
+      }
     };
     
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [userData]);
 
-  const loadData = async () => {
+  const loadData = async ({ silent = false } = {}) => {
     try {
+      if (!silent) {
+        setIsLoading(true);
+      }
+
       const user = await base44.auth.me();
-      setUserData(user);
-
       const progress = await base44.entities.WordProgress.filter({ student_email: user.email });
-      setWordProgress(progress);
-
-      // Load all vocabulary words from database
       const allVocabWords = await base44.entities.VocabularyWord.list();
-      
-      // בדוק אם צריך לבחור מילים חדשות להיום
-      const today = new Date().toISOString().split('T')[0];
+
+      const now = new Date();
+      const expectedDayKey = getVocabDayKey(now);
+
+      // בדוק אם זו מיגרציה (משתמש ישן על מנגנון חצות)
+      const currentVersion = user.daily_vocabulary_scheme_version || 1;
+      let forceResetToday = false;
+
+      if (currentVersion < VOCAB_SCHEME_VERSION) {
+        // משתמש על מנגנון ישן
+        const currentHour = now.getHours();
+
+        if (currentHour >= RESET_HOUR) {
+          // אחרי 08:00 - כפה רענון כדי לעבור למנגנון חדש
+          forceResetToday = true;
+        } else {
+          // לפני 08:00 - תקן את התאריך בלי לשנות רשימה (כדי שלא יישבר הלילה)
+          if (user.daily_vocabulary_date && user.daily_vocabulary_words?.length > 0) {
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayKey = formatLocalDate(yesterday);
+
+            await base44.auth.updateMe({
+              daily_vocabulary_date: yesterdayKey,
+              daily_vocabulary_scheme_version: VOCAB_SCHEME_VERSION
+            });
+          } else {
+            forceResetToday = true;
+          }
+        }
+      }
+
+      // בדוק אם צריך סט חדש
+      const needsNewSet = 
+        forceResetToday ||
+        user.daily_vocabulary_date !== expectedDayKey ||
+        !user.daily_vocabulary_words ||
+        user.daily_vocabulary_words.length === 0;
+
       let dailyWords = [];
       let updatedUser = user;
 
-      if (user.daily_vocabulary_date !== today || !user.daily_vocabulary_words || user.daily_vocabulary_words.length === 0) {
-        // בחר 150 מילים רנדומליות להיום
-        const shuffled = [...allVocabWords].sort(() => Math.random() - 0.5);
-        const selected = shuffled.slice(0, 150);
-        dailyWords = selected.map(w => w.word_english);
-
-        // שמור על המשתמש
-        await base44.auth.updateMe({
-          daily_vocabulary_date: today,
-          daily_vocabulary_words: dailyWords
+      if (needsNewSet) {
+        // סנן מילים תקינות באנגלית בלבד
+        const validWords = allVocabWords.filter(w => {
+          const word = w.word_english || '';
+          return /^[a-zA-Z\s-]+$/.test(word);
         });
 
-        // טען את המשתמש מחדש כדי לקבל את הנתונים המעודכנים
+        // העדף מילים שעדיין לא mastered
+        const masteredWords = progress.filter(w => w.mastered).map(w => w.word_english.toLowerCase());
+        const unmasteredWords = validWords.filter(w => !masteredWords.includes(w.word_english.toLowerCase()));
+
+        // בחר 150 מילים ייחודיות
+        let candidates = unmasteredWords.length >= DAILY_WORDS_COUNT 
+          ? unmasteredWords 
+          : validWords; // אם אין מספיק לא-mastered, קח הכל
+
+        const selected = pickRandomUnique(candidates, DAILY_WORDS_COUNT);
+        dailyWords = selected.map(w => w.word_english);
+
+        // שמור למשתמש
+        await base44.auth.updateMe({
+          daily_vocabulary_date: expectedDayKey,
+          daily_vocabulary_words: dailyWords,
+          daily_vocabulary_scheme_version: VOCAB_SCHEME_VERSION
+        });
+
         updatedUser = await base44.auth.me();
         setUserData(updatedUser);
+
+        if (silent) {
+          toast.success("🎉 המילים התחדשו! מילים חדשות זמינות ללמידה");
+        }
       } else {
-        // וודא שיש בדיוק 150 מילים (תיקון למקרה של נתונים לא עקביים)
-        dailyWords = (user.daily_vocabulary_words || []).slice(0, 150);
+        dailyWords = user.daily_vocabulary_words || [];
+        setUserData(user);
       }
-      
-      // סנן רק למילים של היום
-      const todaysVocabWords = allVocabWords.filter(w => dailyWords.includes(w.word_english));
+
+      // טען את המילים של היום (case-insensitive match)
+      const dailyWordsLower = dailyWords.map(w => w.toLowerCase());
+      const todaysVocabWords = allVocabWords.filter(w => 
+        dailyWordsLower.includes((w.word_english || '').toLowerCase())
+      );
       setAvailableVocabWords(todaysVocabWords);
+      setWordProgress(progress);
 
       // Generate first word
       const firstWord = await generateNextWord(progress, todaysVocabWords);
       setCurrentWord(firstWord);
-      
+
       // Preload next word
       const nextWordPreload = await generateNextWord(progress, todaysVocabWords, firstWord);
       setNextWord(nextWordPreload);
 
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     } catch (error) {
       console.error("Error loading data:", error);
       if (error.response?.status === 404 || error.response?.status === 401) {
@@ -104,7 +235,9 @@ export default function Vocabulary() {
       } else {
         toast.error("שגיאה בטעינת הנתונים");
       }
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -461,7 +594,7 @@ export default function Vocabulary() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 max-w-2xl mx-auto">
           <div className="bg-blue-500/20 border-2 border-blue-500/40 rounded-xl p-3">
             <p className="text-blue-200 text-sm font-bold">
-              📦 {availableVocabWords.length} / 150 מילים נותרו להיום
+              📦 {availableVocabWords.length} / {DAILY_WORDS_COUNT} מילים נותרו להיום
             </p>
           </div>
           <div className="bg-purple-500/20 border-2 border-purple-500/40 rounded-xl p-3">
