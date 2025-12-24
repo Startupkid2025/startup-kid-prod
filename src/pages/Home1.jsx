@@ -301,34 +301,15 @@ export default function Home() {
     }
   };
 
-  const handleEquipItem = async (itemId) => {
+  const handleEquipItem = async (newEquipped) => {
     if (!userData) return;
-
-    const item = AVATAR_ITEMS[itemId];
-    if (!item) return;
-
-    const currentEquipped = userData.equipped_items || {};
     
-    if (currentEquipped[item.category] === itemId) {
-      const newEquipped = { ...currentEquipped };
-      delete newEquipped[item.category];
-      
-      await base44.auth.updateMe({ equipped_items: newEquipped });
-      setUserData({ ...userData, equipped_items: newEquipped });
-    } else {
-      const newEquipped = { ...currentEquipped, [item.category]: itemId };
-      
-      await base44.auth.updateMe({ equipped_items: newEquipped });
-      setUserData({ ...userData, equipped_items: newEquipped });
-    }
+    await base44.auth.updateMe({ equipped_items: newEquipped });
+    setUserData({ ...userData, equipped_items: newEquipped });
 
     try {
       const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
       if (leaderboardEntries.length > 0) {
-        const newEquipped = currentEquipped[item.category] === itemId 
-          ? { ...currentEquipped, [item.category]: undefined }
-          : { ...currentEquipped, [item.category]: itemId };
-        
         await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
           equipped_items: newEquipped
         });
