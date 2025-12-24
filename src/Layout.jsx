@@ -337,7 +337,8 @@ export default function Layout({ children }) {
               coins: newCoins,
               total_inflation_lost: (user.total_inflation_lost || 0) + totalInflationLoss,
               total_income_tax: (user.total_income_tax || 0) + totalIncomeTax,
-              total_credit_interest: (user.total_credit_interest || 0) + totalCreditInterest
+              total_credit_interest: (user.total_credit_interest || 0) + totalCreditInterest,
+              total_passive_income: (user.total_passive_income || 0) + totalPassiveIncome
             });
 
             // Add delay between user updates to avoid rate limiting

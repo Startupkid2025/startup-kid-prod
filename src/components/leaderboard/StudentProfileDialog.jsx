@@ -183,6 +183,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       // Use safeNum to handle 0 values correctly (not falsy!)
       income.collaboration = safeNum(fullUserData.total_collaboration_coins);
       income.loginStreak = safeNum(fullUserData.total_login_streak_coins);
+      income.passiveIncome = safeNum(fullUserData.total_passive_income);
       income.work = safeNum(fullUserData.total_work_earnings);
       income.adminCoins = safeNum(fullUserData.total_admin_coins);
 
@@ -395,6 +396,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                     <div className="flex justify-between"><span className="text-white/70">👤 פרטי פרופיל:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileDetails)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">🤝 שיתופי פעולה:</span><span className="text-white font-bold">{Math.round(financeReport.income.collaboration)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">🔥 רצף כניסות:</span><span className="text-white font-bold">{Math.round(financeReport.income.loginStreak)}</span></div>
+                    <div className="flex justify-between"><span className="text-white/70">🏠 הכנסה פסיבית:</span><span className="text-white font-bold">{Math.round(fullUserData.total_passive_income || 0)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">📈 רווחי השקעות:</span><span className="text-white font-bold">{Math.round(financeReport.income.investmentProfits)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">👑 עדכוני אדמין:</span><span className="text-white font-bold">{Math.round(financeReport.income.adminCoins || 0)}</span></div>
                   </div>
