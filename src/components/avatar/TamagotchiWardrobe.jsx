@@ -16,8 +16,10 @@ const categories = {
   eyes: { name: "עיניים", icon: "👀" },
   mouth: { name: "פה", icon: "😊" },
   hat: { name: "כובע", icon: "🎩" },
-  cheeks: { name: "לחיים", icon: "💕" },
-  background: { name: "רקע", icon: "✨" }
+  accessory: { name: "אביזרים", icon: "💼" },
+  shoes: { name: "נעליים", icon: "👟" },
+  background: { name: "רקע", icon: "🏠" },
+  jewelry: { name: "תכשיטים", icon: "💍" }
 };
 
 export default function TamagotchiWardrobe({ 
@@ -64,14 +66,14 @@ export default function TamagotchiWardrobe({
         </DialogHeader>
 
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mt-4">
-          <TabsList className="grid grid-cols-6 gap-2 bg-white/50 p-1">
+          <TabsList className="grid grid-cols-4 sm:grid-cols-8 gap-1 sm:gap-2 bg-white/50 p-1">
             {Object.entries(categories).map(([key, { name, icon }]) => (
               <TabsTrigger 
                 key={key} 
                 value={key}
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white text-sm sm:text-base p-1 sm:p-2"
               >
-                <span className="text-lg">{icon}</span>
+                <span className="text-base sm:text-lg">{icon}</span>
               </TabsTrigger>
             ))}
           </TabsList>
@@ -111,13 +113,25 @@ export default function TamagotchiWardrobe({
 
                           {/* Preview */}
                           <div className="relative mb-2 h-20 flex items-center justify-center">
-                            {item.isUnlocked ? (
-                              <img src={item.image} alt={item.name} className="w-16 h-16 object-contain" />
-                            ) : (
-                              <div className="text-4xl opacity-30">
-                                <Lock className="w-8 h-8" />
-                              </div>
-                            )}
+                           {item.isUnlocked ? (
+                             item.category === "body" ? (
+                               <div 
+                                 className="w-16 h-16 rounded-full border-2 border-white/30"
+                                 style={{ 
+                                   background: item.color?.includes('gradient') ? item.color : item.color,
+                                   boxShadow: `0 0 15px ${item.color}50`
+                                 }}
+                               />
+                             ) : (
+                               <div className="text-4xl">
+                                 {item.emoji || "🎨"}
+                               </div>
+                             )
+                           ) : (
+                             <div className="text-4xl opacity-30">
+                               <Lock className="w-8 h-8" />
+                             </div>
+                           )}
                           </div>
 
                           <p className={`font-bold text-sm mb-1 ${
