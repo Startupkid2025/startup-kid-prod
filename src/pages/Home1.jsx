@@ -144,13 +144,39 @@ export default function Home() {
         }
       });
 
-      return counts;
+      // Calculate total_lessons - real count of attended lessons
+      const total_lessons = counts.ai_tech_lessons + counts.social_skills_lessons + counts.money_business_lessons;
+      
+      // Update User entity if there's a mismatch
+      if (user.total_lessons !== total_lessons) {
+        await base44.auth.updateMe({ total_lessons });
+        
+        // Sync to LeaderboardEntry
+        try {
+          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
+            student_email: user.email 
+          });
+          if (leaderboardEntries.length > 0) {
+            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+              total_lessons,
+              ai_tech_lessons: counts.ai_tech_lessons,
+              social_skills_lessons: counts.social_skills_lessons,
+              money_business_lessons: counts.money_business_lessons
+            });
+          }
+        } catch (error) {
+          console.error("Error syncing to leaderboard:", error);
+        }
+      }
+
+      return { ...counts, total_lessons };
     } catch (error) {
       console.error("Error calculating lesson counts:", error);
       return {
         ai_tech_lessons: 0,
         social_skills_lessons: 0,
-        money_business_lessons: 0
+        money_business_lessons: 0,
+        total_lessons: 0
       };
     }
   };
