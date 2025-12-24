@@ -441,9 +441,9 @@ export default function Admin() {
           const bgItem = AVATAR_ITEMS[equippedBackground];
           if (!bgItem || !bgItem.passiveIncome) continue;
           
-          // Estimate 30 days of backpay (reasonable average)
+          // Estimate 2 days of backpay
           const dailyIncome = bgItem.passiveIncome;
-          const backpayDays = 30;
+          const backpayDays = 2;
           const backpayAmount = dailyIncome * backpayDays;
           
           console.log(`💰 ${user.full_name}: ${bgItem.name} - ${dailyIncome}/day × ${backpayDays} days = ${backpayAmount} coins`);
