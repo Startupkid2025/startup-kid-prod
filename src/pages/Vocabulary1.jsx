@@ -464,7 +464,7 @@ export default function Vocabulary() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 max-w-2xl mx-auto">
           <div className="bg-blue-500/20 border-2 border-blue-500/40 rounded-xl p-3">
             <p className="text-blue-200 text-sm font-bold">
-              📦 {availableVocabWords.length} / 150 מילים זמינות היום
+              📦 {availableVocabWords.length} / 150 מילים נותרו להיום
             </p>
           </div>
           <div className="bg-purple-500/20 border-2 border-purple-500/40 rounded-xl p-3">
