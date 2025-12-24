@@ -59,6 +59,7 @@ export default function Vocabulary() {
       // בדוק אם צריך לבחור מילים חדשות להיום
       const today = new Date().toISOString().split('T')[0];
       let dailyWords = [];
+      let updatedUser = user;
       
       if (user.daily_vocabulary_date !== today || !user.daily_vocabulary_words || user.daily_vocabulary_words.length === 0) {
         // בחר 150 מילים רנדומליות להיום
@@ -71,6 +72,10 @@ export default function Vocabulary() {
           daily_vocabulary_date: today,
           daily_vocabulary_words: dailyWords
         });
+        
+        // טען את המשתמש מחדש כדי לקבל את הנתונים המעודכנים
+        updatedUser = await base44.auth.me();
+        setUserData(updatedUser);
       } else {
         dailyWords = user.daily_vocabulary_words;
       }
