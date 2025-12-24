@@ -878,8 +878,8 @@ export default function Home() {
         onClose={() => setShowShop(false)}
         equippedItems={userData?.equipped_items || {}}
         userData={userData}
-        onPurchase={handlePurchaseItem}
-        onSell={handleSellItem}
+        onPurchase={loadData}
+        onEquipItem={handleEquipItem}
       />
 
       <AvatarWork
