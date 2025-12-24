@@ -229,35 +229,38 @@ export default function Leaderboard() {
           w => w.student_email === u.student_email && w.mastered
         ).length;
 
-        // Get actual data from User entity (real source of truth)
-        // If we can't access User entity (regular users), use LeaderboardEntry data
-        const userRecord = allUsers.find(usr => usr.email === u.student_email);
-        const last_login_date = userRecord?.last_login_date;
-        const actualTotalLessons = userRecord?.total_lessons || u.total_lessons || 0;
-        const actualAiTechLevel = userRecord?.ai_tech_level || u.ai_tech_level || 1;
-        const actualPersonalDevLevel = userRecord?.personal_dev_level || u.personal_dev_level || 1;
-        const actualSocialSkillsLevel = userRecord?.social_skills_level || u.social_skills_level || 1;
-        const actualMoneyBusinessLevel = userRecord?.money_business_level || u.money_business_level || 1;
-        
-        // Calculate lesson counts by category
+        // Calculate lesson counts by category from REAL participations
         const userParticipations = allLessonParticipations.filter(p => p.student_email === u.student_email && p.attended);
         const lessonMap = {};
         allLessons.forEach(lesson => {
           lessonMap[lesson.id] = lesson;
         });
-        
+
         let aiTechLessons = 0;
         let socialSkillsLessons = 0;
         let moneyBusinessLessons = 0;
-        
+
         userParticipations.forEach(participation => {
           const lesson = lessonMap[participation.lesson_id];
           if (!lesson) return;
-          
+
           if (lesson.category === 'ai_tech') aiTechLessons++;
           if (lesson.category === 'personal_skills' || lesson.category === 'social_skills') socialSkillsLessons++;
           if (lesson.category === 'money_business') moneyBusinessLessons++;
         });
+
+        // Calculate REAL total lessons from actual participations
+        const realTotalLessons = aiTechLessons + socialSkillsLessons + moneyBusinessLessons;
+
+        // Get actual data from User entity (real source of truth)
+        // If we can't access User entity (regular users), use LeaderboardEntry data
+        const userRecord = allUsers.find(usr => usr.email === u.student_email);
+        const last_login_date = userRecord?.last_login_date;
+        const actualTotalLessons = realTotalLessons; // Always use the real calculated count
+        const actualAiTechLevel = userRecord?.ai_tech_level || u.ai_tech_level || 1;
+        const actualPersonalDevLevel = userRecord?.personal_dev_level || u.personal_dev_level || 1;
+        const actualSocialSkillsLevel = userRecord?.social_skills_level || u.social_skills_level || 1;
+        const actualMoneyBusinessLevel = userRecord?.money_business_level || u.money_business_level || 1;
         
         // Count completed math questions directly from MathProgress
         const userMathProgress = allMathProgress.filter(m => m.student_email === u.student_email && (m.total_attempts || 0) > 0);
