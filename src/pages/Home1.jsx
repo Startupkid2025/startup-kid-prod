@@ -38,9 +38,95 @@ export default function Home() {
     loadData();
   }, []);
 
+  const getTodayKeyJerusalem = () => {
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Jerusalem',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    return formatter.format(new Date());
+  };
+
+  const applyPassiveIncomeIfNeeded = async (user) => {
+    try {
+      const todayKey = getTodayKeyJerusalem();
+      const lastKey = user.last_passive_income_date || todayKey;
+      
+      // Calculate days difference
+      const lastDate = new Date(lastKey);
+      const todayDate = new Date(todayKey);
+      const daysDiff = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+      
+      if (daysDiff <= 0) return; // Same day, no income to add
+      
+      // Calculate passive income per day from purchased background items
+      const purchasedItems = user.purchased_items || [];
+      let perDay = 0;
+      
+      purchasedItems.forEach(itemId => {
+        const item = AVATAR_ITEMS[itemId];
+        if (item && item.category === 'background' && item.passiveIncome) {
+          perDay += item.passiveIncome;
+        }
+      });
+      
+      if (perDay === 0) {
+        // No passive income items, just update date
+        await base44.auth.updateMe({ last_passive_income_date: todayKey });
+        return;
+      }
+      
+      // Calculate total amount
+      const amount = perDay * daysDiff;
+      
+      // Update user
+      const newCoins = (user.coins || 0) + amount;
+      const newTotalPassiveIncome = (user.total_passive_income || 0) + amount;
+      
+      await base44.auth.updateMe({
+        coins: newCoins,
+        total_passive_income: newTotalPassiveIncome,
+        last_passive_income_date: todayKey
+      });
+      
+      // Sync to LeaderboardEntry
+      try {
+        const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
+          student_email: user.email 
+        });
+        if (leaderboardEntries.length > 0) {
+          await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+            coins: newCoins,
+            total_passive_income: newTotalPassiveIncome
+          });
+        }
+      } catch (error) {
+        console.error("Error syncing passive income to leaderboard:", error);
+      }
+      
+      // Show toast notification
+      if (amount > 0) {
+        toast.success(`🏠 קיבלת ${amount} מטבעות מהכנסה פסיבית! (${daysDiff} ימים × ${perDay} מטבעות)`, {
+          duration: 5000
+        });
+      }
+      
+      // Update user object for current session
+      user.coins = newCoins;
+      user.total_passive_income = newTotalPassiveIncome;
+      user.last_passive_income_date = todayKey;
+    } catch (error) {
+      console.error("Error applying passive income:", error);
+    }
+  };
+
   const loadData = async () => {
     try {
       const user = await base44.auth.me();
+      
+      // Apply passive income FIRST (before any other calculations)
+      await applyPassiveIncomeIfNeeded(user);
       
       // Check if user needs to select group/name - only if they DON'T have these fields
       const needsOnboarding = !user.has_selected_group && (!user.first_name || !user.last_name);
@@ -215,6 +301,7 @@ export default function Home() {
       const workCoins = user.total_work_earnings || 0;
       const collaborationCoins = user.total_collaboration_coins || 0;
       const loginStreakCoins = user.total_login_streak_coins || 0;
+      const passiveIncomeCoins = user.total_passive_income || 0;
 
       const allInvestments = await base44.entities.Investment.list();
       const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
@@ -227,7 +314,7 @@ export default function Home() {
       const totalIncome = baseCoins + lessonsCoins + wordCoins + mathCoins + 
                          surveyCoins + quizCoins + profileTasksCoins + 
                          profileDetailsCoins + workCoins + collaborationCoins + 
-                         loginStreakCoins + totalInvestmentProfit;
+                         loginStreakCoins + passiveIncomeCoins + totalInvestmentProfit;
 
       const purchasedItems = user.purchased_items || [];
       let itemsValue = 0;

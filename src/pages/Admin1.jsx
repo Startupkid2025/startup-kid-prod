@@ -185,6 +185,7 @@ export default function Admin() {
           const workCoins = user.total_work_earnings || 0;
           const collaborationCoins = user.total_collaboration_coins || 0;
           const loginStreakCoins = user.total_login_streak_coins || 0;
+          const passiveIncomeCoins = user.total_passive_income || 0;
           const adminCoins = user.total_admin_coins || 0;
 
           const userInvestments = investmentsMap.get(user.email) || [];
@@ -197,7 +198,7 @@ export default function Admin() {
           const totalIncome = baseCoins + lessonsCoins + wordCoins + mathCoins + 
                              surveyCoins + quizCoins + profileTasksCoins + 
                              profileDetailsCoins + workCoins + collaborationCoins + 
-                             loginStreakCoins + totalInvestmentProfit + (user.total_admin_coins || 0);
+                             loginStreakCoins + passiveIncomeCoins + totalInvestmentProfit + (user.total_admin_coins || 0);
 
           console.log(`\n📊 ${user.full_name} (${user.email}):`);
           console.log(`  💰 הכנסות:`);
@@ -212,6 +213,7 @@ export default function Admin() {
           console.log(`    - עבודה: ${workCoins}`);
           console.log(`    - שיתופי פעולה: ${collaborationCoins}`);
           console.log(`    - רצף כניסות: ${loginStreakCoins}`);
+          console.log(`    - הכנסה פסיבית: ${passiveIncomeCoins}`);
           console.log(`    - רווחי השקעות: ${totalInvestmentProfit}`);
           console.log(`    - 👑 עדכוני אדמין: ${user.total_admin_coins || 0}`);
           console.log(`  📈 סה"כ הכנסות: ${totalIncome}`);
