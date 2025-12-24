@@ -419,6 +419,87 @@ export default function Admin() {
     }
   };
 
+  const addPassiveIncomeBackpay = async () => {
+    setIsRecalculatingCoins(true);
+    
+    try {
+      const allUsers = await base44.entities.User.list();
+      const students = allUsers.filter(u => u.user_type === 'student');
+      
+      let successCount = 0;
+      let failCount = 0;
+      let totalCoinsAdded = 0;
+      
+      for (let i = 0; i < students.length; i++) {
+        const user = students[i];
+        
+        try {
+          // Check if user has a background with passive income
+          const equippedBackground = user.equipped_items?.background;
+          if (!equippedBackground) continue;
+          
+          const bgItem = AVATAR_ITEMS[equippedBackground];
+          if (!bgItem || !bgItem.passiveIncome) continue;
+          
+          // Estimate 30 days of backpay (reasonable average)
+          const dailyIncome = bgItem.passiveIncome;
+          const backpayDays = 30;
+          const backpayAmount = dailyIncome * backpayDays;
+          
+          console.log(`💰 ${user.full_name}: ${bgItem.name} - ${dailyIncome}/day × ${backpayDays} days = ${backpayAmount} coins`);
+          
+          // Add backpay to user
+          const newCoins = (user.coins || 0) + backpayAmount;
+          const newTotalPassiveIncome = (user.total_passive_income || 0) + backpayAmount;
+          
+          await retryWithBackoff(async () => {
+            await base44.entities.User.update(user.id, {
+              coins: newCoins,
+              total_passive_income: newTotalPassiveIncome
+            });
+          });
+          
+          await sleep(100);
+          
+          // Sync to LeaderboardEntry
+          await retryWithBackoff(async () => {
+            await syncLeaderboardEntry(user.email, {
+              coins: newCoins,
+              total_passive_income: newTotalPassiveIncome
+            });
+          });
+          
+          totalCoinsAdded += backpayAmount;
+          successCount++;
+          
+          if (i < students.length - 1) {
+            await sleep(400);
+          }
+        } catch (error) {
+          failCount++;
+          console.error(`Failed to add backpay for ${user.email}:`, error);
+        }
+      }
+      
+      if (successCount > 0) {
+        toast.success(`✅ הוספו ${totalCoinsAdded} מטבעות ל-${successCount} תלמידים! 🏠`);
+      } else {
+        toast.info("אין תלמידים עם מגורים שצריכים הכנסה פסיבית");
+      }
+      
+      if (failCount > 0) {
+        toast.warning(`⚠️ ${failCount} עדכונים נכשלו`);
+      }
+      
+      await loadData();
+    } catch (error) {
+      console.error("Error adding passive income backpay:", error);
+      toast.error("שגיאה בתיקון הכנסה פסיבית");
+    } finally {
+      setIsRecalculatingCoins(false);
+    }
+  };
+
   const migrateAllDataToLeaderboard = async () => {
     setIsRecalculatingCoins(true);
     
@@ -856,6 +937,13 @@ export default function Admin() {
                 className="w-full bg-green-600 hover:bg-green-700"
               >
                 {isRecalculatingCoins ? "מסנכרן..." : "🔄 סנכרן כל נתוני User ל-LeaderboardEntry (מיגרציה)"}
+              </Button>
+              <Button
+                onClick={addPassiveIncomeBackpay}
+                disabled={isRecalculatingCoins}
+                className="w-full bg-purple-600 hover:bg-purple-700"
+              >
+                {isRecalculatingCoins ? "מתקן..." : "🏠 תקן הכנסה פסיבית למי שקנה מגורים"}
               </Button>
             </CardContent>
           </Card>
