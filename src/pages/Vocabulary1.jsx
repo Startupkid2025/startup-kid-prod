@@ -64,6 +64,47 @@ const pickRandomUnique = (arr, count) => {
   return shuffled.slice(0, Math.min(count, arr.length));
 };
 
+// נורמליזציה של מילה באנגלית
+const normalizeEnglish = (s) => (s || '').trim().toLowerCase();
+
+// מחזיר רשימת מילים ייחודיות לפי word_english (ללא כפילויות)
+const uniqueVocabByEnglish = (allVocabWords) => {
+  const map = new Map();
+  allVocabWords.forEach(word => {
+    const key = normalizeEnglish(word.word_english);
+    if (key && !map.has(key)) {
+      map.set(key, word);
+    }
+  });
+  return Array.from(map.values());
+};
+
+// בונה רשימת המילים של היום מתוך dailyWords (עד 150), תוך שימוש ב-Map למניעת כפילויות
+const buildTodaysVocabWords = (allVocabWords, dailyWords) => {
+  // בנה Map: normalized_english -> VocabularyWordRow
+  const vocabMap = new Map();
+  allVocabWords.forEach(word => {
+    const key = normalizeEnglish(word.word_english);
+    if (key && !vocabMap.has(key)) {
+      vocabMap.set(key, word);
+    }
+  });
+  
+  // הרכב רשימה לפי dailyWords (עד 150)
+  const result = [];
+  const limit = Math.min(dailyWords.length, DAILY_WORDS_COUNT);
+  
+  for (let i = 0; i < limit; i++) {
+    const key = normalizeEnglish(dailyWords[i]);
+    const word = vocabMap.get(key);
+    if (word) {
+      result.push(word);
+    }
+  }
+  
+  return result;
+};
+
 export default function Vocabulary() {
   const [userData, setUserData] = useState(null);
   const [wordProgress, setWordProgress] = useState([]);
@@ -170,20 +211,22 @@ export default function Vocabulary() {
       let updatedUser = user;
 
       if (needsNewSet) {
-        // סנן מילים תקינות באנגלית בלבד
+        // סנן מילים תקינות באנגלית בלבד + הסר כפילויות
         const validWords = allVocabWords.filter(w => {
           const word = w.word_english || '';
           return /^[a-zA-Z\s-]+$/.test(word);
         });
 
+        const uniqueWords = uniqueVocabByEnglish(validWords);
+
         // העדף מילים שעדיין לא mastered
-        const masteredWords = progress.filter(w => w.mastered).map(w => w.word_english.toLowerCase());
-        const unmasteredWords = validWords.filter(w => !masteredWords.includes(w.word_english.toLowerCase()));
+        const masteredWords = progress.filter(w => w.mastered).map(w => normalizeEnglish(w.word_english));
+        const unmasteredWords = uniqueWords.filter(w => !masteredWords.includes(normalizeEnglish(w.word_english)));
 
         // בחר 150 מילים ייחודיות
         let candidates = unmasteredWords.length >= DAILY_WORDS_COUNT 
           ? unmasteredWords 
-          : validWords; // אם אין מספיק לא-mastered, קח הכל
+          : uniqueWords; // אם אין מספיק לא-mastered, קח הכל
 
         const selected = pickRandomUnique(candidates, DAILY_WORDS_COUNT);
         dailyWords = selected.map(w => w.word_english);
@@ -206,11 +249,8 @@ export default function Vocabulary() {
         setUserData(user);
       }
 
-      // טען את המילים של היום (case-insensitive match)
-      const dailyWordsLower = dailyWords.map(w => w.toLowerCase());
-      const todaysVocabWords = allVocabWords.filter(w => 
-        dailyWordsLower.includes((w.word_english || '').toLowerCase())
-      );
+      // טען את המילים של היום (ללא כפילויות)
+      const todaysVocabWords = buildTodaysVocabWords(allVocabWords, dailyWords);
       setAvailableVocabWords(todaysVocabWords);
       setWordProgress(progress);
 
@@ -594,7 +634,7 @@ export default function Vocabulary() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 max-w-2xl mx-auto">
           <div className="bg-blue-500/20 border-2 border-blue-500/40 rounded-xl p-3">
             <p className="text-blue-200 text-sm font-bold">
-              📦 {availableVocabWords.length} / {DAILY_WORDS_COUNT} מילים נותרו להיום
+              📦 {Math.min(availableVocabWords.length, DAILY_WORDS_COUNT)} / {DAILY_WORDS_COUNT} מילים נותרו להיום
             </p>
           </div>
           <div className="bg-purple-500/20 border-2 border-purple-500/40 rounded-xl p-3">
