@@ -836,13 +836,12 @@ export default function Admin() {
                         }
                       }}
                       onRefresh={loadData}
-                    />
-                  ));
-                  })()}
-                  </div>
-                  </CardContent>
-                  </Card>
-                  </TabsContent>
+                      />
+                      ))}
+                      </div>
+                      </CardContent>
+                      </Card>
+                      </TabsContent>
 
         <TabsContent value="lessons">
           <Card className="bg-white/10 backdrop-blur-md border-white/20">
@@ -966,7 +965,8 @@ export default function Admin() {
                       students={students}
                     />
                   </div>
-                ))}
+                  ));
+                })()}
               </div>
             </CardContent>
           </Card>
