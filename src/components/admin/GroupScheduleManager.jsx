@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
@@ -43,10 +42,9 @@ export default function GroupScheduleManager({ group }) {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const scheduled = await base44.entities.ScheduledLesson.filter({
-        group_id: group.id
-      });
-      console.log("Loaded scheduled lessons:", scheduled);
+      const allScheduled = await base44.entities.ScheduledLesson.list();
+      const scheduled = allScheduled.filter(sl => sl.group_id === group.id);
+      console.log("Loaded scheduled lessons for group:", group.id, scheduled);
       setScheduledLessons(scheduled);
 
       const lessons = await base44.entities.Lesson.list();
