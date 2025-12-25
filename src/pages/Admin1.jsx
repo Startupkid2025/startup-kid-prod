@@ -37,6 +37,7 @@ export default function Admin() {
   const [groups, setGroups] = useState([]);
   const [filterGroup, setFilterGroup] = useState("all");
   const [filterUserType, setFilterUserType] = useState("student");
+  const [lessonSortBy, setLessonSortBy] = useState("date");
 
   useEffect(() => {
     loadData();
@@ -836,29 +837,78 @@ export default function Admin() {
                       }}
                       onRefresh={loadData}
                     />
-                  ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                  ));
+                  })()}
+                  </div>
+                  </CardContent>
+                  </Card>
+                  </TabsContent>
 
         <TabsContent value="lessons">
           <Card className="bg-white/10 backdrop-blur-md border-white/20">
             <CardHeader>
               <CardTitle className="text-white flex items-center justify-between">
                 <span>ניהול שיעורים ({lessons.length})</span>
-                <Button
-                  onClick={() => setShowAddLesson(true)}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <Plus className="w-4 h-4 ml-2" />
-                  שיעור חדש
-                </Button>
+                <div className="flex items-center gap-3">
+                  <Select value={lessonSortBy} onValueChange={setLessonSortBy}>
+                    <SelectTrigger className="w-48 bg-white/10 border-white/20 text-white">
+                      <SelectValue placeholder="מיין לפי..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date">תאריך (חדש לישן)</SelectItem>
+                      <SelectItem value="name">שם השיעור</SelectItem>
+                      <SelectItem value="survey">ממוצע סקרים</SelectItem>
+                      <SelectItem value="participants">מספר משתתפים</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    onClick={() => setShowAddLesson(true)}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Plus className="w-4 h-4 ml-2" />
+                    שיעור חדש
+                  </Button>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4">
-                {lessons.map(lesson => (
+                {(() => {
+                  // Calculate stats for each lesson
+                  const lessonsWithStats = lessons.map(lesson => {
+                    const lessonParticipations = participations.filter(p => p.lesson_id === lesson.id);
+                    const completedSurveys = lessonParticipations.filter(p => p.survey_completed);
+
+                    let avgSurvey = 0;
+                    if (completedSurveys.length > 0) {
+                      const totalScore = completedSurveys.reduce((sum, p) => {
+                        const score = (p.survey_interest || 0) + (p.survey_fun || 0) + 
+                                    (p.survey_learned || 0) + (p.survey_difficulty || 0);
+                        return sum + score;
+                      }, 0);
+                      avgSurvey = totalScore / (completedSurveys.length * 4); // Average out of 5
+                    }
+
+                    return {
+                      ...lesson,
+                      participantCount: lessonParticipations.length,
+                      avgSurvey
+                    };
+                  });
+
+                  // Sort lessons
+                  let sortedLessons = [...lessonsWithStats];
+                  if (lessonSortBy === "date") {
+                    sortedLessons.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+                  } else if (lessonSortBy === "name") {
+                    sortedLessons.sort((a, b) => a.lesson_name.localeCompare(b.lesson_name, 'he'));
+                  } else if (lessonSortBy === "survey") {
+                    sortedLessons.sort((a, b) => b.avgSurvey - a.avgSurvey);
+                  } else if (lessonSortBy === "participants") {
+                    sortedLessons.sort((a, b) => b.participantCount - a.participantCount);
+                  }
+
+                  return sortedLessons.map(lesson => (
                   <div key={lesson.id} className="bg-white/5 rounded-lg p-4">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex gap-2">
@@ -890,7 +940,24 @@ export default function Admin() {
                       <div className="flex-1 text-right">
                         <h3 className="text-white font-bold text-lg">{lesson.lesson_name}</h3>
                         <p className="text-white/70 text-sm">{lesson.description}</p>
-                        <p className="text-white/50 text-xs mt-1">{lesson.lesson_date}</p>
+                        <div className="flex items-center justify-end gap-3 mt-2">
+                          <p className="text-white/50 text-xs">{lesson.lesson_date}</p>
+                          <div className="flex items-center gap-4 text-xs">
+                            <span className="bg-blue-500/20 text-blue-200 px-2 py-1 rounded">
+                              👥 {lesson.participantCount} משתתפים
+                            </span>
+                            {lesson.avgSurvey > 0 && (
+                              <span className={`px-2 py-1 rounded font-bold ${
+                                lesson.avgSurvey >= 4.5 ? 'bg-green-500/20 text-green-200' :
+                                lesson.avgSurvey >= 4 ? 'bg-blue-500/20 text-blue-200' :
+                                lesson.avgSurvey >= 3.5 ? 'bg-yellow-500/20 text-yellow-200' :
+                                'bg-orange-500/20 text-orange-200'
+                              }`}>
+                                ⭐ {lesson.avgSurvey.toFixed(1)} / 5
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                     <LessonStudentsList
