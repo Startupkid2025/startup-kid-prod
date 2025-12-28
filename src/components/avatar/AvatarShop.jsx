@@ -150,10 +150,10 @@ export default function AvatarShop({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 border-4 border-yellow-400/50 w-[100vw] sm:max-w-3xl h-[100vh] sm:h-auto sm:max-h-[90vh] overflow-y-auto shadow-2xl p-4 sm:p-6">
-        <DialogHeader>
+      <DialogContent className="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 w-[100vw] h-[100vh] max-h-[100vh] border-0 sm:border-4 border-yellow-400/50 rounded-none sm:rounded-2xl p-2 sm:p-6 overflow-hidden flex flex-col sm:max-w-3xl sm:h-auto sm:max-h-[90vh] shadow-2xl">
+        <DialogHeader className="flex-shrink-0">
           <div className="flex items-center justify-between mb-2">
-            <DialogTitle className="text-2xl font-black text-white">
+            <DialogTitle className="text-xl sm:text-2xl font-black text-white">
               🛍️ חנות היזמים
             </DialogTitle>
             <div className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 sm:px-3 py-1 rounded-full shadow-xl border-2 border-white/30">
@@ -164,7 +164,7 @@ export default function AvatarShop({
         </DialogHeader>
 
         {/* Preview Avatar */}
-        <div className="flex justify-center py-2 sm:py-2">
+        <div className="flex justify-center py-1 sm:py-2 flex-shrink-0">
           <div className="scale-75 sm:scale-100">
             <TamagotchiAvatar 
               equippedItems={equippedItems} 
@@ -175,7 +175,7 @@ export default function AvatarShop({
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-2">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-shrink-0">
           <TabsList className="grid grid-cols-2 gap-2 bg-black/30 p-1 rounded-xl">
             <TabsTrigger 
               value="shop"
@@ -212,10 +212,9 @@ export default function AvatarShop({
           </div>
 
           {/* Shop Tab */}
-          <TabsContent value="shop">
+          <TabsContent value="shop" className="flex-1 overflow-y-auto px-1 pb-20 sm:pb-0 mt-0">
             <TooltipProvider>
-              <div className="mt-3 max-h-[calc(100vh-500px)] sm:max-h-[300px] overflow-y-auto px-1">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
                   <AnimatePresence>
                     {unpurchasedItemsInCategory.map((item) => (
                       <motion.div
@@ -350,17 +349,15 @@ export default function AvatarShop({
                   <p className="text-white font-medium text-base">
                     רכשת את כל הפריטים!
                   </p>
-                  </div>
+                </div>
                 )}
-              </div>
             </TooltipProvider>
           </TabsContent>
 
           {/* Wardrobe Tab */}
-          <TabsContent value="wardrobe">
+          <TabsContent value="wardrobe" className="flex-1 overflow-y-auto px-1 pb-20 sm:pb-0 mt-0">
             <TooltipProvider>
-              <div className="mt-3 max-h-[calc(100vh-500px)] sm:max-h-[300px] overflow-y-auto px-1">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
                   <AnimatePresence>
                     {purchasedItemsInCategory.map((item) => (
                       <motion.div
@@ -472,17 +469,16 @@ export default function AvatarShop({
                   <p className="text-white/70 text-base">
                     עדיין לא רכשת פריטים בקטגוריה זו
                   </p>
-                  </div>
+                </div>
                 )}
-              </div>
             </TooltipProvider>
           </TabsContent>
         </Tabs>
 
-        <div className="mt-3 pt-3 border-t border-white/20">
+        <div className="fixed bottom-0 left-0 right-0 sm:static sm:mt-3 sm:pt-3 sm:border-t sm:border-white/20 bg-gradient-to-t from-indigo-900 via-purple-900 to-transparent sm:bg-transparent p-2 sm:p-0 z-50">
           <Button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-base py-4 rounded-xl"
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-base py-3 sm:py-4 rounded-xl shadow-xl"
           >
             סגור חנות 👋
           </Button>
