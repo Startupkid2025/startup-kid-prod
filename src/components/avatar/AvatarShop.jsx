@@ -176,8 +176,8 @@ export default function AvatarShop({
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-shrink-0">
-          <TabsList className="grid grid-cols-2 gap-2 bg-black/30 p-1 rounded-xl">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-shrink-0 flex flex-col min-h-0">
+          <TabsList className="grid grid-cols-2 gap-2 bg-black/30 p-1 rounded-xl flex-shrink-0">
             <TabsTrigger 
               value="shop"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-white text-white/70 font-bold rounded-lg text-sm"
@@ -194,7 +194,7 @@ export default function AvatarShop({
             </TabsTrigger>
           </TabsList>
 
-          <div className="mt-3">
+          <div className="mt-3 flex-shrink-0">
             <div className="flex gap-2 bg-black/20 p-2 rounded-xl overflow-x-auto">
               {Object.entries(categories).map(([key, { icon }]) => (
                 <button
@@ -213,9 +213,9 @@ export default function AvatarShop({
           </div>
 
           {/* Shop Tab */}
-          <TabsContent value="shop" className="flex-1 overflow-y-auto px-1 pb-24 sm:pb-4 mt-0">
+          <TabsContent value="shop" className="flex-1 overflow-y-auto px-1 pb-24 sm:pb-4 mt-3 min-h-0">
             <TooltipProvider>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <AnimatePresence>
                     {unpurchasedItemsInCategory.map((item) => (
                       <motion.div
@@ -358,9 +358,9 @@ export default function AvatarShop({
           </TabsContent>
 
           {/* Wardrobe Tab */}
-          <TabsContent value="wardrobe" className="flex-1 overflow-y-auto px-1 pb-24 sm:pb-4 mt-0">
+          <TabsContent value="wardrobe" className="flex-1 overflow-y-auto px-1 pb-24 sm:pb-4 mt-3 min-h-0">
             <TooltipProvider>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <AnimatePresence>
                     {purchasedItemsInCategory.map((item) => (
                       <motion.div
