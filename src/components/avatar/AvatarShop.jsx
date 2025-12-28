@@ -36,6 +36,7 @@ export default function AvatarShop({
 }) {
   const [selectedCategory, setSelectedCategory] = useState("body");
   const [activeTab, setActiveTab] = useState("shop");
+  const [tooltipOpen, setTooltipOpen] = useState(null);
 
   const currentCoins = userData?.coins || 0;
   const currentPurchasedItems = userData?.purchased_items || [];
@@ -212,7 +213,7 @@ export default function AvatarShop({
           </div>
 
           {/* Shop Tab */}
-          <TabsContent value="shop" className="flex-1 overflow-y-auto px-1 pb-20 sm:pb-0 mt-0">
+          <TabsContent value="shop" className="flex-1 overflow-y-auto px-1 pb-24 sm:pb-4 mt-0">
             <TooltipProvider>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
                   <AnimatePresence>
@@ -223,9 +224,11 @@ export default function AvatarShop({
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
                       >
-                        <Tooltip>
+                        <Tooltip open={tooltipOpen === item.id} onOpenChange={(open) => setTooltipOpen(open ? item.id : null)}>
                           <TooltipTrigger asChild>
-                            <div className={`relative p-2 rounded-lg border-2 ${
+                            <div 
+                              onClick={() => setTooltipOpen(tooltipOpen === item.id ? null : item.id)}
+                              className={`relative p-2 rounded-lg border-2 ${
                               item.isUnlocked ? 'border-purple-300/50 bg-white/10' : 'border-gray-500 bg-gray-800/50'
                             }`}>
                         {!item.isUnlocked && (
@@ -355,7 +358,7 @@ export default function AvatarShop({
           </TabsContent>
 
           {/* Wardrobe Tab */}
-          <TabsContent value="wardrobe" className="flex-1 overflow-y-auto px-1 pb-20 sm:pb-0 mt-0">
+          <TabsContent value="wardrobe" className="flex-1 overflow-y-auto px-1 pb-24 sm:pb-4 mt-0">
             <TooltipProvider>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
                   <AnimatePresence>
@@ -366,10 +369,18 @@ export default function AvatarShop({
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
                       >
-                        <Tooltip>
+                        <Tooltip open={tooltipOpen === item.id} onOpenChange={(open) => setTooltipOpen(open ? item.id : null)}>
                           <TooltipTrigger asChild>
                             <button
-                        onClick={() => handleEquip(selectedCategory, item.id)}
+                        onClick={(e) => {
+                          if (tooltipOpen === item.id) {
+                            handleEquip(selectedCategory, item.id);
+                            setTooltipOpen(null);
+                          } else {
+                            setTooltipOpen(item.id);
+                          }
+                        }}
+                        onDoubleClick={() => handleEquip(selectedCategory, item.id)}
                         className={`relative w-full p-2 rounded-lg border-2 transition-all ${
                           item.isEquipped
                             ? 'border-green-400 bg-green-900/30 shadow-lg scale-105'
