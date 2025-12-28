@@ -405,12 +405,11 @@ export default function Vocabulary() {
           bonusBreakdown.push({ type: 'base', amount: baseCoins, label: 'בסיס' });
           
           // Check for eyes and mouth bonus
-          const purchasedItems = userData.purchased_items || [];
           const equippedItems = userData.equipped_items || {};
           const equippedEyes = equippedItems.eyes;
           const equippedMouth = equippedItems.mouth;
           
-          if (equippedEyes && purchasedItems.includes(equippedEyes)) {
+          if (equippedEyes) {
             const eyesItem = AVATAR_ITEMS[equippedEyes];
             if (eyesItem && eyesItem.wordBonus) {
               coinsEarned += eyesItem.wordBonus;
@@ -418,7 +417,7 @@ export default function Vocabulary() {
             }
           }
           
-          if (equippedMouth && purchasedItems.includes(equippedMouth)) {
+          if (equippedMouth) {
             const mouthItem = AVATAR_ITEMS[equippedMouth];
             if (mouthItem && mouthItem.wordBonus) {
               coinsEarned += mouthItem.wordBonus;
