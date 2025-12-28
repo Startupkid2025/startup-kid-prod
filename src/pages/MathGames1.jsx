@@ -540,13 +540,14 @@ ${question} = ${correctAnswer}
       if (isCorrect) {
         coinsEarned = MATH_COINS_PER_CORRECT_ANSWER;
         
-        // Check for shoes bonus
-        const purchasedItems = userData.purchased_items || [];
+        // Import AVATAR_ITEMS
+        const { AVATAR_ITEMS } = await import('../components/avatar/TamagotchiAvatar');
+        
+        // Check for shoes bonus (mathBonus)
         const equippedItems = userData.equipped_items || {};
         const equippedShoes = equippedItems.shoes;
         
-        if (equippedShoes && purchasedItems.includes(equippedShoes)) {
-          const { AVATAR_ITEMS } = await import('../components/avatar/TamagotchiAvatar');
+        if (equippedShoes) {
           const shoesItem = AVATAR_ITEMS[equippedShoes];
           if (shoesItem && shoesItem.mathBonus) {
             coinsEarned += shoesItem.mathBonus;
