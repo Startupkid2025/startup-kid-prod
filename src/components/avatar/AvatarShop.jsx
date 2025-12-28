@@ -151,8 +151,9 @@ export default function AvatarShop({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[100vw] h-[100vh] max-h-[100vh] p-2 sm:p-6 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 border-0 sm:border-4 border-yellow-400/50 rounded-none sm:rounded-2xl overflow-hidden flex flex-col sm:max-w-3xl sm:h-auto sm:max-h-[90vh] shadow-2xl">
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent className="w-[100vw] h-[100vh] bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 border-0 sm:border-4 border-yellow-400/50 rounded-none sm:rounded-2xl p-0 flex flex-col overflow-y-auto sm:max-w-3xl sm:h-auto sm:max-h-[90vh] shadow-2xl">
+        <div className="flex-1 flex flex-col p-2 sm:p-6 pb-20 sm:pb-6">
+          <DialogHeader>
           <div className="flex items-center justify-between mb-2">
             <DialogTitle className="text-xl sm:text-2xl font-black text-white">
               🛍️ חנות היזמים
@@ -164,8 +165,8 @@ export default function AvatarShop({
           </div>
         </DialogHeader>
 
-        {/* Preview Avatar */}
-        <div className="flex justify-center py-1 sm:py-2 flex-shrink-0">
+          {/* Preview Avatar */}
+          <div className="flex justify-center py-1 sm:py-2">
           <div className="scale-75 sm:scale-100">
             <TamagotchiAvatar 
               equippedItems={equippedItems} 
@@ -176,8 +177,8 @@ export default function AvatarShop({
           </div>
         </div>
 
-        <div className="flex-shrink-0">
-          <div className="grid grid-cols-2 gap-2 bg-black/30 p-1 rounded-xl">
+          <div>
+            <div className="grid grid-cols-2 gap-2 bg-black/30 p-1 rounded-xl">
             <button
               onClick={() => setActiveTab("shop")}
               className={`flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-sm transition-all ${
@@ -221,8 +222,8 @@ export default function AvatarShop({
           </div>
         </div>
 
-        {/* Single Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-1 pb-28 sm:pb-4 mt-3">
+          {/* Content */}
+          <div className="mt-3">
           <TooltipProvider>
             {activeTab === "shop" ? (
               // Shop Items
@@ -495,9 +496,10 @@ export default function AvatarShop({
               </div>
             )}
           </TooltipProvider>
+          </div>
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 sm:static sm:mt-3 sm:pt-3 sm:border-t sm:border-white/20 bg-gradient-to-t from-indigo-900 via-purple-900 to-transparent sm:bg-transparent p-2 sm:p-0 z-50">
+        <div className="fixed bottom-0 left-0 right-0 sm:static sm:border-t sm:border-white/20 bg-gradient-to-t from-indigo-900 via-purple-900 to-transparent sm:bg-transparent p-2 sm:p-0 z-50">
           <Button
             onClick={onClose}
             className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-base py-3 sm:py-4 rounded-xl shadow-xl"
