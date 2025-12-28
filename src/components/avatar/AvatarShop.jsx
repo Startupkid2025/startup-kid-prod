@@ -151,7 +151,7 @@ export default function AvatarShop({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 w-[100vw] h-[100vh] max-h-[100vh] border-0 sm:border-4 border-yellow-400/50 rounded-none sm:rounded-2xl p-2 sm:p-6 overflow-hidden flex flex-col sm:max-w-3xl sm:h-auto sm:max-h-[90vh] shadow-2xl">
+      <DialogContent className="w-[100vw] h-[100vh] max-h-[100vh] p-2 sm:p-6 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 border-0 sm:border-4 border-yellow-400/50 rounded-none sm:rounded-2xl overflow-hidden flex flex-col sm:max-w-3xl sm:h-auto sm:max-h-[90vh] shadow-2xl">
         <DialogHeader className="flex-shrink-0">
           <div className="flex items-center justify-between mb-2">
             <DialogTitle className="text-xl sm:text-2xl font-black text-white">
@@ -176,25 +176,33 @@ export default function AvatarShop({
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-shrink-0 flex flex-col min-h-0">
-          <TabsList className="grid grid-cols-2 gap-2 bg-black/30 p-1 rounded-xl flex-shrink-0">
-            <TabsTrigger 
-              value="shop"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-white text-white/70 font-bold rounded-lg text-sm"
+        <div className="flex-shrink-0">
+          <div className="grid grid-cols-2 gap-2 bg-black/30 p-1 rounded-xl">
+            <button
+              onClick={() => setActiveTab("shop")}
+              className={`flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-sm transition-all ${
+                activeTab === "shop"
+                  ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white"
+                  : "text-white/70"
+              }`}
             >
-              <ShoppingCart className="w-3 h-3 mr-1" />
+              <ShoppingCart className="w-3 h-3" />
               קנה פריטים
-            </TabsTrigger>
-            <TabsTrigger 
-              value="wardrobe"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white text-white/70 font-bold rounded-lg text-sm"
+            </button>
+            <button
+              onClick={() => setActiveTab("wardrobe")}
+              className={`flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-sm transition-all ${
+                activeTab === "wardrobe"
+                  ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                  : "text-white/70"
+              }`}
             >
-              <Check className="w-3 h-3 mr-1" />
+              <Check className="w-3 h-3" />
               הארון שלי
-            </TabsTrigger>
-          </TabsList>
+            </button>
+          </div>
 
-          <div className="mt-3 flex-shrink-0">
+          <div className="mt-3">
             <div className="flex gap-2 bg-black/20 p-2 rounded-xl overflow-x-auto">
               {Object.entries(categories).map(([key, { icon }]) => (
                 <button
@@ -211,10 +219,14 @@ export default function AvatarShop({
               ))}
             </div>
           </div>
+        </div>
 
-          {/* Shop Tab */}
-          <TabsContent value="shop" className="flex-1 overflow-y-auto px-1 pb-24 sm:pb-4 mt-3 min-h-0">
-            <TooltipProvider>
+        {/* Single Scrollable Content */}
+        <div className="flex-1 overflow-y-auto px-1 pb-28 sm:pb-4 mt-3">
+          <TooltipProvider>
+            {activeTab === "shop" ? (
+              // Shop Items
+              <div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <AnimatePresence>
                     {unpurchasedItemsInCategory.map((item) => (
@@ -347,19 +359,17 @@ export default function AvatarShop({
                 </div>
 
                 {unpurchasedItemsInCategory.length === 0 && (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-2">🎉</div>
-                  <p className="text-white font-medium text-base">
-                    רכשת את כל הפריטים!
-                  </p>
-                </div>
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-2">🎉</div>
+                    <p className="text-white font-medium text-base">
+                      רכשת את כל הפריטים!
+                    </p>
+                  </div>
                 )}
-            </TooltipProvider>
-          </TabsContent>
-
-          {/* Wardrobe Tab */}
-          <TabsContent value="wardrobe" className="flex-1 overflow-y-auto px-1 pb-24 sm:pb-4 mt-3 min-h-0">
-            <TooltipProvider>
+              </div>
+            ) : (
+              // Wardrobe Items
+              <div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <AnimatePresence>
                     {purchasedItemsInCategory.map((item) => (
@@ -475,16 +485,17 @@ export default function AvatarShop({
                 </div>
 
                 {purchasedItemsInCategory.length === 0 && (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-2">🛒</div>
-                  <p className="text-white/70 text-base">
-                    עדיין לא רכשת פריטים בקטגוריה זו
-                  </p>
-                </div>
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-2">🛒</div>
+                    <p className="text-white/70 text-base">
+                      עדיין לא רכשת פריטים בקטגוריה זו
+                    </p>
+                  </div>
                 )}
-            </TooltipProvider>
-          </TabsContent>
-        </Tabs>
+              </div>
+            )}
+          </TooltipProvider>
+        </div>
 
         <div className="fixed bottom-0 left-0 right-0 sm:static sm:mt-3 sm:pt-3 sm:border-t sm:border-white/20 bg-gradient-to-t from-indigo-900 via-purple-900 to-transparent sm:bg-transparent p-2 sm:p-0 z-50">
           <Button
