@@ -14,7 +14,7 @@ import { AVATAR_ITEMS } from "./TamagotchiAvatar";
 const categories = {
   body: { name: "גוף", icon: "🎨" },
   eyes: { name: "עיניים", icon: "👀" },
-  mouth: { name: "פה", icon: "😊" },
+  mouth: { name: "חיוכים", icon: "😊" },
   hat: { name: "כובע", icon: "🎩" },
   accessory: { name: "אביזרים", icon: "💼" },
   shoes: { name: "נעליים", icon: "👟" },
