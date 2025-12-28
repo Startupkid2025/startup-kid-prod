@@ -204,9 +204,13 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     }
     
     const totalWorkEarnings = (userData.total_work_earnings || 0) + coinsToAdd;
+    const newCoins = (userData.coins || 0) + coinsToAdd;
+    
+    // Limit debt to -300
+    const finalCoins = Math.max(newCoins, -300);
 
     await base44.auth.updateMe({
-      coins: (userData.coins || 0) + coinsToAdd,
+      coins: finalCoins,
       total_work_earnings: totalWorkEarnings,
       work_status: null
     });
@@ -216,7 +220,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
       const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
       if (leaderboardEntries.length > 0) {
         await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-          coins: (userData.coins || 0) + coinsToAdd,
+          coins: finalCoins,
           total_work_earnings: totalWorkEarnings
         });
       }
