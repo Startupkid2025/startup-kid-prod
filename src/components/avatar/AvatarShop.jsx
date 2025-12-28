@@ -150,22 +150,22 @@ export default function AvatarShop({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 border-4 border-yellow-400/50 max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl sm:p-6 p-3">
+      <DialogContent className="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 border-4 border-yellow-400/50 max-w-[95vw] sm:max-w-3xl max-h-[85vh] overflow-y-auto shadow-2xl sm:p-6 p-3">
         <DialogHeader>
           <div className="flex items-center justify-between mb-2">
             <DialogTitle className="text-xl sm:text-2xl font-black text-white">
               🛍️ חנות היזמים
             </DialogTitle>
-            <div className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-xl border-2 border-white/30">
-              <Coins className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="text-base sm:text-lg font-black">{currentCoins}</span>
+            <div className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 sm:px-3 py-1 rounded-full shadow-xl border-2 border-white/30">
+              <Coins className="w-3 h-3 sm:w-5 sm:h-5" />
+              <span className="text-sm sm:text-lg font-black">{currentCoins}</span>
             </div>
           </div>
         </DialogHeader>
 
         {/* Preview Avatar */}
         <div className="flex justify-center py-1 sm:py-2">
-          <div className="scale-75 sm:scale-100">
+          <div className="scale-[0.55] sm:scale-75 md:scale-100">
             <TamagotchiAvatar 
               equippedItems={equippedItems} 
               size="medium"
@@ -214,7 +214,7 @@ export default function AvatarShop({
           {/* Shop Tab */}
           <TabsContent value="shop">
             <TooltipProvider>
-              <div className="mt-2 sm:mt-3 max-h-[300px] overflow-y-auto px-1">
+              <div className="mt-2 sm:mt-3 max-h-[250px] sm:max-h-[300px] overflow-y-auto px-1">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <AnimatePresence>
                     {unpurchasedItemsInCategory.map((item) => (
@@ -359,7 +359,7 @@ export default function AvatarShop({
           {/* Wardrobe Tab */}
           <TabsContent value="wardrobe">
             <TooltipProvider>
-              <div className="mt-2 sm:mt-3 max-h-[300px] overflow-y-auto px-1">
+              <div className="mt-2 sm:mt-3 max-h-[250px] sm:max-h-[300px] overflow-y-auto px-1">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <AnimatePresence>
                     {purchasedItemsInCategory.map((item) => (
