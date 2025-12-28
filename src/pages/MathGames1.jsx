@@ -671,7 +671,7 @@ ${question} = ${correctAnswer}
     );
   }
 
-  const masteredCount = mathProgress.filter(p => p.mastered).length;
+  const totalCorrectExercises = mathProgress.filter(p => p.correct_streak > 0 || p.mastered).length;
   const totalCoinsEarned = mathProgress.reduce((sum, p) => sum + (p.coins_earned || 0), 0);
 
   return (
@@ -732,8 +732,8 @@ ${question} = ${correctAnswer}
         <Card className="bg-white/10 backdrop-blur-md border-white/20">
           <CardContent className="pt-6 text-center">
             <Trophy className="w-8 h-8 text-yellow-300 mx-auto mb-2" />
-            <p className="text-2xl font-black text-white">{masteredCount}</p>
-            <p className="text-white/70 text-sm">תרגילים שלטת בהם</p>
+            <p className="text-2xl font-black text-white">{totalCorrectExercises}</p>
+            <p className="text-white/70 text-sm">תרגילים שהצלחת</p>
           </CardContent>
         </Card>
 
