@@ -402,6 +402,12 @@ export default function Leaderboard() {
       return;
     }
 
+    // Prevent collaboration with yourself
+    if (targetUser.student_email === currentUser.email) {
+      toast.error("לא ניתן לשתף פעולה עם עצמך! 😅");
+      return;
+    }
+
     try {
       const today = new Date().toISOString().split('T')[0];
       
