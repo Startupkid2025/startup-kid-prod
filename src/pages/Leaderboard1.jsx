@@ -176,13 +176,13 @@ export default function Leaderboard() {
           return false;
         }
 
-        // Filter out demo users from leaderboard
-        if (u.user_type === 'demo') {
+        // Filter out demo users and parents from leaderboard
+        if (u.user_type === 'demo' || u.user_type === 'parent') {
           return false;
         }
 
-        // For others, show students or users without user_type defined (default to student)
-        return !u.user_type || u.user_type === 'student';
+        // Show all students (including those without user_type defined)
+        return true;
       });
 
       // If admin, add students from User entity that are missing from LeaderboardEntry
