@@ -346,43 +346,7 @@ export default function Home() {
 
   const initializeTutorialLessons = async (userEmail) => {
     try {
-      const tutorialLessons = [
-        {
-          lesson_name: "שיעור הדגמה - מבוא לבינה מלאכותית",
-          lesson_date: new Date().toISOString().split('T')[0],
-          description: "למד את היסודות של AI וטכנולוגיה מודרנית",
-          ai_tech_xp: 30,
-          personal_dev_xp: 0,
-          social_skills_xp: 0,
-          money_business_xp: 0,
-          category: "ai_tech",
-          thumbnail_url: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400",
-          recorded_lesson_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        },
-        {
-          lesson_name: "שיעור הדגמה - יזמות וחשיבה עסקית",
-          lesson_date: new Date().toISOString().split('T')[0],
-          description: "גלה איך לחשוב כמו יזם ולזהות הזדמנויות",
-          ai_tech_xp: 0,
-          personal_dev_xp: 0,
-          social_skills_xp: 0,
-          money_business_xp: 30,
-          category: "money_business",
-          thumbnail_url: "https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?w=400",
-          recorded_lesson_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        }
-      ];
-
-      for (const lessonData of tutorialLessons) {
-        const createdLesson = await base44.entities.Lesson.create(lessonData);
-        
-        await base44.entities.LessonParticipation.create({
-          lesson_id: createdLesson.id,
-          student_email: userEmail,
-          lesson_date: lessonData.lesson_date,
-          attended: false
-        });
-      }
+      // No tutorial lessons for new users
     } catch (error) {
       console.error("Error initializing tutorial lessons:", error);
     }
