@@ -139,7 +139,7 @@ export default function Layout({ children }) {
     try {
       const today = new Date().toISOString().split('T')[0];
       const lastLogin = user.last_login_date;
-      
+
       // If already logged in today, do nothing
       if (lastLogin === today) {
         return;
@@ -149,7 +149,7 @@ export default function Layout({ children }) {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString().split('T')[0];
-      
+
       let newStreak = 1;
       let streakBonus = 10; // Base bonus: 10 coins
 
@@ -158,15 +158,22 @@ export default function Layout({ children }) {
         newStreak = (user.login_streak || 0) + 1;
         streakBonus = newStreak * 10; // 10 coins per day, increases forever (10, 20, 30, 40, ...)
 
-        toast.success(`🔥 רצף כניסות: ${newStreak} ימים! קיבלת ${streakBonus} מטבעות! 🎉`, {
-          duration: 5000
+        toast.success(`🔥 רצף כניסות: ${newStreak} ימים ברצף!\n💰 הרווחת ${streakBonus} מטבעות!`, {
+          duration: 6000,
+          style: { fontSize: '16px', fontWeight: 'bold' }
         });
       } else if (lastLogin && lastLogin !== yesterdayStr) {
         // Streak broken
-        toast.info(`התחלת רצף כניסות חדש! קיבלת ${streakBonus} מטבע 🌟`);
+        toast.warning(`⚠️ הרצף נשבר! התחלת רצף חדש\n💰 הרווחת ${streakBonus} מטבע (יום 1)`, {
+          duration: 5000,
+          style: { fontSize: '16px' }
+        });
       } else {
         // First login
-        toast.success(`🎉 ברוך הבא! קיבלת ${streakBonus} מטבע על הכניסה הראשונה!`);
+        toast.success(`🎉 ברוך הבא! רצף כניסות יום 1\n💰 הרווחת ${streakBonus} מטבע!`, {
+          duration: 5000,
+          style: { fontSize: '16px' }
+        });
       }
       
       // Check if user is login streak king and add bonus
