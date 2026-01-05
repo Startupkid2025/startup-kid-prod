@@ -11,6 +11,19 @@ import StudentProfileDialog from "../components/leaderboard/StudentProfileDialog
 import { toast } from "sonner";
 import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
 
+// Helper function to fetch all records with pagination
+async function listAll(entityHandler, sort = "-created_date", pageSize = 200) {
+  let all = [];
+  let skip = 0;
+  while (true) {
+    const page = await entityHandler.list(sort, pageSize, skip);
+    all = all.concat(page);
+    if (page.length < pageSize) break;
+    skip += pageSize;
+  }
+  return all;
+}
+
 export default function Leaderboard() {
   const [users, setUsers] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -91,7 +104,7 @@ export default function Leaderboard() {
       const user = await base44.auth.me();
       setCurrentUser(user);
 
-      // Fetch all data in a single batch to prevent rate limiting
+      // Fetch all data with pagination to get ALL records
       let allEntries = [];
       let allWordProgress = [];
       let allInvestments = [];
@@ -100,37 +113,37 @@ export default function Leaderboard() {
       let allMathProgress = [];
 
       try {
-        allEntries = await base44.entities.LeaderboardEntry.list();
+        allEntries = await listAll(base44.entities.LeaderboardEntry);
       } catch (e) {
         console.error("Error loading LeaderboardEntry:", e);
       }
 
       try {
-        allWordProgress = await base44.entities.WordProgress.list();
+        allWordProgress = await listAll(base44.entities.WordProgress);
       } catch (e) {
         console.error("Error loading WordProgress:", e);
       }
 
       try {
-        allInvestments = await base44.entities.Investment.list();
+        allInvestments = await listAll(base44.entities.Investment);
       } catch (e) {
         console.error("Error loading Investments:", e);
       }
 
       try {
-        allLessonParticipations = await base44.entities.LessonParticipation.list();
+        allLessonParticipations = await listAll(base44.entities.LessonParticipation);
       } catch (e) {
         console.error("Error loading LessonParticipation:", e);
       }
 
       try {
-        allLessons = await base44.entities.Lesson.list();
+        allLessons = await listAll(base44.entities.Lesson);
       } catch (e) {
         console.error("Error loading Lessons:", e);
       }
 
       try {
-        allMathProgress = await base44.entities.MathProgress.list();
+        allMathProgress = await listAll(base44.entities.MathProgress);
       } catch (e) {
         console.error("Error loading MathProgress:", e);
       }
@@ -151,7 +164,7 @@ export default function Leaderboard() {
       let allUsers = [];
       if (isCurrentUserAdmin) {
         try {
-          allUsers = await base44.entities.User.list();
+          allUsers = await listAll(base44.entities.User);
         } catch (e) {
           console.log("Admin: Cannot load User.list for filtering");
         }
