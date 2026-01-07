@@ -3,8 +3,9 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, BookOpen, Shield, Edit2, Trash2, FileText, Languages, Filter } from "lucide-react";
+import { Plus, Users, BookOpen, Shield, Edit2, Trash2, FileText, Languages, Filter, Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -38,6 +39,7 @@ export default function Admin() {
   const [filterGroup, setFilterGroup] = useState("all");
   const [filterUserType, setFilterUserType] = useState("student");
   const [lessonSortBy, setLessonSortBy] = useState("date");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     loadData();
@@ -733,12 +735,13 @@ export default function Admin() {
 
         <TabsContent value="students">
           {/* Filters Bar */}
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-white/70 text-sm">
-              <Filter className="w-4 h-4" />
-              <span>סינון:</span>
-            </div>
-            <div className="flex gap-3">
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 mb-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-white/70 text-sm">
+                <Filter className="w-4 h-4" />
+                <span>סינון:</span>
+              </div>
+              <div className="flex gap-3">
               <div className="flex items-center gap-2">
                 <span className="text-white/70 text-sm">קבוצה:</span>
                 <Select value={filterGroup} onValueChange={setFilterGroup}>
@@ -768,15 +771,28 @@ export default function Admin() {
                     <SelectItem value="all">הכל</SelectItem>
                   </SelectContent>
                 </Select>
+                </div>
+              </div>
+              <div className="text-white/70 text-sm">
+                סה״כ {students.filter(s => {
+                  const typeMatch = filterUserType === 'all' || s.user_type === filterUserType;
+                  if (filterGroup === 'all') return typeMatch;
+                  const group = groups.find(g => g.id === filterGroup);
+                  return typeMatch && group?.student_emails?.includes(s.email);
+                }).length} מ-{students.length}
               </div>
             </div>
-            <div className="text-white/70 text-sm">
-              סה״כ {students.filter(s => {
-                const typeMatch = filterUserType === 'all' || s.user_type === filterUserType;
-                if (filterGroup === 'all') return typeMatch;
-                const group = groups.find(g => g.id === filterGroup);
-                return typeMatch && group?.student_emails?.includes(s.email);
-              }).length} מ-{students.length}
+            
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
+              <Input
+                type="text"
+                placeholder="חפש תלמיד לפי שם..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-10"
+              />
             </div>
           </div>
 
@@ -791,10 +807,27 @@ export default function Admin() {
               <div className="space-y-3">
                 {students
                   .filter(student => {
+                    // Filter by user type
                     const typeMatch = filterUserType === 'all' || student.user_type === filterUserType;
-                    if (filterGroup === 'all') return typeMatch;
-                    const group = groups.find(g => g.id === filterGroup);
-                    return typeMatch && group?.student_emails?.includes(student.email);
+                    
+                    // Filter by group
+                    let groupMatch = true;
+                    if (filterGroup !== 'all') {
+                      const group = groups.find(g => g.id === filterGroup);
+                      groupMatch = group?.student_emails?.includes(student.email);
+                    }
+                    
+                    // Filter by search term
+                    let searchMatch = true;
+                    if (searchTerm.trim()) {
+                      const fullName = student.full_name?.toLowerCase() || '';
+                      const firstName = student.first_name?.toLowerCase() || '';
+                      const lastName = student.last_name?.toLowerCase() || '';
+                      const search = searchTerm.toLowerCase();
+                      searchMatch = fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
+                    }
+                    
+                    return typeMatch && groupMatch && searchMatch;
                   })
                   .map(student => (
                     <StudentRow
