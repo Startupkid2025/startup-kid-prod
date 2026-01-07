@@ -143,12 +143,6 @@ export default function Home() {
         await base44.auth.updateMe({ coins: recalculatedCoins });
         user.coins = recalculatedCoins;
       }
-      
-      // Initialize tutorial lessons only for new demo users
-      if (user.user_type === 'demo' && !user.tutorial_initialized) {
-        await initializeTutorialLessons(user.email);
-        await base44.auth.updateMe({ tutorial_initialized: true });
-      }
 
       setUserData({ ...user, ...lessonCounts });
 
@@ -344,13 +338,7 @@ export default function Home() {
     }
   };
 
-  const initializeTutorialLessons = async (userEmail) => {
-    try {
-      // No tutorial lessons for new users
-    } catch (error) {
-      console.error("Error initializing tutorial lessons:", error);
-    }
-  };
+
 
   const handleEquipItem = async (newEquipped) => {
     if (!userData) return;
