@@ -38,6 +38,28 @@ export default function Home() {
     loadData();
   }, []);
 
+  const initializeIntroLesson = async (userEmail) => {
+    try {
+      // Check if user already has the intro lesson participation
+      const existingParticipations = await base44.entities.LessonParticipation.filter({
+        student_email: userEmail,
+        lesson_id: '68e4eebd3c0ca8414597076b' // סטארטאפ קיד - היכרות
+      });
+
+      if (existingParticipations.length === 0) {
+        // Create participation for intro lesson
+        await base44.entities.LessonParticipation.create({
+          lesson_id: '68e4eebd3c0ca8414597076b',
+          student_email: userEmail,
+          lesson_date: new Date().toISOString().split('T')[0],
+          attended: false
+        });
+      }
+    } catch (error) {
+      console.error("Error initializing intro lesson:", error);
+    }
+  };
+
   const getTodayKeyJerusalem = () => {
     const formatter = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Asia/Jerusalem',
@@ -127,6 +149,12 @@ export default function Home() {
       
       // Apply passive income FIRST (before any other calculations)
       await applyPassiveIncomeIfNeeded(user);
+      
+      // Initialize intro lesson for new users
+      if (!user.tutorial_initialized) {
+        await initializeIntroLesson(user.email);
+        await base44.auth.updateMe({ tutorial_initialized: true });
+      }
       
       // Check if user needs to select group/name - only if they DON'T have these fields
       const needsOnboarding = !user.has_selected_group && (!user.first_name || !user.last_name);
