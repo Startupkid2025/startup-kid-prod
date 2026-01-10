@@ -44,7 +44,6 @@ export default function Admin() {
 
   useEffect(() => {
     loadData();
-    autoCreateParticipations();
   }, []);
 
   const loadData = async () => {
@@ -79,73 +78,7 @@ export default function Admin() {
     }
   };
 
-  const autoCreateParticipations = async () => {
-    try {
-      const [allScheduledLessons, allGroups, allParticipations, allUsers] = await Promise.all([
-        base44.entities.ScheduledLesson.list(),
-        base44.entities.Group.list(),
-        base44.entities.LessonParticipation.list(),
-        base44.entities.User.list()
-      ]);
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      // Get only past scheduled lessons that are not cancelled
-      const pastScheduledLessons = allScheduledLessons.filter(sl => {
-        if (sl.is_cancelled) return false;
-        if (!sl.lesson_id) return false;
-        
-        const lessonDate = new Date(sl.scheduled_date);
-        lessonDate.setHours(0, 0, 0, 0);
-        return lessonDate < today;
-      });
-
-      let createdCount = 0;
-
-      for (const scheduledLesson of pastScheduledLessons) {
-        const group = allGroups.find(g => g.id === scheduledLesson.group_id);
-        if (!group || !group.student_emails || group.student_emails.length === 0) continue;
-
-        const lessonDateStr = scheduledLesson.scheduled_date.includes('T') 
-          ? scheduledLesson.scheduled_date.split('T')[0] 
-          : scheduledLesson.scheduled_date;
-
-        // For each student in the group
-        for (const studentEmail of group.student_emails) {
-          const student = allUsers.find(u => u.email === studentEmail);
-          if (!student || student.user_type !== 'student') continue;
-
-          // Check if participation already exists
-          const existingParticipation = allParticipations.find(p => 
-            p.student_email === studentEmail && 
-            p.lesson_id === scheduledLesson.lesson_id &&
-            p.lesson_date === lessonDateStr
-          );
-
-          if (!existingParticipation) {
-            // Create participation with attended: false by default
-            await base44.entities.LessonParticipation.create({
-              student_email: studentEmail,
-              lesson_id: scheduledLesson.lesson_id,
-              lesson_date: lessonDateStr,
-              attended: false
-            });
-            createdCount++;
-            
-            // Small delay to avoid rate limiting
-            await sleep(100);
-          }
-        }
-      }
-
-      if (createdCount > 0) {
-        console.log(`✅ נוצרו ${createdCount} השתתפויות אוטומטיות`);
-      }
-    } catch (error) {
-      console.error("Error auto-creating participations:", error);
-    }
-  };
 
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
