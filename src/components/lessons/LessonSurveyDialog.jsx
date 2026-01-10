@@ -31,12 +31,12 @@ export default function LessonSurveyDialog({ isOpen, onClose, lesson, onSubmit }
   };
 
   const handleSubmit = () => {
-    if (ratings.interest && ratings.fun && ratings.learned && ratings.difficulty) {
+    if (ratings.interest && ratings.fun && ratings.learned && ratings.difficulty && ratings.comments.trim()) {
       onSubmit(ratings);
     }
   };
 
-  const isComplete = ratings.interest && ratings.fun && ratings.learned && ratings.difficulty;
+  const isComplete = ratings.interest && ratings.fun && ratings.learned && ratings.difficulty && ratings.comments.trim();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -88,7 +88,7 @@ export default function LessonSurveyDialog({ isOpen, onClose, lesson, onSubmit }
           <div className="space-y-2">
             <p className="font-medium text-gray-800 flex items-center gap-2">
               <span>💬</span>
-              רוצה לספר עוד משהו? (אופציונלי)
+              הערות ומשוב (חובה)
             </p>
             <Textarea
               value={ratings.comments}
