@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, BookOpen, Shield, Edit2, Trash2, FileText, Languages, Filter, Search } from "lucide-react";
+import { Plus, Users, BookOpen, Shield, Edit2, Trash2, FileText, Languages, Filter, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,6 +40,7 @@ export default function Admin() {
   const [filterUserType, setFilterUserType] = useState("student");
   const [lessonSortBy, setLessonSortBy] = useState("date");
   const [searchTerm, setSearchTerm] = useState("");
+  const [expandedSurveys, setExpandedSurveys] = useState({});
 
   useEffect(() => {
     loadData();
@@ -1010,7 +1011,21 @@ export default function Admin() {
                         {/* Survey Breakdown */}
                         {lesson.surveyCount > 0 && (
                           <div className="mt-3 pt-3 border-t border-white/10">
-                            <p className="text-white/60 text-xs mb-2">פירוט סקרים ({lesson.surveyCount} סקרים):</p>
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-white/60 text-xs">פירוט סקרים ({lesson.surveyCount} סקרים):</p>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setExpandedSurveys(prev => ({ ...prev, [lesson.id]: !prev[lesson.id] }))}
+                                className="text-white/60 hover:text-white text-xs h-6 px-2"
+                              >
+                                {expandedSurveys[lesson.id] ? (
+                                  <>הסתר מילאו <ChevronUp className="w-3 h-3 mr-1" /></>
+                                ) : (
+                                  <>הצג מי מילא <ChevronDown className="w-3 h-3 mr-1" /></>
+                                )}
+                              </Button>
+                            </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                               <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg px-2 py-1.5">
                                 <p className="text-purple-200 text-[10px] mb-0.5">🎯 עניין</p>
@@ -1029,6 +1044,47 @@ export default function Admin() {
                                 <p className="text-white font-bold text-sm">{lesson.avgDifficulty.toFixed(1)}/5</p>
                               </div>
                             </div>
+                            
+                            {/* List of students who completed survey */}
+                            {expandedSurveys[lesson.id] && (
+                              <div className="mt-3 bg-white/5 rounded-lg p-3">
+                                <p className="text-white/80 text-xs font-bold mb-2">תלמידים שמילאו סקר:</p>
+                                <div className="space-y-2">
+                                  {participations
+                                    .filter(p => p.lesson_id === lesson.id && p.survey_completed)
+                                    .map(p => {
+                                      const student = students.find(s => s.email === p.student_email);
+                                      if (!student) return null;
+                                      
+                                      const totalScore = (p.survey_interest || 0) + (p.survey_fun || 0) + 
+                                                        (p.survey_learned || 0) + (p.survey_difficulty || 0);
+                                      const avgScore = totalScore / 4;
+                                      
+                                      return (
+                                        <div key={p.id} className="bg-white/5 rounded px-3 py-2 flex items-center justify-between">
+                                          <div className="flex-1">
+                                            <p className="text-white text-sm font-medium">{student.full_name}</p>
+                                            <div className="flex gap-2 mt-1">
+                                              <span className="text-[10px] text-purple-300">🎯 {p.survey_interest || 0}</span>
+                                              <span className="text-[10px] text-pink-300">😄 {p.survey_fun || 0}</span>
+                                              <span className="text-[10px] text-green-300">📚 {p.survey_learned || 0}</span>
+                                              <span className="text-[10px] text-orange-300">💪 {p.survey_difficulty || 0}</span>
+                                            </div>
+                                          </div>
+                                          <div className={`text-sm font-bold px-2 py-1 rounded ${
+                                            avgScore >= 4.5 ? 'bg-green-500/20 text-green-200' :
+                                            avgScore >= 4 ? 'bg-blue-500/20 text-blue-200' :
+                                            avgScore >= 3.5 ? 'bg-yellow-500/20 text-yellow-200' :
+                                            'bg-orange-500/20 text-orange-200'
+                                          }`}>
+                                            {avgScore.toFixed(1)}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
