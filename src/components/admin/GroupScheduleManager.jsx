@@ -275,7 +275,7 @@ export default function GroupScheduleManager({ group }) {
               now.setHours(0, 0, 0, 0); // Normalize 'now' to the start of the day
               const isPast = date < now; // Check if the date is strictly before today
               const isCorrectDay = isGroupDay(date);
-              const canAddLesson = !scheduledLesson && !isPast; // New condition: not scheduled and not in the past
+              const canAddLesson = !scheduledLesson; // Allow adding lessons to past dates too
 
               return (
                 <motion.div
