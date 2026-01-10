@@ -236,7 +236,7 @@ export default function GroupScheduleManager({ group }) {
                 variant="outline"
                 className="bg-white/10 border-white/20 hover:bg-white/20 text-white"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronLeft className="w-4 h-4" />
               </Button>
               <span className="text-lg font-bold">
                 {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
@@ -247,7 +247,7 @@ export default function GroupScheduleManager({ group }) {
                 variant="outline"
                 className="bg-white/10 border-white/20 hover:bg-white/20 text-white"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
           </CardTitle>
@@ -271,11 +271,8 @@ export default function GroupScheduleManager({ group }) {
               const scheduledLesson = getLessonForDate(date);
               const lesson = scheduledLesson && allLessons.find(l => l.id === scheduledLesson.lesson_id);
               const isToday = date.toDateString() === new Date().toDateString();
-              const now = new Date();
-              now.setHours(0, 0, 0, 0); // Normalize 'now' to the start of the day
-              const isPast = date < now; // Check if the date is strictly before today
               const isCorrectDay = isGroupDay(date);
-              const canAddLesson = !scheduledLesson && !isPast; // New condition: not scheduled and not in the past
+              const canAddLesson = !scheduledLesson; // Allow adding lesson on any day without an existing lesson
 
               return (
                 <motion.div
@@ -292,7 +289,7 @@ export default function GroupScheduleManager({ group }) {
                       ? 'bg-green-500/10 border-green-400/30 hover:bg-green-500/20 cursor-pointer'
                       : canAddLesson // If can add but it's NOT the group's day
                       ? 'bg-blue-500/5 border-blue-400/20 hover:bg-blue-500/15 cursor-pointer'
-                      : 'bg-white/5 border-white/10' // This covers past days or days with existing scheduled lessons
+                      : 'bg-white/5 border-white/10' // Days with existing scheduled lessons
                   }`}
                   onClick={() => canAddLesson && handleAddLesson(date)} // Allow adding lesson if canAddLesson is true
                 >
