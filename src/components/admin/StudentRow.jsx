@@ -25,7 +25,8 @@ import { syncLeaderboardEntry } from "../utils/leaderboardSync";
 export default function StudentRow({ 
   student, 
   lessons, 
-  participations, 
+  participations,
+  groups = [],
   onToggleParticipation,
   onUpdateParticipation,
   onRefresh
@@ -344,6 +345,9 @@ export default function StudentRow({
     teacher: "bg-green-500/20 text-green-300"
   };
 
+  // Find the group the student belongs to
+  const studentGroup = groups.find(g => g.student_emails?.includes(student.email));
+
   return (
     <>
       <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden">
@@ -417,10 +421,15 @@ export default function StudentRow({
 
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               <div className="text-right min-w-0 flex-1">
-                <div className="flex items-center gap-2 justify-end">
+                <div className="flex items-center gap-2 justify-end flex-wrap">
                   <span className={`text-xs px-2 py-0.5 rounded-full ${userTypeColors[student.user_type || "student"]}`}>
                     {userTypeLabels[student.user_type || "student"]}
                   </span>
+                  {studentGroup && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/30">
+                      📚 {studentGroup.group_name}
+                    </span>
+                  )}
                   <p className="font-bold text-white text-base sm:text-lg truncate">
                     {student.first_name && student.last_name 
                       ? `${student.first_name} ${student.last_name}`
