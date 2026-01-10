@@ -27,6 +27,7 @@ export default function StudentRow({
   lessons, 
   participations,
   groups = [],
+  scheduledLessons = [],
   onToggleParticipation,
   onUpdateParticipation,
   onRefresh
@@ -348,6 +349,32 @@ export default function StudentRow({
   // Find the group the student belongs to
   const studentGroup = groups.find(g => g.student_emails?.includes(student.email));
 
+  // Find the last scheduled lesson for the student's group
+  const getRecommendedLesson = () => {
+    if (!studentGroup) return null;
+    
+    // Get all scheduled lessons for this group that have passed
+    const groupScheduledLessons = scheduledLessons.filter(sl => 
+      sl.group_id === studentGroup.id && 
+      sl.lesson_id &&
+      !sl.is_cancelled
+    );
+    
+    if (groupScheduledLessons.length === 0) return null;
+    
+    // Sort by date (most recent first)
+    const sortedLessons = groupScheduledLessons.sort((a, b) => {
+      const dateA = new Date(a.scheduled_date);
+      const dateB = new Date(b.scheduled_date);
+      return dateB - dateA;
+    });
+    
+    // Return the most recent lesson
+    return sortedLessons[0];
+  };
+  
+  const recommendedScheduledLesson = getRecommendedLesson();
+
   return (
     <>
       <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden">
@@ -459,22 +486,40 @@ export default function StudentRow({
             <div className="space-y-4">
               {lessons.map((lesson) => {
                 const participation = getParticipationForLesson(lesson.id);
+                const isRecommended = recommendedScheduledLesson?.lesson_id === lesson.id;
                 
                 return (
-                  <div key={lesson.id} className="bg-white/5 rounded-xl p-4 border border-white/10">
+                  <div key={lesson.id} className={`bg-white/5 rounded-xl p-4 border ${
+                    isRecommended && !participation 
+                      ? 'border-yellow-400 bg-yellow-500/10 shadow-lg shadow-yellow-500/20' 
+                      : 'border-white/10'
+                  }`}>
                     <div className="flex items-start justify-between mb-3">
                       {!participation && (
-                        <Button
-                          onClick={() => handleAddParticipation(lesson)}
-                          size="sm"
-                          className="bg-green-500/20 hover:bg-green-500/30 text-green-200 border border-green-500/30"
-                        >
-                          <Plus className="w-4 h-4 ml-1" />
-                          הוסף
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            onClick={() => handleAddParticipation(lesson)}
+                            size="sm"
+                            className={`${
+                              isRecommended
+                                ? 'bg-yellow-500/30 hover:bg-yellow-500/40 text-yellow-200 border border-yellow-400/50 shadow-md'
+                                : 'bg-green-500/20 hover:bg-green-500/30 text-green-200 border border-green-500/30'
+                            }`}
+                          >
+                            <Plus className="w-4 h-4 ml-1" />
+                            {isRecommended ? '⭐ הוסף (מומלץ)' : 'הוסף'}
+                          </Button>
+                        </div>
                       )}
                       <div className="flex-1 text-right">
-                        <h4 className="font-bold text-white mb-1">{lesson.lesson_name}</h4>
+                        <div className="flex items-center justify-end gap-2">
+                          {isRecommended && !participation && (
+                            <span className="text-xs bg-yellow-500/20 text-yellow-200 px-2 py-1 rounded-full border border-yellow-400/30 font-bold">
+                              ⭐ שיעור אחרון של הקבוצה
+                            </span>
+                          )}
+                          <h4 className="font-bold text-white mb-1">{lesson.lesson_name}</h4>
+                        </div>
                         {lesson.description && (
                           <p className="text-white/60 text-sm">{lesson.description}</p>
                         )}

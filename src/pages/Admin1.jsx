@@ -46,6 +46,8 @@ export default function Admin() {
     loadData();
   }, []);
 
+  const [scheduledLessons, setScheduledLessons] = useState([]);
+
   const loadData = async () => {
     try {
       console.log("Loading admin data...");
@@ -63,6 +65,7 @@ export default function Admin() {
       const allLessons = await base44.entities.Lesson.list("-lesson_date");
       const allParticipations = await base44.entities.LessonParticipation.list();
       const allGroups = await base44.entities.Group.list();
+      const allScheduledLessons = await base44.entities.ScheduledLesson.list();
 
       console.log("Loaded users:", allUsers.length);
       
@@ -70,6 +73,7 @@ export default function Admin() {
       setLessons(allLessons);
       setParticipations(allParticipations);
       setGroups(allGroups);
+      setScheduledLessons(allScheduledLessons);
       setIsLoading(false);
     } catch (error) {
       console.error("Error loading data:", error);
@@ -834,12 +838,13 @@ export default function Admin() {
                   })
                   .map(student => (
                     <StudentRow
-                     key={student.id}
-                     student={student}
-                     lessons={lessons}
-                     participations={participations}
-                     groups={groups}
-                     onToggleParticipation={async (student, lesson, lessonDate, participationId, wasAttended) => {
+                      key={student.id}
+                      student={student}
+                      lessons={lessons}
+                      participations={participations}
+                      groups={groups}
+                      scheduledLessons={scheduledLessons}
+                      onToggleParticipation={async (student, lesson, lessonDate, participationId, wasAttended) => {
                         try {
                           if (participationId) {
                             await base44.entities.LessonParticipation.delete(participationId);
