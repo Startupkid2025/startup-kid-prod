@@ -901,11 +901,12 @@ export default function Admin() {
                   })
                   .map(student => (
                     <StudentRow
-                      key={student.id}
-                      student={student}
-                      lessons={lessons}
-                      participations={participations}
-                      onToggleParticipation={async (student, lesson, lessonDate, participationId, wasAttended) => {
+                     key={student.id}
+                     student={student}
+                     lessons={lessons}
+                     participations={participations}
+                     groups={groups}
+                     onToggleParticipation={async (student, lesson, lessonDate, participationId, wasAttended) => {
                         try {
                           if (participationId) {
                             await base44.entities.LessonParticipation.delete(participationId);
