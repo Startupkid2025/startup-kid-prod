@@ -912,6 +912,11 @@ export default function Admin() {
                     const completedSurveys = lessonParticipations.filter(p => p.survey_completed);
 
                     let avgSurvey = 0;
+                    let avgInterest = 0;
+                    let avgFun = 0;
+                    let avgLearned = 0;
+                    let avgDifficulty = 0;
+                    
                     if (completedSurveys.length > 0) {
                       const totalScore = completedSurveys.reduce((sum, p) => {
                         const score = (p.survey_interest || 0) + (p.survey_fun || 0) + 
@@ -919,12 +924,23 @@ export default function Admin() {
                         return sum + score;
                       }, 0);
                       avgSurvey = totalScore / (completedSurveys.length * 4); // Average out of 5
+                      
+                      // Calculate individual averages
+                      avgInterest = completedSurveys.reduce((sum, p) => sum + (p.survey_interest || 0), 0) / completedSurveys.length;
+                      avgFun = completedSurveys.reduce((sum, p) => sum + (p.survey_fun || 0), 0) / completedSurveys.length;
+                      avgLearned = completedSurveys.reduce((sum, p) => sum + (p.survey_learned || 0), 0) / completedSurveys.length;
+                      avgDifficulty = completedSurveys.reduce((sum, p) => sum + (p.survey_difficulty || 0), 0) / completedSurveys.length;
                     }
 
                     return {
                       ...lesson,
                       participantCount: lessonParticipations.length,
-                      avgSurvey
+                      avgSurvey,
+                      surveyCount: completedSurveys.length,
+                      avgInterest,
+                      avgFun,
+                      avgLearned,
+                      avgDifficulty
                     };
                   });
 
@@ -990,6 +1006,31 @@ export default function Admin() {
                             )}
                           </div>
                         </div>
+                        
+                        {/* Survey Breakdown */}
+                        {lesson.surveyCount > 0 && (
+                          <div className="mt-3 pt-3 border-t border-white/10">
+                            <p className="text-white/60 text-xs mb-2">פירוט סקרים ({lesson.surveyCount} סקרים):</p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                              <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg px-2 py-1.5">
+                                <p className="text-purple-200 text-[10px] mb-0.5">🎯 עניין</p>
+                                <p className="text-white font-bold text-sm">{lesson.avgInterest.toFixed(1)}/5</p>
+                              </div>
+                              <div className="bg-pink-500/10 border border-pink-500/20 rounded-lg px-2 py-1.5">
+                                <p className="text-pink-200 text-[10px] mb-0.5">😄 כיף</p>
+                                <p className="text-white font-bold text-sm">{lesson.avgFun.toFixed(1)}/5</p>
+                              </div>
+                              <div className="bg-green-500/10 border border-green-500/20 rounded-lg px-2 py-1.5">
+                                <p className="text-green-200 text-[10px] mb-0.5">📚 למדתי</p>
+                                <p className="text-white font-bold text-sm">{lesson.avgLearned.toFixed(1)}/5</p>
+                              </div>
+                              <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg px-2 py-1.5">
+                                <p className="text-orange-200 text-[10px] mb-0.5">💪 קושי</p>
+                                <p className="text-white font-bold text-sm">{lesson.avgDifficulty.toFixed(1)}/5</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <LessonStudentsList
