@@ -1040,7 +1040,7 @@ export default function Admin() {
                                 <p className="text-white font-bold text-sm">{lesson.avgLearned.toFixed(1)}/5</p>
                               </div>
                               <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg px-2 py-1.5">
-                                <p className="text-orange-200 text-[10px] mb-0.5">💪 קושי</p>
+                                <p className="text-orange-200 text-[10px] mb-0.5">🧠 קל להבנה</p>
                                 <p className="text-white font-bold text-sm">{lesson.avgDifficulty.toFixed(1)}/5</p>
                               </div>
                             </div>
@@ -1061,24 +1061,32 @@ export default function Admin() {
                                       const avgScore = totalScore / 4;
                                       
                                       return (
-                                        <div key={p.id} className="bg-white/5 rounded px-3 py-2 flex items-center justify-between">
-                                          <div className="flex-1">
-                                            <p className="text-white text-sm font-medium">{student.full_name}</p>
-                                            <div className="flex gap-2 mt-1">
-                                              <span className="text-[10px] text-purple-300">🎯 {p.survey_interest || 0}</span>
-                                              <span className="text-[10px] text-pink-300">😄 {p.survey_fun || 0}</span>
-                                              <span className="text-[10px] text-green-300">📚 {p.survey_learned || 0}</span>
-                                              <span className="text-[10px] text-orange-300">💪 {p.survey_difficulty || 0}</span>
+                                        <div key={p.id} className="bg-white/5 rounded px-3 py-2">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <div className="flex-1">
+                                              <p className="text-white text-sm font-medium">{student.full_name}</p>
+                                              <div className="flex gap-2 mt-1">
+                                                <span className="text-[10px] text-purple-300">🎯 {p.survey_interest || 0}</span>
+                                                <span className="text-[10px] text-pink-300">😄 {p.survey_fun || 0}</span>
+                                                <span className="text-[10px] text-green-300">📚 {p.survey_learned || 0}</span>
+                                                <span className="text-[10px] text-orange-300">🧠 {p.survey_difficulty || 0}</span>
+                                              </div>
+                                            </div>
+                                            <div className={`text-sm font-bold px-2 py-1 rounded ${
+                                              avgScore >= 4.5 ? 'bg-green-500/20 text-green-200' :
+                                              avgScore >= 4 ? 'bg-blue-500/20 text-blue-200' :
+                                              avgScore >= 3.5 ? 'bg-yellow-500/20 text-yellow-200' :
+                                              'bg-orange-500/20 text-orange-200'
+                                            }`}>
+                                              {avgScore.toFixed(1)}
                                             </div>
                                           </div>
-                                          <div className={`text-sm font-bold px-2 py-1 rounded ${
-                                            avgScore >= 4.5 ? 'bg-green-500/20 text-green-200' :
-                                            avgScore >= 4 ? 'bg-blue-500/20 text-blue-200' :
-                                            avgScore >= 3.5 ? 'bg-yellow-500/20 text-yellow-200' :
-                                            'bg-orange-500/20 text-orange-200'
-                                          }`}>
-                                            {avgScore.toFixed(1)}
-                                          </div>
+                                          {p.survey_comments && (
+                                            <div className="mt-2 pt-2 border-t border-white/10">
+                                              <p className="text-white/60 text-[10px] mb-1">💬 הערות:</p>
+                                              <p className="text-white/80 text-xs italic">"{p.survey_comments}"</p>
+                                            </div>
+                                          )}
                                         </div>
                                       );
                                     })}
