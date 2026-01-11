@@ -272,15 +272,39 @@ const LeaderboardRow = React.memo(({
   );
 });
 
-// Helper function to fetch all records with pagination
+// Helper function to fetch all records with pagination (with rate limit handling)
 async function listAll(entityHandler, sort = "-created_date", pageSize = 200) {
   let all = [];
   let skip = 0;
+  let retries = 0;
+  const maxRetries = 3;
+  
   while (true) {
-    const page = await entityHandler.list(sort, pageSize, skip);
-    all = all.concat(page);
-    if (page.length < pageSize) break;
-    skip += pageSize;
+    try {
+      const page = await entityHandler.list(sort, pageSize, skip);
+      all = all.concat(page);
+      if (page.length < pageSize) break;
+      skip += pageSize;
+      retries = 0; // Reset retries on success
+      
+      // Add small delay between pages to avoid rate limits
+      if (skip > 0) {
+        await new Promise(resolve => setTimeout(resolve, 150));
+      }
+    } catch (error) {
+      // Handle rate limit errors with exponential backoff
+      if (error?.response?.status === 429 || error?.message?.includes('429') || error?.message?.includes('Rate limit')) {
+        if (retries >= maxRetries) {
+          throw error;
+        }
+        retries++;
+        const delay = Math.min(1000 * Math.pow(2, retries), 8000);
+        console.log(`Rate limit hit, waiting ${delay}ms before retry ${retries}/${maxRetries}`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
   }
   return all;
 }
@@ -382,24 +406,32 @@ export default function Leaderboard() {
       const user = await base44.auth.me();
       setCurrentUser(user);
 
-      // 1️⃣ Fetch all data in parallel for better performance
-      const [
-        allEntries,
-        allWordProgress,
-        allInvestments,
-        allLessonParticipations,
-        allLessons,
-        allMathProgress
-      ] = await Promise.allSettled([
-        listAll(base44.entities.LeaderboardEntry),
+      // 1️⃣ Fetch all data - load critical data first, then rest in smaller batches
+      const allEntries = await listAll(base44.entities.LeaderboardEntry);
+      
+      // Small delay to avoid rate limits
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Load rest in 2 parallel batches
+      const [allWordProgress, allInvestments, allLessonParticipations] = await Promise.allSettled([
         listAll(base44.entities.WordProgress),
         listAll(base44.entities.Investment),
-        listAll(base44.entities.LessonParticipation),
+        listAll(base44.entities.LessonParticipation)
+      ]).then(results => results.map((result, idx) => {
+        if (result.status === 'fulfilled') return result.value;
+        const names = ['WordProgress', 'Investments', 'LessonParticipation'];
+        console.error(`Error loading ${names[idx]}:`, result.reason);
+        return [];
+      }));
+      
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const [allLessons, allMathProgress] = await Promise.allSettled([
         listAll(base44.entities.Lesson),
         listAll(base44.entities.MathProgress)
       ]).then(results => results.map((result, idx) => {
         if (result.status === 'fulfilled') return result.value;
-        const names = ['LeaderboardEntry', 'WordProgress', 'Investments', 'LessonParticipation', 'Lessons', 'MathProgress'];
+        const names = ['Lessons', 'MathProgress'];
         console.error(`Error loading ${names[idx]}:`, result.reason);
         return [];
       }))
@@ -420,6 +452,7 @@ export default function Leaderboard() {
       let allUsers = [];
       if (isCurrentUserAdmin) {
         try {
+          await new Promise(resolve => setTimeout(resolve, 200));
           allUsers = await listAll(base44.entities.User);
         } catch (e) {
           console.log("Admin: Cannot load User.list for filtering");

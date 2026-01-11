@@ -84,12 +84,19 @@ export default function Admin() {
       console.log(`Loading ${tab} data...`);
       
       if (tab === "students") {
-        const [allUsers, allLessons, allParticipations, allGroups, allScheduledLessons] = await Promise.all([
-          base44.entities.User.list(),
-          base44.entities.Lesson.list("-lesson_date"),
-          base44.entities.LessonParticipation.list(),
-          base44.entities.Group.list(),
-          base44.entities.ScheduledLesson.list()
+        // Load in smaller batches with delays to avoid rate limits
+        const allUsers = await retryWithBackoff(() => base44.entities.User.list());
+        await sleep(200);
+        
+        const allLessons = await retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date"));
+        await sleep(200);
+        
+        const allParticipations = await retryWithBackoff(() => base44.entities.LessonParticipation.list());
+        await sleep(200);
+        
+        const [allGroups, allScheduledLessons] = await Promise.all([
+          retryWithBackoff(() => base44.entities.Group.list()),
+          retryWithBackoff(() => base44.entities.ScheduledLesson.list())
         ]);
         
         setStudents(allUsers);
@@ -98,11 +105,13 @@ export default function Admin() {
         setGroups(allGroups);
         setScheduledLessons(allScheduledLessons);
       } else if (tab === "lessons") {
-        const [allLessons, allParticipations, allUsers] = await Promise.all([
-          base44.entities.Lesson.list("-lesson_date"),
-          base44.entities.LessonParticipation.list(),
-          base44.entities.User.list()
-        ]);
+        const allLessons = await retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date"));
+        await sleep(200);
+        
+        const allParticipations = await retryWithBackoff(() => base44.entities.LessonParticipation.list());
+        await sleep(200);
+        
+        const allUsers = await retryWithBackoff(() => base44.entities.User.list());
         
         setLessons(allLessons);
         setParticipations(allParticipations);
@@ -116,7 +125,17 @@ export default function Admin() {
       setLoadedTabs(prev => ({ ...prev, [tab]: true }));
     } catch (error) {
       console.error(`Error loading ${tab} data:`, error);
-      toast.error("שגיאה בטעינת נתונים");
+      
+      // More specific error message for rate limits
+      if (error?.response?.status === 429 || error?.message?.includes('429') || error?.message?.includes('Rate limit')) {
+        toast.error("יותר מדי בקשות. מנסה שוב...");
+        // Auto-retry after a delay
+        await sleep(2000);
+        setLoadedTabs(prev => ({ ...prev, [tab]: false }));
+        await loadTabData(tab);
+      } else {
+        toast.error("שגיאה בטעינת נתונים");
+      }
     }
   };
 
