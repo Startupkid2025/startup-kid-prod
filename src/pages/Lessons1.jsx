@@ -440,7 +440,7 @@ export default function Lessons() {
                       {hasQuestions && (
                         <Button
                           onClick={() => setQuizLesson(lesson)}
-                          className={`w-full font-bold flex items-center justify-between ${
+                          className={`w-full font-bold flex items-center justify-center ${
                             hasQuiz 
                               ? "bg-green-500/20 border-2 border-green-500 text-green-200 hover:bg-green-500/30"
                               : "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white"
@@ -451,8 +451,8 @@ export default function Lessons() {
                             {hasQuiz ? "חידות על השיעור" : "חידות על השיעור 🪙"}
                           </span>
                           {hasQuiz && (
-                            <span className="flex items-center gap-1" dir="ltr">
-                              {quizProg.score}/{quizProg.total_questions} תשובות נכונות ✓
+                            <span className="mr-2" dir="ltr">
+                              ({quizProg.score}/{quizProg.total_questions} ✓)
                             </span>
                           )}
                         </Button>
