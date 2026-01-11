@@ -982,7 +982,7 @@ export default function Admin() {
                             });
                             toast.success("השתתפות נוספה");
                           }
-                          await loadData();
+                          await refreshCurrentTab();
                         } catch (error) {
                           console.error("Error toggling participation:", error);
                           toast.error("שגיאה");
@@ -995,7 +995,7 @@ export default function Admin() {
                             attended: wasAttended
                           });
                           toast.success("ההשתתפות עודכנה");
-                          await loadData();
+                          await refreshCurrentTab();
                         } catch (error) {
                           console.error("Error updating participation:", error);
                           toast.error("שגיאה בעדכון");
