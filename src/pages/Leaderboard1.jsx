@@ -24,6 +24,21 @@ async function listAll(entityHandler, sort = "-created_date", pageSize = 200) {
   return all;
 }
 
+// Helper to format last login date safely
+const formatLastLoginDM = (value) => {
+  if (!value) return null;
+
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [y, m, d] = value.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    return dt.toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit" });
+  }
+
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return null;
+  return dt.toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit" });
+};
+
 export default function Leaderboard() {
   const [users, setUsers] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -962,18 +977,18 @@ export default function Leaderboard() {
                           </Tooltip>
 
                           {/* Last Login */}
-                          {player.last_login_date && (
+                          {player.last_login_date && formatLastLoginDM(player.last_login_date) && (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-500/30 cursor-help">
                                   <span className="text-[10px] sm:text-xs">📅</span>
                                   <span className="text-[10px] sm:text-xs font-bold text-cyan-200">
-                                    {new Date(player.last_login_date).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' })}
+                                    {formatLastLoginDM(player.last_login_date)}
                                   </span>
                                 </div>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p className="text-xs">כניסה אחרונה: {new Date(player.last_login_date).toLocaleDateString('he-IL')}</p>
+                                <p className="text-xs">כניסה אחרונה: {formatLastLoginDM(player.last_login_date)}</p>
                               </TooltipContent>
                             </Tooltip>
                           )}
