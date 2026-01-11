@@ -40,6 +40,7 @@ export default function Admin() {
   const [filterUserType, setFilterUserType] = useState("student");
   const [lessonSortBy, setLessonSortBy] = useState("date");
   const [searchTerm, setSearchTerm] = useState("");
+  const [studentSortBy, setStudentSortBy] = useState("name");
   const [expandedSurveys, setExpandedSurveys] = useState({});
 
   useEffect(() => {
@@ -746,9 +747,22 @@ export default function Admin() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-white/70 text-sm">
                 <Filter className="w-4 h-4" />
-                <span>סינון:</span>
+                <span>סינון ומיון:</span>
               </div>
               <div className="flex gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-white/70 text-sm">מיין לפי:</span>
+                <Select value={studentSortBy} onValueChange={setStudentSortBy}>
+                  <SelectTrigger className="w-44 bg-white/10 border-white/20 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">שם (א-ת)</SelectItem>
+                    <SelectItem value="joined">תאריך הצטרפות</SelectItem>
+                    <SelectItem value="lessons">מספר שיעורים</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-white/70 text-sm">קבוצה:</span>
                 <Select value={filterGroup} onValueChange={setFilterGroup}>
@@ -816,14 +830,14 @@ export default function Admin() {
                   .filter(student => {
                     // Filter by user type
                     const typeMatch = filterUserType === 'all' || student.user_type === filterUserType;
-                    
+
                     // Filter by group
                     let groupMatch = true;
                     if (filterGroup !== 'all') {
                       const group = groups.find(g => g.id === filterGroup);
                       groupMatch = group?.student_emails?.includes(student.email);
                     }
-                    
+
                     // Filter by search term
                     let searchMatch = true;
                     if (searchTerm.trim()) {
@@ -833,8 +847,18 @@ export default function Admin() {
                       const search = searchTerm.toLowerCase();
                       searchMatch = fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
                     }
-                    
+
                     return typeMatch && groupMatch && searchMatch;
+                  })
+                  .sort((a, b) => {
+                    if (studentSortBy === "name") {
+                      return (a.full_name || '').localeCompare(b.full_name || '', 'he');
+                    } else if (studentSortBy === "joined") {
+                      return new Date(a.created_date) - new Date(b.created_date);
+                    } else if (studentSortBy === "lessons") {
+                      return (b.total_lessons || 0) - (a.total_lessons || 0);
+                    }
+                    return 0;
                   })
                   .map(student => (
                     <StudentRow
