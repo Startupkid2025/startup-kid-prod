@@ -522,7 +522,7 @@ export default function Admin() {
     }
   };
 
-  const addPassiveIncomeBackpay = async () {
+  const addPassiveIncomeBackpay = async () => {
     setIsRecalculatingCoins(true);
     
     try {
