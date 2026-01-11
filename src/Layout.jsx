@@ -15,6 +15,31 @@ export default function Layout({ children }) {
     loadUser();
   }, []);
 
+  React.useEffect(() => {
+    const updateLastLogin = async () => {
+      try {
+        const me = await base44.auth.me();
+        if (!me?.email) return;
+
+        const nowIso = new Date().toISOString();
+
+        // עדכון בפרופיל המשתמש
+        await base44.auth.updateMe({
+          last_login_date: nowIso
+        });
+
+        // סנכרון ל-LeaderboardEntry (כי זה מה שמשתמשים אחרים רואים)
+        await syncLeaderboardEntry(me.email, {
+          last_login_date: nowIso
+        });
+      } catch (e) {
+        console.log("Failed to update last login date", e);
+      }
+    };
+
+    updateLastLogin();
+  }, []);
+
 
 
   const loadUser = async () => {
