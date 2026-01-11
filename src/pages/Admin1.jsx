@@ -603,6 +603,67 @@ export default function Admin() {
     }
   };
 
+  const addPassiveIncomeBackpay = async () => {
+    setIsRecalculatingCoins(true);
+    try {
+      const allUsers = await base44.entities.User.list();
+      const students = allUsers.filter(u => u.user_type === 'student');
+      let successCount = 0;
+      let failCount = 0;
+      let totalCoinsAdded = 0;
+      for (let i = 0; i < students.length; i++) {
+        const user = students[i];
+        try {
+          const equippedBackground = user.equipped_items?.background;
+          if (!equippedBackground) continue;
+          const bgItem = AVATAR_ITEMS[equippedBackground];
+          if (!bgItem || !bgItem.passiveIncome) continue;
+          const dailyIncome = bgItem.passiveIncome;
+          const backpayDays = 2;
+          const backpayAmount = dailyIncome * backpayDays;
+          console.log(`💰 ${user.full_name}: ${bgItem.name} - ${dailyIncome}/day × ${backpayDays} days = ${backpayAmount} coins`);
+          const newCoins = (user.coins || 0) + backpayAmount;
+          const newTotalPassiveIncome = (user.total_passive_income || 0) + backpayAmount;
+          await retryWithBackoff(async () => {
+            await base44.entities.User.update(user.id, {
+              coins: newCoins,
+              total_passive_income: newTotalPassiveIncome
+            });
+          });
+          await sleep(100);
+          await retryWithBackoff(async () => {
+            await syncLeaderboardEntry(user.email, {
+              coins: newCoins,
+              total_passive_income: newTotalPassiveIncome
+            });
+          });
+          totalCoinsAdded += backpayAmount;
+          successCount++;
+          if (i < students.length - 1) {
+            await sleep(400);
+          }
+        } catch (error) {
+          failCount++;
+          console.error(`Failed to add backpay for ${user.email}:`, error);
+        }
+      }
+      if (successCount > 0) {
+        toast.success(`✅ הוספו ${totalCoinsAdded} מטבעות ל-${successCount} תלמידים! 🏠`);
+      } else {
+        toast.info("אין תלמידים עם מגורים שצריכים הכנסה פסיבית");
+      }
+      if (failCount > 0) {
+        toast.warning(`⚠️ ${failCount} עדכונים נכשלו`);
+      }
+      await refreshCurrentTab();
+    } catch (error) {
+      console.error("Error adding passive income backpay:", error);
+      toast.error("שגיאה בתיקון הכנסה פסיבית");
+    } finally {
+      setIsRecalculatingCoins(false);
+    }
+  };
+
   const migrateAllDataToLeaderboard = async () => {
     setIsRecalculatingCoins(true);
     
