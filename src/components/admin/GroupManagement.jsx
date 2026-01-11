@@ -158,12 +158,17 @@ export default function GroupManagement() {
           const studentCount = actualStudents.length;
 
           // Check if group has at least 2 future scheduled lessons
-          const futureScheduledLessons = scheduledLessons.filter(sl => 
-            sl.group_id === group.id && 
-            sl.lesson_id && 
-            !sl.is_cancelled &&
-            new Date(sl.scheduled_date) >= new Date()
-          );
+          const today = new Date();
+          today.setHours(0, 0, 0, 0); // Reset time for date-only comparison
+          
+          const futureScheduledLessons = scheduledLessons.filter(sl => {
+            if (sl.group_id !== group.id || !sl.lesson_id || sl.is_cancelled) {
+              return false;
+            }
+            const lessonDate = new Date(sl.scheduled_date);
+            lessonDate.setHours(0, 0, 0, 0);
+            return lessonDate >= today;
+          });
           const hasTwoLessonsAhead = futureScheduledLessons.length >= 2;
 
           return (
