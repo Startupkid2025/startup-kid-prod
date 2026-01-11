@@ -467,6 +467,9 @@ export default function StudentRow({
                 {student.phone_number && (
                   <p className="text-white/50 text-xs truncate">📱 {student.phone_number}</p>
                 )}
+                <p className="text-white/50 text-xs truncate">
+                  📅 הצטרף: {new Date(student.created_date).toLocaleDateString('he-IL')}
+                </p>
               </div>
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0">
                 {student.full_name?.[0] || "?"}
