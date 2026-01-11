@@ -15,31 +15,6 @@ export default function Layout({ children }) {
     loadUser();
   }, []);
 
-  React.useEffect(() => {
-    const updateLastLogin = async () => {
-      try {
-        const me = await base44.auth.me();
-        if (!me?.email) return;
-
-        const nowIso = new Date().toISOString();
-
-        // עדכון בפרופיל המשתמש
-        await base44.auth.updateMe({
-          last_login_date: nowIso
-        });
-
-        // סנכרון ל-LeaderboardEntry (כי זה מה שמשתמשים אחרים רואים)
-        await syncLeaderboardEntry(me.email, {
-          last_login_date: nowIso
-        });
-      } catch (e) {
-        console.log("Failed to update last login date", e);
-      }
-    };
-
-    updateLastLogin();
-  }, []);
-
 
 
   const loadUser = async () => {
@@ -163,6 +138,7 @@ export default function Layout({ children }) {
   const checkAndUpdateLoginStreak = async (user) => {
     try {
       const today = new Date().toISOString().split('T')[0];
+      const nowIso = new Date().toISOString();
       const lastLogin = user.last_login_date;
 
       // If already logged in today, do nothing
@@ -221,7 +197,7 @@ export default function Layout({ children }) {
 
       // Update user with new streak and bonus
       await base44.auth.updateMe({
-        last_login_date: today,
+        last_login_date: nowIso,
         login_streak: newStreak,
         coins: (user.coins || 0) + finalBonus,
         total_login_streak_coins: (user.total_login_streak_coins || 0) + finalBonus
@@ -232,7 +208,7 @@ export default function Layout({ children }) {
         coins: (user.coins || 0) + finalBonus,
         total_login_streak_coins: (user.total_login_streak_coins || 0) + finalBonus,
         login_streak: newStreak,
-        last_login_date: today
+        last_login_date: nowIso
       });
     } catch (error) {
       console.error("Error checking login streak:", error);
