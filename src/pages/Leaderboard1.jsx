@@ -11,6 +11,267 @@ import StudentProfileDialog from "../components/leaderboard/StudentProfileDialog
 import { toast } from "sonner";
 import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
 
+// 3️⃣ Memoized LeaderboardRow to prevent unnecessary re-renders
+const LeaderboardRow = React.memo(({ 
+  player, 
+  index, 
+  actualIndex, 
+  currentUserEmail, 
+  onStudentClick, 
+  onCollaborate, 
+  getCollaborationStatus, 
+  hasPendingRequestFromUser,
+  getRankColor,
+  formatLastLoginDM
+}) => {
+  const isCurrentUser = player.student_email === currentUserEmail;
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.05 }}
+    >
+      <Card
+        className={`overflow-hidden ${
+          isCurrentUser
+            ? "bg-gradient-to-r from-purple-600/40 to-pink-600/40 border-2 border-yellow-400 shadow-2xl"
+            : actualIndex === 0
+            ? "bg-gradient-to-r from-blue-800/40 to-indigo-900/40 border-2 border-yellow-400 shadow-2xl"
+            : "bg-white/10 backdrop-blur-md border-white/20"
+        }`}
+      >
+        <CardContent className="p-2 sm:p-4">
+          <div className="flex items-center gap-1.5 sm:gap-4">
+            {/* Rank Number */}
+            <div className="flex-shrink-0 w-6 sm:w-12 text-center">
+              <div className={`text-base sm:text-2xl font-black ${actualIndex === 0 ? 'text-yellow-400' : 'text-white'}`}>
+                #{actualIndex + 1}
+              </div>
+            </div>
+
+            {/* Avatar - SMALLER */}
+            <div 
+              className="flex-shrink-0 cursor-pointer hidden sm:block"
+              onClick={() => onStudentClick(player)}
+            >
+              <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center">
+                <div className="scale-[0.6]">
+                  <TamagotchiAvatar 
+                    equippedItems={player.equipped_items || {}} 
+                    size="small"
+                    showBackground={false}
+                    userEmail={player.student_email}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Info */}
+            <div 
+              className="flex-1 min-w-0 cursor-pointer"
+              onClick={() => onStudentClick(player)}
+            >
+              <div className="flex items-center gap-1 sm:gap-2 mb-1">
+                <h3 className="text-sm sm:text-lg font-bold text-white truncate max-w-[120px] sm:max-w-none">
+                  {player.first_name && player.last_name 
+                    ? `${player.first_name} ${player.last_name}`
+                    : player.full_name}
+                </h3>
+                {isCurrentUser && (
+                  <span className="text-[10px] sm:text-xs bg-yellow-400 text-gray-900 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-bold whitespace-nowrap">
+                    אתה!
+                  </span>
+                )}
+              </div>
+
+              {/* Crown Badges */}
+              {player.crowns && player.crowns.length > 0 && (
+                <div className="flex gap-1 mb-2 flex-wrap">
+                  {player.crowns.map((crown, idx) => (
+                    <div 
+                      key={idx} 
+                      className="text-[9px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-black shadow-lg border border-yellow-300/50"
+                      title={`${crown.name} - ${crown.bonus}`}
+                    >
+                      {crown.name}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Stats Display */}
+              <TooltipProvider>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {/* Total Lessons */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-blue-500/20 border border-blue-500/30 cursor-help">
+                        <span className="text-[10px] sm:text-xs">📚</span>
+                        <span className="text-[10px] sm:text-xs font-bold text-blue-200">{player.total_lessons || 0}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">סה"כ שיעורים: {player.total_lessons || 0}</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  {/* English Words */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-purple-500/20 border border-purple-500/30 cursor-help">
+                        <span className="text-[10px] sm:text-xs">🔤</span>
+                        <span className="text-[10px] sm:text-xs font-bold text-purple-200">{player.masteredWords || 0}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">אנגלית: {player.masteredWords || 0} מילים</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  {/* Math Questions */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-green-500/20 border border-green-500/30 cursor-help">
+                        <span className="text-[10px] sm:text-xs">🔢</span>
+                        <span className="text-[10px] sm:text-xs font-bold text-green-200">{player.masteredMathQuestions || 0}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">חשבון: {player.masteredMathQuestions || 0} תרגילים</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  {/* Login Streak */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-orange-500/20 border border-orange-500/30 cursor-help">
+                        <span className="text-[10px] sm:text-xs">🔥</span>
+                        <span className="text-[10px] sm:text-xs font-bold text-orange-200">{player.loginStreak || 0}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">רצף כניסות: {player.loginStreak || 0} ימים</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  {/* Collaborations */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-pink-500/20 border border-pink-500/30 cursor-help">
+                        <span className="text-[10px] sm:text-xs">🤝</span>
+                        <span className="text-[10px] sm:text-xs font-bold text-pink-200">{player.collaborationCount || 0}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">שיתופי פעולה: {player.collaborationCount || 0}</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  {/* Work Hours */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-yellow-500/20 border border-yellow-500/30 cursor-help">
+                        <span className="text-[10px] sm:text-xs">💼</span>
+                        <span className="text-[10px] sm:text-xs font-bold text-yellow-200">{player.workHours || 0}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">שעות עבודה: {player.workHours || 0}</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  {/* Last Login */}
+                  {player.last_login_date && formatLastLoginDM(player.last_login_date) && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-500/30 cursor-help">
+                          <span className="text-[10px] sm:text-xs">📅</span>
+                          <span className="text-[10px] sm:text-xs font-bold text-cyan-200">
+                            {formatLastLoginDM(player.last_login_date)}
+                          </span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">כניסה אחרונה: {formatLastLoginDM(player.last_login_date)}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+              </TooltipProvider>
+            </div>
+
+            {/* Right Side: Networth + Collaborate Button */}
+            <div className="flex-shrink-0 flex flex-col items-center gap-1 sm:gap-2">
+              {/* Total Networth */}
+              <div className="text-center">
+                <div className={`bg-gradient-to-br ${getRankColor(actualIndex)} text-white font-black px-2 sm:px-4 py-1 sm:py-2 rounded-xl shadow-lg`}>
+                  <div className="text-base sm:text-2xl">{player.totalValue}</div>
+                  <div className="text-[8px] sm:text-[10px] opacity-80">מטבעות</div>
+                </div>
+              </div>
+
+              {/* Collaborate Button - Only for OTHER users */}
+              {!isCurrentUser && (() => {
+                const collabStatus = getCollaborationStatus(player.student_email);
+                const hasPendingRequest = hasPendingRequestFromUser(player);
+
+                return (
+                  <div className="relative">
+                    {hasPendingRequest && collabStatus === 'none' && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse z-10 border border-white"></div>
+                    )}
+                    <Button
+                      onClick={(e) => onCollaborate(player, e)}
+                      disabled={collabStatus !== 'none'}
+                      size="sm"
+                      className={`text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 font-bold relative ${
+                        collabStatus === 'completed'
+                          ? "bg-green-500/40 text-green-200 cursor-not-allowed border-green-500/30"
+                          : collabStatus === 'pending'
+                          ? "bg-orange-500/40 text-orange-200 cursor-not-allowed border-orange-500/30"
+                          : hasPendingRequest
+                          ? "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white animate-pulse"
+                          : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+                      }`}
+                    >
+                      {collabStatus === 'completed' ? (
+                        <>
+                          <Check className="w-3 h-3 sm:mr-1" />
+                          <span className="hidden sm:inline">קיבלתם 25🪙</span>
+                          <span className="sm:hidden">25🪙</span>
+                        </>
+                      ) : collabStatus === 'pending' ? (
+                        <>
+                          <Check className="w-3 h-3 sm:mr-1" />
+                          <span className="hidden sm:inline">שלחת בקשה</span>
+                          <span className="sm:hidden">נשלח</span>
+                        </>
+                      ) : hasPendingRequest ? (
+                        <>
+                          <Heart className="w-3 h-3 sm:mr-1" />
+                          <span className="hidden sm:inline">שלח לי! קבל 25🪙</span>
+                          <span className="sm:hidden">25🪙!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Handshake className="w-3 h-3 sm:mr-1" />
+                          <span className="hidden sm:inline">שתף פעולה</span>
+                          <span className="sm:hidden">שתף</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+});
+
 // Helper function to fetch all records with pagination
 async function listAll(entityHandler, sort = "-created_date", pageSize = 200) {
   let all = [];
@@ -121,49 +382,27 @@ export default function Leaderboard() {
       const user = await base44.auth.me();
       setCurrentUser(user);
 
-      // Fetch all data with pagination to get ALL records
-      let allEntries = [];
-      let allWordProgress = [];
-      let allInvestments = [];
-      let allLessonParticipations = [];
-      let allLessons = [];
-      let allMathProgress = [];
-
-      try {
-        allEntries = await listAll(base44.entities.LeaderboardEntry);
-      } catch (e) {
-        console.error("Error loading LeaderboardEntry:", e);
-      }
-
-      try {
-        allWordProgress = await listAll(base44.entities.WordProgress);
-      } catch (e) {
-        console.error("Error loading WordProgress:", e);
-      }
-
-      try {
-        allInvestments = await listAll(base44.entities.Investment);
-      } catch (e) {
-        console.error("Error loading Investments:", e);
-      }
-
-      try {
-        allLessonParticipations = await listAll(base44.entities.LessonParticipation);
-      } catch (e) {
-        console.error("Error loading LessonParticipation:", e);
-      }
-
-      try {
-        allLessons = await listAll(base44.entities.Lesson);
-      } catch (e) {
-        console.error("Error loading Lessons:", e);
-      }
-
-      try {
-        allMathProgress = await listAll(base44.entities.MathProgress);
-      } catch (e) {
-        console.error("Error loading MathProgress:", e);
-      }
+      // 1️⃣ Fetch all data in parallel for better performance
+      const [
+        allEntries,
+        allWordProgress,
+        allInvestments,
+        allLessonParticipations,
+        allLessons,
+        allMathProgress
+      ] = await Promise.allSettled([
+        listAll(base44.entities.LeaderboardEntry),
+        listAll(base44.entities.WordProgress),
+        listAll(base44.entities.Investment),
+        listAll(base44.entities.LessonParticipation),
+        listAll(base44.entities.Lesson),
+        listAll(base44.entities.MathProgress)
+      ]).then(results => results.map((result, idx) => {
+        if (result.status === 'fulfilled') return result.value;
+        const names = ['LeaderboardEntry', 'WordProgress', 'Investments', 'LessonParticipation', 'Lessons', 'MathProgress'];
+        console.error(`Error loading ${names[idx]}:`, result.reason);
+        return [];
+      }))
 
       console.log("Loaded entries:", allEntries.length);
 
@@ -254,24 +493,62 @@ export default function Leaderboard() {
         });
       }
 
+      // 2️⃣ Build lookup maps to prevent repeated filter/find operations
+      const lessonMap = new Map();
+      allLessons.forEach(lesson => {
+        lessonMap.set(lesson.id, lesson);
+      });
+
+      const wordProgressByEmail = new Map();
+      allWordProgress.forEach(w => {
+        if (!wordProgressByEmail.has(w.student_email)) {
+          wordProgressByEmail.set(w.student_email, []);
+        }
+        wordProgressByEmail.get(w.student_email).push(w);
+      });
+
+      const participationsByEmail = new Map();
+      allLessonParticipations.forEach(p => {
+        if (!participationsByEmail.has(p.student_email)) {
+          participationsByEmail.set(p.student_email, []);
+        }
+        participationsByEmail.get(p.student_email).push(p);
+      });
+
+      const investmentsByEmail = new Map();
+      allInvestments.forEach(inv => {
+        if (!investmentsByEmail.has(inv.student_email)) {
+          investmentsByEmail.set(inv.student_email, []);
+        }
+        investmentsByEmail.get(inv.student_email).push(inv);
+      });
+
+      const mathProgressByEmail = new Map();
+      allMathProgress.forEach(m => {
+        if (!mathProgressByEmail.has(m.student_email)) {
+          mathProgressByEmail.set(m.student_email, []);
+        }
+        mathProgressByEmail.get(m.student_email).push(m);
+      });
+
+      const userRecordByEmail = new Map();
+      allUsers.forEach(usr => {
+        userRecordByEmail.set(usr.email, usr);
+      });
+
       const usersWithAllStats = filteredUsersForLeaderboard.map((u) => {
-        const masteredWords = allWordProgress.filter(
-          w => w.student_email === u.student_email && w.mastered
-        ).length;
+        const userWordProgress = wordProgressByEmail.get(u.student_email) || [];
+        const masteredWords = userWordProgress.filter(w => w.mastered).length;
 
         // Calculate lesson counts by category from REAL participations
-        const userParticipations = allLessonParticipations.filter(p => p.student_email === u.student_email && p.attended);
-        const lessonMap = {};
-        allLessons.forEach(lesson => {
-          lessonMap[lesson.id] = lesson;
-        });
+        const userParticipations = (participationsByEmail.get(u.student_email) || []).filter(p => p.attended);
 
         let aiTechLessons = 0;
         let socialSkillsLessons = 0;
         let moneyBusinessLessons = 0;
 
         userParticipations.forEach(participation => {
-          const lesson = lessonMap[participation.lesson_id];
+          const lesson = lessonMap.get(participation.lesson_id);
           if (!lesson) return;
 
           if (lesson.category === 'ai_tech') aiTechLessons++;
@@ -283,25 +560,23 @@ export default function Leaderboard() {
         const realTotalLessons = aiTechLessons + socialSkillsLessons + moneyBusinessLessons;
 
         // Get actual data from User entity (real source of truth)
-        // If we can't access User entity (regular users), use LeaderboardEntry data
-        const userRecord = allUsers.find(usr => usr.email === u.student_email);
+        const userRecord = userRecordByEmail.get(u.student_email);
         const last_login_date = userRecord?.last_login_date ?? u.last_login_date;
-        const actualTotalLessons = realTotalLessons; // Always use the real calculated count
+        const actualTotalLessons = realTotalLessons;
         const actualAiTechLevel = userRecord?.ai_tech_level || u.ai_tech_level || 1;
         const actualPersonalDevLevel = userRecord?.personal_dev_level || u.personal_dev_level || 1;
         const actualSocialSkillsLevel = userRecord?.social_skills_level || u.social_skills_level || 1;
         const actualMoneyBusinessLevel = userRecord?.money_business_level || u.money_business_level || 1;
         
         // Count completed math questions directly from MathProgress
-        const userMathProgress = allMathProgress.filter(m => m.student_email === u.student_email && (m.total_attempts || 0) > 0);
-        const masteredMathQuestions = userMathProgress.length;
+        const userMathProgressList = mathProgressByEmail.get(u.student_email) || [];
+        const masteredMathQuestions = userMathProgressList.filter(m => (m.total_attempts || 0) > 0).length;
         
         // Login streak - prefer LeaderboardEntry (always accessible)
         let loginStreak = u.login_streak || 0;
         if (userRecord?.login_streak !== undefined) {
           loginStreak = userRecord.login_streak;
         } else if (u.student_email === user?.email && user.login_streak !== undefined) {
-          // Fallback: Try to get from user's own data if this is the current user
           loginStreak = user.login_streak;
         }
         
@@ -310,11 +585,9 @@ export default function Leaderboard() {
         if (userRecord?.total_collaboration_coins !== undefined) {
           collaborationCount = Math.floor(userRecord.total_collaboration_coins / 25);
         } else if (userRecord?.daily_collaborations) {
-          // Count completed collaborations
           const completedCollabs = (userRecord.daily_collaborations || []).filter(c => c && c.completed);
           collaborationCount = completedCollabs.length;
         } else if (u.student_email === user?.email && user.daily_collaborations) {
-          // If this is current user, use their data
           const completedCollabs = (user.daily_collaborations || []).filter(c => c && c.completed);
           collaborationCount = completedCollabs.length;
         }
@@ -331,7 +604,7 @@ export default function Leaderboard() {
         );
 
         // Calculate net worth including investments (NO pending taxes!)
-        const userInvestments = allInvestments.filter(inv => inv.student_email === u.student_email);
+        const userInvestments = investmentsByEmail.get(u.student_email) || [];
         const investmentsValue = userInvestments.reduce((sum, inv) => sum + inv.current_value, 0);
 
         const totalValue = calculateTotalValue(u, investmentsValue);
@@ -343,11 +616,10 @@ export default function Leaderboard() {
           ((u.money_business_level || 1) - 1) * 100 + (u.money_business_xp || 0);
 
         // Calculate category earnings for crowns
-        const userWordProgress = allWordProgress.filter(w => w.student_email === u.student_email);
         const vocabEarnings = userWordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
 
         const mathEarnings = userRecord?.total_math_earnings || u.total_math_earnings || 0;
-        const currentInvestmentValue = investmentsValue; // Already calculated above
+        const currentInvestmentValue = investmentsValue;
         const loginStreakEarnings = userRecord?.total_login_streak_coins || u.total_login_streak_coins || 0;
 
         return {
@@ -816,254 +1088,21 @@ export default function Leaderboard() {
       <div className="space-y-4">
         {users.slice((currentPage - 1) * USERS_PER_PAGE, currentPage * USERS_PER_PAGE).map((player, index) => {
           const actualIndex = (currentPage - 1) * USERS_PER_PAGE + index;
-          const isCurrentUser = player.student_email === currentUser?.email;
-          const isFirstPlace = index === 0;
-          const hasCollaborated = hasCollaboratedToday(player.student_email);
           
           return (
-            <motion.div
+            <LeaderboardRow
               key={player.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <Card
-                className={`overflow-hidden ${
-                  isCurrentUser
-                    ? "bg-gradient-to-r from-purple-600/40 to-pink-600/40 border-2 border-yellow-400 shadow-2xl"
-                    : actualIndex === 0
-                    ? "bg-gradient-to-r from-blue-800/40 to-indigo-900/40 border-2 border-yellow-400 shadow-2xl"
-                    : "bg-white/10 backdrop-blur-md border-white/20"
-                }`}
-              >
-                <CardContent className="p-2 sm:p-4">
-                  <div className="flex items-center gap-1.5 sm:gap-4">
-                    {/* Rank Number */}
-                    <div className="flex-shrink-0 w-6 sm:w-12 text-center">
-                      <div className={`text-base sm:text-2xl font-black ${actualIndex === 0 ? 'text-yellow-400' : 'text-white'}`}>
-                        #{actualIndex + 1}
-                      </div>
-                    </div>
-
-                    {/* Avatar - SMALLER */}
-                    <div 
-                      className="flex-shrink-0 cursor-pointer hidden sm:block"
-                      onClick={() => handleStudentClick(player)}
-                    >
-                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center">
-                        <div className="scale-[0.6]">
-                          <TamagotchiAvatar 
-                            equippedItems={player.equipped_items || {}} 
-                            size="small"
-                            showBackground={false}
-                            userEmail={player.student_email}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Info */}
-                    <div 
-                      className="flex-1 min-w-0 cursor-pointer"
-                      onClick={() => handleStudentClick(player)}
-                    >
-                      <div className="flex items-center gap-1 sm:gap-2 mb-1">
-                        <h3 className="text-sm sm:text-lg font-bold text-white truncate max-w-[120px] sm:max-w-none">
-                          {player.first_name && player.last_name 
-                            ? `${player.first_name} ${player.last_name}`
-                            : player.full_name}
-                        </h3>
-                        {isCurrentUser && (
-                          <span className="text-[10px] sm:text-xs bg-yellow-400 text-gray-900 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-bold whitespace-nowrap">
-                            אתה!
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Crown Badges */}
-                      {player.crowns && player.crowns.length > 0 && (
-                        <div className="flex gap-1 mb-2 flex-wrap">
-                          {player.crowns.map((crown, idx) => (
-                            <div 
-                              key={idx} 
-                              className="text-[9px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-black shadow-lg border border-yellow-300/50"
-                              title={`${crown.name} - ${crown.bonus}`}
-                            >
-                              {crown.name}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Stats Display */}
-                      <TooltipProvider>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {/* Total Lessons */}
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-blue-500/20 border border-blue-500/30 cursor-help">
-                                <span className="text-[10px] sm:text-xs">📚</span>
-                                <span className="text-[10px] sm:text-xs font-bold text-blue-200">{player.total_lessons || 0}</span>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-xs">סה"כ שיעורים: {player.total_lessons || 0}</p>
-                            </TooltipContent>
-                          </Tooltip>
-
-                          {/* English Words */}
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-purple-500/20 border border-purple-500/30 cursor-help">
-                                <span className="text-[10px] sm:text-xs">🔤</span>
-                                <span className="text-[10px] sm:text-xs font-bold text-purple-200">{player.masteredWords || 0}</span>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-xs">אנגלית: {player.masteredWords || 0} מילים</p>
-                            </TooltipContent>
-                          </Tooltip>
-
-                          {/* Math Questions */}
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-green-500/20 border border-green-500/30 cursor-help">
-                                <span className="text-[10px] sm:text-xs">🔢</span>
-                                <span className="text-[10px] sm:text-xs font-bold text-green-200">{player.masteredMathQuestions || 0}</span>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-xs">חשבון: {player.masteredMathQuestions || 0} תרגילים</p>
-                            </TooltipContent>
-                          </Tooltip>
-
-                          {/* Login Streak */}
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-orange-500/20 border border-orange-500/30 cursor-help">
-                                <span className="text-[10px] sm:text-xs">🔥</span>
-                                <span className="text-[10px] sm:text-xs font-bold text-orange-200">{player.loginStreak || 0}</span>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-xs">רצף כניסות: {player.loginStreak || 0} ימים</p>
-                            </TooltipContent>
-                          </Tooltip>
-
-                          {/* Collaborations */}
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-pink-500/20 border border-pink-500/30 cursor-help">
-                                <span className="text-[10px] sm:text-xs">🤝</span>
-                                <span className="text-[10px] sm:text-xs font-bold text-pink-200">{player.collaborationCount || 0}</span>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-xs">שיתופי פעולה: {player.collaborationCount || 0}</p>
-                            </TooltipContent>
-                          </Tooltip>
-
-                          {/* Work Hours */}
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-yellow-500/20 border border-yellow-500/30 cursor-help">
-                                <span className="text-[10px] sm:text-xs">💼</span>
-                                <span className="text-[10px] sm:text-xs font-bold text-yellow-200">{player.workHours || 0}</span>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-xs">שעות עבודה: {player.workHours || 0}</p>
-                            </TooltipContent>
-                          </Tooltip>
-
-                          {/* Last Login */}
-                          {player.last_login_date && formatLastLoginDM(player.last_login_date) && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-500/30 cursor-help">
-                                  <span className="text-[10px] sm:text-xs">📅</span>
-                                  <span className="text-[10px] sm:text-xs font-bold text-cyan-200">
-                                    {formatLastLoginDM(player.last_login_date)}
-                                  </span>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="text-xs">כניסה אחרונה: {formatLastLoginDM(player.last_login_date)}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                        </div>
-                      </TooltipProvider>
-                    </div>
-
-                    {/* Right Side: Networth + Collaborate Button */}
-                    <div className="flex-shrink-0 flex flex-col items-center gap-1 sm:gap-2">
-                      {/* Total Networth */}
-                      <div className="text-center">
-                        <div className={`bg-gradient-to-br ${getRankColor(actualIndex)} text-white font-black px-2 sm:px-4 py-1 sm:py-2 rounded-xl shadow-lg`}>
-                          <div className="text-base sm:text-2xl">{player.totalValue}</div>
-                          <div className="text-[8px] sm:text-[10px] opacity-80">מטבעות</div>
-                        </div>
-                      </div>
-
-                      {/* Collaborate Button - Only for OTHER users */}
-                      {!isCurrentUser && (() => {
-                        const collabStatus = getCollaborationStatus(player.student_email);
-                        const hasPendingRequest = hasPendingRequestFromUser(player);
-
-                        return (
-                          <div className="relative">
-                            {hasPendingRequest && collabStatus === 'none' && (
-                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse z-10 border border-white"></div>
-                            )}
-                            <Button
-                              onClick={(e) => handleCollaborate(player, e)}
-                              disabled={collabStatus !== 'none'}
-                              size="sm"
-                              className={`text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 font-bold relative ${
-                                collabStatus === 'completed'
-                                  ? "bg-green-500/40 text-green-200 cursor-not-allowed border-green-500/30"
-                                  : collabStatus === 'pending'
-                                  ? "bg-orange-500/40 text-orange-200 cursor-not-allowed border-orange-500/30"
-                                  : hasPendingRequest
-                                  ? "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white animate-pulse"
-                                  : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
-                              }`}
-                            >
-                              {collabStatus === 'completed' ? (
-                                <>
-                                  <Check className="w-3 h-3 sm:mr-1" />
-                                  <span className="hidden sm:inline">קיבלתם 25🪙</span>
-                                  <span className="sm:hidden">25🪙</span>
-                                </>
-                              ) : collabStatus === 'pending' ? (
-                                <>
-                                  <Check className="w-3 h-3 sm:mr-1" />
-                                  <span className="hidden sm:inline">שלחת בקשה</span>
-                                  <span className="sm:hidden">נשלח</span>
-                                </>
-                              ) : hasPendingRequest ? (
-                                <>
-                                  <Heart className="w-3 h-3 sm:mr-1" />
-                                  <span className="hidden sm:inline">שלח לי! קבל 25🪙</span>
-                                  <span className="sm:hidden">25🪙!</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Handshake className="w-3 h-3 sm:mr-1" />
-                                  <span className="hidden sm:inline">שתף פעולה</span>
-                                  <span className="sm:hidden">שתף</span>
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+              player={player}
+              index={index}
+              actualIndex={actualIndex}
+              currentUserEmail={currentUser?.email}
+              onStudentClick={handleStudentClick}
+              onCollaborate={handleCollaborate}
+              getCollaborationStatus={getCollaborationStatus}
+              hasPendingRequestFromUser={hasPendingRequestFromUser}
+              getRankColor={getRankColor}
+              formatLastLoginDM={formatLastLoginDM}
+            />
           );
         })}
       </div>
