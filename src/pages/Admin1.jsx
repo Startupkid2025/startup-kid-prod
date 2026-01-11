@@ -29,6 +29,8 @@ export default function Admin() {
   const [lessons, setLessons] = useState([]);
   const [participations, setParticipations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("students");
+  const [loadedTabs, setLoadedTabs] = useState({});
   const [showAddLesson, setShowAddLesson] = useState(false);
   const [editingLesson, setEditingLesson] = useState(null);
   const [deletingLesson, setDeletingLesson] = useState(null);
@@ -44,14 +46,19 @@ export default function Admin() {
   const [expandedSurveys, setExpandedSurveys] = useState({});
 
   useEffect(() => {
-    loadData();
+    loadInitialData();
   }, []);
+
+  useEffect(() => {
+    if (!loadedTabs[activeTab]) {
+      loadTabData(activeTab);
+    }
+  }, [activeTab]);
 
   const [scheduledLessons, setScheduledLessons] = useState([]);
 
-  const loadData = async () => {
+  const loadInitialData = async () => {
     try {
-      console.log("Loading admin data...");
       const user = await base44.auth.me();
       setCurrentUser(user);
 
@@ -60,34 +67,62 @@ export default function Admin() {
         return;
       }
 
-      // Load data sequentially with small delays to avoid rate limiting
-      const allUsers = await base44.entities.User.list();
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      const allLessons = await base44.entities.Lesson.list("-lesson_date");
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      const allParticipations = await base44.entities.LessonParticipation.list();
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      const allGroups = await base44.entities.Group.list();
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      const allScheduledLessons = await base44.entities.ScheduledLesson.list();
-
-      console.log("Loaded users:", allUsers.length);
-      
-      setStudents(allUsers);
-      setLessons(allLessons);
-      setParticipations(allParticipations);
-      setGroups(allGroups);
-      setScheduledLessons(allScheduledLessons);
       setIsLoading(false);
+      // Load first tab data
+      loadTabData("students");
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error("Error loading user:", error);
       toast.error("שגיאה בטעינת נתונים");
       setIsLoading(false);
     }
+  };
+
+  const loadTabData = async (tab) => {
+    if (loadedTabs[tab]) return; // Already loaded
+    
+    try {
+      console.log(`Loading ${tab} data...`);
+      
+      if (tab === "students") {
+        const [allUsers, allLessons, allParticipations, allGroups, allScheduledLessons] = await Promise.all([
+          base44.entities.User.list(),
+          base44.entities.Lesson.list("-lesson_date"),
+          base44.entities.LessonParticipation.list(),
+          base44.entities.Group.list(),
+          base44.entities.ScheduledLesson.list()
+        ]);
+        
+        setStudents(allUsers);
+        setLessons(allLessons);
+        setParticipations(allParticipations);
+        setGroups(allGroups);
+        setScheduledLessons(allScheduledLessons);
+      } else if (tab === "lessons") {
+        const [allLessons, allParticipations, allUsers] = await Promise.all([
+          base44.entities.Lesson.list("-lesson_date"),
+          base44.entities.LessonParticipation.list(),
+          base44.entities.User.list()
+        ]);
+        
+        setLessons(allLessons);
+        setParticipations(allParticipations);
+        setStudents(allUsers);
+      } else if (tab === "groups") {
+        // Groups will load their own data
+      } else if (tab === "vocabulary") {
+        // Vocabulary will load its own data
+      }
+      
+      setLoadedTabs(prev => ({ ...prev, [tab]: true }));
+    } catch (error) {
+      console.error(`Error loading ${tab} data:`, error);
+      toast.error("שגיאה בטעינת נתונים");
+    }
+  };
+
+  const refreshCurrentTab = async () => {
+    setLoadedTabs(prev => ({ ...prev, [activeTab]: false }));
+    await loadTabData(activeTab);
   };
 
 
@@ -291,8 +326,8 @@ export default function Admin() {
       } else {
         toast.warning(`⚠️ הסתיים: ${successCount} הצליחו, ${failCount} נכשלו`);
       }
-      
-      await loadData();
+
+      await refreshCurrentTab();
     } catch (error) {
       toast.error("שגיאה קריטית בחישוב מחדש");
     } finally {
@@ -429,8 +464,8 @@ export default function Admin() {
       } else {
         toast.warning(`⚠️ הסתיים: ${successCount} הצליחו, ${failCount} נכשלו`);
       }
-      
-      await loadData();
+
+      await refreshCurrentTab();
     } catch (error) {
       console.error("Error fixing admin coins:", error);
       toast.error("שגיאה בתיקון");
@@ -510,8 +545,8 @@ export default function Admin() {
       if (failCount > 0) {
         toast.warning(`⚠️ ${failCount} עדכונים נכשלו`);
       }
-      
-      await loadData();
+
+      await refreshCurrentTab();
     } catch (error) {
       console.error("Error adding passive income backpay:", error);
       toast.error("שגיאה בתיקון הכנסה פסיבית");
@@ -601,8 +636,8 @@ export default function Admin() {
         toast.warning(`⚠️ סנכרון הסתיים: ${successCount} הצליחו, ${failCount} נכשלו`);
         console.error("Failed users:", errors);
       }
-      
-      await loadData();
+
+      await refreshCurrentTab();
     } catch (error) {
       console.error("Error migrating data:", error);
       toast.error("שגיאה קריטית בסנכרון");
@@ -709,7 +744,7 @@ export default function Admin() {
         </motion.div>
       </div>
 
-      <Tabs defaultValue="students" className="w-full">
+      <Tabs defaultValue="students" value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-5 mb-8 bg-white/5 backdrop-blur-md border border-white/10 p-1 rounded-xl">
           <TabsTrigger 
             value="students" 
@@ -908,7 +943,7 @@ export default function Admin() {
                           toast.error("שגיאה בעדכון");
                         }
                       }}
-                      onRefresh={loadData}
+                      onRefresh={refreshCurrentTab}
                       />
                       ))}
                       </div>
@@ -1150,7 +1185,7 @@ export default function Admin() {
         </TabsContent>
 
         <TabsContent value="groups">
-          <GroupManagement onRefresh={loadData} />
+          <GroupManagement onRefresh={refreshCurrentTab} />
         </TabsContent>
 
         <TabsContent value="vocabulary">
@@ -1199,14 +1234,14 @@ export default function Admin() {
       <AddLessonDialog
         isOpen={showAddLesson}
         onClose={() => setShowAddLesson(false)}
-        onSuccess={loadData}
+        onSuccess={refreshCurrentTab}
       />
 
       <EditLessonDialog
         lesson={editingLesson}
         isOpen={!!editingLesson}
         onClose={() => setEditingLesson(null)}
-        onSuccess={loadData}
+        onSuccess={refreshCurrentTab}
       />
 
       <DeleteConfirmDialog
@@ -1217,7 +1252,7 @@ export default function Admin() {
             await base44.entities.Lesson.delete(deletingLesson.id);
             toast.success("השיעור נמחק בהצלחה");
             setDeletingLesson(null);
-            loadData();
+            refreshCurrentTab();
           } catch (error) {
             console.error("Error deleting lesson:", error);
             toast.error("שגיאה במחיקת השיעור");
