@@ -31,6 +31,8 @@ export default function Leaderboard() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const USERS_PER_PAGE = 20;
 
   useEffect(() => {
     loadData();
@@ -797,7 +799,8 @@ export default function Leaderboard() {
 
       {/* Leaderboard */}
       <div className="space-y-4">
-        {users.map((player, index) => {
+        {users.slice((currentPage - 1) * USERS_PER_PAGE, currentPage * USERS_PER_PAGE).map((player, index) => {
+          const actualIndex = (currentPage - 1) * USERS_PER_PAGE + index;
           const isCurrentUser = player.student_email === currentUser?.email;
           const isFirstPlace = index === 0;
           const hasCollaborated = hasCollaboratedToday(player.student_email);
@@ -813,7 +816,7 @@ export default function Leaderboard() {
                 className={`overflow-hidden ${
                   isCurrentUser
                     ? "bg-gradient-to-r from-purple-600/40 to-pink-600/40 border-2 border-yellow-400 shadow-2xl"
-                    : isFirstPlace
+                    : actualIndex === 0
                     ? "bg-gradient-to-r from-blue-800/40 to-indigo-900/40 border-2 border-yellow-400 shadow-2xl"
                     : "bg-white/10 backdrop-blur-md border-white/20"
                 }`}
@@ -822,8 +825,8 @@ export default function Leaderboard() {
                   <div className="flex items-center gap-1.5 sm:gap-4">
                     {/* Rank Number */}
                     <div className="flex-shrink-0 w-6 sm:w-12 text-center">
-                      <div className={`text-base sm:text-2xl font-black ${isFirstPlace ? 'text-yellow-400' : 'text-white'}`}>
-                        #{index + 1}
+                      <div className={`text-base sm:text-2xl font-black ${actualIndex === 0 ? 'text-yellow-400' : 'text-white'}`}>
+                        #{actualIndex + 1}
                       </div>
                     </div>
 
@@ -982,7 +985,7 @@ export default function Leaderboard() {
                     <div className="flex-shrink-0 flex flex-col items-center gap-1 sm:gap-2">
                       {/* Total Networth */}
                       <div className="text-center">
-                        <div className={`bg-gradient-to-br ${getRankColor(index)} text-white font-black px-2 sm:px-4 py-1 sm:py-2 rounded-xl shadow-lg`}>
+                        <div className={`bg-gradient-to-br ${getRankColor(actualIndex)} text-white font-black px-2 sm:px-4 py-1 sm:py-2 rounded-xl shadow-lg`}>
                           <div className="text-base sm:text-2xl">{player.totalValue}</div>
                           <div className="text-[8px] sm:text-[10px] opacity-80">מטבעות</div>
                         </div>
@@ -1049,6 +1052,48 @@ export default function Leaderboard() {
           );
         })}
       </div>
+
+      {/* Pagination */}
+      {users.length > USERS_PER_PAGE && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <Button
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            variant="outline"
+            size="sm"
+            className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+          >
+            ← הקודם
+          </Button>
+          
+          <div className="flex gap-1">
+            {Array.from({ length: Math.ceil(users.length / USERS_PER_PAGE) }, (_, i) => i + 1).map(page => (
+              <Button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                variant={currentPage === page ? "default" : "outline"}
+                size="sm"
+                className={currentPage === page 
+                  ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white" 
+                  : "bg-white/10 border-white/20 text-white hover:bg-white/20"
+                }
+              >
+                {page}
+              </Button>
+            ))}
+          </div>
+
+          <Button
+            onClick={() => setCurrentPage(prev => Math.min(Math.ceil(users.length / USERS_PER_PAGE), prev + 1))}
+            disabled={currentPage === Math.ceil(users.length / USERS_PER_PAGE)}
+            variant="outline"
+            size="sm"
+            className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+          >
+            הבא →
+          </Button>
+        </div>
+      )}
 
       {/* Empty State */}
       {users.length === 0 && (
