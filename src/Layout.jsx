@@ -206,7 +206,8 @@ export default function Layout({ children }) {
       await syncLeaderboardEntry(user.email, {
         coins: (user.coins || 0) + finalBonus,
         total_login_streak_coins: (user.total_login_streak_coins || 0) + finalBonus,
-        login_streak: newStreak
+        login_streak: newStreak,
+        last_login_date: today
       });
     } catch (error) {
       console.error("Error checking login streak:", error);

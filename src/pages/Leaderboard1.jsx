@@ -957,6 +957,23 @@ export default function Leaderboard() {
                               <p className="text-xs">שעות עבודה: {player.workHours || 0}</p>
                             </TooltipContent>
                           </Tooltip>
+
+                          {/* Last Login */}
+                          {player.last_login_date && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-500/30 cursor-help">
+                                  <span className="text-[10px] sm:text-xs">📅</span>
+                                  <span className="text-[10px] sm:text-xs font-bold text-cyan-200">
+                                    {new Date(player.last_login_date).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' })}
+                                  </span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">כניסה אחרונה: {new Date(player.last_login_date).toLocaleDateString('he-IL')}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
                         </div>
                       </TooltipProvider>
                     </div>
