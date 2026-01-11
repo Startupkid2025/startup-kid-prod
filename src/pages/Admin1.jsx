@@ -476,38 +476,29 @@ export default function Admin() {
 
   const resetAllLoginStreaks = async () => {
     setIsRecalculatingCoins(true);
-    
     try {
       const allUsers = await base44.entities.User.list();
       const students = allUsers.filter(u => u.user_type === 'student');
-      
       let successCount = 0;
       let failCount = 0;
       
       for (let i = 0; i < students.length; i++) {
         const user = students[i];
-        
         try {
-          // איפוס רצף כניסות ותאריך כניסה אחרון
           await retryWithBackoff(async () => {
             await base44.entities.User.update(user.id, {
               login_streak: 0,
               last_login_date: null
             });
           });
-          
           await sleep(100);
-          
-          // סנכרון ל-LeaderboardEntry
           await retryWithBackoff(async () => {
             await syncLeaderboardEntry(user.email, {
               login_streak: 0,
               last_login_date: null
             });
           });
-          
           successCount++;
-          
           if (i < students.length - 1) {
             await sleep(400);
           }
@@ -522,7 +513,6 @@ export default function Admin() {
       } else {
         toast.warning(`⚠️ הסתיים: ${successCount} הצליחו, ${failCount} נכשלו`);
       }
-      
       await refreshCurrentTab();
     } catch (error) {
       console.error("Error resetting login streaks:", error);
