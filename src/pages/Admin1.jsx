@@ -474,7 +474,65 @@ export default function Admin() {
     }
   };
 
-  const addPassiveIncomeBackpay = async () => {
+  const resetAllLoginStreaks = async () => {
+    setIsRecalculatingCoins(true);
+    
+    try {
+      const allUsers = await base44.entities.User.list();
+      const students = allUsers.filter(u => u.user_type === 'student');
+      
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (let i = 0; i < students.length; i++) {
+        const user = students[i];
+        
+        try {
+          // איפוס רצף כניסות ותאריך כניסה אחרון
+          await retryWithBackoff(async () => {
+            await base44.entities.User.update(user.id, {
+              login_streak: 0,
+              last_login_date: null
+            });
+          });
+          
+          await sleep(100);
+          
+          // סנכרון ל-LeaderboardEntry
+          await retryWithBackoff(async () => {
+            await syncLeaderboardEntry(user.email, {
+              login_streak: 0,
+              last_login_date: null
+            });
+          });
+          
+          successCount++;
+          
+          if (i < students.length - 1) {
+            await sleep(400);
+          }
+        } catch (error) {
+          failCount++;
+          console.error(`Failed to reset login streak for ${user.email}:`, error);
+        }
+      }
+      
+      if (failCount === 0) {
+        toast.success(`✅ איפוס הושלם! ${successCount} תלמידים אופסו - ממחר רצף חדש! 🔥`);
+      } else {
+        toast.warning(`⚠️ הסתיים: ${successCount} הצליחו, ${failCount} נכשלו`);
+      }
+      
+      await refreshCurrentTab();
+    } catch (error) {
+      console.error("Error resetting login streaks:", error);
+      toast.error("שגיאה באיפוס");
+    } finally {
+      setIsRecalculatingCoins(false);
+    }
+  };
+
+  const addPassiveIncomeBackpay = async () {
     setIsRecalculatingCoins(true);
     
     try {
@@ -1225,6 +1283,13 @@ export default function Admin() {
                 className="w-full bg-purple-600 hover:bg-purple-700"
               >
                 {isRecalculatingCoins ? "מתקן..." : "🏠 תקן הכנסה פסיבית למי שקנה מגורים"}
+              </Button>
+              <Button
+                onClick={resetAllLoginStreaks}
+                disabled={isRecalculatingCoins}
+                className="w-full bg-red-600 hover:bg-red-700"
+              >
+                {isRecalculatingCoins ? "מאפס..." : "🔥 אפס רצף כניסות לכולם (התחלה חדשה)"}
               </Button>
             </CardContent>
           </Card>
