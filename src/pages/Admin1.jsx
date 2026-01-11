@@ -60,17 +60,24 @@ export default function Admin() {
         return;
       }
 
+      // Load data sequentially with small delays to avoid rate limiting
       const allUsers = await base44.entities.User.list();
-      const studentUsers = allUsers;
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       const allLessons = await base44.entities.Lesson.list("-lesson_date");
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       const allParticipations = await base44.entities.LessonParticipation.list();
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       const allGroups = await base44.entities.Group.list();
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       const allScheduledLessons = await base44.entities.ScheduledLesson.list();
 
       console.log("Loaded users:", allUsers.length);
       
-      setStudents(studentUsers);
+      setStudents(allUsers);
       setLessons(allLessons);
       setParticipations(allParticipations);
       setGroups(allGroups);
