@@ -268,7 +268,7 @@ export default function Leaderboard() {
         // Get actual data from User entity (real source of truth)
         // If we can't access User entity (regular users), use LeaderboardEntry data
         const userRecord = allUsers.find(usr => usr.email === u.student_email);
-        const last_login_date = userRecord?.last_login_date;
+        const last_login_date = u.last_login_date || userRecord?.last_login_date;
         const actualTotalLessons = realTotalLessons; // Always use the real calculated count
         const actualAiTechLevel = userRecord?.ai_tech_level || u.ai_tech_level || 1;
         const actualPersonalDevLevel = userRecord?.personal_dev_level || u.personal_dev_level || 1;
