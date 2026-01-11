@@ -16,6 +16,7 @@ export default function GroupManagement() {
   const [groups, setGroups] = useState([]);
   const [lessons, setLessons] = useState([]);
   const [students, setStudents] = useState([]);
+  const [scheduledLessons, setScheduledLessons] = useState([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingGroup, setEditingGroup] = useState(null);
   const [managingGroup, setManagingGroup] = useState(null);
@@ -33,6 +34,7 @@ export default function GroupManagement() {
       const allGroups = await base44.entities.Group.list();
       const allLessons = await base44.entities.Lesson.list();
       const allUsers = await base44.entities.User.list();
+      const allScheduledLessons = await base44.entities.ScheduledLesson.list();
 
       // Sort groups by name (א', ב', ג', etc.)
       const sortedGroups = allGroups.sort((a, b) => {
@@ -42,6 +44,7 @@ export default function GroupManagement() {
       setGroups(sortedGroups);
       setLessons(allLessons);
       setStudents(allUsers);
+      setScheduledLessons(allScheduledLessons);
     } catch (error) {
       console.error("Error loading data:", error);
       toast.error("שגיאה בטעינת הנתונים");
@@ -154,6 +157,15 @@ export default function GroupManagement() {
           });
           const studentCount = actualStudents.length;
 
+          // Check if group has at least 2 future scheduled lessons
+          const futureScheduledLessons = scheduledLessons.filter(sl => 
+            sl.group_id === group.id && 
+            sl.lesson_id && 
+            !sl.is_cancelled &&
+            new Date(sl.scheduled_date) >= new Date()
+          );
+          const hasTwoLessonsAhead = futureScheduledLessons.length >= 2;
+
           return (
             <motion.div
               key={group.id}
@@ -163,7 +175,14 @@ export default function GroupManagement() {
               <Card className="bg-white/10 backdrop-blur-md border-white/20">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center justify-between">
-                    <span>{group.group_name}</span>
+                    <div className="flex items-center gap-2">
+                      <span>{group.group_name}</span>
+                      {hasTwoLessonsAhead && (
+                        <span className="text-xs bg-green-500/30 text-green-200 px-2 py-1 rounded-full border border-green-400/50 font-bold">
+                          ✓ 2+ שיעורים
+                        </span>
+                      )}
+                    </div>
                     <div className="flex gap-2">
                       <Button
                         onClick={() => setViewingLessonStatus(group)}
