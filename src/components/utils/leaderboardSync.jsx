@@ -69,6 +69,9 @@ export async function syncLeaderboardEntry(studentEmail, patch) {
     
     if (entries && entries.length > 0) {
       await base44.entities.LeaderboardEntry.update(entries[0].id, cleanPatch);
+      console.log(`✅ Synced LeaderboardEntry for ${studentEmail}:`, cleanPatch);
+    } else {
+      console.warn(`⚠️ No LeaderboardEntry found for ${studentEmail} - sync skipped`);
     }
   } catch (error) {
     console.error("Error syncing LeaderboardEntry:", error);
