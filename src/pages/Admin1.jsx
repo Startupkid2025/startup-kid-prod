@@ -1126,6 +1126,15 @@ export default function Admin() {
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setExpandedSurveys(prev => ({ ...prev, [`absent_${lesson.id}`]: !prev[`absent_${lesson.id}`] }))}
+                          className="text-orange-300 hover:text-orange-200 w-9 h-9 hover:bg-gradient-to-br hover:from-orange-500/30 hover:to-red-500/30 transition-all duration-300 hover:shadow-lg border border-transparent hover:border-orange-400/50 rounded-xl"
+                          title="תלמידים שלא היו"
+                        >
+                          <Users className="w-4 h-4" />
+                        </Button>
                       </div>
                       <div className="flex-1 text-right">
                         <h3 className="text-white font-bold text-lg">{lesson.lesson_name}</h3>
@@ -1243,7 +1252,49 @@ export default function Admin() {
                       participations={participations}
                       students={students}
                     />
-                  </div>
+
+                    {/* Students who haven't participated yet */}
+                    {expandedSurveys[`absent_${lesson.id}`] && (() => {
+                      const lessonParticipations = participations.filter(p => p.lesson_id === lesson.id);
+                      const participatedEmails = lessonParticipations.map(p => p.student_email);
+
+                      const absentStudents = students
+                        .filter(s => s.user_type === 'student' && s.role !== 'admin' && !participatedEmails.includes(s.email))
+                        .map(student => {
+                          const studentGroups = groups.filter(g => g.student_emails?.includes(student.email));
+                          return { student, groups: studentGroups };
+                        })
+                        .filter(item => item.groups.length > 0); // Only show students that are in groups
+
+                      if (absentStudents.length === 0) {
+                        return (
+                          <div className="mt-3 bg-green-500/10 rounded-lg p-3 border border-green-500/20">
+                            <p className="text-green-200 text-xs">✓ כל התלמידים מהקבוצות כבר השתתפו בשיעור</p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="mt-3 bg-orange-500/10 rounded-lg p-3 border border-orange-500/20">
+                          <p className="text-orange-200 text-xs font-bold mb-2">תלמידים שעדיין לא היו בשיעור ({absentStudents.length}):</p>
+                          <div className="space-y-2">
+                            {absentStudents.map(({ student, groups: studentGroups }) => (
+                              <div key={student.email} className="bg-white/5 rounded px-2 py-1.5 flex items-center justify-between">
+                                <span className="text-white text-xs">{student.full_name}</span>
+                                <div className="flex gap-1">
+                                  {studentGroups.map(g => (
+                                    <span key={g.id} className="text-[10px] bg-purple-500/30 text-purple-200 px-1.5 py-0.5 rounded">
+                                      {g.group_name}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    </div>
                   ));
                 })()}
               </div>
