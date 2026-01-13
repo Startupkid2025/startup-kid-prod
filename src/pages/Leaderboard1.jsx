@@ -688,14 +688,14 @@ export default function Leaderboard() {
       // Find kings in each category - ONLY from real students (not demo users)
       const realStudents = usersWithAllStats.filter(u => u.user_type === 'student');
       const mathKing = [...realStudents].sort((a, b) => b.masteredMathQuestions - a.masteredMathQuestions)[0];
-      const vocabKing = [...realStudents].sort((a, b) => b.vocabEarnings - a.vocabEarnings)[0];
+      const vocabKing = [...realStudents].sort((a, b) => b.masteredWords - a.masteredWords)[0];
       const investmentKing = [...realStudents].sort((a, b) => b.currentInvestmentValue - a.currentInvestmentValue)[0];
       const loginStreakKing = [...realStudents].sort((a, b) => b.loginStreak - a.loginStreak)[0];
       const workKing = [...realStudents].sort((a, b) => b.workHours - a.workHours)[0];
 
       // Debug: Log kings
       console.log('Math King:', mathKing?.student_email, 'Questions:', mathKing?.masteredMathQuestions);
-      console.log('Vocab King:', vocabKing?.student_email, 'Earnings:', vocabKing?.vocabEarnings);
+      console.log('Vocab King:', vocabKing?.student_email, 'Words:', vocabKing?.masteredWords);
       console.log('Investment King:', investmentKing?.student_email, 'Value:', investmentKing?.currentInvestmentValue);
       console.log('Login Streak King:', loginStreakKing?.student_email, 'Streak:', loginStreakKing?.loginStreak);
       console.log('Work King:', workKing?.student_email, 'Hours:', workKing?.workHours);
@@ -706,7 +706,7 @@ export default function Leaderboard() {
         if (mathKing && u.student_email === mathKing.student_email && mathKing.masteredMathQuestions > 0) {
           u.crowns.push({ type: 'math', name: '🔢 מלך החשבון', bonus: '+5 מטבעות לתרגיל' });
         }
-        if (vocabKing && u.student_email === vocabKing.student_email && vocabKing.vocabEarnings > 0) {
+        if (vocabKing && u.student_email === vocabKing.student_email && vocabKing.masteredWords > 0) {
           u.crowns.push({ type: 'vocab', name: '📚 מלך האנגלית', bonus: '+5 מטבעות למילה' });
         }
         if (investmentKing && u.student_email === investmentKing.student_email && investmentKing.currentInvestmentValue > 0) {
