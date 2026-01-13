@@ -380,9 +380,7 @@ export default function Vocabulary() {
         .filter(a => a.length > 0);
       
       const isCorrect = correctAnswers.some(correctAnswer =>
-        normalizedAnswer === correctAnswer ||
-        correctAnswer.includes(normalizedAnswer) ||
-        normalizedAnswer.includes(correctAnswer)
+        normalizedAnswer === correctAnswer
       );
 
       const now = new Date().toISOString();
