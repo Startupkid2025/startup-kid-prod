@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
 
@@ -44,6 +46,10 @@ export default function Admin() {
   const [searchTerm, setSearchTerm] = useState("");
   const [studentSortBy, setStudentSortBy] = useState("name");
   const [expandedSurveys, setExpandedSurveys] = useState({});
+  const [selectedStudents, setSelectedStudents] = useState([]);
+  const [showBulkAddDialog, setShowBulkAddDialog] = useState(false);
+  const [bulkAddLesson, setBulkAddLesson] = useState("");
+  const [bulkAddDate, setBulkAddDate] = useState("");
 
   useEffect(() => {
     loadInitialData();
@@ -851,6 +857,33 @@ export default function Admin() {
         </TabsList>
 
         <TabsContent value="students">
+          {/* Bulk Actions Bar */}
+          {selectedStudents.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-purple-500/20 border-2 border-purple-500/40 rounded-xl p-4 mb-4 flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-white font-bold">{selectedStudents.length} תלמידים נבחרו</span>
+                <Button
+                  onClick={() => setSelectedStudents([])}
+                  variant="ghost"
+                  className="text-white/70 hover:text-white"
+                >
+                  ✕ נקה בחירה
+                </Button>
+              </div>
+              <Button
+                onClick={() => setShowBulkAddDialog(true)}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                <Plus className="w-4 h-4 ml-2" />
+                הוסף לשיעור
+              </Button>
+            </motion.div>
+          )}
+
           {/* Filters Bar */}
           <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 mb-6 space-y-4">
             <div className="flex items-center justify-between">
@@ -929,9 +962,75 @@ export default function Admin() {
           {/* Students List */}
           <Card className="bg-white/5 backdrop-blur-md border-white/10">
             <CardHeader className="border-b border-white/10">
-              <CardTitle className="text-white text-lg">
-                ניהול תלמידים ({students.filter(s => filterUserType === 'all' || s.user_type === filterUserType).length})
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-white text-lg">
+                  ניהול תלמידים ({students.filter(s => filterUserType === 'all' || s.user_type === filterUserType).length})
+                </CardTitle>
+                {students.filter(s => {
+                  const typeMatch = filterUserType === 'all' || s.user_type === filterUserType;
+                  let groupMatch = true;
+                  if (filterGroup !== 'all') {
+                    const group = groups.find(g => g.id === filterGroup);
+                    groupMatch = group?.student_emails?.includes(s.email);
+                  }
+                  let searchMatch = true;
+                  if (searchTerm.trim()) {
+                    const fullName = s.full_name?.toLowerCase() || '';
+                    const firstName = s.first_name?.toLowerCase() || '';
+                    const lastName = s.last_name?.toLowerCase() || '';
+                    const search = searchTerm.toLowerCase();
+                    searchMatch = fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
+                  }
+                  return typeMatch && groupMatch && searchMatch;
+                }).length > 0 && (
+                  <Button
+                    onClick={() => {
+                      const filteredStudents = students.filter(s => {
+                        const typeMatch = filterUserType === 'all' || s.user_type === filterUserType;
+                        let groupMatch = true;
+                        if (filterGroup !== 'all') {
+                          const group = groups.find(g => g.id === filterGroup);
+                          groupMatch = group?.student_emails?.includes(s.email);
+                        }
+                        let searchMatch = true;
+                        if (searchTerm.trim()) {
+                          const fullName = s.full_name?.toLowerCase() || '';
+                          const firstName = s.first_name?.toLowerCase() || '';
+                          const lastName = s.last_name?.toLowerCase() || '';
+                          const search = searchTerm.toLowerCase();
+                          searchMatch = fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
+                        }
+                        return typeMatch && groupMatch && searchMatch;
+                      });
+                      if (selectedStudents.length === filteredStudents.length) {
+                        setSelectedStudents([]);
+                      } else {
+                        setSelectedStudents(filteredStudents.map(s => s.email));
+                      }
+                    }}
+                    variant="ghost"
+                    className="text-white/70 hover:text-white text-sm"
+                  >
+                    {selectedStudents.length === students.filter(s => {
+                      const typeMatch = filterUserType === 'all' || s.user_type === filterUserType;
+                      let groupMatch = true;
+                      if (filterGroup !== 'all') {
+                        const group = groups.find(g => g.id === filterGroup);
+                        groupMatch = group?.student_emails?.includes(s.email);
+                      }
+                      let searchMatch = true;
+                      if (searchTerm.trim()) {
+                        const fullName = s.full_name?.toLowerCase() || '';
+                        const firstName = s.first_name?.toLowerCase() || '';
+                        const lastName = s.last_name?.toLowerCase() || '';
+                        const search = searchTerm.toLowerCase();
+                        searchMatch = fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
+                      }
+                      return typeMatch && groupMatch && searchMatch;
+                    }).length ? '✓ בטל בחירת הכל' : '☑ בחר הכל'}
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-3">
@@ -970,7 +1069,20 @@ export default function Admin() {
                     return 0;
                   })
                   .map(student => (
-                    <StudentRow
+                    <div key={student.id} className="flex items-start gap-3">
+                      <Checkbox
+                        checked={selectedStudents.includes(student.email)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedStudents([...selectedStudents, student.email]);
+                          } else {
+                            setSelectedStudents(selectedStudents.filter(e => e !== student.email));
+                          }
+                        }}
+                        className="mt-4"
+                      />
+                      <div className="flex-1">
+                        <StudentRow
                       key={student.id}
                       student={student}
                       lessons={lessons}
@@ -1012,6 +1124,8 @@ export default function Admin() {
                       }}
                       onRefresh={refreshCurrentTab}
                       />
+                      </div>
+                      </div>
                       ))}
                       </div>
                       </CardContent>
@@ -1392,6 +1506,127 @@ export default function Admin() {
         isOpen={!!managingQuizLesson}
         onClose={() => setManagingQuizLesson(null)}
       />
-    </div>
-  );
-}
+
+      {/* Bulk Add to Lesson Dialog */}
+      <Dialog open={showBulkAddDialog} onOpenChange={setShowBulkAddDialog}>
+        <DialogContent className="bg-gradient-to-br from-purple-500/95 to-pink-500/95 text-white border-white/20">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black">
+              הוסף {selectedStudents.length} תלמידים לשיעור
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div>
+              <label className="text-sm font-bold mb-2 block">בחר שיעור:</label>
+              <Select value={bulkAddLesson} onValueChange={setBulkAddLesson}>
+                <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                  <SelectValue placeholder="בחר שיעור..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {lessons.map(lesson => (
+                    <SelectItem key={lesson.id} value={lesson.id}>
+                      {lesson.lesson_name} - {lesson.lesson_date || 'ללא תאריך'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-bold mb-2 block">תאריך השיעור:</label>
+              <Input
+                type="date"
+                value={bulkAddDate}
+                onChange={(e) => setBulkAddDate(e.target.value)}
+                className="bg-white/10 border-white/20 text-white"
+              />
+            </div>
+            <div className="bg-white/10 rounded-lg p-3 max-h-40 overflow-y-auto">
+              <p className="text-sm font-bold mb-2">תלמידים נבחרים:</p>
+              <div className="space-y-1">
+                {selectedStudents.map(email => {
+                  const student = students.find(s => s.email === email);
+                  return (
+                    <div key={email} className="text-sm text-white/90">
+                      • {student?.full_name || email}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => {
+                  setShowBulkAddDialog(false);
+                  setBulkAddLesson("");
+                  setBulkAddDate("");
+                }}
+                variant="outline"
+                className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
+              >
+                ביטול
+              </Button>
+              <Button
+                onClick={async () => {
+                  if (!bulkAddLesson || !bulkAddDate) {
+                    toast.error("יש לבחור שיעור ותאריך");
+                    return;
+                  }
+
+                  try {
+                    let successCount = 0;
+                    let failCount = 0;
+
+                    for (const email of selectedStudents) {
+                      try {
+                        // Check if participation already exists
+                        const existing = participations.find(
+                          p => p.student_email === email && 
+                               p.lesson_id === bulkAddLesson && 
+                               p.lesson_date === bulkAddDate
+                        );
+
+                        if (!existing) {
+                          await base44.entities.LessonParticipation.create({
+                            student_email: email,
+                            lesson_id: bulkAddLesson,
+                            lesson_date: bulkAddDate,
+                            attended: true
+                          });
+                          successCount++;
+                        }
+
+                        await sleep(100);
+                      } catch (error) {
+                        failCount++;
+                        console.error(`Failed to add ${email}:`, error);
+                      }
+                    }
+
+                    if (failCount === 0) {
+                      toast.success(`✅ ${successCount} תלמידים נוספו בהצלחה!`);
+                    } else {
+                      toast.warning(`הוספו ${successCount} תלמידים, ${failCount} נכשלו`);
+                    }
+
+                    setShowBulkAddDialog(false);
+                    setBulkAddLesson("");
+                    setBulkAddDate("");
+                    setSelectedStudents([]);
+                    await refreshCurrentTab();
+                  } catch (error) {
+                    console.error("Error bulk adding:", error);
+                    toast.error("שגיאה בהוספה קבוצתית");
+                  }
+                }}
+                className="flex-1 bg-white text-purple-600 hover:bg-white/90 font-bold"
+                disabled={!bulkAddLesson || !bulkAddDate}
+              >
+                הוסף לשיעור
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      </div>
+      );
+      }
