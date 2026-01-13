@@ -3,8 +3,9 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Coins, TrendingUp, BookOpen, Star, Crown, Handshake, Check, Heart, Flame, Calculator, MessageSquare } from "lucide-react";
+import { Trophy, Coins, TrendingUp, BookOpen, Star, Crown, Handshake, Check, Heart, Flame, Calculator, MessageSquare, Search } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
 import TamagotchiAvatar from "../components/avatar/TamagotchiAvatar";
 import { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
 import StudentProfileDialog from "../components/leaderboard/StudentProfileDialog";
@@ -332,6 +333,7 @@ export default function Leaderboard() {
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const USERS_PER_PAGE = 20;
 
   useEffect(() => {
@@ -1117,9 +1119,40 @@ export default function Leaderboard() {
         </Card>
       </motion.div>
 
+      {/* Search Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="mb-6"
+      >
+        <div className="relative">
+          <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/50" />
+          <Input
+            type="text"
+            placeholder="חפש תלמיד לפי שם..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1); // Reset to first page on search
+            }}
+            className="w-full bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 py-6 text-lg"
+          />
+        </div>
+      </motion.div>
+
       {/* Leaderboard */}
       <div className="space-y-4">
-        {users.slice((currentPage - 1) * USERS_PER_PAGE, currentPage * USERS_PER_PAGE).map((player, index) => {
+        {users
+          .filter(user => {
+            if (!searchTerm.trim()) return true;
+            const fullName = user.full_name?.toLowerCase() || '';
+            const firstName = user.first_name?.toLowerCase() || '';
+            const lastName = user.last_name?.toLowerCase() || '';
+            const search = searchTerm.toLowerCase();
+            return fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
+          })
+          .slice((currentPage - 1) * USERS_PER_PAGE, currentPage * USERS_PER_PAGE).map((player, index) => {
           const actualIndex = (currentPage - 1) * USERS_PER_PAGE + index;
           
           return (
@@ -1141,7 +1174,14 @@ export default function Leaderboard() {
       </div>
 
       {/* Pagination */}
-      {users.length > USERS_PER_PAGE && (
+      {users.filter(user => {
+        if (!searchTerm.trim()) return true;
+        const fullName = user.full_name?.toLowerCase() || '';
+        const firstName = user.first_name?.toLowerCase() || '';
+        const lastName = user.last_name?.toLowerCase() || '';
+        const search = searchTerm.toLowerCase();
+        return fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
+      }).length > USERS_PER_PAGE && (
         <div className="flex items-center justify-center gap-2 mt-6">
           <Button
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
@@ -1154,7 +1194,14 @@ export default function Leaderboard() {
           </Button>
           
           <div className="flex gap-1">
-            {Array.from({ length: Math.ceil(users.length / USERS_PER_PAGE) }, (_, i) => i + 1).map(page => (
+            {Array.from({ length: Math.ceil(users.filter(user => {
+              if (!searchTerm.trim()) return true;
+              const fullName = user.full_name?.toLowerCase() || '';
+              const firstName = user.first_name?.toLowerCase() || '';
+              const lastName = user.last_name?.toLowerCase() || '';
+              const search = searchTerm.toLowerCase();
+              return fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
+            }).length / USERS_PER_PAGE) }, (_, i) => i + 1).map(page => (
               <Button
                 key={page}
                 onClick={() => setCurrentPage(page)}
@@ -1171,8 +1218,22 @@ export default function Leaderboard() {
           </div>
 
           <Button
-            onClick={() => setCurrentPage(prev => Math.min(Math.ceil(users.length / USERS_PER_PAGE), prev + 1))}
-            disabled={currentPage === Math.ceil(users.length / USERS_PER_PAGE)}
+            onClick={() => setCurrentPage(prev => Math.min(Math.ceil(users.filter(user => {
+              if (!searchTerm.trim()) return true;
+              const fullName = user.full_name?.toLowerCase() || '';
+              const firstName = user.first_name?.toLowerCase() || '';
+              const lastName = user.last_name?.toLowerCase() || '';
+              const search = searchTerm.toLowerCase();
+              return fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
+            }).length / USERS_PER_PAGE), prev + 1))}
+            disabled={currentPage === Math.ceil(users.filter(user => {
+              if (!searchTerm.trim()) return true;
+              const fullName = user.full_name?.toLowerCase() || '';
+              const firstName = user.first_name?.toLowerCase() || '';
+              const lastName = user.last_name?.toLowerCase() || '';
+              const search = searchTerm.toLowerCase();
+              return fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
+            }).length / USERS_PER_PAGE)}
             variant="outline"
             size="sm"
             className="bg-white/10 border-white/20 text-white hover:bg-white/20"
