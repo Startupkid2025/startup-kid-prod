@@ -42,6 +42,7 @@ export default function Admin() {
   const [groups, setGroups] = useState([]);
   const [filterGroup, setFilterGroup] = useState("all");
   const [filterUserType, setFilterUserType] = useState("student");
+  const [filterRecommendation, setFilterRecommendation] = useState("all");
   const [lessonSortBy, setLessonSortBy] = useState("date");
   const [searchTerm, setSearchTerm] = useState("");
   const [studentSortBy, setStudentSortBy] = useState("name");
@@ -935,13 +936,52 @@ export default function Admin() {
                   </SelectContent>
                 </Select>
                 </div>
+              <div className="flex items-center gap-2">
+                <span className="text-white/70 text-sm">המלצות:</span>
+                <Select value={filterRecommendation} onValueChange={setFilterRecommendation}>
+                  <SelectTrigger className="w-44 bg-white/10 border-white/20 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">הכל</SelectItem>
+                    <SelectItem value="pending">יש המלצה ממתינה</SelectItem>
+                  </SelectContent>
+                </Select>
+                </div>
               </div>
               <div className="text-white/70 text-sm">
                 סה״כ {students.filter(s => {
                   const typeMatch = filterUserType === 'all' || s.user_type === filterUserType;
-                  if (filterGroup === 'all') return typeMatch;
-                  const group = groups.find(g => g.id === filterGroup);
-                  return typeMatch && group?.student_emails?.includes(s.email);
+                  let groupMatch = true;
+                  if (filterGroup !== 'all') {
+                    const group = groups.find(g => g.id === filterGroup);
+                    groupMatch = group?.student_emails?.includes(s.email);
+                  }
+                  let recommendationMatch = true;
+                  if (filterRecommendation === 'pending') {
+                    const studentGroup = groups.find(g => g.student_emails?.includes(s.email));
+                    if (!studentGroup) {
+                      recommendationMatch = false;
+                    } else {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      const groupScheduledLessons = scheduledLessons.filter(sl => {
+                        if (sl.group_id !== studentGroup.id || !sl.lesson_id || sl.is_cancelled) return false;
+                        const lessonDate = new Date(sl.scheduled_date);
+                        lessonDate.setHours(0, 0, 0, 0);
+                        return lessonDate <= today;
+                      });
+                      if (groupScheduledLessons.length === 0) {
+                        recommendationMatch = false;
+                      } else {
+                        const sortedLessons = groupScheduledLessons.sort((a, b) => new Date(b.scheduled_date) - new Date(a.scheduled_date));
+                        const recommendedLesson = sortedLessons[0];
+                        const hasParticipation = participations.find(p => p.lesson_id === recommendedLesson.lesson_id && p.student_email === s.email);
+                        recommendationMatch = !hasParticipation;
+                      }
+                    }
+                  }
+                  return typeMatch && groupMatch && recommendationMatch;
                 }).length} מ-{students.length}
               </div>
             </div>
@@ -1000,7 +1040,31 @@ export default function Admin() {
                           const search = searchTerm.toLowerCase();
                           searchMatch = fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
                         }
-                        return typeMatch && groupMatch && searchMatch;
+                        let recommendationMatch = true;
+                        if (filterRecommendation === 'pending') {
+                          const studentGroup = groups.find(g => g.student_emails?.includes(s.email));
+                          if (!studentGroup) {
+                            recommendationMatch = false;
+                          } else {
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            const groupScheduledLessons = scheduledLessons.filter(sl => {
+                              if (sl.group_id !== studentGroup.id || !sl.lesson_id || sl.is_cancelled) return false;
+                              const lessonDate = new Date(sl.scheduled_date);
+                              lessonDate.setHours(0, 0, 0, 0);
+                              return lessonDate <= today;
+                            });
+                            if (groupScheduledLessons.length === 0) {
+                              recommendationMatch = false;
+                            } else {
+                              const sortedLessons = groupScheduledLessons.sort((a, b) => new Date(b.scheduled_date) - new Date(a.scheduled_date));
+                              const recommendedLesson = sortedLessons[0];
+                              const hasParticipation = participations.find(p => p.lesson_id === recommendedLesson.lesson_id && p.student_email === s.email);
+                              recommendationMatch = !hasParticipation;
+                            }
+                          }
+                        }
+                        return typeMatch && groupMatch && searchMatch && recommendationMatch;
                       });
                       if (selectedStudents.length === filteredStudents.length) {
                         setSelectedStudents([]);
@@ -1026,7 +1090,31 @@ export default function Admin() {
                         const search = searchTerm.toLowerCase();
                         searchMatch = fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
                       }
-                      return typeMatch && groupMatch && searchMatch;
+                      let recommendationMatch = true;
+                      if (filterRecommendation === 'pending') {
+                        const studentGroup = groups.find(g => g.student_emails?.includes(s.email));
+                        if (!studentGroup) {
+                          recommendationMatch = false;
+                        } else {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const groupScheduledLessons = scheduledLessons.filter(sl => {
+                            if (sl.group_id !== studentGroup.id || !sl.lesson_id || sl.is_cancelled) return false;
+                            const lessonDate = new Date(sl.scheduled_date);
+                            lessonDate.setHours(0, 0, 0, 0);
+                            return lessonDate <= today;
+                          });
+                          if (groupScheduledLessons.length === 0) {
+                            recommendationMatch = false;
+                          } else {
+                            const sortedLessons = groupScheduledLessons.sort((a, b) => new Date(b.scheduled_date) - new Date(a.scheduled_date));
+                            const recommendedLesson = sortedLessons[0];
+                            const hasParticipation = participations.find(p => p.lesson_id === recommendedLesson.lesson_id && p.student_email === s.email);
+                            recommendationMatch = !hasParticipation;
+                          }
+                        }
+                      }
+                      return typeMatch && groupMatch && searchMatch && recommendationMatch;
                     }).length ? '✓ בטל בחירת הכל' : '☑ בחר הכל'}
                   </Button>
                 )}
@@ -1056,7 +1144,45 @@ export default function Admin() {
                       searchMatch = fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
                     }
 
-                    return typeMatch && groupMatch && searchMatch;
+                    // Filter by recommendation
+                    let recommendationMatch = true;
+                    if (filterRecommendation === 'pending') {
+                      const studentGroup = groups.find(g => g.student_emails?.includes(student.email));
+                      if (!studentGroup) {
+                        recommendationMatch = false;
+                      } else {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        
+                        const groupScheduledLessons = scheduledLessons.filter(sl => {
+                          if (sl.group_id !== studentGroup.id || !sl.lesson_id || sl.is_cancelled) {
+                            return false;
+                          }
+                          const lessonDate = new Date(sl.scheduled_date);
+                          lessonDate.setHours(0, 0, 0, 0);
+                          return lessonDate <= today;
+                        });
+                        
+                        if (groupScheduledLessons.length === 0) {
+                          recommendationMatch = false;
+                        } else {
+                          const sortedLessons = groupScheduledLessons.sort((a, b) => {
+                            const dateA = new Date(a.scheduled_date);
+                            const dateB = new Date(b.scheduled_date);
+                            return dateB - dateA;
+                          });
+                          
+                          const recommendedLesson = sortedLessons[0];
+                          const hasParticipation = participations.find(
+                            p => p.lesson_id === recommendedLesson.lesson_id && p.student_email === student.email
+                          );
+                          
+                          recommendationMatch = !hasParticipation;
+                        }
+                      }
+                    }
+
+                    return typeMatch && groupMatch && searchMatch && recommendationMatch;
                   })
                   .sort((a, b) => {
                     if (studentSortBy === "name") {
