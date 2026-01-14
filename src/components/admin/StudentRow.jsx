@@ -457,11 +457,22 @@ export default function StudentRow({
                       📚 {studentGroup.group_name}
                     </span>
                   )}
-                  <p className="font-bold text-white text-base sm:text-lg truncate">
-                    {student.first_name && student.last_name 
-                      ? `${student.first_name} ${student.last_name}`
-                      : student.full_name}
-                  </p>
+                  <div className="flex flex-col items-end gap-0.5">
+                    {student.first_name && student.last_name ? (
+                      <>
+                        <p className="font-bold text-white text-base sm:text-lg truncate">
+                          {student.first_name}
+                        </p>
+                        <p className="font-bold text-white/80 text-sm sm:text-base truncate">
+                          {student.last_name}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="font-bold text-white text-base sm:text-lg truncate">
+                        {student.full_name}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <p className="text-white/60 text-xs sm:text-sm truncate">{student.email}</p>
                 {student.phone_number && (
