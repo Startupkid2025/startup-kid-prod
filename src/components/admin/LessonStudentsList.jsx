@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -32,8 +33,6 @@ export default function LessonStudentsList({ lesson, participations, students })
     return {
       ...participation, // Contains watched_recording, notes, survey_completed, etc.
       studentName: student?.full_name || participation.student_email,
-      studentFirstName: student?.first_name || "",
-      studentLastName: student?.last_name || "",
       quizScore: quiz?.score,
       quizTotal: quiz?.total_questions,
       quizCompleted: quiz?.completed
@@ -56,14 +55,6 @@ export default function LessonStudentsList({ lesson, participations, students })
   const getCellContent = (participant, column) => {
     switch (column.key) {
       case "full_name":
-        if (participant.studentFirstName && participant.studentLastName) {
-          return (
-            <div className="flex flex-col items-end text-right">
-              <span className="font-semibold">{participant.studentFirstName}</span>
-              <span className="text-white/70 text-xs">{participant.studentLastName}</span>
-            </div>
-          );
-        }
         return participant.studentName;
       
       case "attended":
