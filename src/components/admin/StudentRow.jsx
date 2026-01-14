@@ -460,7 +460,7 @@ export default function StudentRow({
                   <p className="font-bold text-white text-base sm:text-lg truncate">
                     {student.first_name && student.last_name 
                       ? `${student.first_name} ${student.last_name}`
-                      : student.full_name}
+                      : (student.full_name || student.email)}
                   </p>
                 </div>
                 <p className="text-white/60 text-xs sm:text-sm truncate">{student.email}</p>
