@@ -1317,18 +1317,22 @@ export default function Admin() {
                                   {participations
                                     .filter(p => p.lesson_id === lesson.id && p.survey_completed)
                                     .map(p => {
-                                      const student = students.find(s => s.email === p.student_email);
-                                      if (!student) return null;
-                                      
-                                      const totalScore = (p.survey_interest || 0) + (p.survey_fun || 0) + 
-                                                        (p.survey_learned || 0) + (p.survey_difficulty || 0);
-                                      const avgScore = totalScore / 4;
-                                      
-                                      return (
-                                        <div key={p.id} className="bg-white/5 rounded px-3 py-2">
-                                          <div className="flex items-center justify-between mb-2">
-                                            <div className="flex-1">
-                                              <p className="text-white text-sm font-medium">{student.full_name}</p>
+                                     const student = students.find(s => s.email === p.student_email);
+                                     if (!student) return null;
+
+                                     const displayName = student.first_name && student.last_name
+                                       ? `${student.first_name} ${student.last_name}`
+                                       : (student.full_name || student.email);
+
+                                     const totalScore = (p.survey_interest || 0) + (p.survey_fun || 0) + 
+                                                       (p.survey_learned || 0) + (p.survey_difficulty || 0);
+                                     const avgScore = totalScore / 4;
+
+                                     return (
+                                       <div key={p.id} className="bg-white/5 rounded px-3 py-2">
+                                         <div className="flex items-center justify-between mb-2">
+                                           <div className="flex-1">
+                                             <p className="text-white text-sm font-medium">{displayName}</p>
                                               <div className="flex gap-2 mt-1">
                                                 <span className="text-[10px] text-purple-300">🎯 {p.survey_interest || 0}</span>
                                                 <span className="text-[10px] text-pink-300">😄 {p.survey_fun || 0}</span>
@@ -1376,7 +1380,10 @@ export default function Admin() {
                         .filter(s => s.user_type === 'student' && s.role !== 'admin' && !participatedEmails.includes(s.email))
                         .map(student => {
                           const studentGroups = groups.filter(g => g.student_emails?.includes(student.email));
-                          return { student, groups: studentGroups };
+                          const displayName = student.first_name && student.last_name
+                            ? `${student.first_name} ${student.last_name}`
+                            : (student.full_name || student.email);
+                          return { student, groups: studentGroups, displayName };
                         })
                         .filter(item => item.groups.length > 0); // Only show students that are in groups
 
@@ -1392,9 +1399,9 @@ export default function Admin() {
                         <div className="mt-3 bg-orange-500/10 rounded-lg p-3 border border-orange-500/20">
                           <p className="text-orange-200 text-xs font-bold mb-2">תלמידים שעדיין לא היו בשיעור ({absentStudents.length}):</p>
                           <div className="space-y-2">
-                            {absentStudents.map(({ student, groups: studentGroups }) => (
+                            {absentStudents.map(({ student, groups: studentGroups, displayName }) => (
                               <div key={student.email} className="bg-white/5 rounded px-2 py-1.5 flex items-center justify-between">
-                                <span className="text-white text-xs">{student.full_name}</span>
+                                <span className="text-white text-xs">{displayName}</span>
                                 <div className="flex gap-1">
                                   {studentGroups.map(g => (
                                     <span key={g.id} className="text-[10px] bg-purple-500/30 text-purple-200 px-1.5 py-0.5 rounded">
@@ -1545,9 +1552,12 @@ export default function Admin() {
               <div className="space-y-1">
                 {selectedStudents.map(email => {
                   const student = students.find(s => s.email === email);
+                  const displayName = student?.first_name && student?.last_name
+                    ? `${student.first_name} ${student.last_name}`
+                    : (student?.full_name || email);
                   return (
                     <div key={email} className="text-sm text-white/90">
-                      • {student?.full_name || email}
+                      • {displayName}
                     </div>
                   );
                 })}
