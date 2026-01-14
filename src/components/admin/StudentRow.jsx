@@ -87,6 +87,18 @@ export default function StudentRow({
 
   const confirmAddParticipation = () => {
     if (selectedLesson && lessonDate) {
+      // בדוק אם יש כבר השתתפות לאותו שיעור
+      const existingParticipation = participations.find(
+        p => p.lesson_id === selectedLesson.id && p.student_email === student.email
+      );
+      
+      if (existingParticipation) {
+        toast.error("התלמיד כבר רשום לשיעור זה");
+        setShowDateDialog(false);
+        setSelectedLesson(null);
+        return;
+      }
+      
       onToggleParticipation(student, selectedLesson, lessonDate, null, wasAttended);
       setShowDateDialog(false);
       setSelectedLesson(null);
