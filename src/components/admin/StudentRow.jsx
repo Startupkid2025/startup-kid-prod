@@ -365,12 +365,21 @@ export default function StudentRow({
   const getRecommendedLesson = () => {
     if (!studentGroup) return null;
     
-    // Get all scheduled lessons for this group that have passed
-    const groupScheduledLessons = scheduledLessons.filter(sl => 
-      sl.group_id === studentGroup.id && 
-      sl.lesson_id &&
-      !sl.is_cancelled
-    );
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // התחלת היום
+    
+    // Get all scheduled lessons for this group that have passed or are today
+    const groupScheduledLessons = scheduledLessons.filter(sl => {
+      if (sl.group_id !== studentGroup.id || !sl.lesson_id || sl.is_cancelled) {
+        return false;
+      }
+      
+      const lessonDate = new Date(sl.scheduled_date);
+      lessonDate.setHours(0, 0, 0, 0);
+      
+      // רק שיעורים שהתאריך שלהם היום או בעבר
+      return lessonDate <= today;
+    });
     
     if (groupScheduledLessons.length === 0) return null;
     
@@ -381,7 +390,7 @@ export default function StudentRow({
       return dateB - dateA;
     });
     
-    // Return the most recent lesson
+    // Return the most recent lesson that already happened (or is today)
     return sortedLessons[0];
   };
   
