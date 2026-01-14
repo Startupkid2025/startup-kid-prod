@@ -1399,7 +1399,13 @@ export default function Admin() {
                         <div className="mt-3 bg-orange-500/10 rounded-lg p-3 border border-orange-500/20">
                           <p className="text-orange-200 text-xs font-bold mb-2">תלמידים שעדיין לא היו בשיעור ({absentStudents.length}):</p>
                           <div className="space-y-2">
-                            {absentStudents.map(({ student, groups: studentGroups, displayName }) => (
+                            {absentStudents
+                              .sort((a, b) => {
+                                const groupNameA = a.groups[0]?.group_name || '';
+                                const groupNameB = b.groups[0]?.group_name || '';
+                                return groupNameA.localeCompare(groupNameB, 'he');
+                              })
+                              .map(({ student, groups: studentGroups, displayName }) => (
                               <div key={student.email} className="bg-white/5 rounded px-2 py-1.5 flex items-center justify-between">
                                 <span className="text-white text-xs">{displayName}</span>
                                 <div className="flex gap-1">
