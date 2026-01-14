@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -30,9 +29,15 @@ export default function LessonStudentsList({ lesson, participations, students })
   const participantsData = lessonParticipations.map(participation => {
     const student = students.find(s => s.email === participation.student_email);
     const quiz = quizProgress.find(q => q.student_email === participation.student_email);
+    
+    // Use first_name + last_name if available, otherwise fall back to full_name or email
+    const displayName = student?.first_name && student?.last_name
+      ? `${student.first_name} ${student.last_name}`
+      : (student?.full_name || participation.student_email);
+    
     return {
       ...participation, // Contains watched_recording, notes, survey_completed, etc.
-      studentName: student?.full_name || participation.student_email,
+      studentName: displayName,
       quizScore: quiz?.score,
       quizTotal: quiz?.total_questions,
       quizCompleted: quiz?.completed
