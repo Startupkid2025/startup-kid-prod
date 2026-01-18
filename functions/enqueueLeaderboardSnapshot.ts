@@ -4,31 +4,43 @@ export default async function enqueueLeaderboardSnapshot({ studentEmail }, { bas
   }
 
   try {
-    // Check if already in queue
+    // Check for recent pending entry (last 2 minutes to prevent spam)
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    
     const existing = await base44.entities.LeaderboardSnapshotQueue.filter({ 
       student_email: studentEmail 
     });
 
-    if (existing.length > 0) {
-      // Update existing entry - reset to pending if it was done
-      const entry = existing[0];
-      if (entry.status === 'done') {
-        await base44.entities.LeaderboardSnapshotQueue.update(entry.id, {
-          status: 'pending',
-          requested_at: new Date().toISOString()
-        });
-      }
-      // If pending or processing, do nothing (avoid duplicates)
-      return { success: true, message: "Already queued" };
+    const recentPending = existing.find(e => 
+      e.status === 'pending' && 
+      e.created_at && 
+      e.created_at > twoMinutesAgo
+    );
+
+    if (recentPending) {
+      return { success: true, message: "Already queued recently" };
     }
 
-    // Create new queue entry
-    await base44.entities.LeaderboardSnapshotQueue.create({
-      student_email: studentEmail,
-      status: 'pending',
-      requested_at: new Date().toISOString(),
-      attempts: 0
-    });
+    // Update existing entry if done/failed, or create new
+    const doneOrFailed = existing.find(e => e.status === 'done' || e.status === 'failed');
+    
+    if (doneOrFailed) {
+      await base44.entities.LeaderboardSnapshotQueue.update(doneOrFailed.id, {
+        status: 'pending',
+        attempts: 0,
+        last_error: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+    } else {
+      await base44.entities.LeaderboardSnapshotQueue.create({
+        student_email: studentEmail,
+        status: 'pending',
+        attempts: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+    }
 
     return { success: true, message: "Queued for processing" };
   } catch (error) {

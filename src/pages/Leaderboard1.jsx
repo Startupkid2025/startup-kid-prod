@@ -416,56 +416,57 @@ export default function Leaderboard() {
         const snapshots = await base44.entities.LeaderboardSnapshot.list("-total_value", 200);
         
         if (snapshots.length === 0) {
-          toast.info("הטבלה מתעדכנת... רענן בעוד כמה שניות", { duration: 5000 });
-          setUsers([]);
+          // FALLBACK: Try legacy loading
+          console.warn("No snapshots found, falling back to legacy loading");
+          toast.info("טוען נתונים... ⏳", { duration: 3000 });
+          // Continue to legacy loading below
+        } else {
+          // Filter: Show only students (exclude demo/parent)
+          const filteredSnapshots = snapshots.filter(s => {
+            // Current user can always see themselves
+            if (user && s.student_email === user.email) return true;
+            
+            // Filter demo and parents
+            if (s.user_type === 'demo' || s.user_type === 'parent') return false;
+            
+            // If user_type is missing, treat as student (don't filter out)
+            if (!s.user_type) return true;
+            
+            // Show students
+            return s.user_type === 'student';
+          });
+
+          // Map to expected format for UI
+          const usersWithAllStats = filteredSnapshots.map(s => ({
+            id: s.id,
+            student_email: s.student_email,
+            full_name: s.full_name,
+            first_name: s.first_name,
+            last_name: s.last_name,
+            user_type: s.user_type || 'student',
+            coins: s.coins,
+            purchased_items: s.purchased_items || [],
+            equipped_items: s.equipped_items || {},
+            totalValue: s.total_value,
+            masteredWords: s.mastered_words,
+            masteredMathQuestions: s.mastered_math_questions,
+            loginStreak: s.login_streak,
+            collaborationCount: s.collaboration_count,
+            workHours: s.work_hours,
+            workEarnings: s.work_earnings,
+            last_login_date: s.last_login_date,
+            aiTechLessons: s.ai_tech_lessons,
+            socialSkillsLessons: s.social_skills_lessons,
+            moneyBusinessLessons: s.money_business_lessons,
+            total_lessons: (s.ai_tech_lessons || 0) + (s.social_skills_lessons || 0) + (s.money_business_lessons || 0),
+            crowns: s.crowns || [],
+            daily_collaborations: s.daily_collaborations || []
+          }));
+
+          setUsers(usersWithAllStats);
           setIsLoading(false);
           return;
         }
-
-        // Filter: Show only students (exclude demo/parent)
-        const isCurrentUserAdmin = user?.role === 'admin';
-        
-        const filteredSnapshots = snapshots.filter(s => {
-          // Current user can always see themselves
-          if (user && s.student_email === user.email) return true;
-          
-          // Filter demo and parents
-          if (s.user_type === 'demo' || s.user_type === 'parent') return false;
-          
-          // Show all students
-          return s.user_type === 'student';
-        });
-
-        // Map to expected format for UI
-        const usersWithAllStats = filteredSnapshots.map(s => ({
-          id: s.id,
-          student_email: s.student_email,
-          full_name: s.full_name,
-          first_name: s.first_name,
-          last_name: s.last_name,
-          user_type: s.user_type,
-          coins: s.coins,
-          purchased_items: s.purchased_items || [],
-          equipped_items: s.equipped_items || {},
-          totalValue: s.total_value,
-          masteredWords: s.mastered_words,
-          masteredMathQuestions: s.mastered_math_questions,
-          loginStreak: s.login_streak,
-          collaborationCount: s.collaboration_count,
-          workHours: s.work_hours,
-          workEarnings: s.work_earnings,
-          last_login_date: s.last_login_date,
-          aiTechLessons: s.ai_tech_lessons,
-          socialSkillsLessons: s.social_skills_lessons,
-          moneyBusinessLessons: s.money_business_lessons,
-          total_lessons: (s.ai_tech_lessons || 0) + (s.social_skills_lessons || 0) + (s.money_business_lessons || 0),
-          crowns: s.crowns || [],
-          daily_collaborations: [] // Not needed for display, only for collaboration logic
-        }));
-
-        setUsers(usersWithAllStats);
-        setIsLoading(false);
-        return;
       }
 
       // 📦 LEGACY: Old slow loading (fallback)

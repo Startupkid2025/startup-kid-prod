@@ -1,50 +1,49 @@
 export default async function processLeaderboardSnapshotQueue({}, { base44 }) {
   try {
-    // Get up to 10 pending entries
-    const pending = await base44.entities.LeaderboardSnapshotQueue.filter({ 
+    // Get up to 10 pending entries (oldest first)
+    const allPending = await base44.entities.LeaderboardSnapshotQueue.filter({ 
       status: 'pending' 
     });
 
-    const toProcess = pending.slice(0, 10);
+    // Sort by created_at (oldest first)
+    const sorted = allPending.sort((a, b) => 
+      new Date(a.created_at) - new Date(b.created_at)
+    );
+
+    const toProcess = sorted.slice(0, 10);
 
     if (toProcess.length === 0) {
       return { success: true, message: "Queue empty", processed: 0 };
     }
 
     const results = [];
+    let kingsNeedUpdate = false;
 
     for (const entry of toProcess) {
       // Mark as processing
       await base44.entities.LeaderboardSnapshotQueue.update(entry.id, {
         status: 'processing',
-        last_processed_at: new Date().toISOString()
+        updated_at: new Date().toISOString()
       });
 
       try {
-        // Recompute snapshot
-        const recomputeResult = await base44.functions.recomputeStudentSnapshot({ 
+        // Compute snapshot
+        const computeResult = await base44.functions.computeAndUpsertSnapshot({ 
           studentEmail: entry.student_email 
         });
 
-        if (!recomputeResult.success) {
-          throw new Error(recomputeResult.error);
+        if (!computeResult.success) {
+          throw new Error(computeResult.error);
         }
 
-        // Update kings
-        const kingsResult = await base44.functions.updateKingsForStudent({ 
-          studentEmail: entry.student_email 
-        });
-
-        if (!kingsResult.success) {
-          console.warn("Kings update failed:", kingsResult.error);
-          // Don't fail the whole process for this
-        }
+        kingsNeedUpdate = true;
 
         // Mark as done
         await base44.entities.LeaderboardSnapshotQueue.update(entry.id, {
           status: 'done',
-          last_processed_at: new Date().toISOString(),
-          attempts: (entry.attempts || 0) + 1
+          updated_at: new Date().toISOString(),
+          attempts: (entry.attempts || 0) + 1,
+          last_error: null
         });
 
         results.push({ 
@@ -58,11 +57,11 @@ export default async function processLeaderboardSnapshotQueue({}, { base44 }) {
         const attempts = (entry.attempts || 0) + 1;
 
         if (attempts >= 3) {
-          // Max retries reached, mark as done to prevent infinite loop
+          // Max retries reached
           await base44.entities.LeaderboardSnapshotQueue.update(entry.id, {
-            status: 'done',
+            status: 'failed',
             last_error: error.message,
-            last_processed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
             attempts
           });
         } else {
@@ -70,7 +69,7 @@ export default async function processLeaderboardSnapshotQueue({}, { base44 }) {
           await base44.entities.LeaderboardSnapshotQueue.update(entry.id, {
             status: 'pending',
             last_error: error.message,
-            last_processed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
             attempts
           });
         }
@@ -80,6 +79,18 @@ export default async function processLeaderboardSnapshotQueue({}, { base44 }) {
           success: false, 
           error: error.message 
         });
+      }
+    }
+
+    // Update kings if any snapshots changed
+    if (kingsNeedUpdate) {
+      try {
+        await base44.functions.updateLeaderboardKingsIfNeeded({ 
+          changedStudentEmail: null // Check all
+        });
+      } catch (error) {
+        console.error("Error updating kings:", error);
+        // Don't fail the whole process
       }
     }
 
