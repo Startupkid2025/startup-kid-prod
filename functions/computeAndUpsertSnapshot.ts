@@ -69,8 +69,22 @@ export default async function computeAndUpsertSnapshot({ studentEmail }, { base4
     const collaborationCount = Math.floor((entry.total_collaboration_coins || 0) / 25);
     const workHours = entry.total_work_hours || 0;
     const workEarnings = entry.total_work_earnings || 0;
-    const loginStreak = entry.login_streak || 0;
-    const lastLoginDate = entry.last_login_date || null;
+    
+    // Get login streak from User if possible (more accurate), fallback to LeaderboardEntry
+    let loginStreak = entry.login_streak || 0;
+    let lastLoginDate = entry.last_login_date || null;
+    
+    try {
+      const allUsers = await base44.entities.User.list();
+      const userRecord = allUsers.find(u => u.email === studentEmail);
+      if (userRecord) {
+        loginStreak = userRecord.login_streak || 0;
+        lastLoginDate = userRecord.last_login_date || null;
+      }
+    } catch (e) {
+      // Fallback to LeaderboardEntry data
+      console.log("Using LeaderboardEntry data for login streak");
+    }
 
     // Normalize daily collaborations
     const normalizeResult = await base44.functions.normalizeDailyCollabs({ 

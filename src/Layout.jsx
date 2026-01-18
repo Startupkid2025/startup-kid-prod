@@ -13,7 +13,36 @@ export default function Layout({ children }) {
 
   React.useEffect(() => {
     loadUser();
+    updateLoginStreak();
   }, []);
+
+  const updateLoginStreak = async () => {
+    try {
+      const user = await base44.auth.me();
+      if (!user) return;
+
+      // Call backend function to update streak and reward
+      const result = await base44.functions.updateLoginStreakAndReward({ 
+        studentEmail: user.email 
+      });
+
+      if (result.success && result.reward > 0) {
+        if (result.isNewStreak) {
+          toast.warning(`⚠️ הרצף נשבר! התחלת רצף חדש\n💰 הרווחת ${result.reward} מטבעות (יום 1)`, {
+            duration: 5000,
+            style: { fontSize: '16px' }
+          });
+        } else {
+          toast.success(`🔥 רצף כניסות: ${result.streak} ימים ברצף!\n💰 הרווחת ${result.reward} מטבעות!`, {
+            duration: 6000,
+            style: { fontSize: '16px', fontWeight: 'bold' }
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error updating login streak:", error);
+    }
+  };
 
 
 
@@ -25,9 +54,6 @@ export default function Layout({ children }) {
       if (user.email === 'daniel@smeianikov.com' && user.total_work_hours !== 19) {
         await base44.auth.updateMe({ total_work_hours: 19 });
       }
-      
-      // Check and update login streak
-      await checkAndUpdateLoginStreak(user);
 
       // Apply daily taxes and dividend tax to all users (runs automatically in background)
       applyDailyTaxesToAllUsers().catch(error => {
@@ -135,85 +161,7 @@ export default function Layout({ children }) {
     }
   };
 
-  const checkAndUpdateLoginStreak = async (user) => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const nowIso = new Date().toISOString();
-      const lastLogin = user.last_login_date;
 
-      // If already logged in today, do nothing
-      if (lastLogin === today) {
-        return;
-      }
-
-      // Calculate days since last login
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-      let newStreak = 1;
-      let streakBonus = 10; // Base bonus: 10 coins
-
-      if (lastLogin === yesterdayStr) {
-        // Continued streak!
-        newStreak = (user.login_streak || 0) + 1;
-        streakBonus = newStreak * 10; // 10 coins per day, increases forever (10, 20, 30, 40, ...)
-
-        toast.success(`🔥 רצף כניסות: ${newStreak} ימים ברצף!\n💰 הרווחת ${streakBonus} מטבעות!`, {
-          duration: 6000,
-          style: { fontSize: '16px', fontWeight: 'bold' }
-        });
-      } else if (lastLogin && lastLogin !== yesterdayStr) {
-        // Streak broken
-        toast.warning(`⚠️ הרצף נשבר! התחלת רצף חדש\n💰 הרווחת ${streakBonus} מטבע (יום 1)`, {
-          duration: 5000,
-          style: { fontSize: '16px' }
-        });
-      } else {
-        // First login
-        toast.success(`🎉 ברוך הבא! רצף כניסות יום 1\n💰 הרווחת ${streakBonus} מטבע!`, {
-          duration: 5000,
-          style: { fontSize: '16px' }
-        });
-      }
-      
-      // Check if user is login streak king and add bonus
-      const allUsers = await base44.entities.User.list();
-      let maxStreakEarnings = 0;
-      let streakKingEmail = null;
-
-      allUsers.forEach(u => {
-        const earnings = u.total_login_streak_coins || 0;
-        if (earnings > maxStreakEarnings) {
-          maxStreakEarnings = earnings;
-          streakKingEmail = u.email;
-        }
-      });
-
-      let finalBonus = streakBonus;
-      if (streakKingEmail === user.email && maxStreakEarnings > 0) {
-        finalBonus = streakBonus * 2; // Login streak king gets x2 bonus!
-      }
-
-      // Update user with new streak and bonus
-      await base44.auth.updateMe({
-        last_login_date: nowIso,
-        login_streak: newStreak,
-        coins: (user.coins || 0) + finalBonus,
-        total_login_streak_coins: (user.total_login_streak_coins || 0) + finalBonus
-      });
-
-      // Sync to LeaderboardEntry for public visibility
-      await syncLeaderboardEntry(user.email, {
-        coins: (user.coins || 0) + finalBonus,
-        total_login_streak_coins: (user.total_login_streak_coins || 0) + finalBonus,
-        login_streak: newStreak,
-        last_login_date: nowIso
-      });
-    } catch (error) {
-      console.error("Error checking login streak:", error);
-    }
-  };
 
   const applyDailyTaxesToAllUsers = async () => {
     try {
