@@ -337,6 +337,7 @@ export default function Leaderboard() {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isInitializing, setIsInitializing] = useState(false);
   const USERS_PER_PAGE = 20;
 
   useEffect(() => {
@@ -416,21 +417,19 @@ export default function Leaderboard() {
         const snapshots = await base44.entities.LeaderboardSnapshot.list("-total_value", 200);
         
         if (snapshots.length === 0) {
-          // No snapshots yet - initialize them
-          console.warn("No snapshots found, initializing...");
-          toast.info("מאתחל נתונים... זה יקח רגע ⏳", { duration: 3000 });
+          // No snapshots yet - show message and empty state
+          console.warn("No snapshots found");
           
-          try {
-            await base44.functions.initializeAllSnapshots({});
-            // Reload after initialization
-            setTimeout(() => loadData(), 2000);
-            return;
-          } catch (initError) {
-            console.error("Error initializing snapshots:", initError);
-            toast.error("שגיאה באתחול נתונים, נסה שוב");
-            setIsLoading(false);
-            return;
+          // Only admins can initialize snapshots
+          if (user.role === 'admin') {
+            toast.info("📊 לא נמצאו נתונים. לחץ על 'אתחל נתונים' למטה", { duration: 5000 });
+          } else {
+            toast.info("🔄 הטבלה מתעדכנת... רענן בעוד כמה שניות", { duration: 4000 });
           }
+          
+          setUsers([]);
+          setIsLoading(false);
+          return;
         } else {
           // Filter: Show only students (exclude demo/parent)
           const filteredSnapshots = snapshots.filter(s => {
@@ -1316,15 +1315,95 @@ export default function Leaderboard() {
       )}
 
       {/* Empty State */}
-      {users.length === 0 && (
+      {users.length === 0 && !isLoading && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="text-center py-16"
         >
           <div className="text-6xl mb-4">🏆</div>
-          <h3 className="text-2xl font-bold text-white mb-2">אין עדיין שחקנים</h3>
-          <p className="text-white/70">התחל להשתתף בשיעורים ולהרוויח מטבעות!</p>
+          <h3 className="text-2xl font-bold text-white mb-2">הטבלה מתעדכנת...</h3>
+          <p className="text-white/70 mb-4">רענן את הדף בעוד כמה שניות</p>
+          
+          {currentUser?.role === 'admin' && (
+            <Button
+              onClick={async () => {
+                setIsInitializing(true);
+                toast.info("מאתחל נתונים... זה ייקח כמה שניות ⏳", { duration: 3000 });
+                
+                try {
+                  // Client-side initialization for admin
+                  const allEntries = await base44.entities.LeaderboardEntry.list();
+                  const students = allEntries.filter(e => {
+                    const type = e.user_type || 'student';
+                    return type === 'student';
+                  });
+                  
+                  let created = 0;
+                  let updated = 0;
+                  
+                  // Process in small batches
+                  for (let i = 0; i < students.length; i++) {
+                    const student = students[i];
+                    
+                    // Check if snapshot exists
+                    const existing = await base44.entities.LeaderboardSnapshot.filter({
+                      student_email: student.student_email
+                    });
+                    
+                    const snapshotData = {
+                      student_email: student.student_email,
+                      full_name: student.full_name,
+                      first_name: student.first_name,
+                      last_name: student.last_name,
+                      user_type: student.user_type || 'student',
+                      coins: student.coins || 0,
+                      purchased_items: student.purchased_items || [],
+                      equipped_items: student.equipped_items || {},
+                      daily_collaborations: student.daily_collaborations || [],
+                      total_value: (student.coins || 0),
+                      mastered_words: 0,
+                      mastered_math_questions: 0,
+                      login_streak: student.login_streak || 0,
+                      collaboration_count: 0,
+                      work_hours: student.total_work_hours || 0,
+                      work_earnings: student.total_work_earnings || 0,
+                      last_login_date: student.last_login_date,
+                      ai_tech_lessons: 0,
+                      social_skills_lessons: 0,
+                      money_business_lessons: 0,
+                      crowns: []
+                    };
+                    
+                    if (existing.length > 0) {
+                      await base44.entities.LeaderboardSnapshot.update(existing[0].id, snapshotData);
+                      updated++;
+                    } else {
+                      await base44.entities.LeaderboardSnapshot.create(snapshotData);
+                      created++;
+                    }
+                    
+                    // Small delay to avoid rate limiting
+                    if (i % 5 === 0 && i > 0) {
+                      await new Promise(resolve => setTimeout(resolve, 200));
+                    }
+                  }
+                  
+                  toast.success(`✅ אותחל! ${created} נוצרו, ${updated} עודכנו`, { duration: 4000 });
+                  setTimeout(() => loadData(), 1000);
+                } catch (error) {
+                  console.error("Error initializing snapshots:", error);
+                  toast.error("שגיאה באתחול, נסה שוב");
+                } finally {
+                  setIsInitializing(false);
+                }
+              }}
+              disabled={isInitializing}
+              className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold"
+            >
+              {isInitializing ? "מאתחל... ⏳" : "🔄 אתחל נתונים (אדמין בלבד)"}
+            </Button>
+          )}
         </motion.div>
       )}
 

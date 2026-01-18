@@ -21,19 +21,64 @@ export default function Layout({ children }) {
       const user = await base44.auth.me();
       if (!user) return;
 
-      // Call backend function to update streak and reward
-      const result = await base44.functions.updateLoginStreakAndReward({ 
-        studentEmail: user.email 
+      // Client-side login streak update
+      const today = new Date().toISOString().split('T')[0];
+      const lastLogin = user.last_login_date;
+
+      if (lastLogin === today) {
+        // Already logged in today
+        return;
+      }
+
+      // Check if yesterday
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+      let newStreak = 1;
+      let isNewStreak = true;
+
+      if (lastLogin === yesterdayStr) {
+        // Continuing streak
+        newStreak = (user.login_streak || 0) + 1;
+        isNewStreak = false;
+      }
+
+      // Calculate reward (capped at 10 days)
+      const rewardStreak = Math.min(newStreak, 10);
+      const reward = rewardStreak * 10;
+
+      // Update user
+      const newCoins = (user.coins || 0) + reward;
+      await base44.auth.updateMe({
+        login_streak: newStreak,
+        last_login_date: today,
+        coins: newCoins,
+        total_login_streak_coins: (user.total_login_streak_coins || 0) + reward
       });
 
-      if (result.success && result.reward > 0) {
-        if (result.isNewStreak) {
-          toast.warning(`⚠️ הרצף נשבר! התחלת רצף חדש\n💰 הרווחת ${result.reward} מטבעות (יום 1)`, {
+      // Sync to LeaderboardEntry
+      try {
+        const { syncLeaderboardEntry } = await import("./components/utils/leaderboardSync");
+        await syncLeaderboardEntry(user.email, {
+          login_streak: newStreak,
+          last_login_date: today,
+          coins: newCoins,
+          total_login_streak_coins: (user.total_login_streak_coins || 0) + reward
+        });
+      } catch (syncError) {
+        console.error("Error syncing login streak:", syncError);
+      }
+
+      // Show toast
+      if (reward > 0) {
+        if (isNewStreak) {
+          toast.warning(`⚠️ הרצף נשבר! התחלת רצף חדש\n💰 הרווחת ${reward} מטבעות (יום 1)`, {
             duration: 5000,
             style: { fontSize: '16px' }
           });
         } else {
-          toast.success(`🔥 רצף כניסות: ${result.streak} ימים ברצף!\n💰 הרווחת ${result.reward} מטבעות!`, {
+          toast.success(`🔥 רצף כניסות: ${newStreak} ימים ברצף!\n💰 הרווחת ${reward} מטבעות!`, {
             duration: 6000,
             style: { fontSize: '16px', fontWeight: 'bold' }
           });
