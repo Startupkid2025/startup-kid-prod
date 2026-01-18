@@ -446,7 +446,7 @@ export default function Leaderboard() {
             return true;
           });
 
-          // Map to expected format for UI
+          // Map to expected format for UI - handle nulls safely
           const usersWithAllStats = filteredSnapshots.map(s => ({
             id: s.id,
             student_email: s.student_email,
@@ -454,23 +454,24 @@ export default function Leaderboard() {
             first_name: s.first_name,
             last_name: s.last_name,
             user_type: s.user_type || 'student',
-            coins: s.coins,
+            coins: s.coins ?? 0,
             purchased_items: s.purchased_items || [],
             equipped_items: s.equipped_items || {},
-            totalValue: s.total_value,
-            masteredWords: s.mastered_words,
-            masteredMathQuestions: s.mastered_math_questions,
-            loginStreak: s.login_streak || 0,
-            collaborationCount: s.collaboration_count,
-            workHours: s.work_hours,
-            workEarnings: s.work_earnings,
+            totalValue: s.total_value ?? 0,
+            masteredWords: s.mastered_words ?? 0,
+            masteredMathQuestions: s.mastered_math_questions ?? 0,
+            loginStreak: s.login_streak ?? 0,
+            collaborationCount: s.collaboration_count ?? 0,
+            workHours: s.work_hours ?? 0,
+            workEarnings: s.work_earnings ?? 0,
             last_login_date: s.last_login_date,
-            aiTechLessons: s.ai_tech_lessons,
-            socialSkillsLessons: s.social_skills_lessons,
-            moneyBusinessLessons: s.money_business_lessons,
-            total_lessons: (s.ai_tech_lessons || 0) + (s.social_skills_lessons || 0) + (s.money_business_lessons || 0),
+            aiTechLessons: s.ai_tech_lessons ?? 0,
+            socialSkillsLessons: s.social_skills_lessons ?? 0,
+            moneyBusinessLessons: s.money_business_lessons ?? 0,
+            total_lessons: (s.ai_tech_lessons ?? 0) + (s.social_skills_lessons ?? 0) + (s.money_business_lessons ?? 0),
             crowns: s.crowns || [],
-            daily_collaborations: s.daily_collaborations || []
+            daily_collaborations: s.daily_collaborations || [],
+            is_bootstrap: s.is_bootstrap || false
           }));
 
           setUsers(usersWithAllStats);
@@ -1332,7 +1333,7 @@ export default function Leaderboard() {
                 toast.info("מאתחל נתונים... זה ייקח כמה שניות ⏳", { duration: 3000 });
                 
                 try {
-                  // Client-side initialization for admin
+                  // Client-side initialization for admin - BOOTSTRAP ONLY
                   const allEntries = await base44.entities.LeaderboardEntry.list();
                   const students = allEntries.filter(e => {
                     const type = e.user_type || 'student';
@@ -1351,28 +1352,39 @@ export default function Leaderboard() {
                       student_email: student.student_email
                     });
                     
+                    // Calculate items value from purchased_items
+                    const purchasedItems = student.purchased_items || [];
+                    let itemsValue = 0;
+                    purchasedItems.forEach(itemId => {
+                      const item = AVATAR_ITEMS[itemId];
+                      if (item && item.price) {
+                        itemsValue += item.price;
+                      }
+                    });
+                    
+                    const coins = student.coins || 0;
+                    const totalValue = coins + itemsValue;
+                    
+                    // BOOTSTRAP snapshot - only essential fields, no fake zeros
                     const snapshotData = {
                       student_email: student.student_email,
                       full_name: student.full_name,
                       first_name: student.first_name,
                       last_name: student.last_name,
                       user_type: student.user_type || 'student',
-                      coins: student.coins || 0,
-                      purchased_items: student.purchased_items || [],
+                      coins: coins,
+                      purchased_items: purchasedItems,
                       equipped_items: student.equipped_items || {},
                       daily_collaborations: student.daily_collaborations || [],
-                      total_value: (student.coins || 0),
-                      mastered_words: 0,
-                      mastered_math_questions: 0,
+                      total_value: totalValue,
                       login_streak: student.login_streak || 0,
-                      collaboration_count: 0,
                       work_hours: student.total_work_hours || 0,
                       work_earnings: student.total_work_earnings || 0,
                       last_login_date: student.last_login_date,
-                      ai_tech_lessons: 0,
-                      social_skills_lessons: 0,
-                      money_business_lessons: 0,
-                      crowns: []
+                      is_bootstrap: true,
+                      snapshot_version: 1
+                      // DON'T set mastered_words, mastered_math_questions, lessons, etc. to 0
+                      // Let them be null/undefined until properly calculated
                     };
                     
                     if (existing.length > 0) {
