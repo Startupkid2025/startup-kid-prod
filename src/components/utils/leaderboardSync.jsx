@@ -67,40 +67,42 @@ export async function syncLeaderboardEntry(studentEmail, patch) {
 
     const cleanPatch = sanitizeLeaderboardPatch(patch);
 
-    // Helper: determine if this should exist in leaderboard
-    const shouldCreateEntry =
-      cleanPatch?.user_type === "student" ||
-      cleanPatch?.is_student === true;
-
     if (entries && entries.length > 0) {
       await base44.entities.LeaderboardEntry.update(entries[0].id, cleanPatch);
-      console.log(`✅ Synced LeaderboardEntry for ${studentEmail}:`, cleanPatch);
+      console.log(`✅ Synced LeaderboardEntry for ${studentEmail}`);
       return;
     }
 
-    // No entry found:
-    // If we are sure it's a student → create it
-    if (shouldCreateEntry) {
-      const fullName =
-        cleanPatch.full_name ||
-        `${cleanPatch.first_name || ""} ${cleanPatch.last_name || ""}`.trim() ||
-        studentEmail;
+    // No entry found - create one automatically
+    // Get user data to populate initial entry
+    const allUsers = await base44.entities.User.list();
+    const user = allUsers.find(u => u.email === studentEmail);
 
-      const created = await base44.entities.LeaderboardEntry.create({
-        student_email: studentEmail,
-        full_name: fullName,
-        coins: cleanPatch.coins ?? 0,
-        ...cleanPatch
-      });
-
-      console.log(`🆕 Created LeaderboardEntry for ${studentEmail}`);
-      return created;
+    if (!user) {
+      console.log(`⚠️ User not found for ${studentEmail}, cannot create LeaderboardEntry`);
+      return;
     }
 
-    // Otherwise: expected behavior (admin/owner/teacher/parent etc.)
-    // No warn, no error.
-    // console.debug(`Skipping LeaderboardEntry sync (not a student): ${studentEmail}`);
-    return;
+    const fullName =
+      cleanPatch.full_name ||
+      user.full_name ||
+      `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
+      studentEmail;
+
+    const created = await base44.entities.LeaderboardEntry.create({
+      student_email: studentEmail,
+      full_name: fullName,
+      first_name: user.first_name || "",
+      last_name: user.last_name || "",
+      user_type: user.user_type || "student",
+      coins: cleanPatch.coins ?? user.coins ?? 0,
+      login_streak: cleanPatch.login_streak ?? user.login_streak ?? 0,
+      last_login_date: cleanPatch.last_login_date ?? user.last_login_date ?? null,
+      ...cleanPatch
+    });
+
+    console.log(`🆕 Created LeaderboardEntry for ${studentEmail}`);
+    return created;
   } catch (error) {
     console.error("Error syncing LeaderboardEntry:", error);
   }
