@@ -1225,19 +1225,24 @@ export default function Admin() {
                             const existingParticipation = participations.find(
                               p => p.student_email === student.email && p.lesson_id === lesson.id
                             );
-                            
+
                             if (existingParticipation) {
-                              toast.error("התלמיד כבר רשום לשיעור זה");
-                              return;
+                              // דרוס את ההשתתפות הקיימת
+                              await base44.entities.LessonParticipation.update(existingParticipation.id, {
+                                lesson_date: lessonDate,
+                                attended: wasAttended
+                              });
+                              toast.success("ההשתתפות עודכנה");
+                            } else {
+                              // צור השתתפות חדשה
+                              await base44.entities.LessonParticipation.create({
+                                student_email: student.email,
+                                lesson_id: lesson.id,
+                                lesson_date: lessonDate,
+                                attended: wasAttended
+                              });
+                              toast.success("השתתפות נוספה");
                             }
-                            
-                            await base44.entities.LessonParticipation.create({
-                              student_email: student.email,
-                              lesson_id: lesson.id,
-                              lesson_date: lessonDate,
-                              attended: wasAttended
-                            });
-                            toast.success("השתתפות נוספה");
                           }
                           await refreshCurrentTab();
                         } catch (error) {
@@ -1730,23 +1735,27 @@ export default function Admin() {
 
                     for (const email of selectedStudents) {
                       try {
-                        // בדוק אם התלמיד כבר רשום לשיעור זה (בכל תאריך)
+                        // בדוק אם התלמיד כבר רשום לשיעור זה
                         const existing = participations.find(
                           p => p.student_email === email && 
                                p.lesson_id === bulkAddLesson
                         );
 
                         if (existing) {
-                          console.log(`${email} already in lesson ${bulkAddLesson}`);
-                          continue; // דלג על תלמיד זה
+                          // דרוס את ההשתתפות הקיימת
+                          await base44.entities.LessonParticipation.update(existing.id, {
+                            lesson_date: bulkAddDate,
+                            attended: true
+                          });
+                        } else {
+                          // צור השתתפות חדשה
+                          await base44.entities.LessonParticipation.create({
+                            student_email: email,
+                            lesson_id: bulkAddLesson,
+                            lesson_date: bulkAddDate,
+                            attended: true
+                          });
                         }
-
-                        await base44.entities.LessonParticipation.create({
-                          student_email: email,
-                          lesson_id: bulkAddLesson,
-                          lesson_date: bulkAddDate,
-                          attended: true
-                        });
                         successCount++;
 
                         await sleep(100);
