@@ -111,12 +111,12 @@ export default function Investments() {
 
   const calculateDailyChange = (volatility) => {
     const ranges = {
-      ultra_safe: { min: 0.3, max: 0.5 },
-      very_low: { min: -0.8, max: 1.0 },
-      low: { min: -1.5, max: 2.0 },
-      optimal_medium: { min: -2, max: 4 },
-      high: { min: -4, max: 4 },
-      extreme: { min: -8, max: 4 }
+      ultra_safe: { min: 0.1, max: 0.4 },
+      very_low: { min: -0.5, max: 0.7 },
+      low: { min: -1.5, max: 1.85 },
+      optimal_medium: { min: -2, max: 2.5 },
+      high: { min: -2.8, max: 3.2 },
+      extreme: { min: -3.7, max: 4 }
     };
 
     const range = ranges[volatility];
