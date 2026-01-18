@@ -437,14 +437,14 @@ export default function Leaderboard() {
             // Current user can always see themselves
             if (user && s.student_email === user.email) return true;
             
-            // Filter demo and parents
-            if (s.user_type === 'demo' || s.user_type === 'parent') return false;
+            // Get user type (default to student if missing)
+            const type = s.user_type || "student";
             
-            // If user_type is missing, treat as student (don't filter out)
-            if (!s.user_type) return true;
+            // Filter out demo and parents
+            if (type === 'demo' || type === 'parent') return false;
             
-            // Show students
-            return s.user_type === 'student';
+            // Show everyone else (students)
+            return true;
           });
 
           // Map to expected format for UI
