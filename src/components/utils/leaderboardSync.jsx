@@ -61,17 +61,44 @@ export function sanitizeLeaderboardPatch(patch) {
  */
 export async function syncLeaderboardEntry(studentEmail, patch) {
   try {
+    // Check if this is actually a student
+    const allUsers = await base44.entities.User.list();
+    const user = allUsers.find(u => u.email === studentEmail);
+    
+    if (!user) {
+      return; // User not found
+    }
+    
+    const isStudent = user.user_type === 'student';
+    
+    if (!isStudent) {
+      // Not a student - no need to sync to leaderboard (expected behavior)
+      return;
+    }
+    
+    const cleanPatch = sanitizeLeaderboardPatch(patch);
+    
+    if (Object.keys(cleanPatch).length === 0) {
+      return; // nothing to sync
+    }
+    
     const entries = await base44.entities.LeaderboardEntry.filter({ 
       student_email: studentEmail 
     });
-    
-    const cleanPatch = sanitizeLeaderboardPatch(patch);
     
     if (entries && entries.length > 0) {
       await base44.entities.LeaderboardEntry.update(entries[0].id, cleanPatch);
       console.log(`✅ Synced LeaderboardEntry for ${studentEmail}:`, cleanPatch);
     } else {
-      console.warn(`⚠️ No LeaderboardEntry found for ${studentEmail} - sync skipped`);
+      // Student doesn't have LeaderboardEntry - create one
+      await base44.entities.LeaderboardEntry.create({
+        student_email: studentEmail,
+        full_name: user.full_name || user.email,
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
+        ...cleanPatch
+      });
+      console.log(`✅ Created LeaderboardEntry for ${studentEmail}:`, cleanPatch);
     }
   } catch (error) {
     console.error("Error syncing LeaderboardEntry:", error);
