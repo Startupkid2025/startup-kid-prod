@@ -126,13 +126,15 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       const realizedProfit = student.total_realized_investment_profit || 0;
       const totalInvestmentProfit = unrealizedProfit + realizedProfit;
 
-      // Calculate finance report
+      // Calculate finance report - use ACTUAL participations, not total_lessons field
+      const actualLessonsAttended = participations.filter(p => p.attended).length;
+      
       const income = {
         base: 500,
-        lessons: (student.total_lessons || 0) * 100,
+        lessons: actualLessonsAttended * 100,
         vocabulary: wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0),
         math: mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0),
-        surveys: participations.filter(p => p.survey_completed).length * 20,
+        surveys: participations.filter(p => p.survey_completed).length * 50,
         quizzes: quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0),
         work: 0,
         profileTasks: 0,
@@ -140,33 +142,38 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         investmentProfits: totalInvestmentProfit
       };
 
-      // Merge data sources with priority: DB LeaderboardEntry → student prop → me() → User entity
-      let fullUserData = mergeDefined(
-        student,           // Base from prop (might be "light")
-        leaderboardData    // Full data from DB (preferred for regular users)
-      );
+      // Single source of truth - no more complex merging
+      let fullUserData = null;
 
-      // If viewing own profile - merge with me() (most up-to-date)
+      // If viewing own profile → use me() (most up-to-date)
       if (me && me.email === studentEmail) {
-        fullUserData = mergeDefined(fullUserData, me);
-        console.log("Merged with me() for own profile");
+        fullUserData = me;
+        console.log("Using me() as source of truth (own profile)");
       }
-
-      // If admin - try to get User entity for even more accurate data
-      if (isAdminLocal) {
+      // If admin viewing someone else → try User entity first, fallback to LeaderboardEntry
+      else if (isAdminLocal) {
         try {
           const allUsers = await base44.entities.User.list();
           const userEntity = allUsers.find(u => u.email === studentEmail);
           if (userEntity) {
-            fullUserData = mergeDefined(fullUserData, userEntity);
-            console.log("Admin: Merged with User entity data");
+            fullUserData = userEntity;
+            console.log("Admin: Using User entity as source of truth");
+          } else {
+            fullUserData = leaderboardData || student;
+            console.log("Admin: Using LeaderboardEntry as source of truth");
           }
         } catch (e) {
-          console.log("Admin: Cannot access User entity");
+          fullUserData = leaderboardData || student;
+          console.log("Admin: Cannot access User entity, using LeaderboardEntry");
         }
       }
+      // Regular user viewing someone else → LeaderboardEntry only
+      else {
+        fullUserData = leaderboardData || student;
+        console.log("Using LeaderboardEntry as source of truth (other user's profile)");
+      }
 
-      console.log("Final merged fullUserData:", fullUserData);
+      console.log("Source of truth data:", fullUserData);
 
       // Profile tasks - use LeaderboardEntry data (accessible to all)
       if (student.completed_instagram_follow) income.profileTasks += 50;
