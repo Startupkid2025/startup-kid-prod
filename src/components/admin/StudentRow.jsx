@@ -116,13 +116,24 @@ export default function StudentRow({
 
   const handleRemoveParticipation = async (lesson, participationId) => {
     try {
+      // בדוק אם ההשתתפות עדיין קיימת לפני המחיקה
+      const currentParticipations = participations || [];
+      const stillExists = currentParticipations.find(p => p.id === participationId);
+      
+      if (!stillExists) {
+        console.log("Participation already deleted, refreshing data");
+        if (onRefresh) await onRefresh();
+        return;
+      }
+      
       await onToggleParticipation(student, lesson, null, participationId, false);
     } catch (error) {
-      if (error.response?.status === 404 || error.message?.includes('not found')) {
+      if (error.response?.status === 404 || error.message?.includes('not found') || error.message?.includes('404')) {
         console.log("Participation already deleted, refreshing data");
-        if (onRefresh) onRefresh();
+        if (onRefresh) await onRefresh();
       } else {
         console.error("Error removing participation:", error);
+        toast.error("שגיאה בהסרת ההשתתפות");
       }
     }
   };
