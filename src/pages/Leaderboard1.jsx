@@ -416,10 +416,21 @@ export default function Leaderboard() {
         const snapshots = await base44.entities.LeaderboardSnapshot.list("-total_value", 200);
         
         if (snapshots.length === 0) {
-          // FALLBACK: Try legacy loading
-          console.warn("No snapshots found, falling back to legacy loading");
-          toast.info("טוען נתונים... ⏳", { duration: 3000 });
-          // Continue to legacy loading below
+          // No snapshots yet - initialize them
+          console.warn("No snapshots found, initializing...");
+          toast.info("מאתחל נתונים... זה יקח רגע ⏳", { duration: 3000 });
+          
+          try {
+            await base44.functions.initializeAllSnapshots({});
+            // Reload after initialization
+            setTimeout(() => loadData(), 2000);
+            return;
+          } catch (initError) {
+            console.error("Error initializing snapshots:", initError);
+            toast.error("שגיאה באתחול נתונים, נסה שוב");
+            setIsLoading(false);
+            return;
+          }
         } else {
           // Filter: Show only students (exclude demo/parent)
           const filteredSnapshots = snapshots.filter(s => {
@@ -450,7 +461,7 @@ export default function Leaderboard() {
             totalValue: s.total_value,
             masteredWords: s.mastered_words,
             masteredMathQuestions: s.mastered_math_questions,
-            loginStreak: s.login_streak,
+            loginStreak: s.login_streak || 0,
             collaborationCount: s.collaboration_count,
             workHours: s.work_hours,
             workEarnings: s.work_earnings,
