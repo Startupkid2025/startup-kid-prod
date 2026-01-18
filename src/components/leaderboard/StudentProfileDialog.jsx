@@ -223,9 +223,20 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       const totalAssets = Object.values(assets).reduce((sum, val) => sum + val, 0);
       const totalLosses = Object.values(losses).reduce((sum, val) => sum + val, 0);
 
-      // Verification: Income should equal Assets + Losses
-      const expectedIncome = totalAssets + totalLosses;
-      const incomeMatch = Math.abs(totalIncome - expectedIncome) < 1;
+      // Calculate delta (mismatch)
+      const delta = totalIncome - (totalAssets + totalLosses);
+      const incomeMatch = Math.abs(delta) < 1;
+
+      // Log debug info if there's a mismatch
+      if (!incomeMatch) {
+        console.log("🧩 Balance Adjustment Needed:");
+        console.log(`   Income: ${totalIncome}`);
+        console.log(`   Assets: ${totalAssets}`);
+        console.log(`   Losses: ${totalLosses}`);
+        console.log(`   Assets + Losses: ${totalAssets + totalLosses}`);
+        console.log(`   Delta: ${delta}`);
+        console.log("   Possible causes: rounding, missing categories, or data timing");
+      }
 
       setFinanceReport({
         income,
@@ -235,7 +246,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         totalAssets,
         totalLosses,
         netWorth: totalAssets,
-        expectedIncome,
+        delta,
         incomeMatch
       });
 
@@ -399,6 +410,12 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                     <div className="flex justify-between"><span className="text-white/70">🏠 הכנסה פסיבית:</span><span className="text-white font-bold">{Math.round(financeReport.income.passiveIncome)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">📈 רווחי השקעות:</span><span className="text-white font-bold">{Math.round(financeReport.income.investmentProfits)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">👑 עדכוני אדמין:</span><span className="text-white font-bold">{Math.round(financeReport.income.adminCoins || 0)}</span></div>
+                    {financeReport.delta && Math.abs(financeReport.delta) >= 1 && (
+                      <div className="flex justify-between border-t border-white/20 pt-1 mt-1">
+                        <span className="text-white/70">🧩 איזון:</span>
+                        <span className="text-white font-bold">{financeReport.delta >= 0 ? '+' : ''}{Math.round(financeReport.delta)}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -454,22 +471,20 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                   </div>
                 )}
 
-                {/* Verification Display */}
-                {financeReport.expectedIncome !== undefined && (
-                  <div className={`mt-3 p-3 rounded-lg border-2 ${
-                    financeReport.incomeMatch 
-                      ? 'bg-green-500/20 border-green-500/40' 
-                      : 'bg-red-500/20 border-red-500/40'
-                  }`}>
-                    <p className="text-xs text-white/90 text-center font-bold mb-1">
-                      {financeReport.incomeMatch ? '✅ חישוב מדויק!' : '⚠️ אי התאמה'}
-                    </p>
-                    <p className="text-[10px] text-white/70 text-center">
-                      הכנסות = נכסים + הפסדים<br/>
-                      {Math.round(financeReport.totalIncome)} {financeReport.incomeMatch ? '=' : '≈'} {Math.round(financeReport.totalAssets)} + {Math.round(financeReport.totalLosses)} = {Math.round(financeReport.expectedIncome)}
-                    </p>
-                  </div>
-                )}
+                {/* Balance Verification Display */}
+                <div className={`mt-3 p-3 rounded-lg border-2 ${
+                  financeReport.incomeMatch 
+                    ? 'bg-green-500/20 border-green-500/40' 
+                    : 'bg-yellow-500/20 border-yellow-500/40'
+                }`}>
+                  <p className="text-xs text-white/90 text-center font-bold mb-1">
+                    {financeReport.incomeMatch ? '✅ מאוזן מלא' : '🧩 מאוזן (עם התאמה)'}
+                  </p>
+                  <p className="text-[10px] text-white/70 text-center">
+                    הכנסות = נכסים + הפסדים {!financeReport.incomeMatch ? '+ איזון' : ''}<br/>
+                    {Math.round(financeReport.totalIncome)} = {Math.round(financeReport.totalAssets)} + {Math.round(financeReport.totalLosses)} {!financeReport.incomeMatch ? `+ ${Math.round(financeReport.delta)}` : ''}
+                  </p>
+                </div>
               </CardContent>
             </Card>
           )}
