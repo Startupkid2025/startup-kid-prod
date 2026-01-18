@@ -41,6 +41,7 @@ export default function StudentRow({
   const [editingParticipation, setEditingParticipation] = useState(null);
   const [coinsToAdd, setCoinsToAdd] = useState("");
   const [coinsReason, setCoinsReason] = useState("");
+  const [deletingParticipations, setDeletingParticipations] = useState(new Set());
   
   // Get today's date in YYYY-MM-DD format for Israel timezone
   const getTodayDate = () => {
@@ -115,21 +116,39 @@ export default function StudentRow({
   };
 
   const handleRemoveParticipation = async (lesson, participationId) => {
+    // מנע מחיקה כפולה
+    if (deletingParticipations.has(participationId)) {
+      return;
+    }
+    
     try {
-      // בדוק אם ההשתתפות עדיין קיימת לפני המחיקה
-      const currentParticipations = participations || [];
-      const stillExists = currentParticipations.find(p => p.id === participationId);
-      
+      // בדוק אם ההשתתפות עדיין קיימת
+      const stillExists = participations.find(p => p.id === participationId);
       if (!stillExists) {
-        console.log("Participation already deleted, refreshing data");
         if (onRefresh) await onRefresh();
         return;
       }
       
+      // סמן כממחיק
+      setDeletingParticipations(prev => new Set([...prev, participationId]));
+      
       await onToggleParticipation(student, lesson, null, participationId, false);
+      
+      // הסר מרשימת הממחיקים
+      setDeletingParticipations(prev => {
+        const next = new Set(prev);
+        next.delete(participationId);
+        return next;
+      });
     } catch (error) {
+      // הסר מרשימת הממחיקים גם במקרה של שגיאה
+      setDeletingParticipations(prev => {
+        const next = new Set(prev);
+        next.delete(participationId);
+        return next;
+      });
+      
       if (error.response?.status === 404 || error.message?.includes('not found') || error.message?.includes('404')) {
-        console.log("Participation already deleted, refreshing data");
         if (onRefresh) await onRefresh();
       } else {
         console.error("Error removing participation:", error);
@@ -587,8 +606,9 @@ export default function StudentRow({
                               size="sm"
                               variant="ghost"
                               className="text-red-300 hover:text-red-200 hover:bg-red-500/20"
+                              disabled={deletingParticipations.has(participation.id)}
                             >
-                              הסר
+                              {deletingParticipations.has(participation.id) ? "מוחק..." : "הסר"}
                             </Button>
                           </div>
                           <div className="flex items-center gap-2 text-right">
