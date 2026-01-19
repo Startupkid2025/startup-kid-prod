@@ -23,6 +23,7 @@ import GroupManagement from "../components/admin/GroupManagement";
 import TeacherManagement from "../components/admin/TeacherManagement";
 import QuizQuestionsManager from "../components/admin/QuizQuestionsManager";
 import VocabularyManager from "../components/admin/VocabularyManager";
+import EconomyAdminPanel from "../components/admin/EconomyAdminPanel";
 import { AVATAR_ITEMS } from '../components/avatar/TamagotchiAvatar';
 
 export default function Admin() {
@@ -1367,7 +1368,7 @@ export default function Admin() {
             className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white"
           >
             <Shield className="w-4 h-4 ml-2" />
-            כלים באנגלית
+            Economy Admin
           </TabsTrigger>
         </TabsList>
 
@@ -2093,144 +2094,7 @@ export default function Admin() {
         </TabsContent>
 
         <TabsContent value="tools">
-          <Card className="bg-white/10 backdrop-blur-md border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white">כלי ניהול</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Button
-                  onClick={() => recalculateAllCoinsAccurately(true)}
-                  disabled={isRecalculatingCoins}
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                >
-                  {isRecalculatingCoins ? "מחשב..." : "👁️ תצוגה מקדימה - חישוב מטבעות (ללא שינוי)"}
-                </Button>
-                
-                {coinsPreviewResults && (
-                  <div className="bg-white/10 rounded-lg p-4 max-h-96 overflow-y-auto">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-white font-bold">תוצאות תצוגה מקדימה:</h4>
-                      <Button
-                        onClick={() => {
-                          if (confirm(`⚠️ אישור חשוב!\n\nאתה עומד לעדכן את המטבעות של ${coinsPreviewResults.filter(r => r.willUpdate).length} משתמשים.\n\nהשינויים יכתבו ישירות למסד הנתונים ולא ניתן לבטל!\n\nהאם להמשיך?`)) {
-                            recalculateAllCoinsAccurately(false);
-                          }
-                        }}
-                        disabled={isRecalculatingCoins}
-                        className="bg-red-600 hover:bg-red-700 font-bold"
-                      >
-                        🚨 החל שינויים (Apply)
-                      </Button>
-                    </div>
-                    <div className="space-y-2">
-                      {coinsPreviewResults.map((result, idx) => (
-                        <div 
-                          key={idx} 
-                          className={`p-2 rounded text-xs ${
-                            result.warning ? 'bg-red-500/20 border border-red-500/50' : 'bg-white/5'
-                          }`}
-                        >
-                          <div className="text-white font-bold">{result.name}</div>
-                          <div className="text-white/70">
-                            {result.oldCoins} → {result.correctCoins} 
-                            <span className={result.diff >= 0 ? 'text-green-300' : 'text-red-300'}>
-                              {' '}({result.diff >= 0 ? '+' : ''}{result.diff})
-                            </span>
-                          </div>
-                          {result.creditInterest > 0 && (
-                            <div className="text-orange-300">⚠️ ריבית אשראי: {result.creditInterest}</div>
-                          )}
-                          {result.warning && (
-                            <div className="text-red-300 font-bold mt-1">{result.warning}</div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <Button
-                onClick={fixAdminCoins}
-                disabled={isRecalculatingCoins}
-                className="w-full bg-yellow-600 hover:bg-yellow-700"
-              >
-                {isRecalculatingCoins ? "מתקן..." : "👑 תקן עדכוני אדמין (חשב לפי הפרש)"}
-              </Button>
-              <Button
-                onClick={migrateAllDataToLeaderboard}
-                disabled={isRecalculatingCoins}
-                className="w-full bg-green-600 hover:bg-green-700"
-              >
-                {isRecalculatingCoins ? "מסנכרן..." : "🔄 סנכרן כל נתוני User ל-LeaderboardEntry (מיגרציה)"}
-              </Button>
-              <Button
-                onClick={addPassiveIncomeBackpay}
-                disabled={isRecalculatingCoins}
-                className="w-full bg-purple-600 hover:bg-purple-700"
-              >
-                {isRecalculatingCoins ? "מתקן..." : "🏠 תקן הכנסה פסיבית למי שקנה מגורים"}
-              </Button>
-              <Button
-                onClick={resetAllLoginStreaks}
-                disabled={isRecalculatingCoins}
-                className="w-full bg-red-600 hover:bg-red-700"
-              >
-                {isRecalculatingCoins ? "מאפס..." : "🔥 אפס רצף כניסות לכולם (התחלה חדשה)"}
-              </Button>
-              
-              <div className="border-t border-white/20 pt-4 mt-4">
-                <h3 className="text-white font-bold text-sm mb-3">🧹 איפוס ריבית אשראי</h3>
-                <Button
-                  onClick={resetAllCreditInterest}
-                  disabled={isRecalculatingCoins}
-                  className="w-full bg-red-600 hover:bg-red-700 mb-4"
-                >
-                  {isRecalculatingCoins ? "מאפס..." : "🔥 אפס total_credit_interest לכולם"}
-                </Button>
-              </div>
-
-              <div className="border-t border-white/20 pt-4 mt-4">
-                <h3 className="text-white font-bold text-sm mb-3">💰 חישוב מחדש נכון של עו״ש</h3>
-                <p className="text-white/60 text-xs mb-3">
-                  חישוב מלא מתחשב בהשקעות שנקנו. ללא creditInterest (בשלב ייצוב).
-                </p>
-                <div className="space-y-2">
-                  <Button
-                    onClick={() => recomputeStudentCashBalance(true)}
-                    disabled={isRecalculatingCoins}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  >
-                    {isRecalculatingCoins ? "בודק..." : "👁️ Dry Run - בדיקה בלבד"}
-                  </Button>
-                  {coinsPreviewResults && coinsPreviewResults.length > 0 && (
-                    <Button
-                      onClick={() => {
-                        if (confirm(`⚠️ אישור!\n\nלעדכן עו"ש ל-${coinsPreviewResults.filter(r => r.willUpdate).length} משתמשים?\n\nזה ישנה את User.coins וגם LeaderboardEntry.coins.\n\nהאם להמשיך?`)) {
-                          recomputeStudentCashBalance(false);
-                        }
-                      }}
-                      disabled={isRecalculatingCoins}
-                      className="w-full bg-orange-600 hover:bg-orange-700 font-bold"
-                    >
-                      🚨 Apply Fix - עדכן DB
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              <div className="border-t border-white/20 pt-4 mt-4">
-                <h3 className="text-white font-bold text-sm mb-3">📊 ניהול Snapshots</h3>
-                <Button
-                  onClick={rebuildAllSnapshots}
-                  disabled={isRecalculatingCoins}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700"
-                >
-                  {isRecalculatingCoins ? "מעדכן..." : "🔄 עדכן Snapshots (תיקון דירוג)"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <EconomyAdminPanel />
         </TabsContent>
       </Tabs>
 
