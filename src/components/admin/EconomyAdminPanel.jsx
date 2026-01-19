@@ -800,7 +800,13 @@ export default function EconomyAdminPanel() {
               </div>
 
               {/* Assets */}
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-5 gap-4">
+                <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 rounded-lg p-4 border border-yellow-500/30">
+                  <div className="text-yellow-200 text-xs mb-1 font-bold">coins (עו״ש בעובר ושב)</div>
+                  <div className={`text-2xl font-bold ${(debugStudent.coins || 0) >= 0 ? 'text-yellow-300' : 'text-red-300'}`}>
+                    {(debugStudent.coins || 0).toLocaleString()}
+                  </div>
+                </div>
                 <div className={`bg-gradient-to-br ${(debugStudent.investment_profit || 0) >= 0 ? 'from-emerald-500/20 to-emerald-500/5' : 'from-red-500/20 to-red-500/5'} rounded-lg p-4 border ${(debugStudent.investment_profit || 0) >= 0 ? 'border-emerald-500/30' : 'border-red-500/30'}`}>
                   <div className={`${(debugStudent.investment_profit || 0) >= 0 ? 'text-emerald-200' : 'text-red-200'} text-xs mb-1 font-bold`}>רווח/הפסד לא ממומש</div>
                   <div className={`text-2xl font-bold ${(debugStudent.investment_profit || 0) >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
