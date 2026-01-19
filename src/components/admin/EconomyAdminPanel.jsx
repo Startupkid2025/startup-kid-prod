@@ -221,9 +221,33 @@ export default function EconomyAdminPanel() {
     await loadSnapshots();
   };
 
-  const showDebugBreakdown = async (snapshot) => {
-    setDebugStudent(snapshot);
-    setShowDebug(true);
+  const loadStudentData = async (studentEmail) => {
+    try {
+      const [user, wordProgress, mathProgress] = await Promise.all([
+        base44.entities.User.filter({ email: studentEmail }),
+        base44.entities.WordProgress.filter({ student_email: studentEmail }),
+        base44.entities.MathProgress.filter({ student_email: studentEmail })
+      ]);
+      
+      if (user.length === 0) {
+        toast.error("תלמיד לא נמצא");
+        return;
+      }
+      
+      const userData = user[0];
+      const masteredWords = wordProgress.filter(w => w.mastered === true).length;
+      const masteredMath = mathProgress.filter(m => m.mastered === true).length;
+      
+      setDebugStudent({
+        ...userData,
+        mastered_words: masteredWords,
+        mastered_math_questions: masteredMath
+      });
+      setShowDebug(true);
+    } catch (error) {
+      console.error("Error loading student data:", error);
+      toast.error("שגיאה בטעינת נתוני התלמיד");
+    }
   };
 
   const filteredSnapshots = students.filter(s => {
