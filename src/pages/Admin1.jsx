@@ -626,7 +626,7 @@ export default function Admin() {
           
           // 4. Calculate mastered math questions
           const userMathProgress = mathProgressMap.get(entry.student_email) || [];
-          const masteredMathQuestions = userMathProgress.filter(m => (m.total_attempts || 0) > 0).length;
+          const masteredMathQuestions = userMathProgress.filter(m => m.mastered === true).length;
           
           // 5. Calculate lesson counts by category
           const userParticipations = participationsMap.get(entry.student_email) || [];
