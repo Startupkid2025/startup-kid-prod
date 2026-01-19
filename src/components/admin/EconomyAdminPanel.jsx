@@ -481,17 +481,31 @@ export default function EconomyAdminPanel() {
                       'לא עודכן'
                     )}
                   </div>
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      loadStudentData(snapshot.student_email);
-                    }}
-                    size="sm"
-                    variant="ghost"
-                    className="text-white/60 hover:text-white h-6 px-2"
-                  >
-                    <Eye className="w-3 h-3" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        loadStudentData(snapshot.student_email);
+                      }}
+                      size="sm"
+                      variant="ghost"
+                      className="text-white/60 hover:text-white h-6 px-2"
+                    >
+                      <Eye className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        recalculateVocabularyCoins(snapshot.student_email);
+                      }}
+                      size="sm"
+                      variant="ghost"
+                      className="text-blue-400 hover:text-blue-300 h-6 px-2 text-xs"
+                      title="חשב מחדש כסף אנגלית"
+                    >
+                      📚💰
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
