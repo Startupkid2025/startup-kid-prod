@@ -657,19 +657,19 @@ export default function EconomyAdminPanel() {
                   </div>
                   <div>
                     <span className="text-white/70">vocabulary_coins (כסף מאנגלית)</span>
-                    <div className="font-bold text-yellow-300">-</div>
+                    <div className="font-bold text-yellow-300">{(debugStudent.vocabulary_coins || 0).toLocaleString()}</div>
                   </div>
                   <div>
                     <span className="text-white/70">math_coins (כסף מחשבון)</span>
-                    <div className="font-bold text-yellow-300">-</div>
+                    <div className="font-bold text-yellow-300">{(debugStudent.math_coins || 0).toLocaleString()}</div>
                   </div>
                   <div>
-                    <span className="text-white/70">surveys_coins (כסף מסקרים)</span>
-                    <div className="font-bold text-yellow-300">-</div>
+                    <span className="text-white/70">survey_coins (כסף מסקרים)</span>
+                    <div className="font-bold text-yellow-300">{(debugStudent.survey_coins || 0).toLocaleString()}</div>
                   </div>
                   <div>
-                    <span className="text-white/70">quizzes_coins (כסף מחידונים)</span>
-                    <div className="font-bold text-yellow-300">-</div>
+                    <span className="text-white/70">quiz_coins (כסף מחידונים)</span>
+                    <div className="font-bold text-yellow-300">{(debugStudent.quiz_coins || 0).toLocaleString()}</div>
                   </div>
                   <div className="col-span-2 bg-white/5 rounded p-2">
                     <span className="text-white/70">coins (עו״ש בעובר ושב)</span>
