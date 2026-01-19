@@ -622,104 +622,144 @@ export default function EconomyAdminPanel() {
         </DialogContent>
       </Dialog>
 
-      {/* Debug Dialog */}
+      {/* Student Data Dialog */}
       <Dialog open={showDebug} onOpenChange={setShowDebug}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-purple-900 to-indigo-900 text-white">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-purple-900 to-indigo-900 text-white">
           <DialogHeader>
-            <DialogTitle className="text-2xl">
-              🔍 Breakdown - {debugStudent?.full_name}
+            <DialogTitle className="text-3xl font-bold">
+              📊 נתוני תלמיד - {debugStudent?.full_name}
             </DialogTitle>
           </DialogHeader>
 
           {debugStudent && (
             <div className="space-y-6">
-              {/* Summary */}
-              <div className="grid grid-cols-4 gap-4">
-                <div className="bg-white/10 rounded-lg p-4">
-                  <div className="text-white/60 text-sm">עובר ושב</div>
-                  <div className="text-2xl font-bold">{debugStudent.coins_cash?.toLocaleString()}</div>
+              {/* Main Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-blue-500/20 to-blue-500/5 rounded-lg p-4 border border-blue-500/30">
+                  <div className="text-blue-200 text-xs mb-1 font-bold">coins (עו״ש)</div>
+                  <div className="text-2xl font-bold text-white">{(debugStudent.coins || 0).toLocaleString()}</div>
                 </div>
-                <div className="bg-white/10 rounded-lg p-4">
-                  <div className="text-white/60 text-sm">השקעות</div>
-                  <div className="text-2xl font-bold text-emerald-400">
-                    {debugStudent.investments_value?.toLocaleString()}
+                <div className="bg-gradient-to-br from-green-500/20 to-green-500/5 rounded-lg p-4 border border-green-500/30">
+                  <div className="text-green-200 text-xs mb-1 font-bold">total_lessons (שיעורים)</div>
+                  <div className="text-2xl font-bold text-white">{(debugStudent.total_lessons || 0).toLocaleString()}</div>
+                </div>
+                <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/5 rounded-lg p-4 border border-purple-500/30">
+                  <div className="text-purple-200 text-xs mb-1 font-bold">mastered_words (מילים)</div>
+                  <div className="text-2xl font-bold text-white">{(debugStudent.mastered_words || 0).toLocaleString()}</div>
+                </div>
+                <div className="bg-gradient-to-br from-orange-500/20 to-orange-500/5 rounded-lg p-4 border border-orange-500/30">
+                  <div className="text-orange-200 text-xs mb-1 font-bold">mastered_math_questions (תרגילים)</div>
+                  <div className="text-2xl font-bold text-white">{(debugStudent.mastered_math_questions || 0).toLocaleString()}</div>
+                </div>
+              </div>
+
+              {/* Work & Login Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                  <div className="text-white/70 text-xs mb-1">total_work_hours (שעות עבודה)</div>
+                  <div className="text-xl font-bold text-yellow-300">{(debugStudent.total_work_hours || 0).toLocaleString()}</div>
+                </div>
+                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                  <div className="text-white/70 text-xs mb-1">total_work_earnings (הכנסות עבודה)</div>
+                  <div className="text-xl font-bold text-emerald-300">{(debugStudent.total_work_earnings || 0).toLocaleString()}</div>
+                </div>
+                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                  <div className="text-white/70 text-xs mb-1">login_streak (רצף כניסות)</div>
+                  <div className="text-xl font-bold text-pink-300">{(debugStudent.login_streak || 0).toLocaleString()} 🔥</div>
+                </div>
+              </div>
+
+              {/* Assets */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 rounded-lg p-4 border border-emerald-500/30">
+                  <div className="text-emerald-200 text-xs mb-1 font-bold">investments_value (הערך הנוכחי)</div>
+                  <div className="text-2xl font-bold text-white">{(debugStudent.total_realized_investment_profit || 0).toLocaleString()}</div>
+                  <div className="text-white/60 text-xs mt-2">investment_profit_realized (רווח ממומש): {(debugStudent.total_realized_investment_profit || 0).toLocaleString()}</div>
+                </div>
+                <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/5 rounded-lg p-4 border border-purple-500/30">
+                  <div className="text-purple-200 text-xs mb-1 font-bold">purchased_items (פריטים שנרכשו)</div>
+                  <div className="text-2xl font-bold text-white">{((debugStudent.purchased_items || []).length).toLocaleString()}</div>
+                  <div className="text-white/60 text-xs mt-2">items_value: {(debugStudent.items_value || 0).toLocaleString()}</div>
+                </div>
+                <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 rounded-lg p-4 border border-yellow-500/30">
+                  <div className="text-yellow-200 text-xs mb-1 font-bold">total_assets (שווי כולל)</div>
+                  <div className="text-2xl font-bold text-white">{((debugStudent.coins || 0) + (debugStudent.items_value || 0)).toLocaleString()}</div>
+                </div>
+              </div>
+
+              {/* Taxes & Losses */}
+              <div className="bg-red-500/10 rounded-lg p-4 border border-red-500/30">
+                <h3 className="text-red-200 text-lg font-bold mb-3">💸 מיסים והוצאות</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                  <div>
+                    <span className="text-white/70">total_inflation_lost</span>
+                    <div className="font-bold text-red-300">{(debugStudent.total_inflation_lost || 0).toLocaleString()}</div>
                   </div>
-                </div>
-                <div className="bg-white/10 rounded-lg p-4">
-                  <div className="text-white/60 text-sm">פריטים</div>
-                  <div className="text-2xl font-bold text-purple-400">
-                    {debugStudent.items_value?.toLocaleString()}
+                  <div>
+                    <span className="text-white/70">total_income_tax</span>
+                    <div className="font-bold text-red-300">{(debugStudent.total_income_tax || 0).toLocaleString()}</div>
                   </div>
-                </div>
-                <div className="bg-white/10 rounded-lg p-4">
-                  <div className="text-white/60 text-sm">שווי כולל</div>
-                  <div className="text-2xl font-bold text-yellow-400">
-                    {debugStudent.total_assets?.toLocaleString()}
+                  <div>
+                    <span className="text-white/70">total_capital_gains_tax</span>
+                    <div className="font-bold text-red-300">{(debugStudent.total_capital_gains_tax || 0).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">total_dividend_tax</span>
+                    <div className="font-bold text-red-300">{(debugStudent.total_dividend_tax || 0).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">total_credit_interest</span>
+                    <div className="font-bold text-red-300">{(debugStudent.total_credit_interest || 0).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">total_investment_fees</span>
+                    <div className="font-bold text-red-300">{(debugStudent.total_investment_fees || 0).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">total_item_sale_losses</span>
+                    <div className="font-bold text-red-300">{(debugStudent.total_item_sale_losses || 0).toLocaleString()}</div>
                   </div>
                 </div>
               </div>
 
-              {/* Income Breakdown */}
-              <div className="bg-white/10 rounded-lg p-4">
-                <h3 className="text-xl font-bold mb-3">📈 הכנסות</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(debugStudent.income_breakdown || {}).map(([key, value]) => (
-                    <div key={key} className="flex justify-between text-sm">
-                      <span className="text-white/70">{key}:</span>
-                      <span className="text-emerald-400 font-bold">{value.toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 pt-3 border-t border-white/20 flex justify-between font-bold">
-                  <span>סה״כ הכנסות:</span>
-                  <span className="text-emerald-400">
-                    {Object.values(debugStudent.income_breakdown || {})
-                      .reduce((sum, val) => sum + val, 0)
-                      .toLocaleString()}
-                  </span>
+              {/* Income Sources */}
+              <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/30">
+                <h3 className="text-green-200 text-lg font-bold mb-3">💰 מקורות הכנסה</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                  <div>
+                    <span className="text-white/70">total_collaboration_coins</span>
+                    <div className="font-bold text-green-300">{(debugStudent.total_collaboration_coins || 0).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">total_login_streak_coins</span>
+                    <div className="font-bold text-green-300">{(debugStudent.total_login_streak_coins || 0).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">total_passive_income</span>
+                    <div className="font-bold text-green-300">{(debugStudent.total_passive_income || 0).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">total_admin_coins</span>
+                    <div className="font-bold text-green-300">{(debugStudent.total_admin_coins || 0).toLocaleString()}</div>
+                  </div>
                 </div>
               </div>
 
-              {/* Expense Breakdown */}
-              <div className="bg-white/10 rounded-lg p-4">
-                <h3 className="text-xl font-bold mb-3">📉 הוצאות</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(debugStudent.expense_breakdown || {}).map(([key, value]) => (
-                    <div key={key} className="flex justify-between text-sm">
-                      <span className="text-white/70">{key}:</span>
-                      <span className="text-red-400 font-bold">{value.toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 pt-3 border-t border-white/20 flex justify-between font-bold">
-                  <span>סה״כ הוצאות:</span>
-                  <span className="text-red-400">
-                    {Object.values(debugStudent.expense_breakdown || {})
-                      .reduce((sum, val) => sum + val, 0)
-                      .toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
-              {/* Investment Info */}
-              <div className="bg-white/10 rounded-lg p-4">
-                <h3 className="text-xl font-bold mb-3">💼 השקעות</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-white/70">שווי נוכחי:</span>
-                    <span className="font-bold">{debugStudent.investments_value?.toLocaleString()}</span>
+              {/* Engagement Stats */}
+              <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/30">
+                <h3 className="text-blue-200 text-lg font-bold mb-3">📈 סטטיסטיקות עסקה</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <span className="text-white/70">age (גיל)</span>
+                    <div className="font-bold text-blue-300">{debugStudent.age || '—'}</div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/70">רווח לא ממומש:</span>
-                    <span className={`font-bold ${debugStudent.investment_profit_unrealized >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {debugStudent.investment_profit_unrealized?.toLocaleString()}
-                    </span>
+                  <div>
+                    <span className="text-white/70">last_login_date (תאריך כניסה אחרון)</span>
+                    <div className="font-bold text-blue-300">{debugStudent.last_login_date ? new Date(debugStudent.last_login_date).toLocaleDateString('he-IL') : '—'}</div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/70">רווח ממומש:</span>
-                    <span className="font-bold text-emerald-400">
-                      {debugStudent.investment_profit_realized?.toLocaleString()}
-                    </span>
+                  <div>
+                    <span className="text-white/70">email</span>
+                    <div className="font-bold text-blue-300 text-xs break-all">{debugStudent.email}</div>
                   </div>
                 </div>
               </div>
