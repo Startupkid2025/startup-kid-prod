@@ -16,6 +16,8 @@ export default function EconomyAdminPanel() {
   const [progress, setProgress] = useState({ current: 0, total: 0, errors: [] });
   const [debugStudent, setDebugStudent] = useState(null);
   const [showDebug, setShowDebug] = useState(false);
+  const [previewResults, setPreviewResults] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     loadSnapshots();
@@ -52,13 +54,9 @@ export default function EconomyAdminPanel() {
     setSelectedEmails(newSelected);
   };
 
-  const recalculateSelected = async () => {
+  const previewSelected = async () => {
     if (selectedEmails.size === 0) {
       toast.error("בחר לפחות תלמיד אחד");
-      return;
-    }
-
-    if (!confirm(`לחשב מחדש עבור ${selectedEmails.size} תלמידים?`)) {
       return;
     }
 
@@ -66,17 +64,49 @@ export default function EconomyAdminPanel() {
     setProgress({ current: 0, total: selectedEmails.size, errors: [] });
 
     const emails = Array.from(selectedEmails);
-    const errors = [];
+    const results = [];
 
     for (let i = 0; i < emails.length; i++) {
       try {
         const { recalculateStudentEconomySnapshot } = await import("@/functions/recalculateStudentEconomySnapshot");
-        await recalculateStudentEconomySnapshot(emails[i], "admin_selected");
+        const result = await recalculateStudentEconomySnapshot(emails[i], "preview");
+        results.push({ email: emails[i], ...result });
+        setProgress(prev => ({ ...prev, current: i + 1 }));
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(`Error for ${emails[i]}:`, error);
+        results.push({ email: emails[i], error: error.message });
+        setProgress(prev => ({ ...prev, current: i + 1 }));
+      }
+    }
+
+    setIsRecalculating(false);
+    setPreviewResults(results);
+    setShowPreview(true);
+    toast.success(`👁️ תצוגה מקדימה מוכנה`);
+  };
+
+  const applyPreview = async () => {
+    if (!previewResults || previewResults.length === 0) return;
+
+    if (!confirm(`לעדכן ${previewResults.length} תלמידים?`)) {
+      return;
+    }
+
+    setIsRecalculating(true);
+    setProgress({ current: 0, total: previewResults.length, errors: [] });
+
+    const errors = [];
+
+    for (let i = 0; i < previewResults.length; i++) {
+      try {
+        const { recalculateStudentEconomySnapshot } = await import("@/functions/recalculateStudentEconomySnapshot");
+        await recalculateStudentEconomySnapshot(previewResults[i].email, "admin_selected");
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {
-        console.error(`Error for ${emails[i]}:`, error);
-        errors.push({ email: emails[i], error: error.message });
+        console.error(`Error for ${previewResults[i].email}:`, error);
+        errors.push({ email: previewResults[i].email, error: error.message });
         setProgress(prev => ({ ...prev, current: i + 1, errors }));
       }
     }
@@ -84,13 +114,15 @@ export default function EconomyAdminPanel() {
     setIsRecalculating(false);
     
     if (errors.length === 0) {
-      toast.success(`✅ חושב מחדש עבור ${selectedEmails.size} תלמידים`);
+      toast.success(`✅ עודכן עבור ${previewResults.length} תלמידים`);
     } else {
-      toast.warning(`⚠️ ${selectedEmails.size - errors.length} הצליחו, ${errors.length} נכשלו`);
+      toast.warning(`⚠️ ${previewResults.length - errors.length} הצליחו, ${errors.length} נכשלו`);
     }
 
     await loadSnapshots();
     setSelectedEmails(new Set());
+    setPreviewResults(null);
+    setShowPreview(false);
   };
 
   const recalculateAll = async () => {
@@ -170,12 +202,21 @@ export default function EconomyAdminPanel() {
 
         <div className="flex gap-4">
           <Button
-            onClick={recalculateSelected}
+            onClick={previewSelected}
             disabled={isRecalculating || selectedEmails.size === 0}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg border-2 border-emerald-400/50"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg border-2 border-blue-400/50"
           >
-            🔄 חשב מחדש ({selectedEmails.size})
+            👁️ תצוגה מקדימה ({selectedEmails.size})
           </Button>
+          {previewResults && previewResults.length > 0 && (
+            <Button
+              onClick={applyPreview}
+              disabled={isRecalculating}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg border-2 border-emerald-400/50 animate-pulse"
+            >
+              ✅ עדכן עכשיו ({previewResults.length})
+            </Button>
+          )}
           <Button
             onClick={recalculateAll}
             disabled={isRecalculating}
@@ -231,10 +272,13 @@ export default function EconomyAdminPanel() {
               {filteredSnapshots.map((snapshot) => (
                 <tr key={snapshot.id} className="border-t border-white/10 hover:bg-white/5">
                   <td className="px-4 py-3">
-                    <Checkbox
-                      checked={selectedEmails.has(snapshot.student_email)}
-                      onCheckedChange={() => toggleSelect(snapshot.student_email)}
-                    />
+                    <div className="flex items-center">
+                      <Checkbox
+                        checked={selectedEmails.has(snapshot.student_email)}
+                        onCheckedChange={() => toggleSelect(snapshot.student_email)}
+                        className="border-white/40 data-[state=checked]:bg-emerald-500"
+                      />
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-white font-bold">
                     {snapshot.full_name}
@@ -274,6 +318,70 @@ export default function EconomyAdminPanel() {
           </table>
         </div>
       </div>
+
+      {/* Preview Dialog */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-blue-900 to-indigo-900 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">
+              👁️ תצוגה מקדימה - {previewResults?.length} תלמידים
+            </DialogTitle>
+          </DialogHeader>
+
+          {previewResults && (
+            <div className="space-y-3">
+              {previewResults.map((result, idx) => (
+                <div key={idx} className="bg-white/10 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <div className="font-bold">{result.full_name || result.email}</div>
+                      <div className="text-sm text-white/60">{result.email}</div>
+                    </div>
+                    {result.error ? (
+                      <div className="text-red-400 font-bold">❌ שגיאה</div>
+                    ) : (
+                      <div className={`font-bold text-lg ${result.coins_cash >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {result.coins_cash?.toLocaleString()} מטבעות
+                      </div>
+                    )}
+                  </div>
+                  {!result.error && (
+                    <div className="grid grid-cols-3 gap-2 text-sm mt-3">
+                      <div>
+                        <div className="text-white/60">השקעות</div>
+                        <div className="font-bold">{result.investments_value?.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div className="text-white/60">פריטים</div>
+                        <div className="font-bold">{result.items_value?.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div className="text-white/60">שווי כולל</div>
+                        <div className="font-bold text-yellow-400">{result.total_assets?.toLocaleString()}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+              <div className="flex gap-3 pt-4">
+                <Button
+                  onClick={() => setShowPreview(false)}
+                  variant="outline"
+                  className="flex-1 bg-white/10 hover:bg-white/20 text-white border-white/30"
+                >
+                  סגור
+                </Button>
+                <Button
+                  onClick={applyPreview}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 font-bold"
+                >
+                  ✅ עדכן עכשיו
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Debug Dialog */}
       <Dialog open={showDebug} onOpenChange={setShowDebug}>
