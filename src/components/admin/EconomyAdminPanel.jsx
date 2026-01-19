@@ -114,6 +114,8 @@ export default function EconomyAdminPanel() {
     const emails = Array.from(selectedEmails);
     const results = [];
 
+    console.log("base44.functions keys:", Object.keys(base44.functions || {}));
+
     for (let i = 0; i < emails.length; i++) {
       try {
         const result = await base44.functions.recalculateStudentEconomySnapshot({ 

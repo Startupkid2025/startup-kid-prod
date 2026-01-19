@@ -1,108 +1,74 @@
 import { base44 } from "@/api/base44Client";
 
-// Import AVATAR_ITEMS for item prices
 const AVATAR_ITEMS = {
-  // Body colors (8) - Tax reduction
-  "body_blue": { price: 0, taxReduction: 0.1 },
-  "body_pink": { price: 200, taxReduction: 0.2 },
-  "body_purple": { price: 400, taxReduction: 0.3 },
-  "body_green": { price: 600, taxReduction: 0.4 },
-  "body_orange": { price: 800, taxReduction: 0.5 },
-  "body_red": { price: 1000, taxReduction: 0.6 },
-  "body_gold": { price: 1500, taxReduction: 0.7 },
-  "body_rainbow": { price: 2000, taxReduction: 0.8 },
-  
-  // Eyes (8) - Word/hourly bonus
-  "eyes_sparkle": { price: 0, wordBonus: 1 },
-  "eyes_determined": { price: 300, wordBonus: 2 },
-  "eyes_heart": { price: 500, wordBonus: 3 },
-  "eyes_star": { price: 700, wordBonus: 4 },
-  "eyes_cool": { price: 1000, hourlyBonus: 5 },
-  "eyes_laser": { price: 1200, hourlyBonus: 8 },
-  "eyes_cyber": { price: 1500, hourlyBonus: 10 },
-  "eyes_diamond": { price: 2000, hourlyBonus: 15 },
-  
-  // Mouths (8) - Word bonus + dividend tax reduction
-  "mouth_smile": { price: 0, wordBonus: 1, dividendTaxReduction: 1 },
-  "mouth_happy": { price: 250, wordBonus: 2, dividendTaxReduction: 2 },
-  "mouth_confident": { price: 400, wordBonus: 3, dividendTaxReduction: 3 },
-  "mouth_cat": { price: 550, wordBonus: 4, dividendTaxReduction: 4 },
-  "mouth_wink": { price: 700, wordBonus: 5, dividendTaxReduction: 5 },
-  "mouth_laugh": { price: 900, wordBonus: 7, dividendTaxReduction: 7 },
-  "mouth_cool": { price: 1100, wordBonus: 10, dividendTaxReduction: 10 },
-  "mouth_boss": { price: 1500, wordBonus: 15, dividendTaxReduction: 15 },
-  
-  // Hats (8) - Hourly bonus
-  "hat_cap": { price: 300, hourlyBonus: 2 },
-  "hat_party": { price: 450, hourlyBonus: 3 },
-  "hat_tophat": { price: 600, hourlyBonus: 5 },
-  "hat_graduate": { price: 800, hourlyBonus: 7 },
-  "hat_cowboy": { price: 1000, hourlyBonus: 10 },
-  "hat_crown": { price: 1300, hourlyBonus: 15 },
-  "hat_wizard": { price: 1600, hourlyBonus: 20 },
-  "hat_diamond": { price: 2500, hourlyBonus: 30 },
-  
-  // Accessories (8) - Hourly bonus
-  "accessory_phone": { price: 400, hourlyBonus: 3 },
-  "accessory_tie": { price: 600, hourlyBonus: 5 },
-  "accessory_briefcase": { price: 800, hourlyBonus: 8 },
-  "accessory_laptop": { price: 1000, hourlyBonus: 10 },
-  "accessory_suit": { price: 1300, hourlyBonus: 15 },
-  "accessory_rocket": { price: 1600, hourlyBonus: 20 },
-  "accessory_trophy": { price: 2000, hourlyBonus: 25 },
-  "accessory_diamond_brief": { price: 3000, hourlyBonus: 35 },
-  
-  // Shoes (8) - Math bonus
-  "shoes_sneakers": { price: 0, mathBonus: 0 },
-  "shoes_running": { price: 350, mathBonus: 1 },
-  "shoes_boots": { price: 500, mathBonus: 2 },
-  "shoes_heels": { price: 700, mathBonus: 3 },
-  "shoes_dress": { price: 1000, mathBonus: 4 },
-  "shoes_rocket": { price: 1400, mathBonus: 5 },
-  "shoes_fire": { price: 1800, mathBonus: 7 },
-  "shoes_diamond": { price: 2500, mathBonus: 10 },
-  
-  // Backgrounds (8) - Passive income
-  "background_basic": { price: 0, passiveIncome: 0 },
-  "background_apartment": { price: 400, passiveIncome: 10 },
-  "background_villa": { price: 700, passiveIncome: 20 },
-  "background_penthouse": { price: 1000, passiveIncome: 30 },
-  "background_mansion": { price: 1500, passiveIncome: 50 },
-  "background_island": { price: 2000, passiveIncome: 70 },
-  "background_space": { price: 2500, passiveIncome: 100 },
-  "background_universe": { price: 3500, passiveIncome: 150 },
-  
-  // Jewelry (6) - Special bonuses
-  "jewelry_watch": { price: 600, specialBonus: "time" },
-  "jewelry_necklace": { price: 900, specialBonus: "words" },
-  "jewelry_ring": { price: 1200, specialBonus: "math" },
-  "jewelry_crown_small": { price: 1500, specialBonus: "quiz" },
-  "jewelry_amulet": { price: 2000, specialBonus: "investment" },
-  "jewelry_infinity": { price: 3000, specialBonus: "all" }
+  "body_blue": { price: 0 },
+  "body_pink": { price: 200 },
+  "body_purple": { price: 400 },
+  "body_green": { price: 600 },
+  "body_orange": { price: 800 },
+  "body_red": { price: 1000 },
+  "body_gold": { price: 1500 },
+  "body_rainbow": { price: 2000 },
+  "eyes_sparkle": { price: 0 },
+  "eyes_determined": { price: 300 },
+  "eyes_heart": { price: 500 },
+  "eyes_star": { price: 700 },
+  "eyes_cool": { price: 1000 },
+  "eyes_laser": { price: 1200 },
+  "eyes_cyber": { price: 1500 },
+  "eyes_diamond": { price: 2000 },
+  "mouth_smile": { price: 0 },
+  "mouth_happy": { price: 250 },
+  "mouth_confident": { price: 400 },
+  "mouth_cat": { price: 550 },
+  "mouth_wink": { price: 700 },
+  "mouth_laugh": { price: 900 },
+  "mouth_cool": { price: 1100 },
+  "mouth_boss": { price: 1500 },
+  "hat_cap": { price: 300 },
+  "hat_party": { price: 450 },
+  "hat_tophat": { price: 600 },
+  "hat_graduate": { price: 800 },
+  "hat_cowboy": { price: 1000 },
+  "hat_crown": { price: 1300 },
+  "hat_wizard": { price: 1600 },
+  "hat_diamond": { price: 2500 },
+  "accessory_phone": { price: 400 },
+  "accessory_tie": { price: 600 },
+  "accessory_briefcase": { price: 800 },
+  "accessory_laptop": { price: 1000 },
+  "accessory_suit": { price: 1300 },
+  "accessory_rocket": { price: 1600 },
+  "accessory_trophy": { price: 2000 },
+  "accessory_diamond_brief": { price: 3000 },
+  "shoes_sneakers": { price: 0 },
+  "shoes_running": { price: 350 },
+  "shoes_boots": { price: 500 },
+  "shoes_heels": { price: 700 },
+  "shoes_dress": { price: 1000 },
+  "shoes_rocket": { price: 1400 },
+  "shoes_fire": { price: 1800 },
+  "shoes_diamond": { price: 2500 },
+  "background_basic": { price: 0 },
+  "background_apartment": { price: 400 },
+  "background_villa": { price: 700 },
+  "background_penthouse": { price: 1000 },
+  "background_mansion": { price: 1500 },
+  "background_island": { price: 2000 },
+  "background_space": { price: 2500 },
+  "background_universe": { price: 3500 },
+  "jewelry_watch": { price: 600 },
+  "jewelry_necklace": { price: 900 },
+  "jewelry_ring": { price: 1200 },
+  "jewelry_crown_small": { price: 1500 },
+  "jewelry_amulet": { price: 2000 },
+  "jewelry_infinity": { price: 3000 }
 };
 
-/**
- * Recalculate Student Economy Snapshot - The Single Source of Truth
- * 
- * This function calculates the complete financial state of a student based on ALL their activities.
- * It's event-driven and should be called whenever a student's financial state changes.
- * 
- * @param {Object} params - Parameters object
- * @param {string} params.studentEmail - The student's email
- * @param {string} params.reason - Why this calculation was triggered (for logging)
- * @param {boolean} params.previewOnly - If true, returns data without saving to database
- * @returns {Promise<Object>} The updated snapshot or preview data
- */
 export default async function recalculateStudentEconomySnapshot({ studentEmail, reason = "manual", previewOnly = false }) {
   console.log(`\n💰 Recalculating economy snapshot for ${studentEmail} (reason: ${reason}, preview: ${previewOnly})`);
   
   try {
-    // Admin check
-    const me = await base44.auth.me();
-    if (!me || me.role !== "admin") {
-      throw new Error("Unauthorized: admin only");
-    }
-
     // Fetch all data in parallel
     const [
       users,
@@ -192,7 +158,6 @@ export default async function recalculateStudentEconomySnapshot({ studentEmail, 
     // ========================================
     // CALCULATE COINS_CASH (Source of Truth)
     // ========================================
-    // Formula: Total Income - Total Expenses - Items Spent - Investments Spent
     const coinsCash = Math.round(totalIncome - totalExpenses - itemsValue - investmentsSpent);
     
     // ========================================
@@ -201,7 +166,7 @@ export default async function recalculateStudentEconomySnapshot({ studentEmail, 
     const totalAssets = coinsCash + investmentsValue + itemsValue;
     
     // ========================================
-    // CREATE OR UPDATE SNAPSHOT
+    // SNAPSHOT DATA
     // ========================================
     const snapshotData = {
       student_email: studentEmail,
@@ -228,11 +193,7 @@ export default async function recalculateStudentEconomySnapshot({ studentEmail, 
     
     // If preview only, return data without saving
     if (previewOnly) {
-      console.log(`👁️ Preview mode - returning data without saving`);
-      console.log(`  💰 Coins Cash: ${coinsCash}`);
-      console.log(`  📈 Investments: ${investmentsValue} (profit: ${investmentProfitUnrealized})`);
-      console.log(`  🎨 Items: ${itemsValue}`);
-      console.log(`  🏆 Total Assets: ${totalAssets}`);
+      console.log(`👁️ Preview mode - returning calculated data without saving to DB`);
       return snapshotData;
     }
     
@@ -260,7 +221,6 @@ export default async function recalculateStudentEconomySnapshot({ studentEmail, 
     console.log(`  📈 Investments: ${investmentsValue} (profit: ${investmentProfitUnrealized})`);
     console.log(`  🎨 Items: ${itemsValue}`);
     console.log(`  🏆 Total Assets: ${totalAssets}`);
-    console.log(`  📊 Income: ${totalIncome} | Expenses: ${totalExpenses}`);
     
     return snapshot;
     
