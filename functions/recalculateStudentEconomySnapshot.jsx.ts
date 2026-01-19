@@ -243,6 +243,9 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
       purchased_items: JSON.stringify(purchasedItems)
     };
     
+    console.log('🔟 Snapshot data prepared:', { coinsCash, investmentsValue, itemsValue, totalAssets });
+    console.log('1️⃣1️⃣ Saving to database...');
+    
     // Check if snapshot exists
     const existingSnapshots = await base44.entities.StudentEconomySnapshot.filter({ 
       student_email: studentEmail 
