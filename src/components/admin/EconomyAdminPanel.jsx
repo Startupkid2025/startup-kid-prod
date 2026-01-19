@@ -447,19 +447,17 @@ export default function EconomyAdminPanel() {
                       'לא עודכן'
                     )}
                   </div>
-                  {!snapshot.isPlaceholder && (
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        showDebugBreakdown(snapshot);
-                      }}
-                      size="sm"
-                      variant="ghost"
-                      className="text-white/60 hover:text-white h-6 px-2"
-                    >
-                      <Eye className="w-3 h-3" />
-                    </Button>
-                  )}
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      loadStudentData(snapshot.student_email);
+                    }}
+                    size="sm"
+                    variant="ghost"
+                    className="text-white/60 hover:text-white h-6 px-2"
+                  >
+                    <Eye className="w-3 h-3" />
+                  </Button>
                 </div>
               </div>
             </div>
