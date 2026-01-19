@@ -27,17 +27,22 @@ export default function EconomyAdminPanel() {
   const loadSnapshots = async () => {
     setLoading(true);
     try {
-      // Load users first
+      console.log("Loading users...");
       const usersData = await base44.entities.User.list();
+      console.log(`Loaded ${usersData.length} users`);
+      
       const allStudents = usersData.filter(u => u.user_type === 'student');
+      console.log(`Found ${allStudents.length} students`);
       
       // Try to load snapshots, but don't fail if entity doesn't exist
       let snapshotsData = [];
       try {
-        snapshotsData = await base44.entities.StudentEconomySnapshot.list('-total_assets');
+        console.log("Loading StudentEconomySnapshot...");
+        snapshotsData = await base44.entities.StudentEconomySnapshot.list();
+        console.log(`Loaded ${snapshotsData.length} snapshots`);
         setSnapshots(snapshotsData);
       } catch (snapError) {
-        console.warn("Could not load StudentEconomySnapshot - entity may not exist yet:", snapError);
+        console.warn("Could not load StudentEconomySnapshot:", snapError?.response?.status, snapError?.message);
         setSnapshots([]);
       }
       
@@ -56,10 +61,11 @@ export default function EconomyAdminPanel() {
         };
       });
       
+      console.log(`Merged ${merged.length} students with snapshots`);
       setStudents(merged);
     } catch (error) {
-      console.error("Error loading data:", error);
-      toast.error("שגיאה בטעינת נתונים");
+      console.error("Error loading data:", error?.response?.status, error?.message, error);
+      toast.error(`שגיאה בטעינת נתונים: ${error?.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
