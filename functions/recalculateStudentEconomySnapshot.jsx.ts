@@ -215,6 +215,8 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
     // ========================================
     const totalAssets = coinsCash + investmentsValue + itemsValue;
     
+    console.log('9️⃣ Preparing snapshot data for database...');
+    
     // ========================================
     // CREATE OR UPDATE SNAPSHOT
     // ========================================
