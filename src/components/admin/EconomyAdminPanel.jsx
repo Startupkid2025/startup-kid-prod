@@ -223,10 +223,12 @@ export default function EconomyAdminPanel() {
 
   const loadStudentData = async (studentEmail) => {
     try {
-      const [user, wordProgress, mathProgress] = await Promise.all([
+      const [user, wordProgress, mathProgress, participations, quizProgress] = await Promise.all([
         base44.entities.User.filter({ email: studentEmail }),
         base44.entities.WordProgress.filter({ student_email: studentEmail }),
-        base44.entities.MathProgress.filter({ student_email: studentEmail })
+        base44.entities.MathProgress.filter({ student_email: studentEmail }),
+        base44.entities.LessonParticipation.filter({ student_email: studentEmail }),
+        base44.entities.QuizProgress.filter({ student_email: studentEmail })
       ]);
       
       if (user.length === 0) {
@@ -237,11 +239,19 @@ export default function EconomyAdminPanel() {
       const userData = user[0];
       const masteredWords = wordProgress.filter(w => w.mastered === true).length;
       const masteredMath = mathProgress.filter(m => m.mastered === true).length;
+      const vocabularyCoins = wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
+      const mathCoins = mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
+      const surveyCoins = participations.filter(p => p.survey_completed === true).length * 70;
+      const quizCoins = quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
       
       setDebugStudent({
         ...userData,
         mastered_words: masteredWords,
-        mastered_math_questions: masteredMath
+        mastered_math_questions: masteredMath,
+        vocabulary_coins: vocabularyCoins,
+        math_coins: mathCoins,
+        survey_coins: surveyCoins,
+        quiz_coins: quizCoins
       });
       setShowDebug(true);
     } catch (error) {
