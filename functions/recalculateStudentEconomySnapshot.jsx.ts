@@ -87,12 +87,14 @@ const AVATAR_ITEMS = {
  * This function calculates the complete financial state of a student based on ALL their activities.
  * It's event-driven and should be called whenever a student's financial state changes.
  * 
- * @param {string} studentEmail - The student's email
- * @param {string} reason - Why this calculation was triggered (for logging)
- * @returns {Promise<Object>} The updated snapshot
+ * @param {Object} params - Parameters object
+ * @param {string} params.studentEmail - The student's email
+ * @param {string} params.reason - Why this calculation was triggered (for logging)
+ * @param {boolean} params.previewOnly - If true, returns data without saving to database
+ * @returns {Promise<Object>} The updated snapshot or preview data
  */
-export async function recalculateStudentEconomySnapshot(studentEmail, reason = "manual") {
-  console.log(`\n💰 Recalculating economy snapshot for ${studentEmail} (reason: ${reason})`);
+export default async function recalculateStudentEconomySnapshot({ studentEmail, reason = "manual", previewOnly = false }) {
+  console.log(`\n💰 Recalculating economy snapshot for ${studentEmail} (reason: ${reason}, preview: ${previewOnly})`);
   
   try {
     // Fetch all data in parallel
@@ -217,6 +219,16 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
       equipped_items: user.equipped_items || {},
       purchased_items: purchasedItems
     };
+    
+    // If preview only, return data without saving
+    if (previewOnly) {
+      console.log(`👁️ Preview mode - returning data without saving`);
+      console.log(`  💰 Coins Cash: ${coinsCash}`);
+      console.log(`  📈 Investments: ${investmentsValue} (profit: ${investmentProfitUnrealized})`);
+      console.log(`  🎨 Items: ${itemsValue}`);
+      console.log(`  🏆 Total Assets: ${totalAssets}`);
+      return snapshotData;
+    }
     
     // Check if snapshot exists
     const existingSnapshots = await base44.entities.StudentEconomySnapshot.filter({ 
