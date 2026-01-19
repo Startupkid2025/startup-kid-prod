@@ -237,19 +237,20 @@ export default function EconomyAdminPanel() {
 
   const loadStudentData = async (studentEmail) => {
     try {
-      const [user, wordProgress, mathProgress, participations, quizProgress] = await Promise.all([
+      const [user, wordProgress, mathProgress, participations, quizProgress, investments] = await Promise.all([
         base44.entities.User.filter({ email: studentEmail }),
         base44.entities.WordProgress.filter({ student_email: studentEmail }),
         base44.entities.MathProgress.filter({ student_email: studentEmail }),
         base44.entities.LessonParticipation.filter({ student_email: studentEmail }),
-        base44.entities.QuizProgress.filter({ student_email: studentEmail })
+        base44.entities.QuizProgress.filter({ student_email: studentEmail }),
+        base44.entities.Investment.filter({ student_email: studentEmail })
       ]);
-      
+
       if (user.length === 0) {
         toast.error("תלמיד לא נמצא");
         return;
       }
-      
+
       const userData = user[0];
       const masteredWords = wordProgress.filter(w => w.mastered === true).length;
       const masteredMath = mathProgress.filter(m => m.mastered === true).length;
@@ -257,7 +258,45 @@ export default function EconomyAdminPanel() {
       const mathCoins = mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
       const surveyCoins = participations.filter(p => p.survey_completed === true).length * 70;
       const quizCoins = quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
-      
+
+      // חשב ערך פריטים
+      const purchasedItems = userData.purchased_items || [];
+      let itemsValue = 0;
+      purchasedItems.forEach(itemId => {
+        const AVATAR_ITEMS = {
+          "body_blue": { price: 0 }, "body_pink": { price: 200 }, "body_purple": { price: 400 },
+          "body_green": { price: 600 }, "body_orange": { price: 800 }, "body_red": { price: 1000 },
+          "body_gold": { price: 1500 }, "body_rainbow": { price: 2000 },
+          "eyes_sparkle": { price: 0 }, "eyes_determined": { price: 300 }, "eyes_heart": { price: 500 },
+          "eyes_star": { price: 700 }, "eyes_cool": { price: 1000 }, "eyes_laser": { price: 1200 },
+          "eyes_cyber": { price: 1500 }, "eyes_diamond": { price: 2000 },
+          "mouth_smile": { price: 0 }, "mouth_happy": { price: 250 }, "mouth_confident": { price: 400 },
+          "mouth_cat": { price: 550 }, "mouth_wink": { price: 700 }, "mouth_laugh": { price: 900 },
+          "mouth_cool": { price: 1100 }, "mouth_boss": { price: 1500 },
+          "hat_cap": { price: 300 }, "hat_party": { price: 450 }, "hat_tophat": { price: 600 },
+          "hat_graduate": { price: 800 }, "hat_cowboy": { price: 1000 }, "hat_crown": { price: 1300 },
+          "hat_wizard": { price: 1600 }, "hat_diamond": { price: 2500 },
+          "accessory_phone": { price: 400 }, "accessory_tie": { price: 600 }, "accessory_briefcase": { price: 800 },
+          "accessory_laptop": { price: 1000 }, "accessory_suit": { price: 1300 }, "accessory_rocket": { price: 1600 },
+          "accessory_trophy": { price: 2000 }, "accessory_diamond_brief": { price: 3000 },
+          "shoes_sneakers": { price: 0 }, "shoes_running": { price: 350 }, "shoes_boots": { price: 500 },
+          "shoes_heels": { price: 700 }, "shoes_dress": { price: 1000 }, "shoes_rocket": { price: 1400 },
+          "shoes_fire": { price: 1800 }, "shoes_diamond": { price: 2500 },
+          "background_basic": { price: 0 }, "background_apartment": { price: 400 }, "background_villa": { price: 700 },
+          "background_penthouse": { price: 1000 }, "background_mansion": { price: 1500 }, "background_island": { price: 2000 },
+          "background_space": { price: 2500 }, "background_universe": { price: 3500 },
+          "jewelry_watch": { price: 600 }, "jewelry_necklace": { price: 900 }, "jewelry_ring": { price: 1200 },
+          "jewelry_crown_small": { price: 1500 }, "jewelry_amulet": { price: 2000 }, "jewelry_infinity": { price: 3000 }
+        };
+        const item = AVATAR_ITEMS[itemId];
+        if (item && item.price) {
+          itemsValue += item.price;
+        }
+      });
+
+      // חשב ערך השקעות
+      const investmentsValue = investments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+
       setDebugStudent({
         ...userData,
         mastered_words: masteredWords,
@@ -265,7 +304,9 @@ export default function EconomyAdminPanel() {
         vocabulary_coins: vocabularyCoins,
         math_coins: mathCoins,
         survey_coins: surveyCoins,
-        quiz_coins: quizCoins
+        quiz_coins: quizCoins,
+        items_value: itemsValue,
+        investments_value: investmentsValue
       });
       setShowDebug(true);
     } catch (error) {
