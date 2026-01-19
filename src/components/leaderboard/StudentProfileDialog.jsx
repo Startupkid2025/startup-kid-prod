@@ -123,10 +123,6 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       const totalInvested = studentInvestments.reduce((sum, inv) => sum + inv.invested_amount, 0);
       const totalInvestmentValue = studentInvestments.reduce((sum, inv) => sum + inv.current_value, 0);
       const unrealizedProfit = totalInvestmentValue - totalInvested;
-      
-      // Get realized profit from merged fullUserData (see below where we build it)
-      // We'll update this after we have fullUserData
-      let totalInvestmentProfit = 0;
 
       // Calculate finance report - use ACTUAL participations, not total_lessons field
       const actualLessonsAttended = participations.filter(p => p.attended).length;
@@ -141,7 +137,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         work: 0,
         profileTasks: 0,
         profileDetails: 0,
-        investmentProfits: totalInvestmentProfit
+        investmentProfits: safeNum(student.total_realized_investment_profit)
       };
 
       // Single source of truth - no more complex merging
@@ -176,10 +172,6 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       }
 
       console.log("Source of truth data:", fullUserData);
-
-      // NOW calculate investment profit from fullUserData
-      const realizedProfit = safeNum(fullUserData.total_realized_investment_profit);
-      totalInvestmentProfit = realizedProfit;
 
       // Profile tasks - use LeaderboardEntry data (accessible to all)
       if (student.completed_instagram_follow) income.profileTasks += 50;
