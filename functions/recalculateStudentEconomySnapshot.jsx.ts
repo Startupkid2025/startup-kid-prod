@@ -95,6 +95,8 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
   console.log(`\n💰 Recalculating economy snapshot for ${studentEmail} (reason: ${reason})`);
   
   try {
+    console.log('1️⃣ Starting data fetch...');
+    
     // Fetch all data in parallel
     const [
       users,
@@ -112,11 +114,14 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
       base44.entities.Investment.filter({ student_email: studentEmail })
     ]);
     
+    console.log('2️⃣ Data fetched successfully:', { users: users.length, wordProgress: wordProgress.length, mathProgress: mathProgress.length, participations: participations.length, quizProgress: quizProgress.length, investments: investments.length });
+    
     if (users.length === 0) {
       throw new Error(`User not found: ${studentEmail}`);
     }
     
     const user = users[0];
+    console.log('3️⃣ User loaded:', { email: user.email, full_name: user.full_name });
     
     // ========================================
     // INCOME BREAKDOWN
@@ -165,17 +170,7 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
     // ========================================
     // ITEMS VALUE
     // ========================================
-    let purchasedItems = user.purchased_items;
-    if (typeof purchasedItems === 'string') {
-      try {
-        purchasedItems = JSON.parse(purchasedItems);
-      } catch (e) {
-        purchasedItems = [];
-      }
-    }
-    if (!Array.isArray(purchasedItems)) {
-      purchasedItems = [];
-    }
+    const purchasedItems = user.purchased_items || [];
     let itemsValue = 0;
     purchasedItems.forEach(itemId => {
       const item = AVATAR_ITEMS[itemId];
@@ -207,9 +202,9 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
     // ========================================
     const snapshotData = {
       student_email: studentEmail,
-      full_name: user.full_name || "Unknown",
-      first_name: user.first_name || (user.full_name ? user.full_name.split(' ')[0] : "Student"),
-      last_name: user.last_name || (user.full_name && user.full_name.split(' ').length > 1 ? user.full_name.split(' ').slice(1).join(' ') : ""),
+      full_name: user.full_name,
+      first_name: user.first_name || user.full_name.split(' ')[0],
+      last_name: user.last_name || user.full_name.split(' ').slice(1).join(' '),
       user_type: user.user_type || 'student',
       coins_cash: coinsCash,
       investments_value: investmentsValue,
@@ -257,11 +252,7 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
     return snapshot;
     
   } catch (error) {
-    console.error(`❌ Error recalculating snapshot for ${studentEmail}:`, {
-      message: error?.message,
-      stack: error?.stack,
-      cause: error?.cause
-    });
+    console.error(`❌ Error recalculating snapshot for ${studentEmail}:`, error);
     throw error;
   }
 }
