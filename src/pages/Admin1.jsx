@@ -274,10 +274,11 @@ export default function Admin() {
           const realizedProfit = user.total_realized_investment_profit || 0;
           const totalInvestmentProfit = unrealizedProfit + realizedProfit;
 
+          // Only count REALIZED investment profit, not unrealized (unrealized is in current_value)
           const totalIncome = baseCoins + lessonsCoins + wordCoins + mathCoins + 
                              surveyCoins + quizCoins + profileTasksCoins + 
                              profileDetailsCoins + workCoins + collaborationCoins + 
-                             loginStreakCoins + passiveIncomeCoins + totalInvestmentProfit + (user.total_admin_coins || 0);
+                             loginStreakCoins + passiveIncomeCoins + realizedProfit + (user.total_admin_coins || 0);
 
           console.log(`\n📊 ${user.full_name} (${user.email}):`);
           console.log(`  💰 הכנסות:`);
