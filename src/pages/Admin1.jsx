@@ -548,6 +548,102 @@ export default function Admin() {
     }
   };
 
+  const rebuildAllSnapshots = async () => {
+    setIsRecalculatingCoins(true);
+    
+    try {
+      // Load all entries
+      const allEntries = await base44.entities.LeaderboardEntry.list();
+      const students = allEntries.filter(e => {
+        const type = e.user_type || 'student';
+        return type === 'student';
+      });
+      
+      let created = 0;
+      let updated = 0;
+      
+      toast.info(`מעדכן ${students.length} snapshots... ⏳`, { duration: 3000 });
+      
+      for (let i = 0; i < students.length; i++) {
+        const entry = students[i];
+        
+        try {
+          // Calculate items value from purchased_items
+          const purchasedItems = entry.purchased_items || [];
+          let itemsValue = 0;
+          purchasedItems.forEach(itemId => {
+            const item = AVATAR_ITEMS[itemId];
+            if (item && item.price) {
+              itemsValue += item.price;
+            }
+          });
+          
+          // Calculate investments value
+          let investmentsValue = 0;
+          try {
+            const allInvestments = await base44.entities.Investment.filter({
+              student_email: entry.student_email
+            });
+            investmentsValue = allInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+          } catch (e) {
+            console.log(`No investments for ${entry.student_email}`);
+          }
+          
+          const coins = entry.coins || 0;
+          const totalValue = coins + itemsValue + investmentsValue;
+          
+          // Check if snapshot exists
+          const existing = await base44.entities.LeaderboardSnapshot.filter({
+            student_email: entry.student_email
+          });
+          
+          // Build snapshot data - only set known values, let unknowns be null
+          const snapshotData = {
+            student_email: entry.student_email,
+            full_name: entry.full_name,
+            first_name: entry.first_name,
+            last_name: entry.last_name,
+            user_type: entry.user_type || 'student',
+            coins: coins,
+            purchased_items: purchasedItems,
+            equipped_items: entry.equipped_items || {},
+            daily_collaborations: entry.daily_collaborations || [],
+            investments_value: investmentsValue,
+            items_value: itemsValue,
+            total_value: totalValue,
+            login_streak: entry.login_streak ?? null,
+            work_hours: entry.total_work_hours ?? null,
+            work_earnings: entry.total_work_earnings ?? null,
+            last_login_date: entry.last_login_date || null,
+            updated_at: new Date().toISOString()
+          };
+          
+          if (existing.length > 0) {
+            await base44.entities.LeaderboardSnapshot.update(existing[0].id, snapshotData);
+            updated++;
+          } else {
+            await base44.entities.LeaderboardSnapshot.create(snapshotData);
+            created++;
+          }
+          
+          // Delay to avoid rate limits
+          if (i % 5 === 0 && i > 0) {
+            await sleep(200);
+          }
+        } catch (error) {
+          console.error(`Failed to rebuild snapshot for ${entry.student_email}:`, error);
+        }
+      }
+      
+      toast.success(`✅ Snapshots עודכנו! ${created} נוצרו, ${updated} עודכנו`, { duration: 5000 });
+    } catch (error) {
+      console.error("Error rebuilding snapshots:", error);
+      toast.error("שגיאה בעדכון snapshots");
+    } finally {
+      setIsRecalculatingCoins(false);
+    }
+  };
+
   const addPassiveIncomeBackpay = async () => {
     setIsRecalculatingCoins(true);
     
@@ -1619,6 +1715,17 @@ export default function Admin() {
               >
                 {isRecalculatingCoins ? "מאפס..." : "🔥 אפס רצף כניסות לכולם (התחלה חדשה)"}
               </Button>
+              
+              <div className="border-t border-white/20 pt-4 mt-4">
+                <h3 className="text-white font-bold text-sm mb-3">📊 ניהול Snapshots</h3>
+                <Button
+                  onClick={rebuildAllSnapshots}
+                  disabled={isRecalculatingCoins}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700"
+                >
+                  {isRecalculatingCoins ? "מעדכן..." : "🔄 עדכן Snapshots (תיקון דירוג)"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
