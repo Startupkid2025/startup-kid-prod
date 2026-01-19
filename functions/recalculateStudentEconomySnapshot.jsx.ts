@@ -237,8 +237,8 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
       inflation_loss: user.total_inflation_lost || 0,
       last_calculated_at: new Date().toISOString(),
       snapshot_version: 2,
-      equipped_items: user.equipped_items || {},
-      purchased_items: purchasedItems
+      equipped_items: JSON.stringify(user.equipped_items || {}),
+      purchased_items: JSON.stringify(purchasedItems)
     };
     
     // Check if snapshot exists
