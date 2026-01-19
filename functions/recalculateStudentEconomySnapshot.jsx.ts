@@ -207,9 +207,9 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
     // ========================================
     const snapshotData = {
       student_email: studentEmail,
-      full_name: user.full_name,
-      first_name: user.first_name || user.full_name.split(' ')[0],
-      last_name: user.last_name || user.full_name.split(' ').slice(1).join(' '),
+      full_name: user.full_name || "Unknown",
+      first_name: user.first_name || (user.full_name ? user.full_name.split(' ')[0] : "Student"),
+      last_name: user.last_name || (user.full_name && user.full_name.split(' ').length > 1 ? user.full_name.split(' ').slice(1).join(' ') : ""),
       user_type: user.user_type || 'student',
       coins_cash: coinsCash,
       investments_value: investmentsValue,
