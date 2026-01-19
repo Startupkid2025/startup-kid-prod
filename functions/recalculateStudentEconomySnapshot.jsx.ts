@@ -94,7 +94,7 @@ const AVATAR_ITEMS = {
  * @returns {Promise<Object>} The updated snapshot or preview data
  */
 async function recalculateStudentEconomySnapshot({ studentEmail, reason = "manual", previewOnly = false }) {
-  console.log(`\n💰 Recalculating economy snapshot for ${studentEmail} (reason: ${reason})`);
+  console.log(`\n💰 Recalculating economy snapshot for ${studentEmail} (reason: ${reason}, preview: ${previewOnly})`);
   
   try {
     // Fetch all data in parallel
@@ -227,7 +227,6 @@ async function recalculateStudentEconomySnapshot({ studentEmail, reason = "manua
       console.log(`  📈 Investments: ${investmentsValue} (profit: ${investmentProfitUnrealized})`);
       console.log(`  🎨 Items: ${itemsValue}`);
       console.log(`  🏆 Total Assets: ${totalAssets}`);
-      console.log(`  📊 Income: ${totalIncome} | Expenses: ${totalExpenses}`);
       return snapshotData;
     }
     
