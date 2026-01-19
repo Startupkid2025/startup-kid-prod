@@ -135,7 +135,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         lessons: actualLessonsAttended * 100,
         vocabulary: wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0),
         math: mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0),
-        surveys: participations.filter(p => p.survey_completed).length * 50,
+        surveys: participations.filter(p => p.survey_completed).length * 70,
         quizzes: quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0),
         work: 0,
         profileTasks: 0,

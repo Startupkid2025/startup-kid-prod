@@ -228,9 +228,24 @@ export default function Lessons() {
 
       // Give 70 coins for completing survey
       const currentCoins = currentUser.coins || 0;
+      const surveyReward = 70;
       await base44.auth.updateMe({
-        coins: currentCoins + 70
+        coins: currentCoins + surveyReward
       });
+
+      // Update LeaderboardEntry
+      try {
+        const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
+          student_email: currentUser.email 
+        });
+        if (leaderboardEntries.length > 0) {
+          await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+            coins: currentCoins + surveyReward
+          });
+        }
+      } catch (error) {
+        console.error("Error updating leaderboard:", error);
+      }
 
       setSurveyLesson(null);
       setSurveyParticipation(null);

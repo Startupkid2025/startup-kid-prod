@@ -244,7 +244,7 @@ export default function Admin() {
           
           const userParticipations = participationsMap.get(user.email) || [];
           const completedSurveys = userParticipations.filter(p => p.survey_completed === true);
-          const surveyCoins = completedSurveys.length * 20;
+          const surveyCoins = completedSurveys.length * 70;
           
           const userQuizProgress = quizProgressMap.get(user.email) || [];
           const quizCoins = userQuizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
@@ -402,7 +402,7 @@ export default function Admin() {
           const mathCoins = userMathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
           
           const userParticipations = allParticipations.filter(p => p.student_email === user.email);
-          const surveyCoins = userParticipations.filter(p => p.survey_completed === true).length * 20;
+          const surveyCoins = userParticipations.filter(p => p.survey_completed === true).length * 70;
           
           const userQuizProgress = allQuizProgress.filter(q => q.student_email === user.email);
           const quizCoins = userQuizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);

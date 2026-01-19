@@ -303,7 +303,7 @@ export default function Home() {
       
       const allParticipations = await base44.entities.LessonParticipation.filter({ student_email: user.email });
       const completedSurveys = allParticipations.filter(p => p.survey_completed === true);
-      const surveyCoins = completedSurveys.length * 50;
+      const surveyCoins = completedSurveys.length * 70;
       
       const allQuizProgress = await base44.entities.QuizProgress.filter({ student_email: user.email });
       const quizCoins = allQuizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
