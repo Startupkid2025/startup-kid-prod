@@ -791,6 +791,61 @@ export default function Admin() {
     }
   };
 
+  const resetAllCreditInterest = async () => {
+    if (!confirm("⚠️ לאפס את total_credit_interest לכל התלמידים?\n\nזה ימחק את כל הריבית שנצברה.")) {
+      return;
+    }
+    
+    setIsRecalculatingCoins(true);
+    
+    try {
+      const allUsers = await base44.entities.User.list();
+      const students = allUsers.filter(u => u.user_type === 'student');
+      
+      console.log(`\n🔄 Resetting credit interest for ${students.length} students\n`);
+      
+      for (let i = 0; i < students.length; i++) {
+        const user = students[i];
+        
+        try {
+          const oldInterest = user.total_credit_interest || 0;
+          
+          if (oldInterest !== 0) {
+            await retryWithBackoff(async () => {
+              await base44.entities.User.update(user.id, { 
+                total_credit_interest: 0 
+              });
+            });
+            
+            await sleep(100);
+            
+            await retryWithBackoff(async () => {
+              await syncLeaderboardEntry(user.email, { 
+                total_credit_interest: 0 
+              });
+            });
+            
+            console.log(`  ✅ ${user.full_name}: ${oldInterest} → 0`);
+          }
+          
+          if (i < students.length - 1) {
+            await sleep(300);
+          }
+        } catch (error) {
+          console.error(`Failed for ${user.email}:`, error);
+        }
+      }
+      
+      toast.success(`✅ אופס! total_credit_interest ל-${students.length} תלמידים`);
+      await refreshCurrentTab();
+    } catch (error) {
+      console.error("Error resetting credit interest:", error);
+      toast.error("שגיאה באיפוס ריבית");
+    } finally {
+      setIsRecalculatingCoins(false);
+    }
+  };
+
   const recomputeStudentCashBalance = async (dryRun = true) => {
     setIsRecalculatingCoins(true);
     
@@ -2124,6 +2179,17 @@ export default function Admin() {
                 {isRecalculatingCoins ? "מאפס..." : "🔥 אפס רצף כניסות לכולם (התחלה חדשה)"}
               </Button>
               
+              <div className="border-t border-white/20 pt-4 mt-4">
+                <h3 className="text-white font-bold text-sm mb-3">🧹 איפוס ריבית אשראי</h3>
+                <Button
+                  onClick={resetAllCreditInterest}
+                  disabled={isRecalculatingCoins}
+                  className="w-full bg-red-600 hover:bg-red-700 mb-4"
+                >
+                  {isRecalculatingCoins ? "מאפס..." : "🔥 אפס total_credit_interest לכולם"}
+                </Button>
+              </div>
+
               <div className="border-t border-white/20 pt-4 mt-4">
                 <h3 className="text-white font-bold text-sm mb-3">💰 חישוב מחדש נכון של עו״ש</h3>
                 <p className="text-white/60 text-xs mb-3">
