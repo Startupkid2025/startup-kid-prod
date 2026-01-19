@@ -295,7 +295,9 @@ export default function EconomyAdminPanel() {
       });
 
       // חשב ערך השקעות
+      const investmentsSpent = investments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
       const investmentsValue = investments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      const investmentProfit = investmentsValue - investmentsSpent;
 
       setDebugStudent({
         ...userData,
@@ -306,7 +308,9 @@ export default function EconomyAdminPanel() {
         survey_coins: surveyCoins,
         quiz_coins: quizCoins,
         items_value: itemsValue,
-        investments_value: investmentsValue
+        investments_value: investmentsValue,
+        investments_spent: investmentsSpent,
+        investment_profit: investmentProfit
       });
       setShowDebug(true);
     } catch (error) {
