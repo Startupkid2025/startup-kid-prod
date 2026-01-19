@@ -556,6 +556,9 @@ export default function Admin() {
     setIsRecalculatingCoins(true);
     
     try {
+      console.log('\n🚨 REBUILD SNAPSHOTS - START');
+      console.log('⚠️ WARNING: This should be READ-ONLY operation!');
+      
       // Load all base data
       const [allEntries, allWordProgress, allMathProgress, allParticipations, allLessons, allInvestments] = await Promise.all([
         base44.entities.LeaderboardEntry.list(),
@@ -679,14 +682,14 @@ export default function Admin() {
             student_email: entry.student_email
           });
           
-          // 9. Build COMPLETE snapshot data
+          // 9. Build COMPLETE snapshot data - READ ONLY! NO COINS UPDATE!
           const snapshotData = {
             student_email: entry.student_email,
             full_name: entry.full_name,
             first_name: entry.first_name,
             last_name: entry.last_name,
             user_type: entry.user_type || 'student',
-            coins: coins,
+            // ❌ REMOVED: coins - this is READ from LeaderboardEntry, NOT written!
             purchased_items: purchasedItems,
             equipped_items: entry.equipped_items || {},
             daily_collaborations: entry.daily_collaborations || [],
@@ -708,6 +711,12 @@ export default function Admin() {
             snapshot_version: 2,
             updated_at: new Date().toISOString()
           };
+          
+          console.log(`\n📊 SNAPSHOT UPDATE for ${entry.full_name}:`);
+          console.log(`  beforeCoins (in LeaderboardEntry): ${coins}`);
+          console.log(`  computedTotalValue: ${totalValue}`);
+          console.log(`  reason: Snapshot rebuild - display data only`);
+          console.log(`  ⚠️ NO COINS UPDATE - snapshot is read-only!`);
           
           if (existing.length > 0) {
             await base44.entities.LeaderboardSnapshot.update(existing[0].id, snapshotData);
