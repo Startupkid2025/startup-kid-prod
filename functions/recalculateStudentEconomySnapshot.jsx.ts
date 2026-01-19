@@ -257,7 +257,11 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
     return snapshot;
     
   } catch (error) {
-    console.error(`❌ Error recalculating snapshot for ${studentEmail}:`, error);
+    console.error(`❌ Error recalculating snapshot for ${studentEmail}:`, {
+      message: error?.message,
+      stack: error?.stack,
+      cause: error?.cause
+    });
     throw error;
   }
 }
