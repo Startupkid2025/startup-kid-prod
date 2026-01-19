@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, BookOpen, Shield, Edit2, Trash2, FileText, Languages, Filter, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Users, BookOpen, Shield, Edit2, Trash2, FileText, Languages, Filter, Search, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
