@@ -172,14 +172,14 @@ export default function EconomyAdminPanel() {
           <Button
             onClick={recalculateSelected}
             disabled={isRecalculating || selectedEmails.size === 0}
-            className="bg-emerald-600 hover:bg-emerald-700"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg border-2 border-emerald-400/50"
           >
             🔄 חשב מחדש ({selectedEmails.size})
           </Button>
           <Button
             onClick={recalculateAll}
             disabled={isRecalculating}
-            className="bg-orange-600 hover:bg-orange-700"
+            className="bg-orange-600 hover:bg-orange-700 text-white font-bold shadow-lg border-2 border-orange-400/50"
           >
             🚨 חשב הכל ({snapshots.length})
           </Button>
