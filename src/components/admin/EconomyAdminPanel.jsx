@@ -9,6 +9,7 @@ import { RefreshCw, Search, Eye } from "lucide-react";
 
 export default function EconomyAdminPanel() {
   const [snapshots, setSnapshots] = useState([]);
+  const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedEmails, setSelectedEmails] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,8 +27,32 @@ export default function EconomyAdminPanel() {
   const loadSnapshots = async () => {
     setLoading(true);
     try {
-      const data = await base44.entities.StudentEconomySnapshot.list('-total_assets');
-      setSnapshots(data);
+      const [snapshotsData, usersData] = await Promise.all([
+        base44.entities.StudentEconomySnapshot.list('-total_assets'),
+        base44.entities.User.list()
+      ]);
+      
+      setSnapshots(snapshotsData);
+      
+      // Get all students (user_type === 'student')
+      const allStudents = usersData.filter(u => u.user_type === 'student');
+      
+      // Merge snapshots with users to create complete list
+      const merged = allStudents.map(user => {
+        const snapshot = snapshotsData.find(s => s.student_email === user.email);
+        return snapshot || {
+          student_email: user.email,
+          full_name: user.full_name,
+          coins_cash: 0,
+          investments_value: 0,
+          items_value: 0,
+          total_assets: 0,
+          last_calculated_at: null,
+          isPlaceholder: true
+        };
+      });
+      
+      setStudents(merged);
     } catch (error) {
       console.error("Error loading snapshots:", error);
       toast.error("שגיאה בטעינת נתונים");
@@ -126,24 +151,24 @@ export default function EconomyAdminPanel() {
   };
 
   const recalculateAll = async () => {
-    if (!confirm(`⚠️ לחשב מחדש עבור כל ${snapshots.length} התלמידים?`)) {
+    if (!confirm(`⚠️ לחשב מחדש עבור כל ${students.length} התלמידים?`)) {
       return;
     }
 
     setIsRecalculating(true);
-    setProgress({ current: 0, total: snapshots.length, errors: [] });
+    setProgress({ current: 0, total: students.length, errors: [] });
 
     const errors = [];
 
-    for (let i = 0; i < snapshots.length; i++) {
+    for (let i = 0; i < students.length; i++) {
       try {
         const { recalculateStudentEconomySnapshot } = await import("@/functions/recalculateStudentEconomySnapshot");
-        await recalculateStudentEconomySnapshot(snapshots[i].student_email, "admin_all");
+        await recalculateStudentEconomySnapshot(students[i].student_email, "admin_all");
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {
-        console.error(`Error for ${snapshots[i].student_email}:`, error);
-        errors.push({ email: snapshots[i].student_email, error: error.message });
+        console.error(`Error for ${students[i].student_email}:`, error);
+        errors.push({ email: students[i].student_email, error: error.message });
         setProgress(prev => ({ ...prev, current: i + 1, errors }));
       }
     }
@@ -153,7 +178,7 @@ export default function EconomyAdminPanel() {
     if (errors.length === 0) {
       toast.success(`✅ חושב מחדש עבור כל התלמידים`);
     } else {
-      toast.warning(`⚠️ ${snapshots.length - errors.length} הצליחו, ${errors.length} נכשלו`);
+      toast.warning(`⚠️ ${students.length - errors.length} הצליחו, ${errors.length} נכשלו`);
     }
 
     await loadSnapshots();
@@ -164,7 +189,7 @@ export default function EconomyAdminPanel() {
     setShowDebug(true);
   };
 
-  const filteredSnapshots = snapshots.filter(s => {
+  const filteredSnapshots = students.filter(s => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
@@ -195,7 +220,7 @@ export default function EconomyAdminPanel() {
               className="pr-10 bg-white/5 border-white/20 text-white placeholder:text-white/40"
             />
           </div>
-          <Button onClick={toggleSelectAll} className="bg-white/20 hover:bg-white/30 text-white border-white/30 font-bold">
+          <Button onClick={toggleSelectAll} className="bg-white/20 hover:bg-white/30 text-white border-white/30 font-bold" disabled={filteredSnapshots.length === 0}>
             {selectedEmails.size === filteredSnapshots.length && filteredSnapshots.length > 0 ? "✓ בטל הכל" : `☐ בחר הכל (${filteredSnapshots.length})`}
           </Button>
         </div>
@@ -259,7 +284,7 @@ export default function EconomyAdminPanel() {
             disabled={isRecalculating}
             className="bg-orange-600 hover:bg-orange-700 text-white font-bold shadow-lg border-2 border-orange-400/50"
           >
-            🚨 חשב הכל ({snapshots.length})
+            🚨 חשב הכל ({students.length})
           </Button>
         </div>
 
@@ -294,9 +319,9 @@ export default function EconomyAdminPanel() {
           <div className="text-white/80">
             {filteredSnapshots.length} תלמידים
           </div>
-          {snapshots.length === 0 && !loading && (
+          {students.length > 0 && snapshots.length === 0 && !loading && (
             <div className="text-yellow-400 text-sm">
-              ⚠️ אין snapshots - לחץ על "אתחל Snapshots" בלשונית Tools במסך Admin הראשי
+              ⚠️ {students.length} תלמידים ללא snapshots - לחץ "חשב הכל" ליצירתם
             </div>
           )}
         </div>
@@ -330,6 +355,7 @@ export default function EconomyAdminPanel() {
               onClick={() => toggleSelect(snapshot.student_email)}
               className={`
                 relative cursor-pointer rounded-lg p-4 border-2 transition-all
+                ${snapshot.isPlaceholder ? 'opacity-60' : ''}
                 ${selectedEmails.has(snapshot.student_email) 
                   ? 'bg-emerald-500/30 border-emerald-400 shadow-lg shadow-emerald-500/20' 
                   : 'bg-white/5 border-white/20 hover:border-white/40 hover:bg-white/10'}
@@ -376,21 +402,27 @@ export default function EconomyAdminPanel() {
 
                 <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between">
                   <div className="text-white/50 text-xs">
-                    {snapshot.last_calculated_at 
-                      ? new Date(snapshot.last_calculated_at).toLocaleDateString('he-IL')
-                      : 'לא עודכן'}
+                    {snapshot.isPlaceholder ? (
+                      <span className="text-yellow-400">⚠️ לא חושב</span>
+                    ) : snapshot.last_calculated_at ? (
+                      new Date(snapshot.last_calculated_at).toLocaleDateString('he-IL')
+                    ) : (
+                      'לא עודכן'
+                    )}
                   </div>
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      showDebugBreakdown(snapshot);
-                    }}
-                    size="sm"
-                    variant="ghost"
-                    className="text-white/60 hover:text-white h-6 px-2"
-                  >
-                    <Eye className="w-3 h-3" />
-                  </Button>
+                  {!snapshot.isPlaceholder && (
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        showDebugBreakdown(snapshot);
+                      }}
+                      size="sm"
+                      variant="ghost"
+                      className="text-white/60 hover:text-white h-6 px-2"
+                    >
+                      <Eye className="w-3 h-3" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
