@@ -1,26 +1,30 @@
-export default async function recalculateStudentEconomySnapshot({ studentEmail, reason = 'manual', previewOnly = true } = {}) {
+export default async function recalculateStudentEconomySnapshot(params) {
   try {
-    console.log("💰 Called with:", { studentEmail, reason, previewOnly });
+    const { studentEmail, reason = 'manual', previewOnly = true } = params || {};
 
-    if (!studentEmail) {
-      throw new Error("Missing studentEmail");
-    }
-
-    // In Base44 backend, context is a global - test logging it
-    console.log("🔍 Available globals:", {
-      hasContext: typeof context !== 'undefined',
-      contextKeys: typeof context !== 'undefined' ? Object.keys(context || {}) : 'N/A'
+    console.log("💰 Function called with params:", {
+      studentEmail,
+      reason,
+      previewOnly,
+      paramsType: typeof params,
+      paramsKeys: params ? Object.keys(params) : 'null'
     });
 
-    // Return test response
+    if (!studentEmail) {
+      throw new Error("Missing studentEmail in params");
+    }
+
+    // Return minimal test
     return {
       ok: true,
       studentEmail,
-      message: "Backend function working - check logs for context"
+      reason,
+      previewOnly,
+      received: true
     };
 
   } catch (error) {
-    console.error("❌ Error:", {
+    console.error("❌ Backend function error:", {
       message: error?.message,
       status: error?.response?.status,
       data: error?.response?.data,
@@ -29,7 +33,8 @@ export default async function recalculateStudentEconomySnapshot({ studentEmail, 
 
     return {
       ok: false,
-      error: error?.message || 'Unknown error'
+      error: error?.message || 'Unknown error',
+      stack: error?.stack
     };
   }
 }
