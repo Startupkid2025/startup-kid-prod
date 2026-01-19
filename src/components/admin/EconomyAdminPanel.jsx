@@ -716,9 +716,9 @@ export default function EconomyAdminPanel() {
 
           {debugStudent && (
             <div className="space-y-6">
-              {/* Coins Breakdown */}
+              {/* Income & Cash Breakdown */}
               <div className="bg-yellow-500/10 rounded-lg p-4 border border-yellow-500/30 mb-6">
-                <h3 className="text-yellow-200 text-lg font-bold mb-3">💵 בדיקת כסף בעובר ושב</h3>
+                <h3 className="text-yellow-200 text-lg font-bold mb-3">💰 מקורות הכנסה וכסף בעובר ושב</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                   <div>
                     <span className="text-white/70">base_coins (כסף מההתחלה)</span>
@@ -744,9 +744,21 @@ export default function EconomyAdminPanel() {
                     <span className="text-white/70">quiz_coins (כסף מחידונים)</span>
                     <div className="font-bold text-yellow-300">{(debugStudent.quiz_coins || 0).toLocaleString()}</div>
                   </div>
-                  <div className="col-span-2 bg-white/5 rounded p-2">
-                    <span className="text-white/70">coins (עו״ש בעובר ושב)</span>
-                    <div className="font-bold text-yellow-400 text-lg">{(debugStudent.coins || 0).toLocaleString()}</div>
+                  <div>
+                    <span className="text-white/70">total_collaboration_coins</span>
+                    <div className="font-bold text-green-300">{(debugStudent.total_collaboration_coins || 0).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">total_login_streak_coins</span>
+                    <div className="font-bold text-green-300">{(debugStudent.total_login_streak_coins || 0).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">total_passive_income</span>
+                    <div className="font-bold text-green-300">{(debugStudent.total_passive_income || 0).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">total_admin_coins</span>
+                    <div className="font-bold text-green-300">{(debugStudent.total_admin_coins || 0).toLocaleString()}</div>
                   </div>
                 </div>
               </div>
