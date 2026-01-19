@@ -156,6 +156,9 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
     if (user.phone_number) income.profile_phone = 20;
     
     const totalIncome = Object.values(income).reduce((sum, val) => sum + val, 0);
+    console.log('5️⃣ Income calculated:', totalIncome);
+    
+    console.log('6️⃣ Calculating expense breakdown...');
     
     // ========================================
     // EXPENSE BREAKDOWN (NO INCOME TAX, NO DIVIDEND TAX)
