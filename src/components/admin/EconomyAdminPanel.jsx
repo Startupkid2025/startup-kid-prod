@@ -27,6 +27,14 @@ export default function EconomyAdminPanel() {
   const loadSnapshots = async () => {
     setLoading(true);
     try {
+      // Check admin permissions first
+      const currentUser = await base44.auth.me();
+      if (currentUser.role !== 'admin') {
+        toast.error("אין הרשאות גישה");
+        setLoading(false);
+        return;
+      }
+
       console.log("Loading users...");
       const usersData = await base44.entities.User.list();
       console.log(`Loaded ${usersData.length} users`);
@@ -90,8 +98,10 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < emails.length; i++) {
       try {
-        const { recalculateStudentEconomySnapshot } = await import("@/functions/recalculateStudentEconomySnapshot");
-        const result = await recalculateStudentEconomySnapshot(emails[i], "preview");
+        const result = await base44.functions.recalculateStudentEconomySnapshot({
+          student_email: emails[i],
+          reason: "preview"
+        });
         results.push({ email: emails[i], ...result });
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -122,8 +132,10 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < previewResults.length; i++) {
       try {
-        const { recalculateStudentEconomySnapshot } = await import("@/functions/recalculateStudentEconomySnapshot");
-        await recalculateStudentEconomySnapshot(previewResults[i].email, "admin_selected");
+        await base44.functions.recalculateStudentEconomySnapshot({
+          student_email: previewResults[i].email,
+          reason: "admin_selected"
+        });
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {
@@ -159,8 +171,10 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < students.length; i++) {
       try {
-        const { recalculateStudentEconomySnapshot } = await import("@/functions/recalculateStudentEconomySnapshot");
-        await recalculateStudentEconomySnapshot(students[i].student_email, "admin_all");
+        await base44.functions.recalculateStudentEconomySnapshot({
+          student_email: students[i].student_email,
+          reason: "admin_all"
+        });
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {
@@ -348,7 +362,7 @@ export default function EconomyAdminPanel() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredSnapshots.map((snapshot) => (
             <div 
-              key={snapshot.id}
+              key={snapshot.id || snapshot.student_email}
               onClick={() => toggleSelect(snapshot.student_email)}
               className={`
                 relative cursor-pointer rounded-lg p-4 border-2 transition-all
@@ -447,7 +461,7 @@ export default function EconomyAdminPanel() {
             </thead>
             <tbody>
               {filteredSnapshots.map((snapshot) => (
-                <tr key={snapshot.id} className="border-t border-white/10 hover:bg-white/5">
+                <tr key={snapshot.id || snapshot.student_email} className="border-t border-white/10 hover:bg-white/5">
                   <td className="px-4 py-3">
                     <div className="flex items-center">
                       <Checkbox
@@ -507,8 +521,8 @@ export default function EconomyAdminPanel() {
 
           {previewResults && (
             <div className="space-y-3">
-              {previewResults.map((result, idx) => (
-                <div key={idx} className="bg-white/10 rounded-lg p-4">
+              {previewResults.map((result) => (
+                <div key={result.email} className="bg-white/10 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div>
                       <div className="font-bold">{result.full_name || result.email}</div>
