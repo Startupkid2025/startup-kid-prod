@@ -171,11 +171,24 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
     };
     
     const totalExpenses = Object.values(expenses).reduce((sum, val) => sum + val, 0);
+    console.log('7️⃣ Expenses calculated:', totalExpenses);
+    
+    console.log('8️⃣ Processing purchased items...');
     
     // ========================================
     // ITEMS VALUE
     // ========================================
-    const purchasedItems = user.purchased_items || [];
+    let purchasedItems = user.purchased_items;
+    if (typeof purchasedItems === 'string') {
+      try {
+        purchasedItems = JSON.parse(purchasedItems);
+      } catch (e) {
+        purchasedItems = [];
+      }
+    }
+    if (!Array.isArray(purchasedItems)) {
+      purchasedItems = [];
+    }
     let itemsValue = 0;
     purchasedItems.forEach(itemId => {
       const item = AVATAR_ITEMS[itemId];
