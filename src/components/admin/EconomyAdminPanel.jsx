@@ -786,18 +786,18 @@ export default function EconomyAdminPanel() {
               {/* Assets */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 rounded-lg p-4 border border-emerald-500/30">
-                  <div className="text-emerald-200 text-xs mb-1 font-bold">investments_value (הערך הנוכחי)</div>
-                  <div className="text-2xl font-bold text-white">{(debugStudent.total_realized_investment_profit || 0).toLocaleString()}</div>
+                  <div className="text-emerald-200 text-xs mb-1 font-bold">investments_value (שווי השקעות נוכחי)</div>
+                  <div className="text-2xl font-bold text-white">{(debugStudent.investments_value || 0).toLocaleString()}</div>
                   <div className="text-white/60 text-xs mt-2">investment_profit_realized (רווח ממומש): {(debugStudent.total_realized_investment_profit || 0).toLocaleString()}</div>
                 </div>
                 <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/5 rounded-lg p-4 border border-purple-500/30">
-                  <div className="text-purple-200 text-xs mb-1 font-bold">purchased_items (פריטים שנרכשו)</div>
-                  <div className="text-2xl font-bold text-white">{((debugStudent.purchased_items || []).length).toLocaleString()}</div>
-                  <div className="text-white/60 text-xs mt-2">items_value: {(debugStudent.items_value || 0).toLocaleString()}</div>
+                  <div className="text-purple-200 text-xs mb-1 font-bold">items_value (ערך פריטים מהחנות)</div>
+                  <div className="text-2xl font-bold text-white">{(debugStudent.items_value || 0).toLocaleString()}</div>
+                  <div className="text-white/60 text-xs mt-2">מספר פריטים: {((debugStudent.purchased_items || []).length)}</div>
                 </div>
                 <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 rounded-lg p-4 border border-yellow-500/30">
                   <div className="text-yellow-200 text-xs mb-1 font-bold">total_assets (שווי כולל)</div>
-                  <div className="text-2xl font-bold text-white">{((debugStudent.coins || 0) + (debugStudent.items_value || 0)).toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-white">{((debugStudent.coins || 0) + (debugStudent.investments_value || 0) + (debugStudent.items_value || 0)).toLocaleString()}</div>
                 </div>
               </div>
 
