@@ -254,6 +254,7 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
     let snapshot;
     if (existingSnapshots.length > 0) {
       // Update existing
+      console.log('1️⃣2️⃣ Updating existing snapshot...');
       snapshot = await base44.entities.StudentEconomySnapshot.update(
         existingSnapshots[0].id,
         snapshotData
@@ -261,6 +262,7 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
       console.log(`✅ Updated snapshot for ${studentEmail}`);
     } else {
       // Create new
+      console.log('1️⃣3️⃣ Creating new snapshot...');
       snapshot = await base44.entities.StudentEconomySnapshot.create(snapshotData);
       console.log(`✅ Created snapshot for ${studentEmail}`);
     }
