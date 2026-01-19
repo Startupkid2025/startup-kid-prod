@@ -145,7 +145,7 @@ export default function EconomyAdminPanel() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white">Economy Admin Panel</h2>
-        <Button onClick={loadSnapshots} disabled={loading} variant="outline">
+        <Button onClick={loadSnapshots} disabled={loading} className="bg-white/20 hover:bg-white/30 text-white border-white/30">
           <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           רענן
         </Button>
@@ -163,7 +163,7 @@ export default function EconomyAdminPanel() {
               className="pr-10 bg-white/5 border-white/20 text-white"
             />
           </div>
-          <Button onClick={toggleSelectAll} variant="outline">
+          <Button onClick={toggleSelectAll} className="bg-white/20 hover:bg-white/30 text-white border-white/30">
             {selectedEmails.size === filteredSnapshots.length ? "בטל הכל" : "בחר הכל"}
           </Button>
         </div>
