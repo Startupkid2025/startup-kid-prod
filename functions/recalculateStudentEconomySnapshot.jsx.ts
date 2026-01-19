@@ -27,148 +27,171 @@ const AVATAR_ITEMS = {
 };
 
 export default async function recalculateStudentEconomySnapshot(params) {
-  const { studentEmail, reason = "manual", previewOnly = false } = params || {};
+  try {
+    const { studentEmail, reason = "manual", previewOnly = false } = params || {};
 
-  console.log("💰 recalculateStudentEconomySnapshot called", {
-    studentEmail,
-    reason,
-    previewOnly,
-    ts: new Date().toISOString(),
-  });
+    console.log("💰 recalculateStudentEconomySnapshot called with params:", {
+      studentEmail,
+      reason,
+      previewOnly,
+      ts: new Date().toISOString(),
+    });
 
-  if (!studentEmail) {
-    throw new Error("Missing studentEmail");
+    if (!studentEmail) {
+      throw new Error("Missing studentEmail parameter");
+    }
+
+    // Fetch all data in parallel
+    const [
+      users,
+      wordProgress,
+      mathProgress,
+      participations,
+      quizProgress,
+      investments
+    ] = await Promise.all([
+      base44.entities.User.filter({ email: studentEmail }),
+      base44.entities.WordProgress.filter({ student_email: studentEmail }),
+      base44.entities.MathProgress.filter({ student_email: studentEmail }),
+      base44.entities.LessonParticipation.filter({ student_email: studentEmail }),
+      base44.entities.QuizProgress.filter({ student_email: studentEmail }),
+      base44.entities.Investment.filter({ student_email: studentEmail })
+    ]);
+
+    if (!users || users.length === 0) {
+      throw new Error(`User not found: ${studentEmail}`);
+    }
+
+    const user = users[0];
+
+    // INCOME BREAKDOWN
+    const income = {
+      base_signup: 500,
+      lessons: (user.total_lessons || 0) * 100,
+      vocabulary: (wordProgress || []).reduce((sum, w) => sum + (w.coins_earned || 0), 0),
+      math: (mathProgress || []).reduce((sum, m) => sum + (m.coins_earned || 0), 0),
+      surveys: (participations || []).filter(p => p.survey_completed === true).length * 70,
+      quizzes: (quizProgress || []).reduce((sum, q) => sum + (q.coins_earned || 0), 0),
+      work: user.total_work_earnings || 0,
+      collaboration: user.total_collaboration_coins || 0,
+      login_streak: user.total_login_streak_coins || 0,
+      passive_income: user.total_passive_income || 0,
+      admin_bonus: user.total_admin_coins || 0,
+      investment_profit_realized: user.total_realized_investment_profit || 0
+    };
+
+    if (user.completed_instagram_follow) income.instagram_follow = 50;
+    if (user.completed_youtube_subscribe) income.youtube_subscribe = 50;
+    if (user.completed_facebook_follow) income.facebook_follow = 50;
+    if (user.completed_discord_join) income.discord_join = 50;
+    if (user.completed_share) income.share_bonus = 100;
+
+    if (user.age) income.profile_age = 20;
+    if (user.bio && user.bio.length > 10) income.profile_bio = 30;
+    if (user.phone_number) income.profile_phone = 20;
+
+    const totalIncome = Object.values(income).reduce((sum, val) => sum + val, 0);
+
+    // EXPENSE BREAKDOWN
+    const expenses = {
+      inflation: user.total_inflation_lost || 0,
+      capital_gains_tax: user.total_capital_gains_tax || 0,
+      investment_fees: user.total_investment_fees || 0,
+      item_sale_losses: user.total_item_sale_losses || 0
+    };
+
+    const totalExpenses = Object.values(expenses).reduce((sum, val) => sum + val, 0);
+
+    // ITEMS VALUE
+    const purchasedItems = user.purchased_items || [];
+    let itemsValue = 0;
+    for (const itemId of purchasedItems) {
+      const item = AVATAR_ITEMS[itemId];
+      if (item?.price) itemsValue += item.price;
+    }
+
+    // INVESTMENTS
+    const investmentsSpent = (investments || []).reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
+    const investmentsValue = (investments || []).reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+    const investmentProfitUnrealized = investmentsValue - investmentsSpent;
+
+    // COINS CASH (Source of Truth)
+    const coinsCash = Math.round(totalIncome - totalExpenses - itemsValue - investmentsSpent);
+
+    // TOTAL ASSETS
+    const totalAssets = coinsCash + investmentsValue + itemsValue;
+
+    // SNAPSHOT DATA
+    const snapshotData = {
+      student_email: studentEmail,
+      full_name: user.full_name,
+      first_name: user.first_name || user.full_name?.split(" ")?.[0] || "",
+      last_name: user.last_name || user.full_name?.split(" ")?.slice(1)?.join(" ") || "",
+      user_type: user.user_type || "student",
+
+      coins_cash: coinsCash,
+      investments_value: investmentsValue,
+      items_value: itemsValue,
+      total_assets: totalAssets,
+
+      income_breakdown: income,
+      expense_breakdown: expenses,
+
+      investment_profit_unrealized: investmentProfitUnrealized,
+      investment_profit_realized: user.total_realized_investment_profit || 0,
+
+      capital_gains_tax_paid: user.total_capital_gains_tax || 0,
+      fees_paid: user.total_investment_fees || 0,
+      inflation_loss: user.total_inflation_lost || 0,
+
+      last_calculated_at: new Date().toISOString(),
+      snapshot_version: 2,
+
+      equipped_items: user.equipped_items || {},
+      purchased_items: purchasedItems
+    };
+
+    console.log("📊 Snapshot calculated", {
+      studentEmail,
+      coinsCash,
+      investmentsValue,
+      itemsValue,
+      totalAssets,
+      totalIncome,
+      totalExpenses
+    });
+
+    // PREVIEW ONLY: return without writing to DB
+    if (previewOnly === true) {
+      console.log("👁️ Preview mode - no DB write", { studentEmail });
+      return snapshotData;
+    }
+
+    // UPSERT snapshot to database
+    const existing = await base44.entities.StudentEconomySnapshot.filter({ student_email: studentEmail });
+
+    let saved;
+    if (existing && existing.length > 0) {
+      saved = await base44.entities.StudentEconomySnapshot.update(existing[0].id, snapshotData);
+      console.log("✅ Updated StudentEconomySnapshot", { studentEmail, id: existing[0].id });
+    } else {
+      saved = await base44.entities.StudentEconomySnapshot.create(snapshotData);
+      console.log("✅ Created StudentEconomySnapshot", { studentEmail, id: saved?.id });
+    }
+
+    return saved;
+
+  } catch (error) {
+    console.error("❌ recalculateStudentEconomySnapshot error:", {
+      studentEmail: params?.studentEmail,
+      error: error.message,
+      stack: error.stack
+    });
+
+    return {
+      ok: false,
+      error: error.message,
+      stack: error.stack
+    };
   }
-
-  // Fetch all data
-  const [
-    users,
-    wordProgress,
-    mathProgress,
-    participations,
-    quizProgress,
-    investments
-  ] = await Promise.all([
-    base44.entities.User.filter({ email: studentEmail }),
-    base44.entities.WordProgress.filter({ student_email: studentEmail }),
-    base44.entities.MathProgress.filter({ student_email: studentEmail }),
-    base44.entities.LessonParticipation.filter({ student_email: studentEmail }),
-    base44.entities.QuizProgress.filter({ student_email: studentEmail }),
-    base44.entities.Investment.filter({ student_email: studentEmail })
-  ]);
-
-  if (!users || users.length === 0) {
-    throw new Error(`User not found: ${studentEmail}`);
-  }
-
-  const user = users[0];
-
-  const income = {
-    base_signup: 500,
-    lessons: (user.total_lessons || 0) * 100,
-    vocabulary: (wordProgress || []).reduce((sum, w) => sum + (w.coins_earned || 0), 0),
-    math: (mathProgress || []).reduce((sum, m) => sum + (m.coins_earned || 0), 0),
-    surveys: (participations || []).filter(p => p.survey_completed === true).length * 70,
-    quizzes: (quizProgress || []).reduce((sum, q) => sum + (q.coins_earned || 0), 0),
-    work: user.total_work_earnings || 0,
-    collaboration: user.total_collaboration_coins || 0,
-    login_streak: user.total_login_streak_coins || 0,
-    passive_income: user.total_passive_income || 0,
-    admin_bonus: user.total_admin_coins || 0,
-    investment_profit_realized: user.total_realized_investment_profit || 0
-  };
-
-  if (user.completed_instagram_follow) income.instagram_follow = 50;
-  if (user.completed_youtube_subscribe) income.youtube_subscribe = 50;
-  if (user.completed_facebook_follow) income.facebook_follow = 50;
-  if (user.completed_discord_join) income.discord_join = 50;
-  if (user.completed_share) income.share_bonus = 100;
-
-  if (user.age) income.profile_age = 20;
-  if (user.bio && user.bio.length > 10) income.profile_bio = 30;
-  if (user.phone_number) income.profile_phone = 20;
-
-  const totalIncome = Object.values(income).reduce((sum, val) => sum + val, 0);
-
-  const expenses = {
-    inflation: user.total_inflation_lost || 0,
-    capital_gains_tax: user.total_capital_gains_tax || 0,
-    investment_fees: user.total_investment_fees || 0,
-    item_sale_losses: user.total_item_sale_losses || 0
-  };
-
-  const totalExpenses = Object.values(expenses).reduce((sum, val) => sum + val, 0);
-
-  const purchasedItems = user.purchased_items || [];
-  let itemsValue = 0;
-  for (const itemId of purchasedItems) {
-    const item = AVATAR_ITEMS[itemId];
-    if (item?.price) itemsValue += item.price;
-  }
-
-  const investmentsSpent = (investments || []).reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
-  const investmentsValue = (investments || []).reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-  const investmentProfitUnrealized = investmentsValue - investmentsSpent;
-
-  const coinsCash = Math.round(totalIncome - totalExpenses - itemsValue - investmentsSpent);
-  const totalAssets = coinsCash + investmentsValue + itemsValue;
-
-  const snapshotData = {
-    student_email: studentEmail,
-    full_name: user.full_name,
-    first_name: user.first_name || user.full_name?.split(" ")?.[0] || "",
-    last_name: user.last_name || user.full_name?.split(" ")?.slice(1)?.join(" ") || "",
-    user_type: user.user_type || "student",
-
-    coins_cash: coinsCash,
-    investments_value: investmentsValue,
-    items_value: itemsValue,
-    total_assets: totalAssets,
-
-    income_breakdown: income,
-    expense_breakdown: expenses,
-
-    investment_profit_unrealized: investmentProfitUnrealized,
-    investment_profit_realized: user.total_realized_investment_profit || 0,
-
-    capital_gains_tax_paid: user.total_capital_gains_tax || 0,
-    fees_paid: user.total_investment_fees || 0,
-    inflation_loss: user.total_inflation_lost || 0,
-
-    last_calculated_at: new Date().toISOString(),
-    snapshot_version: 2,
-
-    equipped_items: user.equipped_items || {},
-    purchased_items: purchasedItems
-  };
-
-  console.log("📊 Snapshot calculated", {
-    studentEmail,
-    coinsCash,
-    investmentsValue,
-    itemsValue,
-    totalAssets,
-    totalIncome,
-    totalExpenses
-  });
-
-  // PREVIEW ONLY: return without writing
-  if (previewOnly === true) {
-    console.log("👁️ Preview mode - no DB write", { studentEmail });
-    return snapshotData;
-  }
-
-  // UPSERT snapshot
-  const existing = await base44.entities.StudentEconomySnapshot.filter({ student_email: studentEmail });
-
-  let saved;
-  if (existing && existing.length > 0) {
-    saved = await base44.entities.StudentEconomySnapshot.update(existing[0].id, snapshotData);
-    console.log("✅ Updated StudentEconomySnapshot", { studentEmail, id: existing[0].id });
-  } else {
-    saved = await base44.entities.StudentEconomySnapshot.create(snapshotData);
-    console.log("✅ Created StudentEconomySnapshot", { studentEmail, id: saved?.id });
-  }
-
-  return saved;
 }
