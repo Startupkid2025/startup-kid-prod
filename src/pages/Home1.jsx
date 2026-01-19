@@ -360,6 +360,39 @@ export default function Home() {
 
       // DON'T subtract investments! They are assets, not expenses
       const correctCoins = Math.round(totalIncome - itemsValue - totalLosses);
+      
+      console.log(`\n💰 HOME1 - Coin Recalculation for ${user.email}:`);
+      console.log(`  📥 INCOME BREAKDOWN:`);
+      console.log(`    base: ${baseCoins}`);
+      console.log(`    lessons: ${lessonsCoins} (${user.total_lessons || 0} × 100)`);
+      console.log(`    vocabulary: ${wordCoins}`);
+      console.log(`    math: ${mathCoins}`);
+      console.log(`    surveys: ${surveyCoins}`);
+      console.log(`    quizzes: ${quizCoins}`);
+      console.log(`    profileTasks: ${profileTasksCoins}`);
+      console.log(`    profileDetails: ${profileDetailsCoins}`);
+      console.log(`    work: ${workCoins}`);
+      console.log(`    collaboration: ${collaborationCoins}`);
+      console.log(`    loginStreak: ${loginStreakCoins}`);
+      console.log(`    passiveIncome: ${passiveIncomeCoins}`);
+      console.log(`    investmentProfit (realized): ${totalInvestmentProfit}`);
+      console.log(`    ✅ TOTAL INCOME: ${totalIncome}`);
+      console.log(`\n  📦 ASSETS:`);
+      console.log(`    items: ${itemsValue}`);
+      console.log(`    investments: ${investmentsValue} (NOT subtracted from coins!)`);
+      console.log(`\n  📉 LOSSES:`);
+      console.log(`    inflation: ${inflationLoss}`);
+      console.log(`    incomeTax: ${incomeTax}`);
+      console.log(`    capitalGainsTax: ${capitalGainsTax}`);
+      console.log(`    creditInterest: ${creditInterest}`);
+      console.log(`    itemSaleLosses: ${itemSaleLosses}`);
+      console.log(`    investmentFees: ${investmentFees}`);
+      console.log(`    dividendTax: ${dividendTax}`);
+      console.log(`    ✅ TOTAL LOSSES: ${totalLosses}`);
+      console.log(`\n  🧮 CALCULATION:`);
+      console.log(`    ${totalIncome} - ${itemsValue} - ${totalLosses} = ${correctCoins}`);
+      console.log(`    Current user.coins: ${user.coins || 0}`);
+      console.log(`    Difference: ${correctCoins - (user.coins || 0)}\n`);
 
       return correctCoins;
     } catch (error) {
@@ -511,7 +544,15 @@ export default function Home() {
       const userInvestments = await base44.entities.Investment.list();
       const myInvestments = userInvestments.filter(inv => inv.student_email === userData.email);
       const investmentsValue = myInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-      return currentCoins + itemsValue + investmentsValue;
+      const netWorth = currentCoins + itemsValue + investmentsValue;
+      
+      console.log(`\n💎 HOME1 - Net Worth Calculation for ${userData.email}:`);
+      console.log(`  coins: ${currentCoins}`);
+      console.log(`  items: ${itemsValue}`);
+      console.log(`  investments: ${investmentsValue}`);
+      console.log(`  ✅ NET WORTH: ${netWorth}\n`);
+      
+      return netWorth;
     } catch (error) {
       console.error("Error calculating net worth:", error);
       return currentCoins + itemsValue;
@@ -659,6 +700,15 @@ export default function Home() {
                       }
 
                       dividendTax = userData?.daily_dividend_tax || 0;
+                      
+                      console.log(`\n💸 HOME1 - Expected Daily Losses for ${userData?.email}:`);
+                      console.log(`  currentCoins: ${currentCoins}`);
+                      console.log(`  netWorth: ${netWorth}`);
+                      console.log(`  inflationLoss (3% on cash): ${inflationLoss}`);
+                      console.log(`  incomeTax (${(incomeTaxRate * 100).toFixed(2)}% on netWorth): ${incomeTax}`);
+                      console.log(`  creditInterest (10% on negative): ${creditInterest}`);
+                      console.log(`  dividendTax (from investments): ${dividendTax}`);
+                      console.log(`  ✅ TOTAL EXPECTED DAILY LOSS: ${inflationLoss + incomeTax + creditInterest + dividendTax}\n`);
 
                       return (
                         <>
