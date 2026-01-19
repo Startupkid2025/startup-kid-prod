@@ -221,6 +221,20 @@ export default function EconomyAdminPanel() {
     await loadSnapshots();
   };
 
+  const recalculateVocabularyCoins = async (studentEmail) => {
+    try {
+      const wordProgress = await base44.entities.WordProgress.filter({ student_email: studentEmail });
+
+      // חשב כסף מתשובות נכונות
+      const totalCoins = wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
+
+      toast.success(`✅ סה"כ כסף מאנגלית: ${totalCoins} מטבעות`);
+    } catch (error) {
+      console.error("Error recalculating vocabulary coins:", error);
+      toast.error("שגיאה בחישוב כסף אנגלית");
+    }
+  };
+
   const loadStudentData = async (studentEmail) => {
     try {
       const [user, wordProgress, mathProgress, participations, quizProgress] = await Promise.all([
