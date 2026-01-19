@@ -33,7 +33,16 @@ export default function EconomyAdminPanel() {
     setLoading(true);
     try {
       // Check admin permissions first
-      const currentUser = await base44.auth.me();
+      let currentUser;
+      try {
+        currentUser = await base44.auth.me();
+      } catch (authError) {
+        console.error("Auth error:", authError);
+        toast.error("שגיאה באימות משתמש");
+        setLoading(false);
+        return;
+      }
+
       if (currentUser.role !== 'admin') {
         toast.error("אין הרשאות גישה");
         setLoading(false);
@@ -41,14 +50,21 @@ export default function EconomyAdminPanel() {
       }
 
       console.log("Loading users...");
-      const usersData = await base44.entities.User.list();
-      console.log(`Loaded ${usersData.length} users`);
+      let usersData;
+      try {
+        usersData = await base44.entities.User.list();
+        console.log(`Loaded ${usersData.length} users`);
+      } catch (userError) {
+        console.error("Error loading users:", userError?.response?.status, userError?.response?.data, userError);
+        toast.error("שגיאה בטעינת משתמשים");
+        setLoading(false);
+        return;
+      }
       
       const allStudents = usersData.filter(u => u.user_type === 'student');
       console.log(`Found ${allStudents.length} students`);
       
       // Create merged list directly from users
-      // Don't try to load StudentEconomySnapshot - it may not exist or may cause errors
       const merged = allStudents.map(user => ({
         student_email: user.email,
         full_name: user.full_name,
@@ -64,8 +80,8 @@ export default function EconomyAdminPanel() {
       setStudents(merged);
       setSnapshots([]);
     } catch (error) {
-      console.error("Error loading data:", error?.response?.status, error?.message, error);
-      toast.error(`שגיאה בטעינת נתונים: ${error?.message || 'Unknown error'}`);
+      console.error("Unexpected error:", error?.response?.status, error?.response?.data, error?.message, error);
+      toast.error(`שגיאה: ${error?.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
