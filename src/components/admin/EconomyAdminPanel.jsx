@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { RefreshCw, Search, Eye } from "lucide-react";
+import recalculateStudentEconomySnapshot from "@/functions/recalculateStudentEconomySnapshot";
 
 export default function EconomyAdminPanel() {
   const [snapshots, setSnapshots] = useState([]);
@@ -116,7 +117,7 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < emails.length; i++) {
       try {
-        const result = await base44.functions.recalculateStudentEconomySnapshot({ 
+        const result = await recalculateStudentEconomySnapshot({ 
           studentEmail: emails[i], 
           reason: "preview", 
           previewOnly: true 
@@ -151,7 +152,7 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < previewResults.length; i++) {
       try {
-        await base44.functions.recalculateStudentEconomySnapshot({ 
+        await recalculateStudentEconomySnapshot({ 
           studentEmail: previewResults[i].email, 
           reason: "admin_selected", 
           previewOnly: false 
@@ -191,7 +192,7 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < students.length; i++) {
       try {
-        await base44.functions.recalculateStudentEconomySnapshot({ 
+        await recalculateStudentEconomySnapshot({ 
           studentEmail: students[i].student_email, 
           reason: "admin_all", 
           previewOnly: false 
