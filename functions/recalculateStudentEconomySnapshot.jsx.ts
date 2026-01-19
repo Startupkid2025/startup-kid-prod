@@ -123,6 +123,8 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
     const user = users[0];
     console.log('3️⃣ User loaded:', { email: user.email, full_name: user.full_name });
     
+    console.log('4️⃣ Calculating income breakdown...');
+
     // ========================================
     // INCOME BREAKDOWN
     // ========================================
