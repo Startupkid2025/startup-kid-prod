@@ -331,7 +331,8 @@ export default function Home() {
       const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
       const unrealizedProfit = investmentsValue - totalInvested;
       const realizedProfit = user.total_realized_investment_profit || 0;
-      const totalInvestmentProfit = unrealizedProfit + realizedProfit;
+      // Only count realized profit as income (unrealized is already in current_value/assets)
+      const totalInvestmentProfit = realizedProfit;
 
       const totalIncome = baseCoins + lessonsCoins + wordCoins + mathCoins + 
                          surveyCoins + quizCoins + profileTasksCoins + 

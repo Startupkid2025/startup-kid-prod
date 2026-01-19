@@ -124,7 +124,8 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       const totalInvestmentValue = studentInvestments.reduce((sum, inv) => sum + inv.current_value, 0);
       const unrealizedProfit = totalInvestmentValue - totalInvested;
       const realizedProfit = student.total_realized_investment_profit || 0;
-      const totalInvestmentProfit = unrealizedProfit + realizedProfit;
+      // Only count realized profit as income (unrealized is already in assets)
+      const totalInvestmentProfit = realizedProfit;
 
       // Calculate finance report - use ACTUAL participations, not total_lessons field
       const actualLessonsAttended = participations.filter(p => p.attended).length;
@@ -234,15 +235,30 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       const delta = totalIncome - (totalAssets + totalLosses);
       const incomeMatch = Math.abs(delta) < 1;
 
-      // Log debug info if there's a mismatch
+      // Enhanced debug logging for mismatches
       if (!incomeMatch) {
-        console.log("🧩 Balance Adjustment Needed:");
-        console.log(`   Income: ${totalIncome}`);
-        console.log(`   Assets: ${totalAssets}`);
-        console.log(`   Losses: ${totalLosses}`);
-        console.log(`   Assets + Losses: ${totalAssets + totalLosses}`);
-        console.log(`   Delta: ${delta}`);
-        console.log("   Possible causes: rounding, missing categories, or data timing");
+        console.log(`\n🧩 BALANCE MISMATCH for ${studentEmail}:`);
+        console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+        console.log(`💰 Income Categories:`);
+        Object.entries(income).forEach(([key, value]) => {
+          if (value > 0) console.log(`   ${key}: ${Math.round(value)}`);
+        });
+        console.log(`   ✅ Total Income: ${Math.round(totalIncome)}`);
+        console.log(`\n📦 Assets:`);
+        console.log(`   Cash: ${Math.round(assets.cash)}`);
+        console.log(`   Items: ${Math.round(assets.items)}`);
+        console.log(`   Investments: ${Math.round(assets.investments)}`);
+        console.log(`   ✅ Total Assets: ${Math.round(totalAssets)}`);
+        console.log(`\n📉 Losses:`);
+        Object.entries(losses).forEach(([key, value]) => {
+          if (value > 0) console.log(`   ${key}: ${Math.round(value)}`);
+        });
+        console.log(`   ✅ Total Losses: ${Math.round(totalLosses)}`);
+        console.log(`\n🔍 Calculation:`);
+        console.log(`   Income: ${Math.round(totalIncome)}`);
+        console.log(`   Assets + Losses: ${Math.round(totalAssets)} + ${Math.round(totalLosses)} = ${Math.round(totalAssets + totalLosses)}`);
+        console.log(`   ⚠️ Delta: ${Math.round(delta)}`);
+        console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
       }
 
       setFinanceReport({
