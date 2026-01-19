@@ -428,7 +428,8 @@ export default function Admin() {
           const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
           const unrealizedProfit = investmentsValue - totalInvested;
           const realizedProfit = user.total_realized_investment_profit || 0;
-          const totalInvestmentProfit = unrealizedProfit + realizedProfit;
+          // Only count REALIZED profit (unrealized is already in current_value)
+          const totalInvestmentProfit = realizedProfit;
 
           // Calculate expected income WITHOUT admin coins
           const expectedIncome = baseCoins + lessonsCoins + wordCoins + mathCoins + 
