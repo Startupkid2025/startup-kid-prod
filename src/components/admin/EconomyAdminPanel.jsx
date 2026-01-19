@@ -633,12 +633,43 @@ export default function EconomyAdminPanel() {
 
           {debugStudent && (
             <div className="space-y-6">
+              {/* Coins Breakdown */}
+              <div className="bg-yellow-500/10 rounded-lg p-4 border border-yellow-500/30 mb-6">
+                <h3 className="text-yellow-200 text-lg font-bold mb-3">💵 בדיקת כסף בעובר ושב</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                  <div>
+                    <span className="text-white/70">base_coins (כסף מההתחלה)</span>
+                    <div className="font-bold text-yellow-300">500</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">lessons_coins (כסף משיעורים)</span>
+                    <div className="font-bold text-yellow-300">{((debugStudent.total_lessons || 0) * 100).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">vocabulary_coins (כסף מאנגלית)</span>
+                    <div className="font-bold text-yellow-300">-</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">math_coins (כסף מחשבון)</span>
+                    <div className="font-bold text-yellow-300">-</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">surveys_coins (כסף מסקרים)</span>
+                    <div className="font-bold text-yellow-300">-</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">quizzes_coins (כסף מחידונים)</span>
+                    <div className="font-bold text-yellow-300">-</div>
+                  </div>
+                  <div className="col-span-2 bg-white/5 rounded p-2">
+                    <span className="text-white/70">coins (עו״ש בעובר ושב)</span>
+                    <div className="font-bold text-yellow-400 text-lg">{(debugStudent.coins || 0).toLocaleString()}</div>
+                  </div>
+                </div>
+              </div>
+
               {/* Main Stats Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-gradient-to-br from-blue-500/20 to-blue-500/5 rounded-lg p-4 border border-blue-500/30">
-                  <div className="text-blue-200 text-xs mb-1 font-bold">coins (עו״ש)</div>
-                  <div className="text-2xl font-bold text-white">{(debugStudent.coins || 0).toLocaleString()}</div>
-                </div>
                 <div className="bg-gradient-to-br from-green-500/20 to-green-500/5 rounded-lg p-4 border border-green-500/30">
                   <div className="text-green-200 text-xs mb-1 font-bold">total_lessons (שיעורים)</div>
                   <div className="text-2xl font-bold text-white">{(debugStudent.total_lessons || 0).toLocaleString()}</div>
@@ -650,6 +681,10 @@ export default function EconomyAdminPanel() {
                 <div className="bg-gradient-to-br from-orange-500/20 to-orange-500/5 rounded-lg p-4 border border-orange-500/30">
                   <div className="text-orange-200 text-xs mb-1 font-bold">mastered_math_questions (תרגילים)</div>
                   <div className="text-2xl font-bold text-white">{(debugStudent.mastered_math_questions || 0).toLocaleString()}</div>
+                </div>
+                <div className="bg-gradient-to-br from-pink-500/20 to-pink-500/5 rounded-lg p-4 border border-pink-500/30">
+                  <div className="text-pink-200 text-xs mb-1 font-bold">age (גיל)</div>
+                  <div className="text-2xl font-bold text-white">{debugStudent.age || '—'}</div>
                 </div>
               </div>
 
