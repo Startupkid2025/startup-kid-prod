@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { RefreshCw, Search, Eye } from "lucide-react";
+import recalculateStudentEconomySnapshot from "@/functions/recalculateStudentEconomySnapshot";
 
 export default function EconomyAdminPanel() {
   const [snapshots, setSnapshots] = useState([]);
@@ -25,10 +26,7 @@ export default function EconomyAdminPanel() {
   }, []);
 
   const runRecalc = async (email, mode) => {
-    return await base44.functions.call("recalculateStudentEconomySnapshot", {
-      student_email: email,
-      mode: mode
-    });
+    return await recalculateStudentEconomySnapshot(email, mode);
   };
 
   const loadSnapshots = async () => {
@@ -121,7 +119,7 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < emails.length; i++) {
       try {
-        const result = await runRecalc(emails[i], "preview");
+        const result = await recalculateStudentEconomySnapshot(emails[i], "preview", true);
         results.push({ email: emails[i], ...result });
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -152,7 +150,7 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < previewResults.length; i++) {
       try {
-        await runRecalc(previewResults[i].email, "admin_selected");
+        await recalculateStudentEconomySnapshot(previewResults[i].email, "admin_selected", false);
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {
@@ -188,7 +186,7 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < students.length; i++) {
       try {
-        await runRecalc(students[i].student_email, "admin_all");
+        await recalculateStudentEconomySnapshot(students[i].student_email, "admin_all", false);
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {
