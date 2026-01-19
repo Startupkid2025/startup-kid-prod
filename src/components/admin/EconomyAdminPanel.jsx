@@ -868,29 +868,6 @@ export default function EconomyAdminPanel() {
                 </div>
               </div>
 
-              {/* Income Sources */}
-              <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/30">
-                <h3 className="text-green-200 text-lg font-bold mb-3">💰 מקורות הכנסה</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                  <div>
-                    <span className="text-white/70">total_collaboration_coins</span>
-                    <div className="font-bold text-green-300">{(debugStudent.total_collaboration_coins || 0).toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <span className="text-white/70">total_login_streak_coins</span>
-                    <div className="font-bold text-green-300">{(debugStudent.total_login_streak_coins || 0).toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <span className="text-white/70">total_passive_income</span>
-                    <div className="font-bold text-green-300">{(debugStudent.total_passive_income || 0).toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <span className="text-white/70">total_admin_coins</span>
-                    <div className="font-bold text-green-300">{(debugStudent.total_admin_coins || 0).toLocaleString()}</div>
-                  </div>
-                </div>
-              </div>
-
               {/* Engagement Stats */}
               <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/30">
                 <h3 className="text-blue-200 text-lg font-bold mb-3">📈 סטטיסטיקות עסקה</h3>
