@@ -249,8 +249,6 @@ export default function EconomyAdminPanel() {
         mastered_words: masteredWords,
         mastered_math_questions: masteredMath,
         vocabulary_coins: vocabularyCoins,
-        correct_answers_coins: correctAnswersCoins,
-        mastery_bonus_coins: masteryBonusCoins,
         math_coins: mathCoins,
         survey_coins: surveyCoins,
         quiz_coins: quizCoins
