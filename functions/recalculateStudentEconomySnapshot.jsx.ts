@@ -97,6 +97,12 @@ export default async function recalculateStudentEconomySnapshot({ studentEmail, 
   console.log(`\n💰 Recalculating economy snapshot for ${studentEmail} (reason: ${reason}, preview: ${previewOnly})`);
   
   try {
+    // Admin check
+    const me = await base44.auth.me();
+    if (!me || me.role !== "admin") {
+      throw new Error("Unauthorized: admin only");
+    }
+
     // Fetch all data in parallel
     const [
       users,
