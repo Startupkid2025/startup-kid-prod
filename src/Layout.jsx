@@ -95,19 +95,9 @@ export default function Layout({ children }) {
     try {
       const user = await base44.auth.me();
       
-      // One-time fix for Daniel's work hours
-      if (user.email === 'daniel@smeianikov.com' && user.total_work_hours !== 19) {
-        await base44.auth.updateMe({ total_work_hours: 19 });
-      }
-
-      // Apply daily taxes and dividend tax to all users (runs automatically in background)
-      applyDailyTaxesToAllUsers().catch(error => {
-        console.error("Error applying taxes to all users:", error);
-      });
-
-      // Apply daily dividend tax from investment profits
-      applyDailyDividendTax(user).catch(error => {
-        console.error("Error applying dividend tax:", error);
+      // Apply daily economy updates for current user only (inflation + credit interest)
+      applyDailyEconomyForCurrentUser(user).catch(error => {
+        console.error("Error applying daily economy:", error);
       });
       
       setCurrentUser(user);
@@ -116,247 +106,85 @@ export default function Layout({ children }) {
     }
   };
 
-  const applyDailyDividendTax = async (user) => {
+  const applyDailyEconomyForCurrentUser = async (user) => {
     try {
       const today = new Date().toISOString().split('T')[0];
-      const lastDividendDate = user.last_dividend_date;
+      const lastTaxDate = user.last_tax_date;
 
-      // If already applied dividend tax today, do nothing
-      if (lastDividendDate === today) {
+      // If already processed today, skip
+      if (lastTaxDate === today) {
         return;
       }
 
-      // Get all investments for this user
-      const allInvestments = await base44.entities.Investment.list();
-      const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
-
-      if (userInvestments.length === 0) {
-        await base44.auth.updateMe({
-          last_dividend_date: today
-        });
-        return;
+      // Calculate days passed
+      let daysPassed = 1;
+      if (lastTaxDate) {
+        const lastDate = new Date(lastTaxDate);
+        const todayDate = new Date(today);
+        daysPassed = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+        daysPassed = Math.min(daysPassed, 30); // Cap at 30 days
       }
 
-      // Get today's market data
-      const todayMarketData = await base44.entities.DailyMarketPerformance.filter({ date: today });
-      if (todayMarketData.length === 0) {
-        await base44.auth.updateMe({
-          last_dividend_date: today
-        });
-        return;
-      }
+      let newCoins = user.coins || 0;
+      let totalInflationLoss = 0;
+      let totalCreditInterest = 0;
+      let totalPassiveIncome = 0;
 
-      const todayMarket = todayMarketData[0];
-      const marketChanges = {
-        government_bonds: todayMarket.government_bonds_change || 0,
-        real_estate: todayMarket.real_estate_change || 0,
-        gold: todayMarket.gold_change || 0,
-        stock_market: todayMarket.stock_market_change || 0,
-        tech_startup: todayMarket.tech_startup_change || 0,
-        crypto: todayMarket.crypto_change || 0
-      };
-
-      // Calculate 25% dividend tax on daily profits (with mouth reductions)
-      let totalDailyProfit = 0;
-      userInvestments.forEach(inv => {
-        const changePercent = marketChanges[inv.business_type] || 0;
-        if (changePercent > 0) {
-          const profit = Math.floor(inv.current_value * (changePercent / 100));
-          totalDailyProfit += profit;
+      // Apply for all missed days
+      for (let i = 0; i < daysPassed; i++) {
+        // Passive income from backgrounds
+        const equippedBackground = user.equipped_items?.background;
+        if (equippedBackground) {
+          const bgItem = AVATAR_ITEMS[equippedBackground];
+          if (bgItem && bgItem.passiveIncome > 0) {
+            totalPassiveIncome += bgItem.passiveIncome;
+            newCoins += bgItem.passiveIncome;
+          }
         }
+
+        // Inflation: 3% on cash only (only if positive)
+        if (newCoins > 0) {
+          const inflationLoss = Math.floor(newCoins * 0.03);
+          if (inflationLoss > 0) {
+            totalInflationLoss += inflationLoss;
+            newCoins -= inflationLoss;
+          }
+        }
+
+        // Credit interest: 10% per day on negative balance only
+        if (newCoins < 0) {
+          const creditInterest = Math.floor(Math.abs(newCoins) * 0.10);
+          if (creditInterest > 0) {
+            totalCreditInterest += creditInterest;
+            newCoins -= creditInterest;
+          }
+        }
+      }
+
+      // Update user
+      await base44.auth.updateMe({
+        coins: newCoins,
+        last_tax_date: today,
+        total_inflation_lost: (user.total_inflation_lost || 0) + totalInflationLoss,
+        total_credit_interest: (user.total_credit_interest || 0) + totalCreditInterest,
+        total_passive_income: (user.total_passive_income || 0) + totalPassiveIncome
       });
 
-      let dividendTax = 0;
-      if (totalDailyProfit > 0) {
-        // Base dividend tax rate: 25%
-        let dividendTaxRate = 0.25;
-
-        // Check if user has mouth item that reduces dividend tax
-        const equippedMouth = user.equipped_items?.mouth;
-        if (equippedMouth) {
-          const mouthItem = AVATAR_ITEMS[equippedMouth];
-          if (mouthItem && mouthItem.dividendTaxReduction) {
-            dividendTaxRate = Math.max(0, dividendTaxRate - (mouthItem.dividendTaxReduction / 100));
-          }
-        }
-
-        dividendTax = Math.floor(totalDailyProfit * dividendTaxRate);
-
-        const newCoins = (user.coins || 0) - dividendTax;
-        await base44.auth.updateMe({
-          coins: newCoins,
-          last_dividend_date: today,
-          total_dividend_tax: (user.total_dividend_tax || 0) + dividendTax,
-          daily_dividend_tax: dividendTax
-        });
-
-        // Sync to LeaderboardEntry for public visibility
-        await syncLeaderboardEntry(user.email, {
-          coins: newCoins,
-          total_dividend_tax: (user.total_dividend_tax || 0) + dividendTax
-        });
-      } else {
-        await base44.auth.updateMe({
-          last_dividend_date: today,
-          daily_dividend_tax: 0
-        });
-      }
+      // Sync to LeaderboardEntry
+      await syncLeaderboardEntry(user.email, {
+        coins: newCoins,
+        total_inflation_lost: (user.total_inflation_lost || 0) + totalInflationLoss,
+        total_credit_interest: (user.total_credit_interest || 0) + totalCreditInterest,
+        total_passive_income: (user.total_passive_income || 0) + totalPassiveIncome
+      });
     } catch (error) {
-      console.error("Error applying dividend tax:", error);
+      console.error("Error applying daily economy:", error);
     }
   };
 
 
 
-  const applyDailyTaxesToAllUsers = async () => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const allUsers = await base44.entities.User.list();
-      const allInvestments = await base44.entities.Investment.list();
 
-      // Filter only students
-      const students = allUsers.filter(u => u.user_type === 'student');
-
-      for (let i = 0; i < students.length; i++) {
-        const user = students[i];
-        
-        // Estimate work hours if missing (one-time migration)
-        if ((user.total_work_earnings || 0) > 0 && !(user.total_work_hours > 0)) {
-          const excludedEmails = ['alon@binder.co.il', 'daniel@smeianikov.com'];
-          const divisor = excludedEmails.includes(user.email) ? 50 : 10;
-          const estimatedHours = Math.floor((user.total_work_earnings || 0) / divisor);
-          if (estimatedHours > 0) {
-            try {
-              await base44.entities.User.update(user.id, {
-                total_work_hours: estimatedHours
-              });
-              // Add a small delay to avoid rate limiting
-              await new Promise(resolve => setTimeout(resolve, 100));
-            } catch (error) {
-              console.error("Error updating work hours for user:", user.email, error);
-            }
-          }
-        }
-        
-        const lastTaxDate = user.last_tax_date;
-
-        if (!lastTaxDate || lastTaxDate < today) {
-          try {
-            // Calculate days passed
-            let daysPassed = 1;
-            if (lastTaxDate) {
-              const lastDate = new Date(lastTaxDate);
-              const todayDate = new Date(today);
-              daysPassed = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
-              daysPassed = Math.min(daysPassed, 30); // Cap at 30 days
-            }
-
-            const currentCoins = user.coins || 0;
-
-            // Calculate current net worth
-            const purchasedItems = user.purchased_items || [];
-            let itemsValue = 0;
-            purchasedItems.forEach(itemId => {
-              const item = AVATAR_ITEMS[itemId];
-              if (item) {
-                itemsValue += item.price || 0;
-              }
-            });
-
-            // Get investments value
-            const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
-            const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-            const currentNetWorth = currentCoins + itemsValue + investmentsValue;
-
-            // Apply taxes for all days missed
-            let newCoins = currentCoins;
-            let totalInflationLoss = 0;
-            let totalIncomeTax = 0;
-            let totalCreditInterest = 0;
-            let totalPassiveIncome = 0;
-
-            for (let i = 0; i < daysPassed; i++) {
-              // Passive income from backgrounds
-              const equippedBackground = user.equipped_items?.background;
-              if (equippedBackground) {
-                const bgItem = AVATAR_ITEMS[equippedBackground];
-                if (bgItem && bgItem.passiveIncome > 0) {
-                  totalPassiveIncome += bgItem.passiveIncome;
-                  newCoins += bgItem.passiveIncome;
-                }
-              }
-
-              // Inflation: 3% on cash only (only if positive)
-              if (newCoins > 0) {
-                const inflationLoss = Math.floor(newCoins * 0.03);
-                if (inflationLoss > 0) {
-                  totalInflationLoss += inflationLoss;
-                  newCoins -= inflationLoss;
-                }
-              }
-
-              // Income tax: 1.5% on total net worth (taken from cash)
-              // But can be reduced by owning body colors! Each color has different reduction
-              let incomeTaxRate = 0.015; // Base rate: 1.5%
-
-              // Calculate tax reduction based on owned body colors
-              for (const itemId of purchasedItems) {
-                const item = AVATAR_ITEMS[itemId];
-                if (item && item.category === 'body' && item.taxReduction) {
-                  incomeTaxRate = Math.max(0, incomeTaxRate - (item.taxReduction / 100));
-                }
-              }
-
-              // Recalculate net worth with current coins
-              const currentDayNetWorth = newCoins + itemsValue + investmentsValue;
-              const incomeTax = Math.floor(currentDayNetWorth * incomeTaxRate);
-              if (incomeTax > 0) {
-                totalIncomeTax += incomeTax;
-                newCoins -= incomeTax;
-              }
-
-              // Credit interest: 10% per day on negative balance only
-              if (newCoins < 0) {
-                const creditInterest = Math.floor(Math.abs(newCoins) * 0.10);
-                if (creditInterest > 0) {
-                  totalCreditInterest += creditInterest;
-                  newCoins -= creditInterest;
-                }
-              }
-            }
-
-            await base44.entities.User.update(user.id, {
-              coins: newCoins,
-              last_tax_date: today,
-              total_inflation_lost: (user.total_inflation_lost || 0) + totalInflationLoss,
-              total_income_tax: (user.total_income_tax || 0) + totalIncomeTax,
-              total_credit_interest: (user.total_credit_interest || 0) + totalCreditInterest,
-              total_passive_income: (user.total_passive_income || 0) + totalPassiveIncome
-            });
-
-            // Sync to LeaderboardEntry for public visibility
-            await syncLeaderboardEntry(user.email, {
-              coins: newCoins,
-              total_inflation_lost: (user.total_inflation_lost || 0) + totalInflationLoss,
-              total_income_tax: (user.total_income_tax || 0) + totalIncomeTax,
-              total_credit_interest: (user.total_credit_interest || 0) + totalCreditInterest,
-              total_passive_income: (user.total_passive_income || 0) + totalPassiveIncome
-            });
-
-            // Add delay between user updates to avoid rate limiting
-            if (i < students.length - 1) {
-              await new Promise(resolve => setTimeout(resolve, 200));
-            }
-          } catch (error) {
-            console.error("Error applying taxes to user:", user.email, error);
-            // Continue with next user even if one fails
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error applying taxes to all users:", error);
-    }
-  };
 
   const navItems = [
     { name: "בית", path: createPageUrl("Home1"), icon: Home, roles: ["user", "admin"] },
