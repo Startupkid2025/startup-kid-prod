@@ -24,9 +24,11 @@ export default function EconomyAdminPanel() {
     loadSnapshots();
   }, []);
 
-  const runRecalc = async (email, reason) => {
-    const { recalculateStudentEconomySnapshot } = await import("@/functions/recalculateStudentEconomySnapshot");
-    return await recalculateStudentEconomySnapshot(email, reason);
+  const runRecalc = async (email, mode) => {
+    return await base44.functions.call("recalculateStudentEconomySnapshot", {
+      student_email: email,
+      mode: mode
+    });
   };
 
   const loadSnapshots = async () => {
@@ -124,7 +126,7 @@ export default function EconomyAdminPanel() {
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 100));
       } catch (error) {
-        console.error(`Error for ${emails[i]}:`, error);
+        console.error(`Error for ${emails[i]}:`, error, error?.response?.data);
         results.push({ email: emails[i], error: error.message });
         setProgress(prev => ({ ...prev, current: i + 1 }));
       }
@@ -154,7 +156,7 @@ export default function EconomyAdminPanel() {
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {
-        console.error(`Error for ${previewResults[i].email}:`, error);
+        console.error(`Error for ${previewResults[i].email}:`, error, error?.response?.data);
         errors.push({ email: previewResults[i].email, error: error.message });
         setProgress(prev => ({ ...prev, current: i + 1, errors }));
       }
@@ -190,7 +192,7 @@ export default function EconomyAdminPanel() {
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {
-        console.error(`Error for ${students[i].student_email}:`, error);
+        console.error(`Error for ${students[i].student_email}:`, error, error?.response?.data);
         errors.push({ email: students[i].student_email, error: error.message });
         setProgress(prev => ({ ...prev, current: i + 1, errors }));
       }
@@ -374,7 +376,7 @@ export default function EconomyAdminPanel() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredSnapshots.map((snapshot) => (
             <div 
-              key={snapshot.id || snapshot.student_email}
+              key={snapshot.student_email}
               onClick={() => toggleSelect(snapshot.student_email)}
               className={`
                 relative cursor-pointer rounded-lg p-4 border-2 transition-all
@@ -473,7 +475,7 @@ export default function EconomyAdminPanel() {
             </thead>
             <tbody>
               {filteredSnapshots.map((snapshot) => (
-                <tr key={snapshot.id || snapshot.student_email} className="border-t border-white/10 hover:bg-white/5">
+                <tr key={snapshot.student_email} className="border-t border-white/10 hover:bg-white/5">
                   <td className="px-4 py-3">
                     <div className="flex items-center">
                       <Checkbox
