@@ -116,15 +116,10 @@ export default function EconomyAdminPanel() {
 
     console.log("base44.functions keys:", Object.keys(base44.functions || {}));
 
-    if (typeof base44.functions?.recalculateStudentEconomySnapshot !== "function") {
-      console.error("❌ Missing function base44.functions.recalculateStudentEconomySnapshot", base44.functions);
-      toast.error("הפונקציה לא נטענה (בדוק Functions ב-Base44)");
-      return;
-    }
-
     for (let i = 0; i < emails.length; i++) {
       try {
-        const result = await base44.functions.recalculateStudentEconomySnapshot({
+        console.log(`Calling recalculateStudentEconomySnapshot for ${emails[i]} (preview mode)`);
+        const result = await base44.functions.invoke('recalculateStudentEconomySnapshot', {
           studentEmail: emails[i],
           reason: "preview",
           previewOnly: true
@@ -159,7 +154,8 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < previewResults.length; i++) {
       try {
-        await base44.functions.recalculateStudentEconomySnapshot({
+        console.log(`Calling recalculateStudentEconomySnapshot for ${previewResults[i].email} (apply mode)`);
+        await base44.functions.invoke('recalculateStudentEconomySnapshot', {
           studentEmail: previewResults[i].email,
           reason: "admin_selected",
           previewOnly: false
@@ -199,7 +195,8 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < students.length; i++) {
       try {
-        await base44.functions.recalculateStudentEconomySnapshot({
+        console.log(`Calling recalculateStudentEconomySnapshot for ${students[i].student_email} (all mode)`);
+        await base44.functions.invoke('recalculateStudentEconomySnapshot', {
           studentEmail: students[i].student_email,
           reason: "admin_all",
           previewOnly: false
