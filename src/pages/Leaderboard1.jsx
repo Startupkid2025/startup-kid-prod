@@ -646,6 +646,19 @@ export default function Leaderboard() {
       const usersWithAllStats = filteredUsersForLeaderboard.map((u) => {
         const userWordProgress = wordProgressByEmail.get(u.student_email) || [];
         const masteredWords = userWordProgress.filter(w => w.mastered).length;
+        
+        // DEBUG: Log word count calculation
+        if (u.student_email === 'omer@startupkid.co.il') {
+          console.log(`🔍 VOCAB DEBUG for ${u.full_name}:`, {
+            totalWordProgress: userWordProgress.length,
+            masteredWords: masteredWords,
+            wordProgressDetails: userWordProgress.map(w => ({
+              word: w.word_english,
+              mastered: w.mastered,
+              correct_streak: w.correct_streak
+            }))
+          });
+        }
 
         // Calculate lesson counts by category from REAL participations
         const userParticipations = (participationsByEmail.get(u.student_email) || []).filter(p => p.attended);
@@ -677,7 +690,7 @@ export default function Leaderboard() {
         
         // Count completed math questions directly from MathProgress
         const userMathProgressList = mathProgressByEmail.get(u.student_email) || [];
-        const masteredMathQuestions = userMathProgressList.filter(m => (m.total_attempts || 0) > 0).length;
+        const masteredMathQuestions = userMathProgressList.filter(m => m.mastered === true).length;
         
         // Login streak - prefer LeaderboardEntry (always accessible)
         let loginStreak = u.login_streak || 0;
