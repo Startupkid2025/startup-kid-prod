@@ -27,15 +27,19 @@ export default function EconomyAdminPanel() {
   const loadSnapshots = async () => {
     setLoading(true);
     try {
-      const [snapshotsData, usersData] = await Promise.all([
-        base44.entities.StudentEconomySnapshot.list('-total_assets'),
-        base44.entities.User.list()
-      ]);
-      
-      setSnapshots(snapshotsData);
-      
-      // Get all students (user_type === 'student')
+      // Load users first
+      const usersData = await base44.entities.User.list();
       const allStudents = usersData.filter(u => u.user_type === 'student');
+      
+      // Try to load snapshots, but don't fail if entity doesn't exist
+      let snapshotsData = [];
+      try {
+        snapshotsData = await base44.entities.StudentEconomySnapshot.list('-total_assets');
+        setSnapshots(snapshotsData);
+      } catch (snapError) {
+        console.warn("Could not load StudentEconomySnapshot - entity may not exist yet:", snapError);
+        setSnapshots([]);
+      }
       
       // Merge snapshots with users to create complete list
       const merged = allStudents.map(user => {
@@ -54,7 +58,7 @@ export default function EconomyAdminPanel() {
       
       setStudents(merged);
     } catch (error) {
-      console.error("Error loading snapshots:", error);
+      console.error("Error loading data:", error);
       toast.error("שגיאה בטעינת נתונים");
     } finally {
       setLoading(false);
