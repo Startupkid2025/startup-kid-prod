@@ -192,13 +192,50 @@ export default function EconomyAdminPanel() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="חפש לפי שם או אימייל..."
-              className="pr-10 bg-white/5 border-white/20 text-white"
+              className="pr-10 bg-white/5 border-white/20 text-white placeholder:text-white/40"
             />
           </div>
-          <Button onClick={toggleSelectAll} className="bg-white/20 hover:bg-white/30 text-white border-white/30">
-            {selectedEmails.size === filteredSnapshots.length ? "בטל הכל" : "בחר הכל"}
+          <Button onClick={toggleSelectAll} className="bg-white/20 hover:bg-white/30 text-white border-white/30 font-bold">
+            {selectedEmails.size === filteredSnapshots.length && filteredSnapshots.length > 0 ? "✓ בטל הכל" : `☐ בחר הכל (${filteredSnapshots.length})`}
           </Button>
         </div>
+
+        {/* Selected Students Preview */}
+        {selectedEmails.size > 0 && (
+          <div className="bg-emerald-500/20 border-2 border-emerald-500/50 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-white font-bold">נבחרו {selectedEmails.size} תלמידים:</span>
+              <Button 
+                onClick={() => setSelectedEmails(new Set())}
+                size="sm"
+                className="bg-white/20 hover:bg-white/30 text-white"
+              >
+                נקה בחירה
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {Array.from(selectedEmails).slice(0, 10).map(email => {
+                const snapshot = snapshots.find(s => s.student_email === email);
+                return (
+                  <div key={email} className="bg-white/20 rounded px-2 py-1 text-sm text-white flex items-center gap-2">
+                    {snapshot?.full_name || email}
+                    <button 
+                      onClick={() => toggleSelect(email)}
+                      className="text-white/80 hover:text-white"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                );
+              })}
+              {selectedEmails.size > 10 && (
+                <div className="bg-white/20 rounded px-2 py-1 text-sm text-white">
+                  +{selectedEmails.size - 10} נוספים
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-4">
           <Button
@@ -251,8 +288,88 @@ export default function EconomyAdminPanel() {
         )}
       </div>
 
-      {/* Students Table */}
-      <div className="bg-white/10 rounded-xl overflow-hidden">
+      {/* Students Grid */}
+      <div className="bg-white/10 rounded-xl p-4">
+        <div className="mb-4 text-white/80">
+          {filteredSnapshots.length} תלמידים
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {filteredSnapshots.map((snapshot) => (
+            <div 
+              key={snapshot.id}
+              onClick={() => toggleSelect(snapshot.student_email)}
+              className={`
+                relative cursor-pointer rounded-lg p-4 border-2 transition-all
+                ${selectedEmails.has(snapshot.student_email) 
+                  ? 'bg-emerald-500/30 border-emerald-400 shadow-lg shadow-emerald-500/20' 
+                  : 'bg-white/5 border-white/20 hover:border-white/40 hover:bg-white/10'}
+              `}
+            >
+              <div className="absolute top-3 left-3">
+                <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
+                  selectedEmails.has(snapshot.student_email)
+                    ? 'bg-emerald-500 border-emerald-400'
+                    : 'bg-white/10 border-white/40'
+                }`}>
+                  {selectedEmails.has(snapshot.student_email) && (
+                    <span className="text-white text-sm">✓</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="pr-8">
+                <div className="text-white font-bold text-lg mb-1">
+                  {snapshot.full_name}
+                </div>
+                <div className="text-white/60 text-xs mb-3">
+                  {snapshot.student_email}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <div className="text-white/60 text-xs">עו"ש</div>
+                    <div className="text-white font-bold">{snapshot.coins_cash?.toLocaleString() || 0}</div>
+                  </div>
+                  <div>
+                    <div className="text-white/60 text-xs">השקעות</div>
+                    <div className="text-emerald-400 font-bold">{snapshot.investments_value?.toLocaleString() || 0}</div>
+                  </div>
+                  <div>
+                    <div className="text-white/60 text-xs">פריטים</div>
+                    <div className="text-purple-400 font-bold">{snapshot.items_value?.toLocaleString() || 0}</div>
+                  </div>
+                  <div>
+                    <div className="text-white/60 text-xs">שווי כולל</div>
+                    <div className="text-yellow-400 font-bold">{snapshot.total_assets?.toLocaleString() || 0}</div>
+                  </div>
+                </div>
+
+                <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between">
+                  <div className="text-white/50 text-xs">
+                    {snapshot.last_calculated_at 
+                      ? new Date(snapshot.last_calculated_at).toLocaleDateString('he-IL')
+                      : 'לא עודכן'}
+                  </div>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      showDebugBreakdown(snapshot);
+                    }}
+                    size="sm"
+                    variant="ghost"
+                    className="text-white/60 hover:text-white h-6 px-2"
+                  >
+                    <Eye className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Old Table (Hidden) */}
+      <div className="bg-white/10 rounded-xl overflow-hidden hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-white/5">
