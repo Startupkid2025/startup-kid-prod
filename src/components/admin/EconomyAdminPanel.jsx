@@ -240,10 +240,10 @@ export default function EconomyAdminPanel() {
             </div>
             <div className="flex flex-wrap gap-2">
               {Array.from(selectedEmails).slice(0, 10).map(email => {
-                const snapshot = snapshots.find(s => s.student_email === email);
+                const student = students.find(s => s.student_email === email);
                 return (
                   <div key={email} className="bg-white/20 rounded px-2 py-1 text-sm text-white flex items-center gap-2">
-                    {snapshot?.full_name || email}
+                    {student?.full_name || email}
                     <button 
                       onClick={() => toggleSelect(email)}
                       className="text-white/80 hover:text-white"
