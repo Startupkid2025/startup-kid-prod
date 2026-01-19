@@ -791,6 +791,222 @@ export default function Admin() {
     }
   };
 
+  const recomputeStudentCashBalance = async (dryRun = true) => {
+    setIsRecalculatingCoins(true);
+    
+    try {
+      console.log(`\n💰 ${dryRun ? 'DRY RUN' : '🚨 APPLYING'} - Recompute Cash Balance\n`);
+      
+      const [
+        allUsers,
+        allWordProgress,
+        allMathProgress,
+        allParticipations,
+        allQuizProgress,
+        allInvestments
+      ] = await Promise.all([
+        base44.entities.User.list(),
+        base44.entities.WordProgress.list(),
+        base44.entities.MathProgress.list(),
+        base44.entities.LessonParticipation.list(),
+        base44.entities.QuizProgress.list(),
+        base44.entities.Investment.list()
+      ]);
+
+      const students = allUsers.filter(u => u.user_type === 'student');
+      const results = [];
+      
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (let i = 0; i < students.length; i++) {
+        const user = students[i];
+        
+        try {
+          // === INCOME SOURCES ===
+          const baseCoins = 500;
+          const lessonsCoins = (user.total_lessons || 0) * 100;
+          
+          const userWordProgress = allWordProgress.filter(w => w.student_email === user.email);
+          const vocabularyCoins = userWordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
+          
+          const userMathProgress = allMathProgress.filter(m => m.student_email === user.email);
+          const mathCoins = userMathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
+          
+          const userParticipations = allParticipations.filter(p => p.student_email === user.email);
+          const surveysCoins = userParticipations.filter(p => p.survey_completed === true).length * 70;
+          
+          const userQuizProgress = allQuizProgress.filter(q => q.student_email === user.email);
+          const quizCoins = userQuizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
+          
+          let profileTasksCoins = 0;
+          if (user.completed_instagram_follow) profileTasksCoins += 50;
+          if (user.completed_youtube_subscribe) profileTasksCoins += 50;
+          if (user.completed_facebook_follow) profileTasksCoins += 50;
+          if (user.completed_discord_join) profileTasksCoins += 50;
+          if (user.completed_share) profileTasksCoins += 100;
+          
+          let profileDetailsCoins = 0;
+          if (user.age) profileDetailsCoins += 20;
+          if (user.bio && user.bio.length > 10) profileDetailsCoins += 30;
+          if (user.phone_number) profileDetailsCoins += 20;
+          
+          const workCoins = user.total_work_earnings || 0;
+          const collaborationCoins = user.total_collaboration_coins || 0;
+          const loginStreakCoins = user.total_login_streak_coins || 0;
+          const passiveIncomeCoins = user.total_passive_income || 0;
+          const adminCoins = user.total_admin_coins || 0;
+          
+          // Realized investment profit (dividends paid to cash)
+          const realizedInvestmentProfit = user.total_realized_investment_profit || 0;
+          
+          const totalIncome = baseCoins + lessonsCoins + vocabularyCoins + mathCoins + 
+                             surveysCoins + quizCoins + profileTasksCoins + 
+                             profileDetailsCoins + workCoins + collaborationCoins + 
+                             loginStreakCoins + passiveIncomeCoins + adminCoins + 
+                             realizedInvestmentProfit;
+          
+          // === LOSSES (excluding creditInterest for now) ===
+          const inflationLoss = user.total_inflation_lost || 0;
+          const incomeTax = user.total_income_tax || 0;
+          const capitalGainsTax = user.total_capital_gains_tax || 0;
+          const dividendTax = user.total_dividend_tax || 0;
+          const investmentFees = user.total_investment_fees || 0;
+          const itemSaleLosses = user.total_item_sale_losses || 0;
+          
+          const totalLosses = inflationLoss + incomeTax + capitalGainsTax + 
+                            dividendTax + investmentFees + itemSaleLosses;
+          
+          // === ITEMS SPENT ===
+          const purchasedItems = user.purchased_items || [];
+          let itemsSpent = 0;
+          purchasedItems.forEach(itemId => {
+            const item = AVATAR_ITEMS[itemId];
+            if (item && item.price) {
+              itemsSpent += item.price;
+            }
+          });
+          
+          // === INVESTMENTS SPENT ===
+          // When you buy an investment, cash goes DOWN by invested_amount
+          const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
+          const investmentsSpent = userInvestments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
+          
+          // Current value of investments (for netWorth calculation)
+          const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+          
+          // === COMPUTE NEW COINS ===
+          const newCoins = Math.round(totalIncome - totalLosses - itemsSpent - investmentsSpent);
+          const oldCoins = user.coins || 0;
+          const diff = newCoins - oldCoins;
+          
+          // === VALIDATION ===
+          const netWorth = newCoins + itemsSpent + investmentsValue;
+          
+          // === DEBUG LOG ===
+          console.log(`\n📊 ${user.full_name} (${user.email}):`);
+          console.log(`  === INCOME ===`);
+          console.log(`    base: ${baseCoins}, lessons: ${lessonsCoins}, vocab: ${vocabularyCoins}, math: ${mathCoins}`);
+          console.log(`    surveys: ${surveysCoins}, quizzes: ${quizCoins}, work: ${workCoins}`);
+          console.log(`    collab: ${collaborationCoins}, streak: ${loginStreakCoins}, passive: ${passiveIncomeCoins}`);
+          console.log(`    admin: ${adminCoins}, realized_profit: ${realizedInvestmentProfit}`);
+          console.log(`    📈 TOTAL INCOME: ${totalIncome}`);
+          console.log(`  === LOSSES (no creditInterest) ===`);
+          console.log(`    inflation: ${inflationLoss}, incomeTax: ${incomeTax}, capitalGainsTax: ${capitalGainsTax}`);
+          console.log(`    dividendTax: ${dividendTax}, investmentFees: ${investmentFees}, itemSaleLosses: ${itemSaleLosses}`);
+          console.log(`    📉 TOTAL LOSSES: ${totalLosses}`);
+          console.log(`  === SPENDING ===`);
+          console.log(`    itemsSpent: ${itemsSpent} (${purchasedItems.length} items)`);
+          console.log(`    investmentsSpent: ${investmentsSpent} (${userInvestments.length} investments)`);
+          console.log(`  === RESULT ===`);
+          console.log(`    oldCoins: ${oldCoins}`);
+          console.log(`    newCoins: ${newCoins}`);
+          console.log(`    diff: ${diff >= 0 ? '+' : ''}${diff}`);
+          console.log(`  === VALIDATION ===`);
+          console.log(`    investmentsValue (current): ${investmentsValue}`);
+          console.log(`    netWorth: ${netWorth} (coins + items + investments)`);
+          console.log(`    ✅ Formula: ${totalIncome} - ${totalLosses} - ${itemsSpent} - ${investmentsSpent} = ${newCoins}\n`);
+          
+          const resultItem = {
+            email: user.email,
+            name: user.full_name,
+            oldCoins,
+            newCoins,
+            diff,
+            totalIncome,
+            totalLosses,
+            itemsSpent,
+            investmentsSpent,
+            investmentsValue,
+            netWorth,
+            warning: null,
+            willUpdate: true
+          };
+          
+          // Safeguards
+          if (newCoins < -10000) {
+            resultItem.warning = `⚠️ ANOMALY: newCoins (${newCoins}) < -10000`;
+            resultItem.willUpdate = false;
+          } else if (Math.abs(diff) > 10000) {
+            resultItem.warning = `⚠️ ANOMALY: diff (${diff}) > 10000`;
+            resultItem.willUpdate = false;
+          }
+          
+          if (resultItem.warning) {
+            console.log(`  🚨 ${resultItem.warning} - SKIPPING!`);
+          }
+          
+          results.push(resultItem);
+          
+          // Apply if not dry run and passes safeguards
+          if (!dryRun && resultItem.willUpdate) {
+            await retryWithBackoff(async () => {
+              await base44.entities.User.update(user.id, { coins: newCoins });
+            });
+            await sleep(100);
+            await retryWithBackoff(async () => {
+              await syncLeaderboardEntry(user.email, { coins: newCoins });
+            });
+            console.log(`  ✅ UPDATED!`);
+          } else if (dryRun) {
+            console.log(`  👁️ DRY RUN - no changes`);
+          }
+          
+          successCount++;
+          if (i < students.length - 1) {
+            await sleep(dryRun ? 50 : 300);
+          }
+        } catch (error) {
+          failCount++;
+          console.error(`Failed for ${user.email}:`, error);
+        }
+      }
+      
+      if (dryRun) {
+        setCoinsPreviewResults(results);
+        const anomalyCount = results.filter(r => !r.willUpdate).length;
+        toast.success(
+          `👁️ Dry Run: ${successCount} תלמידים נבדקו` +
+          (anomalyCount > 0 ? ` (${anomalyCount} חריגים!)` : ''),
+          { duration: 8000 }
+        );
+      } else {
+        setCoinsPreviewResults(null);
+        if (failCount === 0) {
+          toast.success(`✅ Cash Balance עודכן! ${successCount} תלמידים`);
+        } else {
+          toast.warning(`⚠️ ${successCount} הצליחו, ${failCount} נכשלו`);
+        }
+        await refreshCurrentTab();
+      }
+    } catch (error) {
+      console.error("Error recomputing cash balance:", error);
+      toast.error("שגיאה בחישוב מחדש");
+    } finally {
+      setIsRecalculatingCoins(false);
+    }
+  };
+
   const addPassiveIncomeBackpay = async () => {
     setIsRecalculatingCoins(true);
     
@@ -1908,6 +2124,35 @@ export default function Admin() {
                 {isRecalculatingCoins ? "מאפס..." : "🔥 אפס רצף כניסות לכולם (התחלה חדשה)"}
               </Button>
               
+              <div className="border-t border-white/20 pt-4 mt-4">
+                <h3 className="text-white font-bold text-sm mb-3">💰 חישוב מחדש נכון של עו״ש</h3>
+                <p className="text-white/60 text-xs mb-3">
+                  חישוב מלא מתחשב בהשקעות שנקנו. ללא creditInterest (בשלב ייצוב).
+                </p>
+                <div className="space-y-2">
+                  <Button
+                    onClick={() => recomputeStudentCashBalance(true)}
+                    disabled={isRecalculatingCoins}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    {isRecalculatingCoins ? "בודק..." : "👁️ Dry Run - בדיקה בלבד"}
+                  </Button>
+                  {coinsPreviewResults && coinsPreviewResults.length > 0 && (
+                    <Button
+                      onClick={() => {
+                        if (confirm(`⚠️ אישור!\n\nלעדכן עו"ש ל-${coinsPreviewResults.filter(r => r.willUpdate).length} משתמשים?\n\nזה ישנה את User.coins וגם LeaderboardEntry.coins.\n\nהאם להמשיך?`)) {
+                          recomputeStudentCashBalance(false);
+                        }
+                      }}
+                      disabled={isRecalculatingCoins}
+                      className="w-full bg-orange-600 hover:bg-orange-700 font-bold"
+                    >
+                      🚨 Apply Fix - עדכן DB
+                    </Button>
+                  )}
+                </div>
+              </div>
+
               <div className="border-t border-white/20 pt-4 mt-4">
                 <h3 className="text-white font-bold text-sm mb-3">📊 ניהול Snapshots</h3>
                 <Button
