@@ -358,7 +358,8 @@ export default function Home() {
 
       const totalLosses = inflationLoss + incomeTax + capitalGainsTax + creditInterest + itemSaleLosses + investmentFees + dividendTax;
 
-      const correctCoins = Math.round(totalIncome - itemsValue - investmentsValue - totalLosses);
+      // DON'T subtract investments! They are assets, not expenses
+      const correctCoins = Math.round(totalIncome - itemsValue - totalLosses);
 
       return correctCoins;
     } catch (error) {

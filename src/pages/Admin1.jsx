@@ -316,7 +316,9 @@ export default function Admin() {
           const dividendTax = user.total_dividend_tax || 0;
 
           const totalLosses = inflationLoss + incomeTax + capitalGainsTax + creditInterest + itemSaleLosses + investmentFees + dividendTax;
-          const correctCoins = Math.round(totalIncome - itemsValue - investmentsValue - totalLosses);
+          
+          // DON'T subtract investments! They are assets, not expenses
+          const correctCoins = Math.round(totalIncome - itemsValue - totalLosses);
           
           console.log(`  📦 נכסים:`);
           console.log(`    - פריטים: ${itemsValue}`);
