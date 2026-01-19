@@ -789,10 +789,14 @@ export default function EconomyAdminPanel() {
 
               {/* Assets */}
               <div className="grid grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 rounded-lg p-4 border border-emerald-500/30">
-                  <div className="text-emerald-200 text-xs mb-1 font-bold">investments_value (שווי השקעות נוכחי)</div>
-                  <div className="text-2xl font-bold text-white">{(debugStudent.investments_value || 0).toLocaleString()}</div>
-                  <div className="text-white/60 text-xs mt-2">investment_profit_realized (רווח ממומש): {(debugStudent.total_realized_investment_profit || 0).toLocaleString()}</div>
+                <div className={`bg-gradient-to-br ${(debugStudent.investment_profit || 0) >= 0 ? 'from-emerald-500/20 to-emerald-500/5' : 'from-red-500/20 to-red-500/5'} rounded-lg p-4 border ${(debugStudent.investment_profit || 0) >= 0 ? 'border-emerald-500/30' : 'border-red-500/30'}`}>
+                  <div className={`${(debugStudent.investment_profit || 0) >= 0 ? 'text-emerald-200' : 'text-red-200'} text-xs mb-1 font-bold`}>השקעות - רווח/הפסד</div>
+                  <div className={`text-2xl font-bold ${(debugStudent.investment_profit || 0) >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                    {(debugStudent.investment_profit || 0) >= 0 ? '+' : ''}{(debugStudent.investment_profit || 0).toLocaleString()}
+                  </div>
+                  <div className="text-white/60 text-xs mt-2">
+                    השקעה: {(debugStudent.investments_spent || 0).toLocaleString()} | נוכחי: {(debugStudent.investments_value || 0).toLocaleString()}
+                  </div>
                 </div>
                 <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/5 rounded-lg p-4 border border-purple-500/30">
                   <div className="text-purple-200 text-xs mb-1 font-bold">items_value (ערך פריטים מהחנות)</div>
