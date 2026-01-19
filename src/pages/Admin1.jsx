@@ -552,23 +552,59 @@ export default function Admin() {
     setIsRecalculatingCoins(true);
     
     try {
-      // Load all entries
-      const allEntries = await base44.entities.LeaderboardEntry.list();
+      // Load all base data
+      const [allEntries, allWordProgress, allMathProgress, allParticipations, allLessons, allInvestments] = await Promise.all([
+        base44.entities.LeaderboardEntry.list(),
+        base44.entities.WordProgress.list(),
+        base44.entities.MathProgress.list(),
+        base44.entities.LessonParticipation.list(),
+        base44.entities.Lesson.list(),
+        base44.entities.Investment.list()
+      ]);
+      
       const students = allEntries.filter(e => {
         const type = e.user_type || 'student';
         return type === 'student';
       });
       
+      // Build lookup maps
+      const wordProgressMap = new Map();
+      allWordProgress.forEach(w => {
+        if (!wordProgressMap.has(w.student_email)) wordProgressMap.set(w.student_email, []);
+        wordProgressMap.get(w.student_email).push(w);
+      });
+      
+      const mathProgressMap = new Map();
+      allMathProgress.forEach(m => {
+        if (!mathProgressMap.has(m.student_email)) mathProgressMap.set(m.student_email, []);
+        mathProgressMap.get(m.student_email).push(m);
+      });
+      
+      const participationsMap = new Map();
+      allParticipations.forEach(p => {
+        if (!participationsMap.has(p.student_email)) participationsMap.set(p.student_email, []);
+        participationsMap.get(p.student_email).push(p);
+      });
+      
+      const lessonMap = new Map();
+      allLessons.forEach(l => lessonMap.set(l.id, l));
+      
+      const investmentsMap = new Map();
+      allInvestments.forEach(inv => {
+        if (!investmentsMap.has(inv.student_email)) investmentsMap.set(inv.student_email, []);
+        investmentsMap.get(inv.student_email).push(inv);
+      });
+      
       let created = 0;
       let updated = 0;
       
-      toast.info(`מעדכן ${students.length} snapshots... ⏳`, { duration: 3000 });
+      toast.info(`מחשב ומעדכן ${students.length} snapshots... ⏳`, { duration: 3000 });
       
       for (let i = 0; i < students.length; i++) {
         const entry = students[i];
         
         try {
-          // Calculate items value from purchased_items
+          // 1. Calculate items value
           const purchasedItems = entry.purchased_items || [];
           let itemsValue = 0;
           purchasedItems.forEach(itemId => {
@@ -578,26 +614,54 @@ export default function Admin() {
             }
           });
           
-          // Calculate investments value
-          let investmentsValue = 0;
-          try {
-            const allInvestments = await base44.entities.Investment.filter({
-              student_email: entry.student_email
-            });
-            investmentsValue = allInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-          } catch (e) {
-            console.log(`No investments for ${entry.student_email}`);
+          // 2. Calculate investments value
+          const userInvestments = investmentsMap.get(entry.student_email) || [];
+          const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+          
+          // 3. Calculate mastered words
+          const userWordProgress = wordProgressMap.get(entry.student_email) || [];
+          const masteredWords = userWordProgress.filter(w => w.mastered === true).length;
+          
+          // 4. Calculate mastered math questions
+          const userMathProgress = mathProgressMap.get(entry.student_email) || [];
+          const masteredMathQuestions = userMathProgress.filter(m => (m.total_attempts || 0) > 0).length;
+          
+          // 5. Calculate lesson counts by category
+          const userParticipations = participationsMap.get(entry.student_email) || [];
+          const attendedParticipations = userParticipations.filter(p => p.attended === true);
+          
+          let aiTechLessons = 0;
+          let socialSkillsLessons = 0;
+          let moneyBusinessLessons = 0;
+          
+          attendedParticipations.forEach(p => {
+            const lesson = lessonMap.get(p.lesson_id);
+            if (!lesson) return;
+            
+            if (lesson.category === 'ai_tech') aiTechLessons++;
+            if (lesson.category === 'personal_skills' || lesson.category === 'social_skills') socialSkillsLessons++;
+            if (lesson.category === 'money_business') moneyBusinessLessons++;
+          });
+          
+          // 6. Calculate collaboration count
+          let collaborationCount = 0;
+          if (entry.total_collaboration_coins) {
+            collaborationCount = Math.floor(entry.total_collaboration_coins / 25);
+          } else {
+            const completedCollabs = (entry.daily_collaborations || []).filter(c => c && c.completed === true);
+            collaborationCount = completedCollabs.length;
           }
           
+          // 7. Total value
           const coins = entry.coins || 0;
           const totalValue = coins + itemsValue + investmentsValue;
           
-          // Check if snapshot exists
+          // 8. Check if snapshot exists
           const existing = await base44.entities.LeaderboardSnapshot.filter({
             student_email: entry.student_email
           });
           
-          // Build snapshot data - only set known values, let unknowns be null
+          // 9. Build COMPLETE snapshot data
           const snapshotData = {
             student_email: entry.student_email,
             full_name: entry.full_name,
@@ -611,10 +675,19 @@ export default function Admin() {
             investments_value: investmentsValue,
             items_value: itemsValue,
             total_value: totalValue,
-            login_streak: entry.login_streak ?? null,
-            work_hours: entry.total_work_hours ?? null,
-            work_earnings: entry.total_work_earnings ?? null,
+            mastered_words: masteredWords,
+            mastered_math_questions: masteredMathQuestions,
+            ai_tech_lessons: aiTechLessons,
+            social_skills_lessons: socialSkillsLessons,
+            money_business_lessons: moneyBusinessLessons,
+            collaboration_count: collaborationCount,
+            login_streak: entry.login_streak || 0,
+            work_hours: entry.total_work_hours || 0,
+            work_earnings: entry.total_work_earnings || 0,
             last_login_date: entry.last_login_date || null,
+            crowns: entry.crowns || [],
+            is_bootstrap: false,
+            snapshot_version: 2,
             updated_at: new Date().toISOString()
           };
           
@@ -626,19 +699,24 @@ export default function Admin() {
             created++;
           }
           
+          // Progress indicator
+          if (i % 10 === 0) {
+            console.log(`Progress: ${i + 1}/${students.length}`);
+          }
+          
           // Delay to avoid rate limits
           if (i % 5 === 0 && i > 0) {
-            await sleep(200);
+            await sleep(300);
           }
         } catch (error) {
           console.error(`Failed to rebuild snapshot for ${entry.student_email}:`, error);
         }
       }
       
-      toast.success(`✅ Snapshots עודכנו! ${created} נוצרו, ${updated} עודכנו`, { duration: 5000 });
+      toast.success(`✅ Rebuild הושלם! ${created} נוצרו, ${updated} עודכנו`, { duration: 5000 });
     } catch (error) {
       console.error("Error rebuilding snapshots:", error);
-      toast.error("שגיאה בעדכון snapshots");
+      toast.error("שגיאה ב-rebuild snapshots");
     } finally {
       setIsRecalculatingCoins(false);
     }
