@@ -156,7 +156,7 @@ export default function Layout({ children }) {
         crypto: todayMarket.crypto_change || 0
       };
 
-      // Calculate 25% dividend tax on daily profits (with mouth reductions)
+      // Calculate daily profits (cash payout from investments)
       let totalDailyProfit = 0;
       userInvestments.forEach(inv => {
         const changePercent = marketChanges[inv.business_type] || 0;
@@ -166,7 +166,6 @@ export default function Layout({ children }) {
         }
       });
 
-      let dividendTax = 0;
       if (totalDailyProfit > 0) {
         // Base dividend tax rate: 25%
         let dividendTaxRate = 0.25;
@@ -180,20 +179,24 @@ export default function Layout({ children }) {
           }
         }
 
-        dividendTax = Math.floor(totalDailyProfit * dividendTaxRate);
+        const dividendTax = Math.floor(totalDailyProfit * dividendTaxRate);
+        const netProfit = totalDailyProfit - dividendTax;
 
-        const newCoins = (user.coins || 0) - dividendTax;
+        // ADD profit to coins (this is cash payout), then deduct tax
+        const newCoins = (user.coins || 0) + netProfit;
         await base44.auth.updateMe({
           coins: newCoins,
           last_dividend_date: today,
           total_dividend_tax: (user.total_dividend_tax || 0) + dividendTax,
+          total_realized_investment_profit: (user.total_realized_investment_profit || 0) + totalDailyProfit,
           daily_dividend_tax: dividendTax
         });
 
         // Sync to LeaderboardEntry for public visibility
         await syncLeaderboardEntry(user.email, {
           coins: newCoins,
-          total_dividend_tax: (user.total_dividend_tax || 0) + dividendTax
+          total_dividend_tax: (user.total_dividend_tax || 0) + dividendTax,
+          total_realized_investment_profit: (user.total_realized_investment_profit || 0) + totalDailyProfit
         });
       } else {
         await base44.auth.updateMe({
