@@ -240,10 +240,6 @@ export default function EconomyAdminPanel() {
       const masteredWords = wordProgress.filter(w => w.mastered === true).length;
       const masteredMath = mathProgress.filter(m => m.mastered === true).length;
       const vocabularyCoins = wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
-      const masteryBonusCoins = wordProgress
-        .filter(w => w.mastered === true)
-        .reduce((sum, w) => sum + (w.coins_earned || 0), 0);
-      const correctAnswersCoins = vocabularyCoins - masteryBonusCoins;
       const mathCoins = mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
       const surveyCoins = participations.filter(p => p.survey_completed === true).length * 70;
       const quizCoins = quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
