@@ -1518,9 +1518,20 @@ export default function Admin() {
           <Card className="bg-white/5 backdrop-blur-md border-white/10">
             <CardHeader className="border-b border-white/10">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-white text-lg">
-                  ניהול תלמידים ({students.filter(s => filterUserType === 'all' || s.user_type === filterUserType).length})
-                </CardTitle>
+                <div className="flex items-center gap-3">
+                  <CardTitle className="text-white text-lg">
+                    ניהול תלמידים ({students.filter(s => filterUserType === 'all' || s.user_type === filterUserType).length})
+                  </CardTitle>
+                  <Button
+                    onClick={refreshCurrentTab}
+                    size="sm"
+                    variant="ghost"
+                    className="text-white/70 hover:text-white hover:bg-white/10"
+                    title="רענן נתונים"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                </div>
                 {students.filter(s => {
                   const typeMatch = filterUserType === 'all' || s.user_type === filterUserType;
                   let groupMatch = true;
