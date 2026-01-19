@@ -290,10 +290,40 @@ export default function EconomyAdminPanel() {
 
       {/* Students Grid */}
       <div className="bg-white/10 rounded-xl p-4">
-        <div className="mb-4 text-white/80">
-          {filteredSnapshots.length} תלמידים
+        <div className="mb-4 flex items-center justify-between">
+          <div className="text-white/80">
+            {filteredSnapshots.length} תלמידים
+          </div>
+          {snapshots.length === 0 && !loading && (
+            <div className="text-yellow-400 text-sm">
+              ⚠️ אין snapshots - לחץ על "אתחל Snapshots" בלשונית Tools במסך Admin הראשי
+            </div>
+          )}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {filteredSnapshots.length === 0 ? (
+          <div className="text-center py-12 text-white/60">
+            {loading ? (
+              <div className="flex items-center justify-center gap-3">
+                <RefreshCw className="w-6 h-6 animate-spin" />
+                <span>טוען...</span>
+              </div>
+            ) : searchQuery ? (
+              <div>
+                <div className="text-2xl mb-2">🔍</div>
+                <div>לא נמצאו תוצאות עבור "{searchQuery}"</div>
+              </div>
+            ) : (
+              <div>
+                <div className="text-4xl mb-3">📊</div>
+                <div className="text-lg mb-2">אין נתונים</div>
+                <div className="text-sm text-white/40">
+                  יש ליצור StudentEconomySnapshot עבור התלמידים
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredSnapshots.map((snapshot) => (
             <div 
               key={snapshot.id}
@@ -365,7 +395,8 @@ export default function EconomyAdminPanel() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Old Table (Hidden) */}
