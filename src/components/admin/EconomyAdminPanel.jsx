@@ -24,6 +24,11 @@ export default function EconomyAdminPanel() {
     loadSnapshots();
   }, []);
 
+  const runRecalc = async (email, reason) => {
+    const { recalculateStudentEconomySnapshot } = await import("@/functions/recalculateStudentEconomySnapshot");
+    return await recalculateStudentEconomySnapshot(email, reason);
+  };
+
   const loadSnapshots = async () => {
     setLoading(true);
     try {
@@ -98,10 +103,7 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < emails.length; i++) {
       try {
-        const result = await base44.functions.recalculateStudentEconomySnapshot({
-          student_email: emails[i],
-          reason: "preview"
-        });
+        const result = await runRecalc(emails[i], "preview");
         results.push({ email: emails[i], ...result });
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -132,10 +134,7 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < previewResults.length; i++) {
       try {
-        await base44.functions.recalculateStudentEconomySnapshot({
-          student_email: previewResults[i].email,
-          reason: "admin_selected"
-        });
+        await runRecalc(previewResults[i].email, "admin_selected");
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {
@@ -171,10 +170,7 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < students.length; i++) {
       try {
-        await base44.functions.recalculateStudentEconomySnapshot({
-          student_email: students[i].student_email,
-          reason: "admin_all"
-        });
+        await runRecalc(students[i].student_email, "admin_all");
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {
