@@ -808,7 +808,7 @@ export default function EconomyAdminPanel() {
                   </div>
                 </div>
                 <div className={`bg-gradient-to-br ${(debugStudent.investment_profit || 0) >= 0 ? 'from-emerald-500/20 to-emerald-500/5' : 'from-red-500/20 to-red-500/5'} rounded-lg p-4 border ${(debugStudent.investment_profit || 0) >= 0 ? 'border-emerald-500/30' : 'border-red-500/30'}`}>
-                  <div className={`${(debugStudent.investment_profit || 0) >= 0 ? 'text-emerald-200' : 'text-red-200'} text-xs mb-1 font-bold`}>רווח/הפסד לא ממומש</div>
+                  <div className={`${(debugStudent.investment_profit || 0) >= 0 ? 'text-emerald-200' : 'text-red-200'} text-xs mb-1 font-bold`}>investment_profit (רווח/הפסד לא ממומש)</div>
                   <div className={`text-2xl font-bold ${(debugStudent.investment_profit || 0) >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
                     {(debugStudent.investment_profit || 0) >= 0 ? '+' : ''}{(debugStudent.investment_profit || 0).toLocaleString()}
                   </div>
