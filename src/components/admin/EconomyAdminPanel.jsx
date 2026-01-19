@@ -116,12 +116,18 @@ export default function EconomyAdminPanel() {
 
     console.log("base44.functions keys:", Object.keys(base44.functions || {}));
 
+    if (typeof base44.functions?.recalculateStudentEconomySnapshot !== "function") {
+      console.error("❌ Missing function base44.functions.recalculateStudentEconomySnapshot", base44.functions);
+      toast.error("הפונקציה לא נטענה (בדוק Functions ב-Base44)");
+      return;
+    }
+
     for (let i = 0; i < emails.length; i++) {
       try {
-        const result = await base44.functions.recalculateStudentEconomySnapshot({ 
-          studentEmail: emails[i], 
-          reason: "preview", 
-          previewOnly: true 
+        const result = await base44.functions.recalculateStudentEconomySnapshot({
+          studentEmail: emails[i],
+          reason: "preview",
+          previewOnly: true
         });
         results.push({ email: emails[i], ...result });
         setProgress(prev => ({ ...prev, current: i + 1 }));
@@ -153,10 +159,10 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < previewResults.length; i++) {
       try {
-        await base44.functions.recalculateStudentEconomySnapshot({ 
-          studentEmail: previewResults[i].email, 
-          reason: "admin_selected", 
-          previewOnly: false 
+        await base44.functions.recalculateStudentEconomySnapshot({
+          studentEmail: previewResults[i].email,
+          reason: "admin_selected",
+          previewOnly: false
         });
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 200));
@@ -193,10 +199,10 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < students.length; i++) {
       try {
-        await base44.functions.recalculateStudentEconomySnapshot({ 
-          studentEmail: students[i].student_email, 
-          reason: "admin_all", 
-          previewOnly: false 
+        await base44.functions.recalculateStudentEconomySnapshot({
+          studentEmail: students[i].student_email,
+          reason: "admin_all",
+          previewOnly: false
         });
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 200));
