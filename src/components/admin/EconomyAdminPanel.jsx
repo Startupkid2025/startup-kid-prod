@@ -25,9 +25,7 @@ export default function EconomyAdminPanel() {
     loadSnapshots();
   }, []);
 
-  const runRecalc = async (email, mode) => {
-    return await recalculateStudentEconomySnapshot(email, mode);
-  };
+
 
   const loadSnapshots = async () => {
     setLoading(true);
@@ -119,7 +117,11 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < emails.length; i++) {
       try {
-        const result = await recalculateStudentEconomySnapshot(emails[i], "preview", true);
+        const result = await recalculateStudentEconomySnapshot({ 
+          studentEmail: emails[i], 
+          reason: "preview", 
+          previewOnly: true 
+        });
         results.push({ email: emails[i], ...result });
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -150,7 +152,11 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < previewResults.length; i++) {
       try {
-        await recalculateStudentEconomySnapshot(previewResults[i].email, "admin_selected", false);
+        await recalculateStudentEconomySnapshot({ 
+          studentEmail: previewResults[i].email, 
+          reason: "admin_selected", 
+          previewOnly: false 
+        });
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {
@@ -186,7 +192,11 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < students.length; i++) {
       try {
-        await recalculateStudentEconomySnapshot(students[i].student_email, "admin_all", false);
+        await recalculateStudentEconomySnapshot({ 
+          studentEmail: students[i].student_email, 
+          reason: "admin_all", 
+          previewOnly: false 
+        });
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {

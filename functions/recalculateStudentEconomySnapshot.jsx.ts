@@ -89,10 +89,9 @@ const AVATAR_ITEMS = {
  * 
  * @param {string} studentEmail - The student's email
  * @param {string} reason - Why this calculation was triggered (for logging)
- * @param {boolean} previewOnly - If true, returns data without saving to database
- * @returns {Promise<Object>} The updated snapshot or preview data
+ * @returns {Promise<Object>} The updated snapshot
  */
-export async function recalculateStudentEconomySnapshot(studentEmail, reason = "manual", previewOnly = false) {
+export async function recalculateStudentEconomySnapshot(studentEmail, reason = "manual") {
   console.log(`\n💰 Recalculating economy snapshot for ${studentEmail} (reason: ${reason})`);
   
   try {
@@ -219,17 +218,6 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
       purchased_items: purchasedItems
     };
     
-    // If preview only, return data without saving
-    if (previewOnly) {
-      console.log(`👁️ Preview mode - returning data without saving`);
-      console.log(`  💰 Coins Cash: ${coinsCash}`);
-      console.log(`  📈 Investments: ${investmentsValue} (profit: ${investmentProfitUnrealized})`);
-      console.log(`  🎨 Items: ${itemsValue}`);
-      console.log(`  🏆 Total Assets: ${totalAssets}`);
-      console.log(`  📊 Income: ${totalIncome} | Expenses: ${totalExpenses}`);
-      return snapshotData;
-    }
-    
     // Check if snapshot exists
     const existingSnapshots = await base44.entities.StudentEconomySnapshot.filter({ 
       student_email: studentEmail 
@@ -264,4 +252,6 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
   }
 }
 
-export default recalculateStudentEconomySnapshot;
+export default async function recalculateStudentEconomySnapshotDefault({ studentEmail, reason = "manual", previewOnly = false }) {
+  return await recalculateStudentEconomySnapshot({ studentEmail, reason, previewOnly });
+}
