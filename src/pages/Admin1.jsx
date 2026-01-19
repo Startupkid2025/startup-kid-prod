@@ -624,6 +624,20 @@ export default function Admin() {
           const userWordProgress = wordProgressMap.get(entry.student_email) || [];
           const masteredWords = userWordProgress.filter(w => w.mastered === true).length;
           
+          // DEBUG: Log for specific student
+          if (entry.student_email === 'omer@startupkid.co.il') {
+            console.log(`🔍 VOCAB REBUILD DEBUG for ${entry.full_name}:`, {
+              totalWordProgress: userWordProgress.length,
+              masteredWords: masteredWords,
+              wordDetails: userWordProgress.map(w => ({
+                word: w.word_english,
+                mastered: w.mastered,
+                correct_streak: w.correct_streak,
+                total_attempts: w.total_attempts
+              }))
+            });
+          }
+          
           // 4. Calculate mastered math questions
           const userMathProgress = mathProgressMap.get(entry.student_email) || [];
           const masteredMathQuestions = userMathProgress.filter(m => m.mastered === true).length;
