@@ -39,6 +39,7 @@ export default function Admin() {
   const [managingQuizLesson, setManagingQuizLesson] = useState(null);
   const [isFixingEverything, setIsFixingEverything] = useState(false);
   const [isRecalculatingCoins, setIsRecalculatingCoins] = useState(false);
+  const [coinsPreviewResults, setCoinsPreviewResults] = useState(null);
   const [groups, setGroups] = useState([]);
   const [filterGroup, setFilterGroup] = useState("all");
   const [filterUserType, setFilterUserType] = useState("student");
@@ -173,10 +174,12 @@ export default function Admin() {
     }
   };
 
-  const recalculateAllCoinsAccurately = async () => {
+  const recalculateAllCoinsAccurately = async (previewOnly = true) => {
     setIsRecalculatingCoins(true);
     
     try {
+      console.log(`\n💰 ${previewOnly ? 'PREVIEW' : '🚨 APPLYING'} Coins Recalculation\n`);
+      
       const [
         allUsers,
         allWordProgress,
@@ -194,6 +197,7 @@ export default function Admin() {
       ]);
 
       const students = allUsers.filter(u => u.user_type === 'student');
+      const previewResults = [];
       
       const wordProgressMap = new Map();
       const mathProgressMap = new Map();
@@ -280,24 +284,6 @@ export default function Admin() {
                              profileDetailsCoins + workCoins + collaborationCoins + 
                              loginStreakCoins + passiveIncomeCoins + realizedProfit + (user.total_admin_coins || 0);
 
-          console.log(`\n📊 ${user.full_name} (${user.email}):`);
-          console.log(`  💰 הכנסות:`);
-          console.log(`    - בסיס: ${baseCoins}`);
-          console.log(`    - שיעורים: ${lessonsCoins} (${user.total_lessons || 0} × 100)`);
-          console.log(`    - אנגלית: ${wordCoins}`);
-          console.log(`    - חשבון: ${mathCoins}`);
-          console.log(`    - סקרים: ${surveyCoins}`);
-          console.log(`    - חידונים: ${quizCoins}`);
-          console.log(`    - משימות פרופיל: ${profileTasksCoins}`);
-          console.log(`    - פרטי פרופיל: ${profileDetailsCoins}`);
-          console.log(`    - עבודה: ${workCoins}`);
-          console.log(`    - שיתופי פעולה: ${collaborationCoins}`);
-          console.log(`    - רצף כניסות: ${loginStreakCoins}`);
-          console.log(`    - הכנסה פסיבית: ${passiveIncomeCoins}`);
-          console.log(`    - רווחי השקעות: ${totalInvestmentProfit}`);
-          console.log(`    - 👑 עדכוני אדמין: ${user.total_admin_coins || 0}`);
-          console.log(`  📈 סה"כ הכנסות: ${totalIncome}`);
-
           const purchasedItems = user.purchased_items || [];
           let itemsValue = 0;
           purchasedItems.forEach(itemId => {
@@ -319,44 +305,100 @@ export default function Admin() {
           
           // DON'T subtract investments! They are assets, not expenses
           const correctCoins = Math.round(totalIncome - itemsValue - totalLosses);
+          const oldCoins = user.coins || 0;
+          const coinsDiff = correctCoins - oldCoins;
           
-          console.log(`  📦 נכסים:`);
-          console.log(`    - פריטים: ${itemsValue}`);
-          console.log(`    - השקעות: ${investmentsValue}`);
-          console.log(`  📉 הפסדים: ${totalLosses}`);
-          console.log(`  💸 חישוב: ${totalIncome} - ${itemsValue} - ${investmentsValue} - ${totalLosses} = ${correctCoins}`);
-          console.log(`  ✅ מטבעות נכונים: ${correctCoins}`);
-          console.log(`  🔍 אימות: הכנסות (${totalIncome}) = נכסים (${correctCoins + itemsValue + investmentsValue}) + הפסדים (${totalLosses})`);
-          console.log(`  ${totalIncome} = ${correctCoins + itemsValue + investmentsValue + totalLosses} ✓\n`);
-
-          // Update only coins, NOT total_admin_coins (it should remain constant)
-          await retryWithBackoff(async () => {
-            await base44.entities.User.update(user.id, { coins: correctCoins });
-          });
+          // 🔍 DEBUG LOG for each user
+          console.log(`\n📊 ${user.full_name} (${user.email}):`);
+          console.log(`  oldCoins: ${oldCoins}`);
+          console.log(`  correctCoins: ${correctCoins}`);
+          console.log(`  diff: ${coinsDiff >= 0 ? '+' : ''}${coinsDiff}`);
+          console.log(`  totalIncome: ${totalIncome}`);
+          console.log(`  itemsValue: ${itemsValue}`);
+          console.log(`  totalLosses: ${totalLosses} (breakdown below)`);
+          console.log(`    - inflationLoss: ${inflationLoss}`);
+          console.log(`    - incomeTax: ${incomeTax}`);
+          console.log(`    - capitalGainsTax: ${capitalGainsTax}`);
+          console.log(`    - creditInterest: ${creditInterest} ⚠️`);
+          console.log(`    - itemSaleLosses: ${itemSaleLosses}`);
+          console.log(`    - investmentFees: ${investmentFees}`);
+          console.log(`    - dividendTax: ${dividendTax}`);
+          console.log(`  ✅ Formula: ${totalIncome} - ${itemsValue} - ${totalLosses} = ${correctCoins}`);
+          console.log(`  (investments ${investmentsValue} NOT subtracted - they are assets!)\n`);
           
-          await sleep(100);
+          // Build preview result
+          const resultItem = {
+            email: user.email,
+            name: user.full_name,
+            oldCoins,
+            correctCoins,
+            diff: coinsDiff,
+            totalIncome,
+            itemsValue,
+            totalLosses,
+            creditInterest,
+            warning: null,
+            willUpdate: true
+          };
           
-          await retryWithBackoff(async () => {
-            await syncLeaderboardEntry(user.email, { coins: correctCoins });
-          });
+          // 🛡️ SAFEGUARD: Detect anomalies
+          if (correctCoins < -5000) {
+            resultItem.warning = `⚠️ ANOMALY: correctCoins (${correctCoins}) < -5000`;
+            resultItem.willUpdate = false;
+            console.log(`  🚨 ${resultItem.warning} - SKIPPING UPDATE!`);
+          } else if (Math.abs(coinsDiff) > 5000) {
+            resultItem.warning = `⚠️ ANOMALY: diff (${coinsDiff}) > 5000`;
+            resultItem.willUpdate = false;
+            console.log(`  🚨 ${resultItem.warning} - SKIPPING UPDATE!`);
+          }
+          
+          previewResults.push(resultItem);
+          
+          // Only update if NOT preview mode AND passes safeguards
+          if (!previewOnly && resultItem.willUpdate) {
+            await retryWithBackoff(async () => {
+              await base44.entities.User.update(user.id, { coins: correctCoins });
+            });
+            
+            await sleep(100);
+            
+            await retryWithBackoff(async () => {
+              await syncLeaderboardEntry(user.email, { coins: correctCoins });
+            });
+            
+            console.log(`  ✅ UPDATED!`);
+          } else if (previewOnly) {
+            console.log(`  👁️ PREVIEW MODE - no changes made`);
+          }
           
           successCount++;
           
           if (i < students.length - 1) {
-            await sleep(400);
+            await sleep(previewOnly ? 100 : 400);
           }
         } catch (error) {
           failCount++;
         }
       }
       
-      if (failCount === 0) {
-        toast.success(`✅ חישוב מחדש הושלם! ${successCount} תלמידים עודכנו`);
+      // Save preview results to state
+      if (previewOnly) {
+        setCoinsPreviewResults(previewResults);
+        const anomalyCount = previewResults.filter(r => !r.willUpdate).length;
+        toast.success(
+          `👁️ תצוגה מקדימה: ${successCount} תלמידים נבדקו` + 
+          (anomalyCount > 0 ? ` (${anomalyCount} חריגים!)` : ''),
+          { duration: 8000 }
+        );
       } else {
-        toast.warning(`⚠️ הסתיים: ${successCount} הצליחו, ${failCount} נכשלו`);
+        setCoinsPreviewResults(null);
+        if (failCount === 0) {
+          toast.success(`✅ חישוב מחדש הושלם! ${successCount} תלמידים עודכנו`);
+        } else {
+          toast.warning(`⚠️ הסתיים: ${successCount} הצליחו, ${failCount} נכשלו`);
+        }
+        await refreshCurrentTab();
       }
-
-      await refreshCurrentTab();
     } catch (error) {
       toast.error("שגיאה קריטית בחישוב מחדש");
     } finally {
@@ -1785,13 +1827,58 @@ export default function Admin() {
               <CardTitle className="text-white">כלי ניהול</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button
-                onClick={recalculateAllCoinsAccurately}
-                disabled={isRecalculatingCoins}
-                className="w-full bg-blue-600 hover:bg-blue-700"
-              >
-                {isRecalculatingCoins ? "מחשב מחדש..." : "חשב מחדש מטבעות לכל המשתמשים"}
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  onClick={() => recalculateAllCoinsAccurately(true)}
+                  disabled={isRecalculatingCoins}
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                >
+                  {isRecalculatingCoins ? "מחשב..." : "👁️ תצוגה מקדימה - חישוב מטבעות (ללא שינוי)"}
+                </Button>
+                
+                {coinsPreviewResults && (
+                  <div className="bg-white/10 rounded-lg p-4 max-h-96 overflow-y-auto">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-white font-bold">תוצאות תצוגה מקדימה:</h4>
+                      <Button
+                        onClick={() => {
+                          if (confirm(`⚠️ אישור חשוב!\n\nאתה עומד לעדכן את המטבעות של ${coinsPreviewResults.filter(r => r.willUpdate).length} משתמשים.\n\nהשינויים יכתבו ישירות למסד הנתונים ולא ניתן לבטל!\n\nהאם להמשיך?`)) {
+                            recalculateAllCoinsAccurately(false);
+                          }
+                        }}
+                        disabled={isRecalculatingCoins}
+                        className="bg-red-600 hover:bg-red-700 font-bold"
+                      >
+                        🚨 החל שינויים (Apply)
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {coinsPreviewResults.map((result, idx) => (
+                        <div 
+                          key={idx} 
+                          className={`p-2 rounded text-xs ${
+                            result.warning ? 'bg-red-500/20 border border-red-500/50' : 'bg-white/5'
+                          }`}
+                        >
+                          <div className="text-white font-bold">{result.name}</div>
+                          <div className="text-white/70">
+                            {result.oldCoins} → {result.correctCoins} 
+                            <span className={result.diff >= 0 ? 'text-green-300' : 'text-red-300'}>
+                              {' '}({result.diff >= 0 ? '+' : ''}{result.diff})
+                            </span>
+                          </div>
+                          {result.creditInterest > 0 && (
+                            <div className="text-orange-300">⚠️ ריבית אשראי: {result.creditInterest}</div>
+                          )}
+                          {result.warning && (
+                            <div className="text-red-300 font-bold mt-1">{result.warning}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
               <Button
                 onClick={fixAdminCoins}
                 disabled={isRecalculatingCoins}
