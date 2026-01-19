@@ -34,35 +34,22 @@ export default function EconomyAdminPanel() {
       const allStudents = usersData.filter(u => u.user_type === 'student');
       console.log(`Found ${allStudents.length} students`);
       
-      // Try to load snapshots, but don't fail if entity doesn't exist
-      let snapshotsData = [];
-      try {
-        console.log("Loading StudentEconomySnapshot...");
-        snapshotsData = await base44.entities.StudentEconomySnapshot.list();
-        console.log(`Loaded ${snapshotsData.length} snapshots`);
-        setSnapshots(snapshotsData);
-      } catch (snapError) {
-        console.warn("Could not load StudentEconomySnapshot:", snapError?.response?.status, snapError?.message);
-        setSnapshots([]);
-      }
+      // Create merged list directly from users
+      // Don't try to load StudentEconomySnapshot - it may not exist or may cause errors
+      const merged = allStudents.map(user => ({
+        student_email: user.email,
+        full_name: user.full_name,
+        coins_cash: 0,
+        investments_value: 0,
+        items_value: 0,
+        total_assets: 0,
+        last_calculated_at: null,
+        isPlaceholder: true
+      }));
       
-      // Merge snapshots with users to create complete list
-      const merged = allStudents.map(user => {
-        const snapshot = snapshotsData.find(s => s.student_email === user.email);
-        return snapshot || {
-          student_email: user.email,
-          full_name: user.full_name,
-          coins_cash: 0,
-          investments_value: 0,
-          items_value: 0,
-          total_assets: 0,
-          last_calculated_at: null,
-          isPlaceholder: true
-        };
-      });
-      
-      console.log(`Merged ${merged.length} students with snapshots`);
+      console.log(`Created ${merged.length} student placeholders`);
       setStudents(merged);
+      setSnapshots([]);
     } catch (error) {
       console.error("Error loading data:", error?.response?.status, error?.message, error);
       toast.error(`שגיאה בטעינת נתונים: ${error?.message || 'Unknown error'}`);
