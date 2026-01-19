@@ -662,8 +662,16 @@ export default function EconomyAdminPanel() {
                     <div className="font-bold text-yellow-300">{((debugStudent.total_lessons || 0) * 100).toLocaleString()}</div>
                   </div>
                   <div>
-                    <span className="text-white/70">vocabulary_coins (כסף מאנגלית)</span>
+                    <span className="text-white/70">vocabulary_coins (כסף מאנגלית - סה"כ)</span>
                     <div className="font-bold text-yellow-300">{(debugStudent.vocabulary_coins || 0).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">correct_answers_coins (תשובות נכונות)</span>
+                    <div className="font-bold text-yellow-300">{(debugStudent.correct_answers_coins || 0).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">mastery_bonus_coins (בונוס שליטה)</span>
+                    <div className="font-bold text-yellow-300">{(debugStudent.mastery_bonus_coins || 0).toLocaleString()}</div>
                   </div>
                   <div>
                     <span className="text-white/70">math_coins (כסף מחשבון)</span>
