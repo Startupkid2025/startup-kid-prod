@@ -446,33 +446,70 @@ export default function Leaderboard() {
             return true;
           });
 
-          // Map to expected format for UI - handle nulls safely
-          const usersWithAllStats = filteredSnapshots.map(s => ({
-            id: s.id,
-            student_email: s.student_email,
-            full_name: s.full_name,
-            first_name: s.first_name,
-            last_name: s.last_name,
-            user_type: s.user_type || 'student',
-            coins: s.coins ?? 0,
-            purchased_items: s.purchased_items || [],
-            equipped_items: s.equipped_items || {},
-            totalValue: s.total_value ?? 0,
-            masteredWords: s.mastered_words ?? 0,
-            masteredMathQuestions: s.mastered_math_questions ?? 0,
-            loginStreak: s.login_streak ?? 0,
-            collaborationCount: s.collaboration_count ?? 0,
-            workHours: s.work_hours ?? 0,
-            workEarnings: s.work_earnings ?? 0,
-            last_login_date: s.last_login_date,
-            aiTechLessons: s.ai_tech_lessons ?? 0,
-            socialSkillsLessons: s.social_skills_lessons ?? 0,
-            moneyBusinessLessons: s.money_business_lessons ?? 0,
-            total_lessons: (s.ai_tech_lessons ?? 0) + (s.social_skills_lessons ?? 0) + (s.money_business_lessons ?? 0),
-            crowns: s.crowns || [],
-            daily_collaborations: s.daily_collaborations || [],
-            is_bootstrap: s.is_bootstrap || false
+          // Load WordProgress and MathProgress to get accurate counts
+          const [allWordProgress, allMathProgress] = await Promise.allSettled([
+            listAll(base44.entities.WordProgress),
+            listAll(base44.entities.MathProgress)
+          ]).then(results => results.map((result, idx) => {
+            if (result.status === 'fulfilled') return result.value;
+            const names = ['WordProgress', 'MathProgress'];
+            console.error(`Error loading ${names[idx]}:`, result.reason);
+            return [];
           }));
+
+          // Build lookup maps
+          const wordProgressByEmail = new Map();
+          allWordProgress.forEach(w => {
+            if (!wordProgressByEmail.has(w.student_email)) {
+              wordProgressByEmail.set(w.student_email, []);
+            }
+            wordProgressByEmail.get(w.student_email).push(w);
+          });
+
+          const mathProgressByEmail = new Map();
+          allMathProgress.forEach(m => {
+            if (!mathProgressByEmail.has(m.student_email)) {
+              mathProgressByEmail.set(m.student_email, []);
+            }
+            mathProgressByEmail.get(m.student_email).push(m);
+          });
+
+          // Map to expected format for UI - handle nulls safely
+           const usersWithAllStats = filteredSnapshots.map(s => {
+             // Get REAL counts from WordProgress and MathProgress
+             const userWordProgress = wordProgressByEmail.get(s.student_email) || [];
+             const masteredWords = userWordProgress.filter(w => w.mastered === true).length;
+
+             const userMathProgress = mathProgressByEmail.get(s.student_email) || [];
+             const masteredMathQuestions = userMathProgress.filter(m => m.mastered === true).length;
+
+             return {
+               id: s.id,
+               student_email: s.student_email,
+               full_name: s.full_name,
+               first_name: s.first_name,
+               last_name: s.last_name,
+               user_type: s.user_type || 'student',
+               coins: s.coins ?? 0,
+               purchased_items: s.purchased_items || [],
+               equipped_items: s.equipped_items || {},
+               totalValue: s.total_value ?? 0,
+               masteredWords: masteredWords,
+               masteredMathQuestions: masteredMathQuestions,
+               loginStreak: s.login_streak ?? 0,
+               collaborationCount: s.collaboration_count ?? 0,
+               workHours: s.work_hours ?? 0,
+               workEarnings: s.work_earnings ?? 0,
+               last_login_date: s.last_login_date,
+               aiTechLessons: s.ai_tech_lessons ?? 0,
+               socialSkillsLessons: s.social_skills_lessons ?? 0,
+               moneyBusinessLessons: s.money_business_lessons ?? 0,
+               total_lessons: (s.ai_tech_lessons ?? 0) + (s.social_skills_lessons ?? 0) + (s.money_business_lessons ?? 0),
+               crowns: s.crowns || [],
+               daily_collaborations: s.daily_collaborations || [],
+               is_bootstrap: s.is_bootstrap || false
+             };
+           });
 
           setUsers(usersWithAllStats);
           setIsLoading(false);
