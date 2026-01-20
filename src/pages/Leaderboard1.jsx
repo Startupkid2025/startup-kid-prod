@@ -202,13 +202,13 @@ const LeaderboardRow = React.memo(({
               </TooltipProvider>
             </div>
 
-            {/* Right Side: Income + Collaborate Button */}
+            {/* Right Side: Networth + Collaborate Button */}
             <div className="flex-shrink-0 flex flex-col items-center gap-1 sm:gap-2">
-            {/* Total Income */}
+            {/* Total Networth */}
             <div className="text-center">
               <div className={`bg-gradient-to-br ${getRankColor(actualIndex)} text-white font-black px-2 sm:px-4 py-1 sm:py-2 rounded-xl shadow-lg`}>
-                <div className="text-base sm:text-2xl">{player.total_income?.toLocaleString() || player.totalValue}</div>
-                <div className="text-[8px] sm:text-[10px] opacity-80">הכנסות</div>
+                <div className="text-base sm:text-2xl">{player.totalValue}</div>
+                <div className="text-[8px] sm:text-[10px] opacity-80">מטבעות</div>
               </div>
             </div>
 
@@ -807,8 +807,8 @@ export default function Leaderboard() {
         };
       });
 
-      // Sort by total_income (gross income) instead of totalValue
-      usersWithAllStats.sort((a, b) => (b.total_income || b.totalValue) - (a.total_income || a.totalValue));
+      // Sort by totalValue (Networth) instead of totalXP
+      usersWithAllStats.sort((a, b) => b.totalValue - a.totalValue);
 
       // Find kings in each category - ONLY from real students (not demo users)
       const realStudents = usersWithAllStats.filter(u => u.user_type === 'student');
@@ -1098,7 +1098,7 @@ export default function Leaderboard() {
           🎯 טבלת שיאים 🎯
         </h1>
         <p className="text-white/80 text-lg">
-          מי הרוויח הכי הרבה? 💰
+          מי הכי עשיר? 💰
         </p>
       </motion.div>
 
