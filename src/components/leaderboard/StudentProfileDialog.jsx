@@ -189,8 +189,11 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       // 2) A) Lesson income - SINGLE SOURCE OF TRUTH (no double counting)
       if (fullUserData.total_lessons_coins != null) {
         income.lessonsCoins = safeNum(fullUserData.total_lessons_coins);
+      } else if (fullUserData.total_lessons) {
+        // Fallback: calculate from total_lessons only if total_lessons_coins doesn't exist
+        income.lessonsCoins = fullUserData.total_lessons * 100;
       } else {
-        income.lessonsCoins = 0; // No fallback to prevent double counting
+        income.lessonsCoins = 0;
       }
 
       // 7) Surveys - prefer stored value with fallback
