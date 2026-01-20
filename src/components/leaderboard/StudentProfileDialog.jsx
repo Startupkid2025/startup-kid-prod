@@ -134,7 +134,6 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         quizzes: quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0),
         workEarnings: 0, // Will be set from fullUserData
         profileTasks: 0,
-        profileDetails: 0,
         investmentProfits: 0 // Will be calculated properly
       };
 
@@ -171,17 +170,12 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
 
       console.log("Source of truth data:", fullUserData);
 
-      // Profile tasks - use LeaderboardEntry data (accessible to all)
-      if (student.completed_instagram_follow) income.profileTasks += 50;
-      if (student.completed_youtube_subscribe) income.profileTasks += 50;
-      if (student.completed_facebook_follow) income.profileTasks += 50;
-      if (student.completed_discord_join) income.profileTasks += 50;
-      if (student.completed_share) income.profileTasks += 100;
-
-      // Profile details - use merged fullUserData (includes DB data)
-      if (fullUserData.age) income.profileDetails += 20;
-      if (fullUserData.bio && fullUserData.bio.length > 10) income.profileDetails += 30;
-      if (fullUserData.phone_number) income.profileDetails += 20;
+      // Profile tasks - these ARE saved in User entity
+      if (fullUserData.completed_instagram_follow) income.profileTasks += 50;
+      if (fullUserData.completed_youtube_subscribe) income.profileTasks += 50;
+      if (fullUserData.completed_facebook_follow) income.profileTasks += 50;
+      if (fullUserData.completed_discord_join) income.profileTasks += 50;
+      if (fullUserData.completed_share) income.profileTasks += 100;
 
       // 5) Base - use stored value with fallback to 500
       income.base = safeNum(fullUserData.base_coins ?? fullUserData.base ?? 500);
@@ -458,7 +452,6 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                     <div className="flex justify-between"><span className="text-white/70">❓ חידונים:</span><span className="text-white font-bold">{Math.round(financeReport.income.quizzes)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">💼 הכנסות מעבודה:</span><span className="text-white font-bold">{Math.round(financeReport.income.workEarnings)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">✅ משימות פרופיל:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileTasks)}</span></div>
-                    <div className="flex justify-between"><span className="text-white/70">👤 פרטי פרופיל:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileDetails)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">🤝 שיתופי פעולה:</span><span className="text-white font-bold">{Math.round(financeReport.income.collaboration)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">🔥 הכנסות מרצף כניסות:</span><span className="text-white font-bold">{Math.round(financeReport.income.loginStreakIncome)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">🏠 הכנסה פסיבית:</span><span className="text-white font-bold">{Math.round(financeReport.income.passiveIncome)}</span></div>
