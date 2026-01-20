@@ -1532,6 +1532,35 @@ export default function Admin() {
                   >
                     <RefreshCw className="w-4 h-4" />
                   </Button>
+                  <Button
+                    onClick={() => {
+                      // Generate CSV
+                      const headers = ['email', 'full_name', 'first_name', 'last_name', 'user_type', 'role', 'coins', 'total_lessons', 'created_date'];
+                      const csvRows = [headers.join(',')];
+                      
+                      students.forEach(student => {
+                        const row = headers.map(header => {
+                          const value = student[header] || '';
+                          return `"${String(value).replace(/"/g, '""')}"`;
+                        });
+                        csvRows.push(row.join(','));
+                      });
+                      
+                      const csvContent = csvRows.join('\n');
+                      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = `users_${new Date().toISOString().split('T')[0]}.csv`;
+                      link.click();
+                      URL.revokeObjectURL(url);
+                      toast.success('קובץ CSV הורד בהצלחה');
+                    }}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    📥 הורד CSV
+                  </Button>
                 </div>
                 {students.filter(s => {
                   const typeMatch = filterUserType === 'all' || s.user_type === filterUserType;
