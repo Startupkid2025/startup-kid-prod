@@ -31,16 +31,7 @@ export default function EconomyAdminPanel() {
   const loadSnapshots = async () => {
     setLoading(true);
     try {
-      // Check admin permissions first
-      let currentUser;
-      try {
-        currentUser = await base44.auth.me();
-      } catch (authError) {
-        console.error("Auth error:", authError);
-        toast.error("שגיאה באימות משתמש");
-        setLoading(false);
-        return;
-      }
+      const currentUser = await base44.auth.me();
 
       if (currentUser.role !== 'admin') {
         toast.error("אין הרשאות גישה");
@@ -48,39 +39,22 @@ export default function EconomyAdminPanel() {
         return;
       }
 
-      console.log("Loading users...");
-      let usersData;
-      try {
-        usersData = await base44.entities.User.list();
-        console.log(`Loaded ${usersData.length} users`);
-      } catch (userError) {
-        console.error("Error loading users:", userError?.response?.status, userError?.response?.data, userError);
-        toast.error("שגיאה בטעינת משתמשים");
-        setLoading(false);
-        return;
-      }
-      
+      const usersData = await base44.entities.User.list();
       const allStudents = usersData.filter(u => u.user_type === 'student');
-      console.log(`Found ${allStudents.length} students`);
       
-      // Create merged list directly from users
-      const merged = allStudents.map(user => ({
+      setStudents(allStudents.map(user => ({
         student_email: user.email,
         full_name: user.full_name,
-        coins_cash: 0,
+        coins_cash: user.coins || 0,
         investments_value: 0,
         items_value: 0,
-        total_assets: 0,
-        last_calculated_at: null,
-        isPlaceholder: true
-      }));
-      
-      console.log(`Created ${merged.length} student placeholders`);
-      setStudents(merged);
+        total_assets: user.coins || 0,
+        last_calculated_at: null
+      })));
       setSnapshots([]);
     } catch (error) {
-      console.error("Unexpected error:", error?.response?.status, error?.response?.data, error?.message, error);
-      toast.error(`שגיאה: ${error?.message || 'Unknown error'}`);
+      console.error("Error loading data:", error);
+      toast.error("שגיאה בטעינת נתונים");
     } finally {
       setLoading(false);
     }
@@ -104,225 +78,11 @@ export default function EconomyAdminPanel() {
     setSelectedEmails(newSelected);
   };
 
-  const calculateStudentEconomy = async (studentEmail) => {
-    // Fetch user data with delays
-    const users = await base44.entities.User.filter({ email: studentEmail });
-    if (!users || users.length === 0) throw new Error("User not found");
-    const user = users[0];
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const wordProgress = await base44.entities.WordProgress.filter({ student_email: studentEmail });
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const mathProgress = await base44.entities.MathProgress.filter({ student_email: studentEmail });
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const participations = await base44.entities.LessonParticipation.filter({ student_email: studentEmail });
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const quizProgress = await base44.entities.QuizProgress.filter({ student_email: studentEmail });
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const investments = await base44.entities.Investment.filter({ student_email: studentEmail });
 
-    // Calculate income
-    const income = {
-      base_signup: 500,
-      lessons: (user.total_lessons || 0) * 100,
-      vocabulary: wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0),
-      math: mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0),
-      surveys: participations.filter(p => p.survey_completed === true).length * 70,
-      quizzes: quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0),
-      work: user.total_work_earnings || 0,
-      profile_age: user.age ? 20 : 0,
-      profile_bio: (user.bio && user.bio.length > 10) ? 30 : 0,
-      profile_phone: user.phone_number ? 20 : 0,
-      instagram_follow: user.completed_instagram_follow ? 50 : 0,
-      youtube_subscribe: user.completed_youtube_subscribe ? 50 : 0,
-      facebook_follow: user.completed_facebook_follow ? 50 : 0,
-      discord_join: user.completed_discord_join ? 50 : 0,
-      share_bonus: user.completed_share ? 100 : 0,
-      collaboration: user.total_collaboration_coins || 0,
-      login_streak: user.total_login_streak_coins || 0,
-      passive_income: user.total_passive_income || 0,
-      admin_bonus: user.total_admin_coins || 0,
-      investment_profit_realized: user.total_realized_investment_profit || 0
-    };
 
-    // Calculate expenses
-    const expenses = {
-      inflation: user.total_inflation_lost || 0,
-      capital_gains_tax: user.total_capital_gains_tax || 0,
-      investment_fees: user.total_investment_fees || 0,
-      item_sale_losses: user.total_item_sale_losses || 0
-    };
 
-    // Items value
-    const purchasedItems = user.purchased_items || [];
-    const AVATAR_ITEMS = {
-      "body_blue": { price: 0 }, "body_pink": { price: 200 }, "body_purple": { price: 400 },
-      "body_green": { price: 600 }, "body_orange": { price: 800 }, "body_red": { price: 1000 },
-      "body_gold": { price: 1500 }, "body_rainbow": { price: 2000 },
-      "eyes_sparkle": { price: 0 }, "eyes_determined": { price: 300 }, "eyes_heart": { price: 500 },
-      "eyes_star": { price: 700 }, "eyes_cool": { price: 1000 }, "eyes_laser": { price: 1200 },
-      "eyes_cyber": { price: 1500 }, "eyes_diamond": { price: 2000 },
-      "mouth_smile": { price: 0 }, "mouth_happy": { price: 250 }, "mouth_confident": { price: 400 },
-      "mouth_cat": { price: 550 }, "mouth_wink": { price: 700 }, "mouth_laugh": { price: 900 },
-      "mouth_cool": { price: 1100 }, "mouth_boss": { price: 1500 },
-      "hat_cap": { price: 300 }, "hat_party": { price: 450 }, "hat_tophat": { price: 600 },
-      "hat_graduate": { price: 800 }, "hat_cowboy": { price: 1000 }, "hat_crown": { price: 1300 },
-      "hat_wizard": { price: 1600 }, "hat_diamond": { price: 2500 },
-      "accessory_phone": { price: 400 }, "accessory_tie": { price: 600 }, "accessory_briefcase": { price: 800 },
-      "accessory_laptop": { price: 1000 }, "accessory_suit": { price: 1300 }, "accessory_rocket": { price: 1600 },
-      "accessory_trophy": { price: 2000 }, "accessory_diamond_brief": { price: 3000 },
-      "shoes_sneakers": { price: 0 }, "shoes_running": { price: 350 }, "shoes_boots": { price: 500 },
-      "shoes_heels": { price: 700 }, "shoes_dress": { price: 1000 }, "shoes_rocket": { price: 1400 },
-      "shoes_fire": { price: 1800 }, "shoes_diamond": { price: 2500 },
-      "background_basic": { price: 0 }, "background_apartment": { price: 400 }, "background_villa": { price: 700 },
-      "background_penthouse": { price: 1000 }, "background_mansion": { price: 1500 }, "background_island": { price: 2000 },
-      "background_space": { price: 2500 }, "background_universe": { price: 3500 },
-      "jewelry_watch": { price: 600 }, "jewelry_necklace": { price: 900 }, "jewelry_ring": { price: 1200 },
-      "jewelry_crown_small": { price: 1500 }, "jewelry_amulet": { price: 2000 }, "jewelry_infinity": { price: 3000 }
-    };
 
-    let itemsValue = 0;
-    purchasedItems.forEach(itemId => {
-      const item = AVATAR_ITEMS[itemId];
-      if (item && item.price) itemsValue += item.price;
-    });
-
-    // Investments
-    const investmentsValue = investments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-    const investmentsSpent = investments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
-    const investmentProfitUnrealized = investmentsValue - investmentsSpent;
-    income.investment_profit_unrealized = investmentProfitUnrealized;
-
-    const totalIncome = Object.values(income).reduce((sum, val) => sum + val, 0);
-    const totalExpenses = Object.values(expenses).reduce((sum, val) => sum + val, 0);
-    const coinsCash = Math.round(totalIncome - totalExpenses - itemsValue - investmentsSpent);
-    const totalAssets = coinsCash + investmentsValue + itemsValue;
-
-    return {
-      email: studentEmail,
-      full_name: user.full_name,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      user_type: user.user_type,
-      coins_cash: coinsCash,
-      investments_value: investmentsValue,
-      items_value: itemsValue,
-      total_assets: totalAssets,
-      income_breakdown: income,
-      expense_breakdown: expenses,
-      purchased_items: purchasedItems,
-      equipped_items: user.equipped_items || {}
-    };
-  };
-
-  const previewSelected = async () => {
-    if (selectedEmails.size === 0) {
-      toast.error("בחר לפחות תלמיד אחד");
-      return;
-    }
-
-    setIsRecalculating(true);
-    setProgress({ current: 0, total: selectedEmails.size, errors: [] });
-
-    const emails = Array.from(selectedEmails);
-    const results = [];
-
-    for (let i = 0; i < emails.length; i++) {
-      try {
-        const result = await calculateStudentEconomy(emails[i]);
-        results.push(result);
-        setProgress(prev => ({ ...prev, current: i + 1 }));
-        await new Promise(resolve => setTimeout(resolve, 100));
-      } catch (error) {
-        console.error(`Error for ${emails[i]}:`, error);
-        results.push({ email: emails[i], error: error.message });
-        setProgress(prev => ({ ...prev, current: i + 1 }));
-      }
-    }
-
-    setIsRecalculating(false);
-    setPreviewResults(results);
-    setShowPreview(true);
-    toast.success(`👁️ תצוגה מקדימה מוכנה`);
-  };
-
-  const applyPreview = async () => {
-    if (!previewResults || previewResults.length === 0) return;
-
-    if (!confirm(`לעדכן ${previewResults.length} תלמידים?`)) {
-      return;
-    }
-
-    setIsRecalculating(true);
-    setProgress({ current: 0, total: previewResults.length, errors: [] });
-
-    const errors = [];
-
-    for (let i = 0; i < previewResults.length; i++) {
-      try {
-        const result = previewResults[i];
-        if (result.error) {
-          errors.push({ email: result.email, error: result.error });
-          continue;
-        }
-
-        // Create or update snapshot
-        const existingSnapshots = await base44.entities.StudentEconomySnapshot.filter({ 
-          student_email: result.email 
-        });
-
-        const snapshotData = {
-          student_email: result.email,
-          full_name: result.full_name,
-          first_name: result.first_name,
-          last_name: result.last_name,
-          user_type: result.user_type,
-          coins: result.coins_cash,
-          coins_cash: result.coins_cash,
-          investments_value: result.investments_value,
-          items_value: result.items_value,
-          total_assets: result.total_assets,
-          total_value: result.total_assets,
-          income_breakdown: result.income_breakdown,
-          expense_breakdown: result.expense_breakdown,
-          purchased_items: result.purchased_items,
-          equipped_items: result.equipped_items,
-          last_calculated_at: new Date().toISOString(),
-          snapshot_version: 2
-        };
-
-        if (existingSnapshots.length > 0) {
-          await base44.entities.StudentEconomySnapshot.update(existingSnapshots[0].id, snapshotData);
-        } else {
-          await base44.entities.StudentEconomySnapshot.create(snapshotData);
-        }
-
-        setProgress(prev => ({ ...prev, current: i + 1 }));
-        await new Promise(resolve => setTimeout(resolve, 1500));
-      } catch (error) {
-        console.error(`Error for ${previewResults[i].email}:`, error);
-        errors.push({ email: previewResults[i].email, error: error.message });
-        setProgress(prev => ({ ...prev, current: i + 1, errors }));
-      }
-    }
-
-    setIsRecalculating(false);
-
-    if (errors.length === 0) {
-      toast.success(`✅ עודכן עבור ${previewResults.length} תלמידים`);
-    } else {
-      toast.warning(`⚠️ ${previewResults.length - errors.length} הצליחו, ${errors.length} נכשלו`);
-    }
-
-    await loadSnapshots();
-    setSelectedEmails(new Set());
-    setPreviewResults(null);
-    setShowPreview(false);
-  };
 
   const balanceSelectedCoins = async () => {
     if (selectedEmails.size === 0) {
@@ -646,84 +406,9 @@ export default function EconomyAdminPanel() {
     await loadSnapshots();
   };
 
-  const recalculateAll = async () => {
-    if (!confirm(`⚠️ לחשב מחדש עבור כל ${students.length} התלמידים?`)) {
-      return;
-    }
 
-    setIsRecalculating(true);
-    setProgress({ current: 0, total: students.length, errors: [] });
 
-    const errors = [];
 
-    for (let i = 0; i < students.length; i++) {
-      try {
-        const result = await calculateStudentEconomy(students[i].student_email);
-
-        // Create or update snapshot
-        const existingSnapshots = await base44.entities.StudentEconomySnapshot.filter({ 
-          student_email: result.email 
-        });
-
-        const snapshotData = {
-          student_email: result.email,
-          full_name: result.full_name,
-          first_name: result.first_name,
-          last_name: result.last_name,
-          user_type: result.user_type,
-          coins: result.coins_cash,
-          coins_cash: result.coins_cash,
-          investments_value: result.investments_value,
-          items_value: result.items_value,
-          total_assets: result.total_assets,
-          total_value: result.total_assets,
-          income_breakdown: result.income_breakdown,
-          expense_breakdown: result.expense_breakdown,
-          purchased_items: result.purchased_items,
-          equipped_items: result.equipped_items,
-          last_calculated_at: new Date().toISOString(),
-          snapshot_version: 2
-        };
-
-        if (existingSnapshots.length > 0) {
-          await base44.entities.StudentEconomySnapshot.update(existingSnapshots[0].id, snapshotData);
-        } else {
-          await base44.entities.StudentEconomySnapshot.create(snapshotData);
-        }
-
-        setProgress(prev => ({ ...prev, current: i + 1 }));
-        await new Promise(resolve => setTimeout(resolve, 1500));
-      } catch (error) {
-        console.error(`Error for ${students[i].student_email}:`, error);
-        errors.push({ email: students[i].student_email, error: error.message });
-        setProgress(prev => ({ ...prev, current: i + 1, errors }));
-      }
-    }
-
-    setIsRecalculating(false);
-
-    if (errors.length === 0) {
-      toast.success(`✅ חושב מחדש עבור כל התלמידים`);
-    } else {
-      toast.warning(`⚠️ ${students.length - errors.length} הצליחו, ${errors.length} נכשלו`);
-    }
-
-    await loadSnapshots();
-  };
-
-  const recalculateVocabularyCoins = async (studentEmail) => {
-    try {
-      const wordProgress = await base44.entities.WordProgress.filter({ student_email: studentEmail });
-
-      // חשב כסף מתשובות נכונות
-      const totalCoins = wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
-
-      toast.success(`✅ סה"כ כסף מאנגלית: ${totalCoins} מטבעות`);
-    } catch (error) {
-      console.error("Error recalculating vocabulary coins:", error);
-      toast.error("שגיאה בחישוב כסף אנגלית");
-    }
-  };
 
   const loadStudentData = async (studentEmail) => {
     if (loadingStudentData) return; // Prevent double clicks
@@ -851,14 +536,6 @@ export default function EconomyAdminPanel() {
   return (
     <div className="space-y-6">
       <MaintenanceModeToggle />
-      
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Economy Admin Panel</h2>
-        <Button onClick={loadSnapshots} disabled={loading} className="bg-white/20 hover:bg-white/30 text-white border-white/30">
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          רענן
-        </Button>
-      </div>
 
       {/* Search and Actions */}
       <div className="bg-white/10 rounded-xl p-4 space-y-4">
@@ -877,8 +554,8 @@ export default function EconomyAdminPanel() {
           </Button>
         </div>
 
-        {/* Selected Students Preview */}
-        {selectedEmails.size > 0 && (
+        {/* Removed preview section */}
+        {false && selectedEmails.size > 0 && (
           <div className="bg-emerald-500/20 border-2 border-emerald-500/50 rounded-lg p-3">
             <div className="flex items-center justify-between mb-2">
               <span className="text-white font-bold">נבחרו {selectedEmails.size} תלמידים:</span>
@@ -914,49 +591,11 @@ export default function EconomyAdminPanel() {
           </div>
         )}
 
-        <div className="flex gap-4">
-          <Button
-            onClick={previewSelected}
-            disabled={isRecalculating || selectedEmails.size === 0}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg border-2 border-blue-400/50"
-          >
-            👁️ תצוגה מקדימה ({selectedEmails.size})
-          </Button>
-          {previewResults && previewResults.length > 0 && (
-            <Button
-              onClick={applyPreview}
-              disabled={isRecalculating}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg border-2 border-emerald-400/50 animate-pulse"
-            >
-              ✅ עדכן עכשיו ({previewResults.length})
-            </Button>
-          )}
-          {selectedEmails.size > 0 && (
-            <Button
-              onClick={balanceSelectedCoins}
-              disabled={isRecalculating}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg border-2 border-purple-400/50"
-            >
-              ⚖️ אזן נבחרים ({selectedEmails.size})
-            </Button>
-          )}
-          <Button
-            onClick={balanceAllCoins}
-            disabled={isRecalculating}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg border-2 border-purple-400/50"
-          >
-            ⚖️ אזן הכל ({students.length})
-          </Button>
-          <Button
-            onClick={recalculateAll}
-            disabled={isRecalculating}
-            className="bg-orange-600 hover:bg-orange-700 text-white font-bold shadow-lg border-2 border-orange-400/50"
-          >
-            🚨 חשב הכל ({students.length})
-          </Button>
+        <div className="text-white/70 text-sm">
+          מערכת ניהול הכסף עברה לעמוד הניהול הראשי
         </div>
 
-        {isRecalculating && (
+        {false && isRecalculating && (
           <div className="bg-white/5 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-white font-bold">
@@ -981,9 +620,8 @@ export default function EconomyAdminPanel() {
         )}
       </div>
 
-      {/* Students Grid */}
-      <div className="bg-white/10 rounded-xl p-4">
-        <div className="mb-4 flex items-center justify-between">
+      <div className="bg-white/10 rounded-xl p-4 hidden">
+        <div className="mb-4 flex items-center justify-between hidden">
           <div className="text-white/80">
             {filteredSnapshots.length} תלמידים
           </div>
@@ -1180,8 +818,8 @@ export default function EconomyAdminPanel() {
         </div>
       </div>
 
-      {/* Preview Dialog */}
-      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+      {/* Preview Dialog - removed */}
+      <Dialog open={false} onOpenChange={setShowPreview}>
         <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-blue-900 to-indigo-900 text-white">
           <DialogHeader>
             <DialogTitle className="text-2xl">

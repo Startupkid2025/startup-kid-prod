@@ -410,60 +410,29 @@ export default function Leaderboard() {
       const user = await base44.auth.me();
       setCurrentUser(user);
 
-      // Load all users
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const allUsers = await listAll(base44.entities.User);
-      
-      // Filter: Show ONLY students, exclude demo/parent
-      const filteredUsers = allUsers.filter(u => {
-        // Current user can always see themselves
+      // Load all students and their investments
+      const [allUsers, allInvestments, allWordProgress, allMathProgress] = await Promise.all([
+        listAll(base44.entities.User),
+        listAll(base44.entities.Investment),
+        listAll(base44.entities.WordProgress),
+        listAll(base44.entities.MathProgress)
+      ]);
+
+      // Filter: Show ONLY students, exclude demo/parent/admin
+      const students = allUsers.filter(u => {
         if (user && u.email === user.email) return true;
-        
-        // Filter out demo, parents, and admins
         if (u.role === 'admin') return false;
         if (u.user_type === 'demo' || u.user_type === 'parent') return false;
-        
-        // Show everyone else (students)
         return true;
       });
 
-      console.log("Loaded users:", filteredUsers.length);
-
-      // Load data in batches with delays
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const allWordProgress = await listAll(base44.entities.WordProgress).catch(err => {
-        console.error('Error loading WordProgress:', err);
-        return [];
-      });
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const allMathProgress = await listAll(base44.entities.MathProgress).catch(err => {
-        console.error('Error loading MathProgress:', err);
-        return [];
-      });
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const allInvestments = await listAll(base44.entities.Investment).catch(err => {
-        console.error('Error loading Investments:', err);
-        return [];
-      });
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const allLessonParticipations = await listAll(base44.entities.LessonParticipation).catch(err => {
-        console.error('Error loading LessonParticipation:', err);
-        return [];
-      });
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const allLessons = await listAll(base44.entities.Lesson).catch(err => {
-        console.error('Error loading Lessons:', err);
-        return [];
-      });
-
       // Build lookup maps
-      const lessonMap = new Map();
-      allLessons.forEach(lesson => {
-        lessonMap.set(lesson.id, lesson);
+      const investmentsByEmail = new Map();
+      allInvestments.forEach(inv => {
+        if (!investmentsByEmail.has(inv.student_email)) {
+          investmentsByEmail.set(inv.student_email, []);
+        }
+        investmentsByEmail.get(inv.student_email).push(inv);
       });
 
       const wordProgressByEmail = new Map();
@@ -474,22 +443,6 @@ export default function Leaderboard() {
         wordProgressByEmail.get(w.student_email).push(w);
       });
 
-      const participationsByEmail = new Map();
-      allLessonParticipations.forEach(p => {
-        if (!participationsByEmail.has(p.student_email)) {
-          participationsByEmail.set(p.student_email, []);
-        }
-        participationsByEmail.get(p.student_email).push(p);
-      });
-
-      const investmentsByEmail = new Map();
-      allInvestments.forEach(inv => {
-        if (!investmentsByEmail.has(inv.student_email)) {
-          investmentsByEmail.set(inv.student_email, []);
-        }
-        investmentsByEmail.get(inv.student_email).push(inv);
-      });
-
       const mathProgressByEmail = new Map();
       allMathProgress.forEach(m => {
         if (!mathProgressByEmail.has(m.student_email)) {
@@ -498,63 +451,28 @@ export default function Leaderboard() {
         mathProgressByEmail.get(m.student_email).push(m);
       });
 
-      const usersWithAllStats = filteredUsers.map((u) => {
-        const userWordProgress = wordProgressByEmail.get(u.email) || [];
-        const masteredWords = userWordProgress.filter(w => w.mastered).length;
-
-        // Calculate lesson counts by category from REAL participations
-        const userParticipations = (participationsByEmail.get(u.email) || []).filter(p => p.attended);
-
-        let aiTechLessons = 0;
-        let socialSkillsLessons = 0;
-        let moneyBusinessLessons = 0;
-
-        userParticipations.forEach(participation => {
-          const lesson = lessonMap.get(participation.lesson_id);
-          if (!lesson) return;
-
-          if (lesson.category === 'ai_tech') aiTechLessons++;
-          if (lesson.category === 'personal_skills' || lesson.category === 'social_skills') socialSkillsLessons++;
-          if (lesson.category === 'money_business') moneyBusinessLessons++;
-        });
-
-        // Calculate REAL total lessons from actual participations
-        const realTotalLessons = aiTechLessons + socialSkillsLessons + moneyBusinessLessons;
-        
-        // Count completed math questions directly from MathProgress
-        const userMathProgressList = mathProgressByEmail.get(u.email) || [];
-        const masteredMathQuestions = userMathProgressList.filter(m => m.mastered === true).length;
-        
-        // Collaboration count - calculate from daily_collaborations
-        const completedCollabs = (u.daily_collaborations || []).filter(c => c && c.completed);
-        const collaborationCount = completedCollabs.length;
-
-        // Work hours and earnings
-        const workHours = u.total_work_hours || 0;
-        const workEarnings = u.total_work_earnings || 0;
-
-        // Calculate net worth: coins + items + investments
+      // Calculate net worth for each student
+      const studentsWithStats = students.map(u => {
         const userInvestments = investmentsByEmail.get(u.email) || [];
         const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
 
-        // Calculate items value
         const purchasedItems = u.purchased_items || [];
         let itemsValue = 0;
         purchasedItems.forEach(itemId => {
           const item = AVATAR_ITEMS[itemId];
-          if (item && item.price) {
-            itemsValue += item.price;
-          }
+          if (item && item.price) itemsValue += item.price;
         });
 
         const coins = u.coins || 0;
         const totalValue = Math.round(coins + itemsValue + investmentsValue);
 
-        // Calculate category earnings for crowns
-        const vocabEarnings = userWordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
-        const mathEarnings = u.total_math_earnings || 0;
-        const currentInvestmentValue = investmentsValue;
-        const loginStreakEarnings = u.total_login_streak_coins || 0;
+        const userWordProgress = wordProgressByEmail.get(u.email) || [];
+        const masteredWords = userWordProgress.filter(w => w.mastered).length;
+
+        const userMathProgress = mathProgressByEmail.get(u.email) || [];
+        const masteredMathQuestions = userMathProgress.filter(m => m.mastered).length;
+
+        const collaborationCount = (u.daily_collaborations || []).filter(c => c && c.completed).length;
 
         return {
           id: u.id,
@@ -571,42 +489,29 @@ export default function Leaderboard() {
           masteredMathQuestions: masteredMathQuestions,
           loginStreak: u.login_streak || 0,
           collaborationCount: collaborationCount,
-          workHours: workHours,
-          workEarnings: workEarnings,
+          workHours: u.total_work_hours || 0,
+          workEarnings: u.total_work_earnings || 0,
           last_login_date: u.last_login_date,
-          aiTechLessons: aiTechLessons,
-          socialSkillsLessons: socialSkillsLessons,
-          moneyBusinessLessons: moneyBusinessLessons,
-          total_lessons: realTotalLessons,
-          vocabEarnings: vocabEarnings,
-          mathEarnings: mathEarnings,
-          currentInvestmentValue: currentInvestmentValue,
-          loginStreakEarnings: loginStreakEarnings,
+          total_lessons: u.total_lessons || 0,
           daily_collaborations: u.daily_collaborations || [],
+          currentInvestmentValue: investmentsValue,
           crowns: []
         };
       });
 
-      // Sort by totalValue (Networth) instead of totalXP
-      usersWithAllStats.sort((a, b) => b.totalValue - a.totalValue);
+      // Sort by totalValue descending
+      studentsWithStats.sort((a, b) => b.totalValue - a.totalValue);
 
-      // Find kings in each category - ONLY from real students (not demo users)
-      const realStudents = usersWithAllStats.filter(u => u.user_type === 'student');
+      // Find kings - ONLY from real students
+      const realStudents = studentsWithStats.filter(u => u.user_type === 'student');
       const mathKing = [...realStudents].sort((a, b) => b.masteredMathQuestions - a.masteredMathQuestions)[0];
       const vocabKing = [...realStudents].sort((a, b) => b.masteredWords - a.masteredWords)[0];
       const investmentKing = [...realStudents].sort((a, b) => b.currentInvestmentValue - a.currentInvestmentValue)[0];
       const loginStreakKing = [...realStudents].sort((a, b) => b.loginStreak - a.loginStreak)[0];
       const workKing = [...realStudents].sort((a, b) => b.workHours - a.workHours)[0];
 
-      // Debug: Log kings
-      console.log('Math King:', mathKing?.student_email, 'Questions:', mathKing?.masteredMathQuestions);
-      console.log('Vocab King:', vocabKing?.student_email, 'Words:', vocabKing?.masteredWords);
-      console.log('Investment King:', investmentKing?.student_email, 'Value:', investmentKing?.currentInvestmentValue);
-      console.log('Login Streak King:', loginStreakKing?.student_email, 'Streak:', loginStreakKing?.loginStreak);
-      console.log('Work King:', workKing?.student_email, 'Hours:', workKing?.workHours);
-
-      // Add crown flags to users
-      usersWithAllStats.forEach(u => {
+      // Add crowns
+      studentsWithStats.forEach(u => {
         u.crowns = [];
         if (mathKing && u.student_email === mathKing.student_email && mathKing.masteredMathQuestions > 0) {
           u.crowns.push({ type: 'math', name: '🔢 מלך החשבון', bonus: '+5 מטבעות לתרגיל' });
@@ -625,10 +530,10 @@ export default function Leaderboard() {
         }
       });
 
-      setUsers(usersWithAllStats);
+      setUsers(studentsWithStats);
     } catch (error) {
       console.error("Error loading leaderboard:", error);
-      toast.error("שגיאה בטעינת טבלת השיאים. נסה שוב מאוחר יותר.");
+      toast.error("שגיאה בטעינת טבלת השיאים");
     } finally {
       setIsLoading(false);
     }
