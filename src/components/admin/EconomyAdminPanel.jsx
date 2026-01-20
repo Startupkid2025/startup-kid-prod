@@ -309,46 +309,34 @@ export default function EconomyAdminPanel() {
       return;
     }
 
-    if (!confirm(`⚠️ לאזן עו"ש עבור ${selectedEmails.size} תלמידים נבחרים?\n\ncoins = הכנסות - הפסדים - השקעות - פריטים`)) {
-      return;
-    }
-
+    // Calculate preview first
     const selectedStudents = students.filter(s => selectedEmails.has(s.student_email));
+    const previewData = [];
 
     setIsRecalculating(true);
     setProgress({ current: 0, total: selectedStudents.length, errors: [] });
 
-    const errors = [];
-
     for (let i = 0; i < selectedStudents.length; i++) {
       try {
         const studentEmail = selectedStudents[i].student_email;
-
-        // Fetch user data
         const users = await base44.entities.User.filter({ email: studentEmail });
         if (!users || users.length === 0) continue;
 
         const user = users[0];
 
-        // Fetch additional data sequentially with larger delays to avoid rate limits
         await new Promise(resolve => setTimeout(resolve, 300));
         const wordProgress = await base44.entities.WordProgress.filter({ student_email: studentEmail });
-
         await new Promise(resolve => setTimeout(resolve, 300));
         const mathProgress = await base44.entities.MathProgress.filter({ student_email: studentEmail });
-
         await new Promise(resolve => setTimeout(resolve, 300));
         const participations = await base44.entities.LessonParticipation.filter({ student_email: studentEmail });
-
         await new Promise(resolve => setTimeout(resolve, 300));
         const quizProgress = await base44.entities.QuizProgress.filter({ student_email: studentEmail });
-
         await new Promise(resolve => setTimeout(resolve, 300));
         const investments = await base44.entities.Investment.filter({ student_email: studentEmail });
 
         const safeNum = (val) => typeof val === 'number' ? val : 0;
 
-        // Calculate total income
         const income = {
           base: safeNum(user.base_coins ?? user.base ?? 500),
           lessonsCoins: safeNum(user.total_lessons_coins ?? (user.total_lessons * 100)),
@@ -363,7 +351,6 @@ export default function EconomyAdminPanel() {
           adminCoins: safeNum(user.total_admin_coins)
         };
 
-        // Calculate total losses
         const losses = {
           inflation: safeNum(user.total_inflation_lost),
           capitalGainsTax: safeNum(user.total_capital_gains_tax),
@@ -373,7 +360,6 @@ export default function EconomyAdminPanel() {
         };
         const totalLosses = Object.values(losses).reduce((sum, val) => sum + safeNum(val), 0);
 
-        // Calculate items value
         const purchasedItems = user.purchased_items || [];
         const AVATAR_ITEMS = {
           "body_blue": { price: 0 }, "body_pink": { price: 200 }, "body_purple": { price: 400 },
@@ -407,11 +393,9 @@ export default function EconomyAdminPanel() {
           if (item && item.price) itemsValue += item.price;
         });
 
-        // Calculate investments - SPENT not current value
         const investmentsSpent = investments.reduce((sum, inv) => sum + safeNum(inv.invested_amount), 0);
         const investmentsValue = investments.reduce((sum, inv) => sum + safeNum(inv.current_value), 0);
 
-        // Calculate investment profits
         const realizedProfit = safeNum(user.total_realized_investment_profit);
         let unrealized = 0;
         if (user.investment_profit != null) {
@@ -421,21 +405,65 @@ export default function EconomyAdminPanel() {
         }
         const totalInvestmentProfits = unrealized + realizedProfit;
 
-        // Calculate total income
         income.investmentProfits = totalInvestmentProfits;
         const totalIncome = Object.values(income).reduce((sum, val) => sum + safeNum(val), 0);
 
-        // Calculate balanced coins: coins = totalIncome - totalLosses - itemsValue - investmentsValue
         const balancedCoins = Math.round(totalIncome - totalLosses - itemsValue - investmentsValue);
 
-        // Update user
-        await base44.entities.User.update(user.id, { coins: balancedCoins });
+        previewData.push({
+          email: studentEmail,
+          name: user.full_name,
+          currentCoins: user.coins || 0,
+          newCoins: balancedCoins,
+          diff: balancedCoins - (user.coins || 0),
+          totalIncome,
+          totalLosses,
+          itemsValue,
+          investmentsValue
+        });
 
         setProgress(prev => ({ ...prev, current: i + 1 }));
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 100));
       } catch (error) {
         console.error(`Error for ${selectedStudents[i].student_email}:`, error);
-        errors.push({ email: selectedStudents[i].student_email, error: error.message });
+      }
+    }
+
+    setIsRecalculating(false);
+
+    // Show preview
+    const previewText = previewData.map(p => 
+      `${p.name}:\n` +
+      `  עו"ש נוכחי: ${p.currentCoins.toLocaleString()}\n` +
+      `  עו"ש חדש: ${p.newCoins.toLocaleString()}\n` +
+      `  הפרש: ${p.diff >= 0 ? '+' : ''}${p.diff.toLocaleString()}\n` +
+      `  (הכנסות: ${p.totalIncome.toLocaleString()} - הפסדים: ${p.totalLosses.toLocaleString()} - פריטים: ${p.itemsValue.toLocaleString()} - השקעות: ${p.investmentsValue.toLocaleString()})`
+    ).join('\n\n');
+
+    if (!confirm(`⚠️ לאזן עו"ש עבור ${previewData.length} תלמידים?\n\n${previewText}\n\nלהמשיך?`)) {
+      return;
+    }
+
+    // Apply changes
+    setIsRecalculating(true);
+    setProgress({ current: 0, total: previewData.length, errors: [] });
+
+    const errors = [];
+
+    for (let i = 0; i < previewData.length; i++) {
+      try {
+        const preview = previewData[i];
+        const users = await base44.entities.User.filter({ email: preview.email });
+        if (!users || users.length === 0) continue;
+
+        const user = users[0];
+        await base44.entities.User.update(user.id, { coins: preview.newCoins });
+
+        setProgress(prev => ({ ...prev, current: i + 1 }));
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } catch (error) {
+        console.error(`Error for ${previewData[i].email}:`, error);
+        errors.push({ email: previewData[i].email, error: error.message });
         setProgress(prev => ({ ...prev, current: i + 1, errors }));
       }
     }
@@ -443,9 +471,9 @@ export default function EconomyAdminPanel() {
     setIsRecalculating(false);
 
     if (errors.length === 0) {
-      toast.success(`✅ אוזן עו"ש עבור ${selectedStudents.length} תלמידים`);
+      toast.success(`✅ אוזן עו"ש עבור ${previewData.length} תלמידים`);
     } else {
-      toast.warning(`⚠️ ${selectedStudents.length - errors.length} הצליחו, ${errors.length} נכשלו`);
+      toast.warning(`⚠️ ${previewData.length - errors.length} הצליחו, ${errors.length} נכשלו`);
     }
 
     await loadSnapshots();
