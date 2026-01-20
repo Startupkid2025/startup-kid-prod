@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { RefreshCw, Search, Eye } from "lucide-react";
+import MaintenanceModeToggle from "./MaintenanceModeToggle";
 
 export default function EconomyAdminPanel() {
   const [snapshots, setSnapshots] = useState([]);
@@ -849,6 +850,8 @@ export default function EconomyAdminPanel() {
 
   return (
     <div className="space-y-6">
+      <MaintenanceModeToggle />
+      
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white">Economy Admin Panel</h2>
         <Button onClick={loadSnapshots} disabled={loading} className="bg-white/20 hover:bg-white/30 text-white border-white/30">

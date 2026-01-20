@@ -6,15 +6,39 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { AVATAR_ITEMS } from "./components/avatar/TamagotchiAvatar";
 import { syncLeaderboardEntry } from "./components/utils/leaderboardSync";
+import MaintenancePage from "./components/MaintenancePage";
 
 export default function Layout({ children }) {
   const location = useLocation();
   const [currentUser, setCurrentUser] = React.useState(null);
+  const [maintenanceMode, setMaintenanceMode] = React.useState(null);
+  const [isLoadingMaintenance, setIsLoadingMaintenance] = React.useState(true);
 
   React.useEffect(() => {
+    checkMaintenanceMode();
     loadUser();
     updateLoginStreak();
   }, []);
+
+  const checkMaintenanceMode = async () => {
+    try {
+      const modes = await base44.entities.MaintenanceMode.list();
+      if (modes.length > 0) {
+        setMaintenanceMode(modes[0]);
+      } else {
+        // Create default entry
+        const newMode = await base44.entities.MaintenanceMode.create({
+          is_active: false,
+          message: "האפליקציה במצב תחזוקה. נחזור בקרוב!"
+        });
+        setMaintenanceMode(newMode);
+      }
+    } catch (error) {
+      console.error("Error loading maintenance mode:", error);
+    } finally {
+      setIsLoadingMaintenance(false);
+    }
+  };
 
   const updateLoginStreak = async () => {
     try {
@@ -208,6 +232,23 @@ export default function Layout({ children }) {
   });
 
   const isActive = (path) => location.pathname === path;
+
+  // Show maintenance page if active and user is not admin
+  if (isLoadingMaintenance) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#4C6EF5] via-[#7B5EF5] to-[#9B6EF5] flex items-center justify-center">
+        <div className="text-white text-2xl">טוען...</div>
+      </div>
+    );
+  }
+
+  if (maintenanceMode?.is_active && currentUser?.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#4C6EF5] via-[#7B5EF5] to-[#9B6EF5] text-white" dir="rtl">
+        <MaintenancePage message={maintenanceMode.message} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#4C6EF5] via-[#7B5EF5] to-[#9B6EF5] text-white" dir="rtl">
