@@ -323,20 +323,20 @@ export default function EconomyAdminPanel() {
 
         const user = users[0];
 
-        // Fetch additional data sequentially
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Fetch additional data sequentially with larger delays to avoid rate limits
+        await new Promise(resolve => setTimeout(resolve, 300));
         const wordProgress = await base44.entities.WordProgress.filter({ student_email: studentEmail });
 
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 300));
         const mathProgress = await base44.entities.MathProgress.filter({ student_email: studentEmail });
 
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 300));
         const participations = await base44.entities.LessonParticipation.filter({ student_email: studentEmail });
 
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 300));
         const quizProgress = await base44.entities.QuizProgress.filter({ student_email: studentEmail });
 
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 300));
         const investments = await base44.entities.Investment.filter({ student_email: studentEmail });
 
         const safeNum = (val) => typeof val === 'number' ? val : 0;
