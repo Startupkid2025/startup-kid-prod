@@ -120,9 +120,9 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       setInvestments(studentInvestments);
 
       // Calculate investment data
-      const totalInvested = studentInvestments.reduce((sum, inv) => sum + inv.invested_amount, 0);
-      const totalInvestmentValue = studentInvestments.reduce((sum, inv) => sum + inv.current_value, 0);
-      const unrealizedProfit = totalInvestmentValue - totalInvested;
+      const totalInvested = studentInvestments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
+      const totalInvestmentValue = studentInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      const investmentUnrealizedProfit = totalInvestmentValue - totalInvested;
 
       // Initial income calculation (before fullUserData)
       const income = {
@@ -198,9 +198,9 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       income.passiveIncome = safeNum(fullUserData.total_passive_income);
       income.adminCoins = safeNum(fullUserData.total_admin_coins);
 
-      // B) Investment profits - unrealized + realized (unrealizedProfit already calculated at line 125)
+      // B) Investment profits - unrealized + realized
       const realizedProfit = safeNum(fullUserData.total_realized_investment_profit);
-      income.investmentProfits = unrealizedProfit + realizedProfit;
+      income.investmentProfits = investmentUnrealizedProfit + realizedProfit;
 
       // Assets - use merged fullUserData
       const purchasedItems = fullUserData.purchased_items ?? [];
