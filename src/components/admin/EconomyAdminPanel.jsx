@@ -104,17 +104,25 @@ export default function EconomyAdminPanel() {
   };
 
   const calculateStudentEconomy = async (studentEmail) => {
-    // Fetch all data
-    const [user, wordProgress, mathProgress, participations, quizProgress, investments] = await Promise.all([
-      base44.entities.User.filter({ email: studentEmail }).then(users => users[0]),
-      base44.entities.WordProgress.filter({ student_email: studentEmail }),
-      base44.entities.MathProgress.filter({ student_email: studentEmail }),
-      base44.entities.LessonParticipation.filter({ student_email: studentEmail }),
-      base44.entities.QuizProgress.filter({ student_email: studentEmail }),
-      base44.entities.Investment.filter({ student_email: studentEmail })
-    ]);
+    // Fetch user data with delays
+    const users = await base44.entities.User.filter({ email: studentEmail });
+    if (!users || users.length === 0) throw new Error("User not found");
+    const user = users[0];
 
-    if (!user) throw new Error("User not found");
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const wordProgress = await base44.entities.WordProgress.filter({ student_email: studentEmail });
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const mathProgress = await base44.entities.MathProgress.filter({ student_email: studentEmail });
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const participations = await base44.entities.LessonParticipation.filter({ student_email: studentEmail });
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const quizProgress = await base44.entities.QuizProgress.filter({ student_email: studentEmail });
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const investments = await base44.entities.Investment.filter({ student_email: studentEmail });
 
     // Calculate income
     const income = {
@@ -183,8 +191,8 @@ export default function EconomyAdminPanel() {
     });
 
     // Investments
-    const investmentsSpent = investments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
     const investmentsValue = investments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+    const investmentsSpent = investments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
     const investmentProfitUnrealized = investmentsValue - investmentsSpent;
     income.investment_profit_unrealized = investmentProfitUnrealized;
 
@@ -196,12 +204,17 @@ export default function EconomyAdminPanel() {
     return {
       email: studentEmail,
       full_name: user.full_name,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      user_type: user.user_type,
       coins_cash: coinsCash,
       investments_value: investmentsValue,
       items_value: itemsValue,
       total_assets: totalAssets,
       income_breakdown: income,
-      expense_breakdown: expenses
+      expense_breakdown: expenses,
+      purchased_items: purchasedItems,
+      equipped_items: user.equipped_items || {}
     };
   };
 
