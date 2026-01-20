@@ -66,38 +66,35 @@ export default async function recomputeStudentSnapshot({ studentEmail }, { base4
     const loginStreak = entry.login_streak || 0;
     const lastLoginDate = entry.last_login_date || null;
     
-    // Calculate total income (זהה ל-💰 סה"כ הכנסות ברוטו)
-    const vocabEarnings = wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
-    const mathEarnings = mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
-    const quizEarnings = entry.total_quiz_coins || 0;
-    const surveyEarnings = participations.filter(p => p.survey_completed === true).length * 70;
+    // Calculate total income components
+    const vocabularyCoins = wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
+    const mathCoins = mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
+    const quizCoins = entry.total_quiz_coins || 0;
+    const surveyCoins = participations.filter(p => p.survey_completed === true).length * 70;
+    const profileCompletionCoins = (entry.age ? 20 : 0) + ((entry.bio && entry.bio.length > 10) ? 30 : 0) + (entry.phone_number ? 20 : 0);
+    const socialMissionsCoins = (entry.completed_instagram_follow ? 50 : 0) + (entry.completed_youtube_subscribe ? 50 : 0) + (entry.completed_facebook_follow ? 50 : 0) + (entry.completed_discord_join ? 50 : 0) + (entry.completed_share ? 100 : 0);
     
     // Investment profit
     const investmentsSpent = investments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
-    const investmentProfitUnrealized = investmentsValue - investmentsSpent;
+    const investmentProfit = investmentsValue - investmentsSpent;
     
+    // Calculate total income (gross total income)
     const totalIncome = 
-      500 + // base_signup
-      ((aiTechLessons + socialSkillsLessons + moneyBusinessLessons) * 100) + // lessons
-      vocabEarnings + // vocabulary
-      mathEarnings + // math
-      surveyEarnings + // surveys
-      quizEarnings + // quizzes
-      workEarnings + // work
-      (entry.age ? 20 : 0) + // profile_age
-      ((entry.bio && entry.bio.length > 10) ? 30 : 0) + // profile_bio
-      (entry.phone_number ? 20 : 0) + // profile_phone
-      (entry.completed_instagram_follow ? 50 : 0) + // instagram
-      (entry.completed_youtube_subscribe ? 50 : 0) + // youtube
-      (entry.completed_facebook_follow ? 50 : 0) + // facebook
-      (entry.completed_discord_join ? 50 : 0) + // discord
-      (entry.completed_share ? 100 : 0) + // share
-      (entry.total_collaboration_coins || 0) + // collaboration
-      (entry.total_login_streak_coins || 0) + // login_streak
-      (entry.total_passive_income || 0) + // passive_income
-      (entry.total_admin_coins || 0) + // admin_bonus
-      (entry.total_realized_investment_profit || 0) + // realized profit
-      investmentProfitUnrealized; // unrealized profit
+      500 + // base_coins
+      ((aiTechLessons + socialSkillsLessons + moneyBusinessLessons) * 100) + // lessons_coins
+      vocabularyCoins + // vocabulary_coins
+      mathCoins + // math_coins
+      surveyCoins + // survey_coins
+      quizCoins + // quiz_coins
+      workEarnings + // total_work_earnings
+      socialMissionsCoins + // social_missions_coins
+      profileCompletionCoins + // profile_completion_coins
+      (entry.total_collaboration_coins || 0) + // total_collaboration_coins
+      (entry.total_login_streak_coins || 0) + // total_login_streak_coins
+      (entry.total_passive_income || 0) + // total_passive_income
+      (entry.total_realized_investment_profit || 0) + // total_realized_investment_profit
+      investmentProfit + // investment_profit
+      (entry.total_admin_coins || 0); // total_admin_coins
 
     // UPSERT snapshot
     const existingSnapshot = await base44.entities.LeaderboardSnapshot.filter({ 
