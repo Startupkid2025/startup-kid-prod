@@ -824,8 +824,8 @@ export default function EconomyAdminPanel() {
         )}
       </div>
 
-      <div className="bg-white/10 rounded-xl p-4 hidden">
-        <div className="mb-4 flex items-center justify-between hidden">
+      <div className="bg-white/10 rounded-xl p-4">
+        <div className="mb-4 flex items-center justify-between">
           <div className="text-white/80">
             {filteredSnapshots.length} תלמידים
           </div>
