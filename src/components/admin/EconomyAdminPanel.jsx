@@ -277,12 +277,19 @@ export default function EconomyAdminPanel() {
         const snapshotData = {
           student_email: result.email,
           full_name: result.full_name,
+          first_name: result.first_name,
+          last_name: result.last_name,
+          user_type: result.user_type,
+          coins: result.coins_cash,
           coins_cash: result.coins_cash,
           investments_value: result.investments_value,
           items_value: result.items_value,
           total_assets: result.total_assets,
+          total_value: result.total_assets,
           income_breakdown: result.income_breakdown,
           expense_breakdown: result.expense_breakdown,
+          purchased_items: result.purchased_items,
+          equipped_items: result.equipped_items,
           last_calculated_at: new Date().toISOString(),
           snapshot_version: 2
         };
@@ -294,7 +301,7 @@ export default function EconomyAdminPanel() {
         }
 
         setProgress(prev => ({ ...prev, current: i + 1 }));
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 1500));
       } catch (error) {
         console.error(`Error for ${previewResults[i].email}:`, error);
         errors.push({ email: previewResults[i].email, error: error.message });
@@ -337,15 +344,15 @@ export default function EconomyAdminPanel() {
 
         const user = users[0];
 
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         const wordProgress = await base44.entities.WordProgress.filter({ student_email: studentEmail });
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         const mathProgress = await base44.entities.MathProgress.filter({ student_email: studentEmail });
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         const participations = await base44.entities.LessonParticipation.filter({ student_email: studentEmail });
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         const quizProgress = await base44.entities.QuizProgress.filter({ student_email: studentEmail });
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         const investments = await base44.entities.Investment.filter({ student_email: studentEmail });
 
         const safeNum = (val) => typeof val === 'number' ? val : 0;
@@ -438,7 +445,7 @@ export default function EconomyAdminPanel() {
         });
 
         setProgress(prev => ({ ...prev, current: i + 1 }));
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 1500));
       } catch (error) {
         console.error(`Error for ${selectedStudents[i].student_email}:`, error);
       }
@@ -660,12 +667,19 @@ export default function EconomyAdminPanel() {
         const snapshotData = {
           student_email: result.email,
           full_name: result.full_name,
+          first_name: result.first_name,
+          last_name: result.last_name,
+          user_type: result.user_type,
+          coins: result.coins_cash,
           coins_cash: result.coins_cash,
           investments_value: result.investments_value,
           items_value: result.items_value,
           total_assets: result.total_assets,
+          total_value: result.total_assets,
           income_breakdown: result.income_breakdown,
           expense_breakdown: result.expense_breakdown,
+          purchased_items: result.purchased_items,
+          equipped_items: result.equipped_items,
           last_calculated_at: new Date().toISOString(),
           snapshot_version: 2
         };
@@ -677,7 +691,7 @@ export default function EconomyAdminPanel() {
         }
 
         setProgress(prev => ({ ...prev, current: i + 1 }));
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 1500));
       } catch (error) {
         console.error(`Error for ${students[i].student_email}:`, error);
         errors.push({ email: students[i].student_email, error: error.message });
