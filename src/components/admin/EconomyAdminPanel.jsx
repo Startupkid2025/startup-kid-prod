@@ -418,8 +418,8 @@ export default function EconomyAdminPanel() {
         const investmentsSpent = investments.reduce((sum, inv) => sum + safeNum(inv.invested_amount), 0);
         const investmentsValue = investments.reduce((sum, inv) => sum + safeNum(inv.current_value), 0);
 
-        // Calculate balanced coins: coins = totalIncome - totalLosses - investmentsSpent - itemsValue
-        const balancedCoins = Math.round(totalIncome - totalLosses - investmentsSpent - itemsValue);
+        // Calculate balanced coins: coins = totalIncome - totalLosses - investmentsValue - itemsValue
+        const balancedCoins = Math.round(totalIncome - totalLosses - investmentsValue - itemsValue);
 
         // Update user
         await base44.entities.User.update(user.id, { coins: balancedCoins });
