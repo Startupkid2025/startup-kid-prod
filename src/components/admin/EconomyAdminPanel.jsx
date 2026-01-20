@@ -303,6 +303,147 @@ export default function EconomyAdminPanel() {
     setShowPreview(false);
   };
 
+  const balanceAllCoins = async () => {
+    if (!confirm(`⚠️ לאזן עו"ש עבור כל ${students.length} התלמידים?\n\ncoins = הכנסות - הפסדים - השקעות - פריטים`)) {
+      return;
+    }
+
+    setIsRecalculating(true);
+    setProgress({ current: 0, total: students.length, errors: [] });
+
+    const errors = [];
+
+    for (let i = 0; i < students.length; i++) {
+      try {
+        const studentEmail = students[i].student_email;
+
+        // Fetch user data
+        const users = await base44.entities.User.filter({ email: studentEmail });
+        if (!users || users.length === 0) continue;
+
+        const user = users[0];
+
+        // Fetch additional data sequentially
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const wordProgress = await base44.entities.WordProgress.filter({ student_email: studentEmail });
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const mathProgress = await base44.entities.MathProgress.filter({ student_email: studentEmail });
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const participations = await base44.entities.LessonParticipation.filter({ student_email: studentEmail });
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const quizProgress = await base44.entities.QuizProgress.filter({ student_email: studentEmail });
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const investments = await base44.entities.Investment.filter({ student_email: studentEmail });
+
+        const safeNum = (val) => typeof val === 'number' ? val : 0;
+
+        // Calculate total income
+        const income = {
+          base: safeNum(user.base_coins ?? user.base ?? 500),
+          lessonsCoins: safeNum(user.total_lessons_coins ?? (user.total_lessons * 100)),
+          vocabulary: wordProgress.reduce((sum, w) => sum + safeNum(w.coins_earned), 0),
+          math: mathProgress.reduce((sum, m) => sum + safeNum(m.coins_earned), 0),
+          surveys: safeNum(user.survey_coins ?? user.total_survey_coins) || (participations.filter(p => p.survey_completed).length * 70),
+          quizzes: quizProgress.reduce((sum, q) => sum + safeNum(q.coins_earned), 0),
+          collaboration: safeNum(user.total_collaboration_coins),
+          loginStreakIncome: safeNum(user.total_login_streak_coins),
+          workEarnings: safeNum(user.total_work_earnings),
+          passiveIncome: safeNum(user.total_passive_income),
+          adminCoins: safeNum(user.total_admin_coins)
+        };
+
+        // Investment profits
+        const realizedProfit = safeNum(user.total_realized_investment_profit);
+        let unrealized = 0;
+        if (user.investment_profit != null) {
+          unrealized = safeNum(user.investment_profit);
+        } else {
+          const totalInvestedLocal = investments.reduce((sum, inv) => sum + safeNum(inv.invested_amount), 0);
+          const totalValueLocal = investments.reduce((sum, inv) => sum + safeNum(inv.current_value), 0);
+          unrealized = totalValueLocal - totalInvestedLocal;
+        }
+        income.investmentProfits = unrealized + realizedProfit;
+
+        const totalIncome = Object.values(income).reduce((sum, val) => sum + safeNum(val), 0);
+
+        // Calculate total losses
+        const losses = {
+          inflation: safeNum(user.total_inflation_lost),
+          capitalGainsTax: safeNum(user.total_capital_gains_tax),
+          investmentFees: safeNum(user.total_investment_fees),
+          itemSaleLosses: safeNum(user.total_item_sale_losses),
+          creditInterest: safeNum(user.total_credit_interest)
+        };
+        const totalLosses = Object.values(losses).reduce((sum, val) => sum + safeNum(val), 0);
+
+        // Calculate items value
+        const purchasedItems = user.purchased_items || [];
+        const AVATAR_ITEMS = {
+          "body_blue": { price: 0 }, "body_pink": { price: 200 }, "body_purple": { price: 400 },
+          "body_green": { price: 600 }, "body_orange": { price: 800 }, "body_red": { price: 1000 },
+          "body_gold": { price: 1500 }, "body_rainbow": { price: 2000 },
+          "eyes_sparkle": { price: 0 }, "eyes_determined": { price: 300 }, "eyes_heart": { price: 500 },
+          "eyes_star": { price: 700 }, "eyes_cool": { price: 1000 }, "eyes_laser": { price: 1200 },
+          "eyes_cyber": { price: 1500 }, "eyes_diamond": { price: 2000 },
+          "mouth_smile": { price: 0 }, "mouth_happy": { price: 250 }, "mouth_confident": { price: 400 },
+          "mouth_cat": { price: 550 }, "mouth_wink": { price: 700 }, "mouth_laugh": { price: 900 },
+          "mouth_cool": { price: 1100 }, "mouth_boss": { price: 1500 },
+          "hat_cap": { price: 300 }, "hat_party": { price: 450 }, "hat_tophat": { price: 600 },
+          "hat_graduate": { price: 800 }, "hat_cowboy": { price: 1000 }, "hat_crown": { price: 1300 },
+          "hat_wizard": { price: 1600 }, "hat_diamond": { price: 2500 },
+          "accessory_phone": { price: 400 }, "accessory_tie": { price: 600 }, "accessory_briefcase": { price: 800 },
+          "accessory_laptop": { price: 1000 }, "accessory_suit": { price: 1300 }, "accessory_rocket": { price: 1600 },
+          "accessory_trophy": { price: 2000 }, "accessory_diamond_brief": { price: 3000 },
+          "shoes_sneakers": { price: 0 }, "shoes_running": { price: 350 }, "shoes_boots": { price: 500 },
+          "shoes_heels": { price: 700 }, "shoes_dress": { price: 1000 }, "shoes_rocket": { price: 1400 },
+          "shoes_fire": { price: 1800 }, "shoes_diamond": { price: 2500 },
+          "background_basic": { price: 0 }, "background_apartment": { price: 400 }, "background_villa": { price: 700 },
+          "background_penthouse": { price: 1000 }, "background_mansion": { price: 1500 }, "background_island": { price: 2000 },
+          "background_space": { price: 2500 }, "background_universe": { price: 3500 },
+          "jewelry_watch": { price: 600 }, "jewelry_necklace": { price: 900 }, "jewelry_ring": { price: 1200 },
+          "jewelry_crown_small": { price: 1500 }, "jewelry_amulet": { price: 2000 }, "jewelry_infinity": { price: 3000 }
+        };
+
+        let itemsValue = 0;
+        purchasedItems.forEach(itemId => {
+          const item = AVATAR_ITEMS[itemId];
+          if (item && item.price) itemsValue += item.price;
+        });
+
+        // Calculate investments value
+        const investmentsSpent = investments.reduce((sum, inv) => sum + safeNum(inv.invested_amount), 0);
+        const investmentsValue = investments.reduce((sum, inv) => sum + safeNum(inv.current_value), 0);
+
+        // Calculate balanced coins: coins = totalIncome - totalLosses - investmentsSpent - itemsValue
+        const balancedCoins = Math.round(totalIncome - totalLosses - investmentsSpent - itemsValue);
+
+        // Update user
+        await base44.entities.User.update(user.id, { coins: balancedCoins });
+
+        setProgress(prev => ({ ...prev, current: i + 1 }));
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(`Error for ${students[i].student_email}:`, error);
+        errors.push({ email: students[i].student_email, error: error.message });
+        setProgress(prev => ({ ...prev, current: i + 1, errors }));
+      }
+    }
+
+    setIsRecalculating(false);
+
+    if (errors.length === 0) {
+      toast.success(`✅ אוזן עו"ש עבור כל התלמידים`);
+    } else {
+      toast.warning(`⚠️ ${students.length - errors.length} הצליחו, ${errors.length} נכשלו`);
+    }
+
+    await loadSnapshots();
+  };
+
   const recalculateAll = async () => {
     if (!confirm(`⚠️ לחשב מחדש עבור כל ${students.length} התלמידים?`)) {
       return;
@@ -579,6 +720,13 @@ export default function EconomyAdminPanel() {
               ✅ עדכן עכשיו ({previewResults.length})
             </Button>
           )}
+          <Button
+            onClick={balanceAllCoins}
+            disabled={isRecalculating}
+            className="bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg border-2 border-purple-400/50"
+          >
+            ⚖️ אזן עו"ש ({students.length})
+          </Button>
           <Button
             onClick={recalculateAll}
             disabled={isRecalculating}
