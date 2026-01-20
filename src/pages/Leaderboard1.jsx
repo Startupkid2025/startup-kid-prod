@@ -274,7 +274,7 @@ const LeaderboardRow = React.memo(({
 });
 
 // Helper function to fetch all records with pagination (with rate limit handling)
-async function listAll(entityHandler, sort = "-created_date", pageSize = 200) {
+async function listAll(entityHandler, sort = "-created_date", pageSize = 100) {
   let all = [];
   let skip = 0;
   let retries = 0;
@@ -288,9 +288,9 @@ async function listAll(entityHandler, sort = "-created_date", pageSize = 200) {
       skip += pageSize;
       retries = 0; // Reset retries on success
       
-      // Add small delay between pages to avoid rate limits
+      // Add longer delay between pages to avoid rate limits
       if (skip > 0) {
-        await new Promise(resolve => setTimeout(resolve, 150));
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     } catch (error) {
       // Handle rate limit errors with exponential backoff
@@ -299,7 +299,7 @@ async function listAll(entityHandler, sort = "-created_date", pageSize = 200) {
           throw error;
         }
         retries++;
-        const delay = Math.min(1000 * Math.pow(2, retries), 8000);
+        const delay = Math.min(2000 * Math.pow(2, retries), 10000);
         console.log(`Rate limit hit, waiting ${delay}ms before retry ${retries}/${maxRetries}`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
@@ -447,16 +447,18 @@ export default function Leaderboard() {
             return true;
           });
 
-          // Load WordProgress and MathProgress to get accurate counts
-          const [allWordProgress, allMathProgress] = await Promise.allSettled([
-            listAll(base44.entities.WordProgress),
-            listAll(base44.entities.MathProgress)
-          ]).then(results => results.map((result, idx) => {
-            if (result.status === 'fulfilled') return result.value;
-            const names = ['WordProgress', 'MathProgress'];
-            console.error(`Error loading ${names[idx]}:`, result.reason);
+          // Load WordProgress and MathProgress to get accurate counts (with delays)
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const allWordProgress = await listAll(base44.entities.WordProgress).catch(err => {
+            console.error('Error loading WordProgress:', err);
             return [];
-          }));
+          });
+          
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const allMathProgress = await listAll(base44.entities.MathProgress).catch(err => {
+            console.error('Error loading MathProgress:', err);
+            return [];
+          });
 
           // Build lookup maps
           const wordProgressByEmail = new Map();

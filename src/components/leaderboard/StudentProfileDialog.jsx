@@ -105,17 +105,17 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       
       const studentInvestments = allInvestments.filter(inv => inv.student_email === studentEmail);
 
-      const [
-        participations,
-        wordProgress,
-        mathProgress,
-        quizProgress
-      ] = await Promise.all([
-        base44.entities.LessonParticipation.filter({ student_email: studentEmail }),
-        base44.entities.WordProgress.filter({ student_email: studentEmail }),
-        base44.entities.MathProgress.filter({ student_email: studentEmail }),
-        base44.entities.QuizProgress.filter({ student_email: studentEmail })
-      ]);
+      // Load data with delays to avoid rate limits
+      const participations = await base44.entities.LessonParticipation.filter({ student_email: studentEmail });
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const wordProgress = await base44.entities.WordProgress.filter({ student_email: studentEmail });
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const mathProgress = await base44.entities.MathProgress.filter({ student_email: studentEmail });
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const quizProgress = await base44.entities.QuizProgress.filter({ student_email: studentEmail });
 
       setInvestments(studentInvestments);
 
