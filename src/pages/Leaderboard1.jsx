@@ -325,9 +325,6 @@ const formatLastLoginDM = (value) => {
   return dt.toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit" });
 };
 
-// 🎯 FEATURE FLAG: Switch between old and new leaderboard architecture
-const USE_SNAPSHOT = true;
-
 export default function Leaderboard() {
   const [users, setUsers] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -413,250 +410,57 @@ export default function Leaderboard() {
       const user = await base44.auth.me();
       setCurrentUser(user);
 
-      // 🚀 NEW: Fast snapshot-based loading
-      if (USE_SNAPSHOT) {
-        const snapshots = await base44.entities.LeaderboardSnapshot.list("-total_value", 200);
-        
-        if (snapshots.length === 0) {
-          // No snapshots yet - show message and empty state
-          console.warn("No snapshots found");
-          
-          // Only admins can initialize snapshots
-          if (user.role === 'admin') {
-            toast.info("📊 לא נמצאו נתונים. לחץ על 'אתחל נתונים' למטה", { duration: 5000 });
-          } else {
-            toast.info("🔄 הטבלה מתעדכנת... רענן בעוד כמה שניות", { duration: 4000 });
-          }
-          
-          setUsers([]);
-          setIsLoading(false);
-          return;
-        } else {
-          // Filter: Show only students (exclude demo/parent)
-          const filteredSnapshots = snapshots.filter(s => {
-            // Current user can always see themselves
-            if (user && s.student_email === user.email) return true;
-            
-            // Get user type (default to student if missing)
-            const type = s.user_type || "student";
-            
-            // Filter out demo and parents
-            if (type === 'demo' || type === 'parent') return false;
-            
-            // Show everyone else (students)
-            return true;
-          });
-
-          // Load WordProgress and MathProgress to get accurate counts (with delays)
-          await new Promise(resolve => setTimeout(resolve, 500));
-          const allWordProgress = await listAll(base44.entities.WordProgress).catch(err => {
-            console.error('Error loading WordProgress:', err);
-            return [];
-          });
-          
-          await new Promise(resolve => setTimeout(resolve, 500));
-          const allMathProgress = await listAll(base44.entities.MathProgress).catch(err => {
-            console.error('Error loading MathProgress:', err);
-            return [];
-          });
-
-          // Build lookup maps
-          const wordProgressByEmail = new Map();
-          allWordProgress.forEach(w => {
-            if (!wordProgressByEmail.has(w.student_email)) {
-              wordProgressByEmail.set(w.student_email, []);
-            }
-            wordProgressByEmail.get(w.student_email).push(w);
-          });
-
-          const mathProgressByEmail = new Map();
-          allMathProgress.forEach(m => {
-            if (!mathProgressByEmail.has(m.student_email)) {
-              mathProgressByEmail.set(m.student_email, []);
-            }
-            mathProgressByEmail.get(m.student_email).push(m);
-          });
-
-          // Map to expected format for UI - handle nulls safely
-           const usersWithAllStats = filteredSnapshots.map(s => {
-             // Get REAL counts from WordProgress and MathProgress
-             const userWordProgress = wordProgressByEmail.get(s.student_email) || [];
-             const masteredWords = userWordProgress.filter(w => w.mastered === true).length;
-
-             const userMathProgress = mathProgressByEmail.get(s.student_email) || [];
-             const masteredMathQuestions = userMathProgress.filter(m => m.mastered === true).length;
-
-             // Calculate items value from purchased_items
-             const purchasedItems = s.purchased_items || [];
-             let itemsValue = 0;
-             purchasedItems.forEach(itemId => {
-               const item = AVATAR_ITEMS[itemId];
-               if (item && item.price) {
-                 itemsValue += item.price;
-               }
-             });
-
-             // Calculate total value: coins + items + investments (same as finance report)
-             const coins = s.coins ?? 0;
-             const investmentsValue = s.investments_value ?? 0;
-             const totalValue = coins + itemsValue + investmentsValue;
-
-             return {
-               id: s.id,
-               student_email: s.student_email,
-               full_name: s.full_name,
-               first_name: s.first_name,
-               last_name: s.last_name,
-               user_type: s.user_type || 'student',
-               coins: coins,
-               purchased_items: purchasedItems,
-               equipped_items: s.equipped_items || {},
-               totalValue: Math.round(totalValue),
-               masteredWords: masteredWords,
-               masteredMathQuestions: masteredMathQuestions,
-               loginStreak: s.login_streak ?? 0,
-               collaborationCount: s.collaboration_count ?? 0,
-               workHours: s.work_hours ?? 0,
-               workEarnings: s.work_earnings ?? 0,
-               last_login_date: s.last_login_date,
-               aiTechLessons: s.ai_tech_lessons ?? 0,
-               socialSkillsLessons: s.social_skills_lessons ?? 0,
-               moneyBusinessLessons: s.money_business_lessons ?? 0,
-               total_lessons: (s.ai_tech_lessons ?? 0) + (s.social_skills_lessons ?? 0) + (s.money_business_lessons ?? 0),
-               crowns: s.crowns || [],
-               daily_collaborations: s.daily_collaborations || [],
-               is_bootstrap: s.is_bootstrap || false,
-               total_income: s.total_income ?? 0
-             };
-           });
-
-          setUsers(usersWithAllStats);
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      // 📦 LEGACY: Old slow loading (fallback)
-      const allEntries = await listAll(base44.entities.LeaderboardEntry);
+      // Load all users
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const allUsers = await listAll(base44.entities.User);
       
-      // Small delay to avoid rate limits
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      // Load rest in 2 parallel batches
-      const [allWordProgress, allInvestments, allLessonParticipations] = await Promise.allSettled([
-        listAll(base44.entities.WordProgress),
-        listAll(base44.entities.Investment),
-        listAll(base44.entities.LessonParticipation)
-      ]).then(results => results.map((result, idx) => {
-        if (result.status === 'fulfilled') return result.value;
-        const names = ['WordProgress', 'Investments', 'LessonParticipation'];
-        console.error(`Error loading ${names[idx]}:`, result.reason);
-        return [];
-      }));
-      
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      const [allLessons, allMathProgress] = await Promise.allSettled([
-        listAll(base44.entities.Lesson),
-        listAll(base44.entities.MathProgress)
-      ]).then(results => results.map((result, idx) => {
-        if (result.status === 'fulfilled') return result.value;
-        const names = ['Lessons', 'MathProgress'];
-        console.error(`Error loading ${names[idx]}:`, result.reason);
-        return [];
-      }))
-
-      console.log("Loaded entries:", allEntries.length);
-
-      // If no entries loaded, show error
-      if (allEntries.length === 0) {
-        console.error("No leaderboard entries found");
-        setUsers([]);
-        return;
-      }
-
-      // Filter: Show ONLY students, exclude admins (unless current user is admin viewing themselves)
-      const isCurrentUserAdmin = user?.role === 'admin';
-
-      // Only load User entity if current user is admin (for admin filtering)
-      let allUsers = [];
-      if (isCurrentUserAdmin) {
-        try {
-          await new Promise(resolve => setTimeout(resolve, 200));
-          allUsers = await listAll(base44.entities.User);
-        } catch (e) {
-          console.log("Admin: Cannot load User.list for filtering");
-        }
-      }
-
-      // Start with entries from LeaderboardEntry
-      let filteredUsersForLeaderboard = allEntries.filter(u => {
-        // Check if this entry belongs to an admin (only if we have User data)
-        let isEntryAdmin = false;
-        if (allUsers.length > 0) {
-          const userRecord = allUsers.find(usr => usr.email === u.student_email);
-          isEntryAdmin = userRecord?.role === 'admin';
-        }
-
+      // Filter: Show ONLY students, exclude demo/parent
+      const filteredUsers = allUsers.filter(u => {
         // Current user can always see themselves
-        if (user && u.student_email === user.email) {
-          return true;
-        }
-
-        // Regular users cannot see admins AT ALL (even if they are also students)
-        if (!isCurrentUserAdmin && isEntryAdmin) {
-          return false;
-        }
-
-        // Filter out demo users and parents from leaderboard
-        if (u.user_type === 'demo' || u.user_type === 'parent') {
-          return false;
-        }
-
-        // Show all students (including those without user_type defined)
+        if (user && u.email === user.email) return true;
+        
+        // Filter out demo, parents, and admins
+        if (u.role === 'admin') return false;
+        if (u.user_type === 'demo' || u.user_type === 'parent') return false;
+        
+        // Show everyone else (students)
         return true;
       });
 
-      // If admin, add students from User entity that are missing from LeaderboardEntry
-      if (isCurrentUserAdmin && allUsers.length > 0) {
-        const existingEmails = new Set(filteredUsersForLeaderboard.map(u => u.student_email));
-        
-        allUsers.forEach(userRecord => {
-          // Skip if already in leaderboard or not a student
-          if (existingEmails.has(userRecord.email)) return;
-          if (userRecord.role === 'admin') return;
-          if (userRecord.user_type && userRecord.user_type !== 'student') return;
-          
-          // Add missing student with default LeaderboardEntry-like structure
-          filteredUsersForLeaderboard.push({
-            student_email: userRecord.email,
-            full_name: userRecord.full_name || userRecord.email,
-            first_name: userRecord.first_name,
-            last_name: userRecord.last_name,
-            coins: userRecord.coins || 0,
-            ai_tech_level: userRecord.ai_tech_level || 1,
-            ai_tech_xp: userRecord.ai_tech_xp || 0,
-            personal_dev_level: userRecord.personal_dev_level || 1,
-            personal_dev_xp: userRecord.personal_dev_xp || 0,
-            social_skills_level: userRecord.social_skills_level || 1,
-            social_skills_xp: userRecord.social_skills_xp || 0,
-            money_business_level: userRecord.money_business_level || 1,
-            money_business_xp: userRecord.money_business_xp || 0,
-            total_lessons: userRecord.total_lessons || 0,
-            equipped_items: userRecord.equipped_items || {},
-            purchased_items: userRecord.purchased_items || [],
-            user_type: userRecord.user_type || 'student',
-            daily_collaborations: userRecord.daily_collaborations || [],
-            total_collaboration_coins: userRecord.total_collaboration_coins || 0,
-            total_work_hours: userRecord.total_work_hours || 0,
-            total_work_earnings: userRecord.total_work_earnings || 0,
-            login_streak: userRecord.login_streak || 0,
-            total_login_streak_coins: userRecord.total_login_streak_coins || 0
-          });
-        });
-      }
+      console.log("Loaded users:", filteredUsers.length);
 
-      // 2️⃣ Build lookup maps to prevent repeated filter/find operations
+      // Load data in batches with delays
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const allWordProgress = await listAll(base44.entities.WordProgress).catch(err => {
+        console.error('Error loading WordProgress:', err);
+        return [];
+      });
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const allMathProgress = await listAll(base44.entities.MathProgress).catch(err => {
+        console.error('Error loading MathProgress:', err);
+        return [];
+      });
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const allInvestments = await listAll(base44.entities.Investment).catch(err => {
+        console.error('Error loading Investments:', err);
+        return [];
+      });
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const allLessonParticipations = await listAll(base44.entities.LessonParticipation).catch(err => {
+        console.error('Error loading LessonParticipation:', err);
+        return [];
+      });
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const allLessons = await listAll(base44.entities.Lesson).catch(err => {
+        console.error('Error loading Lessons:', err);
+        return [];
+      });
+
+      // Build lookup maps
       const lessonMap = new Map();
       allLessons.forEach(lesson => {
         lessonMap.set(lesson.id, lesson);
@@ -694,30 +498,12 @@ export default function Leaderboard() {
         mathProgressByEmail.get(m.student_email).push(m);
       });
 
-      const userRecordByEmail = new Map();
-      allUsers.forEach(usr => {
-        userRecordByEmail.set(usr.email, usr);
-      });
-
-      const usersWithAllStats = filteredUsersForLeaderboard.map((u) => {
-        const userWordProgress = wordProgressByEmail.get(u.student_email) || [];
+      const usersWithAllStats = filteredUsers.map((u) => {
+        const userWordProgress = wordProgressByEmail.get(u.email) || [];
         const masteredWords = userWordProgress.filter(w => w.mastered).length;
-        
-        // DEBUG: Log word count calculation
-        if (u.student_email === 'omer@startupkid.co.il') {
-          console.log(`🔍 VOCAB DEBUG for ${u.full_name}:`, {
-            totalWordProgress: userWordProgress.length,
-            masteredWords: masteredWords,
-            wordProgressDetails: userWordProgress.map(w => ({
-              word: w.word_english,
-              mastered: w.mastered,
-              correct_streak: w.correct_streak
-            }))
-          });
-        }
 
         // Calculate lesson counts by category from REAL participations
-        const userParticipations = (participationsByEmail.get(u.student_email) || []).filter(p => p.attended);
+        const userParticipations = (participationsByEmail.get(u.email) || []).filter(p => p.attended);
 
         let aiTechLessons = 0;
         let socialSkillsLessons = 0;
@@ -734,94 +520,70 @@ export default function Leaderboard() {
 
         // Calculate REAL total lessons from actual participations
         const realTotalLessons = aiTechLessons + socialSkillsLessons + moneyBusinessLessons;
-
-        // Get actual data from User entity (real source of truth)
-        const userRecord = userRecordByEmail.get(u.student_email);
-        const last_login_date = userRecord?.last_login_date ?? u.last_login_date;
-        const actualTotalLessons = realTotalLessons;
-        const actualAiTechLevel = userRecord?.ai_tech_level || u.ai_tech_level || 1;
-        const actualPersonalDevLevel = userRecord?.personal_dev_level || u.personal_dev_level || 1;
-        const actualSocialSkillsLevel = userRecord?.social_skills_level || u.social_skills_level || 1;
-        const actualMoneyBusinessLevel = userRecord?.money_business_level || u.money_business_level || 1;
         
         // Count completed math questions directly from MathProgress
-        const userMathProgressList = mathProgressByEmail.get(u.student_email) || [];
+        const userMathProgressList = mathProgressByEmail.get(u.email) || [];
         const masteredMathQuestions = userMathProgressList.filter(m => m.mastered === true).length;
         
-        // Login streak - prefer LeaderboardEntry (always accessible)
-        let loginStreak = u.login_streak || 0;
-        if (userRecord?.login_streak !== undefined) {
-          loginStreak = userRecord.login_streak;
-        } else if (u.student_email === user?.email && user.login_streak !== undefined) {
-          loginStreak = user.login_streak;
-        }
-        
         // Collaboration count - calculate from daily_collaborations
-        let collaborationCount = 0;
-        if (userRecord?.total_collaboration_coins !== undefined) {
-          collaborationCount = Math.floor(userRecord.total_collaboration_coins / 25);
-        } else if (userRecord?.daily_collaborations) {
-          const completedCollabs = (userRecord.daily_collaborations || []).filter(c => c && c.completed);
-          collaborationCount = completedCollabs.length;
-        } else if (u.student_email === user?.email && user.daily_collaborations) {
-          const completedCollabs = (user.daily_collaborations || []).filter(c => c && c.completed);
-          collaborationCount = completedCollabs.length;
-        }
+        const completedCollabs = (u.daily_collaborations || []).filter(c => c && c.completed);
+        const collaborationCount = completedCollabs.length;
 
-        // Work hours and earnings - ALWAYS use LeaderboardEntry data (accessible to all)
+        // Work hours and earnings
         const workHours = u.total_work_hours || 0;
         const workEarnings = u.total_work_earnings || 0;
 
-        const averageLevel = Math.round(
-          (actualAiTechLevel +
-          actualPersonalDevLevel +
-          actualSocialSkillsLevel +
-          actualMoneyBusinessLevel) / 4
-        );
+        // Calculate net worth: coins + items + investments
+        const userInvestments = investmentsByEmail.get(u.email) || [];
+        const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
 
-        // Calculate net worth including investments (NO pending taxes!)
-        const userInvestments = investmentsByEmail.get(u.student_email) || [];
-        const investmentsValue = userInvestments.reduce((sum, inv) => sum + inv.current_value, 0);
+        // Calculate items value
+        const purchasedItems = u.purchased_items || [];
+        let itemsValue = 0;
+        purchasedItems.forEach(itemId => {
+          const item = AVATAR_ITEMS[itemId];
+          if (item && item.price) {
+            itemsValue += item.price;
+          }
+        });
 
-        const totalValue = calculateTotalValue(u, investmentsValue);
-
-        const totalXP =
-          ((u.ai_tech_level || 1) - 1) * 100 + (u.ai_tech_xp || 0) +
-          ((u.personal_dev_level || 1) - 1) * 100 + (u.personal_dev_xp || 0) +
-          ((u.social_skills_level || 1) - 1) * 100 + (u.social_skills_xp || 0) +
-          ((u.money_business_level || 1) - 1) * 100 + (u.money_business_xp || 0);
+        const coins = u.coins || 0;
+        const totalValue = Math.round(coins + itemsValue + investmentsValue);
 
         // Calculate category earnings for crowns
         const vocabEarnings = userWordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
-
-        const mathEarnings = userRecord?.total_math_earnings || u.total_math_earnings || 0;
+        const mathEarnings = u.total_math_earnings || 0;
         const currentInvestmentValue = investmentsValue;
-        const loginStreakEarnings = userRecord?.total_login_streak_coins || u.total_login_streak_coins || 0;
+        const loginStreakEarnings = u.total_login_streak_coins || 0;
 
         return {
-          ...u,
-          masteredWords,
-          averageLevel,
-          totalValue,
-          totalXP,
-          last_login_date,
-          total_lessons: actualTotalLessons,
-          ai_tech_level: actualAiTechLevel,
-          personal_dev_level: actualPersonalDevLevel,
-          social_skills_level: actualSocialSkillsLevel,
-          money_business_level: actualMoneyBusinessLevel,
-          vocabEarnings,
-          mathEarnings,
-          currentInvestmentValue,
-          loginStreakEarnings,
-          workEarnings,
-          workHours,
-          aiTechLessons,
-          socialSkillsLessons,
-          moneyBusinessLessons,
-          masteredMathQuestions,
-          loginStreak,
-          collaborationCount
+          id: u.id,
+          student_email: u.email,
+          full_name: u.full_name,
+          first_name: u.first_name,
+          last_name: u.last_name,
+          user_type: u.user_type || 'student',
+          coins: coins,
+          purchased_items: purchasedItems,
+          equipped_items: u.equipped_items || {},
+          totalValue: totalValue,
+          masteredWords: masteredWords,
+          masteredMathQuestions: masteredMathQuestions,
+          loginStreak: u.login_streak || 0,
+          collaborationCount: collaborationCount,
+          workHours: workHours,
+          workEarnings: workEarnings,
+          last_login_date: u.last_login_date,
+          aiTechLessons: aiTechLessons,
+          socialSkillsLessons: socialSkillsLessons,
+          moneyBusinessLessons: moneyBusinessLessons,
+          total_lessons: realTotalLessons,
+          vocabEarnings: vocabEarnings,
+          mathEarnings: mathEarnings,
+          currentInvestmentValue: currentInvestmentValue,
+          loginStreakEarnings: loginStreakEarnings,
+          daily_collaborations: u.daily_collaborations || [],
+          crowns: []
         };
       });
 
@@ -1392,99 +1154,8 @@ export default function Leaderboard() {
           className="text-center py-16"
         >
           <div className="text-6xl mb-4">🏆</div>
-          <h3 className="text-2xl font-bold text-white mb-2">הטבלה מתעדכנת...</h3>
-          <p className="text-white/70 mb-4">רענן את הדף בעוד כמה שניות</p>
-          
-          {currentUser?.role === 'admin' && (
-            <Button
-              onClick={async () => {
-                setIsInitializing(true);
-                toast.info("מאתחל נתונים... זה ייקח כמה שניות ⏳", { duration: 3000 });
-                
-                try {
-                  // Client-side initialization for admin - BOOTSTRAP ONLY
-                  const allEntries = await base44.entities.LeaderboardEntry.list();
-                  const students = allEntries.filter(e => {
-                    const type = e.user_type || 'student';
-                    return type === 'student';
-                  });
-                  
-                  let created = 0;
-                  let updated = 0;
-                  
-                  // Process in small batches
-                  for (let i = 0; i < students.length; i++) {
-                    const student = students[i];
-                    
-                    // Check if snapshot exists
-                    const existing = await base44.entities.LeaderboardSnapshot.filter({
-                      student_email: student.student_email
-                    });
-                    
-                    // Calculate items value from purchased_items
-                    const purchasedItems = student.purchased_items || [];
-                    let itemsValue = 0;
-                    purchasedItems.forEach(itemId => {
-                      const item = AVATAR_ITEMS[itemId];
-                      if (item && item.price) {
-                        itemsValue += item.price;
-                      }
-                    });
-                    
-                    const coins = student.coins || 0;
-                    const totalValue = coins + itemsValue;
-                    
-                    // BOOTSTRAP snapshot - only essential fields, no fake zeros
-                    const snapshotData = {
-                      student_email: student.student_email,
-                      full_name: student.full_name,
-                      first_name: student.first_name,
-                      last_name: student.last_name,
-                      user_type: student.user_type || 'student',
-                      coins: coins,
-                      purchased_items: purchasedItems,
-                      equipped_items: student.equipped_items || {},
-                      daily_collaborations: student.daily_collaborations || [],
-                      total_value: totalValue,
-                      login_streak: student.login_streak || 0,
-                      work_hours: student.total_work_hours || 0,
-                      work_earnings: student.total_work_earnings || 0,
-                      last_login_date: student.last_login_date,
-                      is_bootstrap: true,
-                      snapshot_version: 1
-                      // DON'T set mastered_words, mastered_math_questions, lessons, etc. to 0
-                      // Let them be null/undefined until properly calculated
-                    };
-                    
-                    if (existing.length > 0) {
-                      await base44.entities.LeaderboardSnapshot.update(existing[0].id, snapshotData);
-                      updated++;
-                    } else {
-                      await base44.entities.LeaderboardSnapshot.create(snapshotData);
-                      created++;
-                    }
-                    
-                    // Small delay to avoid rate limiting
-                    if (i % 5 === 0 && i > 0) {
-                      await new Promise(resolve => setTimeout(resolve, 200));
-                    }
-                  }
-                  
-                  toast.success(`✅ אותחל! ${created} נוצרו, ${updated} עודכנו`, { duration: 4000 });
-                  setTimeout(() => loadData(), 1000);
-                } catch (error) {
-                  console.error("Error initializing snapshots:", error);
-                  toast.error("שגיאה באתחול, נסה שוב");
-                } finally {
-                  setIsInitializing(false);
-                }
-              }}
-              disabled={isInitializing}
-              className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold"
-            >
-              {isInitializing ? "מאתחל... ⏳" : "🔄 אתחל נתונים (אדמין בלבד)"}
-            </Button>
-          )}
+          <h3 className="text-2xl font-bold text-white mb-2">אין תלמידים</h3>
+          <p className="text-white/70 mb-4">טבלת השיאים תמולא כאשר יהיו תלמידים במערכת</p>
         </motion.div>
       )}
 
