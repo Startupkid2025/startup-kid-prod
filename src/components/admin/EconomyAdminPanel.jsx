@@ -761,6 +761,10 @@ export default function EconomyAdminPanel() {
                     <div className="font-bold text-green-300">{(debugStudent.total_admin_coins || 0).toLocaleString()}</div>
                   </div>
                   <div>
+                    <span className="text-white/70">total_work_earnings (הכנסות עבודה)</span>
+                    <div className="font-bold text-green-300">{(debugStudent.total_work_earnings || 0).toLocaleString()}</div>
+                  </div>
+                  <div>
                     <span className="text-white/70">investment_profit (רווח/הפסד לא ממומש)</span>
                     <div className={`font-bold ${(debugStudent.investment_profit || 0) >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
                       {(debugStudent.investment_profit || 0) >= 0 ? '+' : ''}{(debugStudent.investment_profit || 0).toLocaleString()}
