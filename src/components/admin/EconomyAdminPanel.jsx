@@ -356,20 +356,6 @@ export default function EconomyAdminPanel() {
           adminCoins: safeNum(user.total_admin_coins)
         };
 
-        // Investment profits
-        const realizedProfit = safeNum(user.total_realized_investment_profit);
-        let unrealized = 0;
-        if (user.investment_profit != null) {
-          unrealized = safeNum(user.investment_profit);
-        } else {
-          const totalInvestedLocal = investments.reduce((sum, inv) => sum + safeNum(inv.invested_amount), 0);
-          const totalValueLocal = investments.reduce((sum, inv) => sum + safeNum(inv.current_value), 0);
-          unrealized = totalValueLocal - totalInvestedLocal;
-        }
-        income.investmentProfits = unrealized + realizedProfit;
-
-        const totalIncome = Object.values(income).reduce((sum, val) => sum + safeNum(val), 0);
-
         // Calculate total losses
         const losses = {
           inflation: safeNum(user.total_inflation_lost),
@@ -414,12 +400,27 @@ export default function EconomyAdminPanel() {
           if (item && item.price) itemsValue += item.price;
         });
 
-        // Calculate investments value
+        // Calculate investments - SPENT not current value
         const investmentsSpent = investments.reduce((sum, inv) => sum + safeNum(inv.invested_amount), 0);
         const investmentsValue = investments.reduce((sum, inv) => sum + safeNum(inv.current_value), 0);
 
-        // Calculate balanced coins: coins = totalIncome - totalLosses - investmentsValue - itemsValue
-        const balancedCoins = Math.round(totalIncome - totalLosses - investmentsValue - itemsValue);
+        // Calculate investment profits
+        const realizedProfit = safeNum(user.total_realized_investment_profit);
+        let unrealized = 0;
+        if (user.investment_profit != null) {
+          unrealized = safeNum(user.investment_profit);
+        } else {
+          unrealized = investmentsValue - investmentsSpent;
+        }
+        const totalInvestmentProfits = unrealized + realizedProfit;
+
+        // Calculate total income
+        income.investmentProfits = totalInvestmentProfits;
+        const totalIncome = Object.values(income).reduce((sum, val) => sum + safeNum(val), 0);
+
+        // Calculate balanced coins: coins = totalIncome - investmentProfits - totalLosses - itemsValue - investmentsSpent
+        // This ensures: totalIncome = coins + itemsValue + investmentsValue + totalLosses
+        const balancedCoins = Math.round(totalIncome - totalInvestmentProfits - totalLosses - itemsValue - investmentsSpent);
 
         // Update user
         await base44.entities.User.update(user.id, { coins: balancedCoins });
