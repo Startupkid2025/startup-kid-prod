@@ -258,6 +258,16 @@ export default function EconomyAdminPanel() {
       const mathCoins = mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
       const surveyCoins = participations.filter(p => p.survey_completed === true).length * 70;
       const quizCoins = quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
+      
+      // Profile completion and social missions
+      const profileCompletionCoins = (userData.age && userData.bio && userData.phone_number ? 70 : 0);
+      const socialMissionsCoins = [
+        userData.completed_instagram_follow,
+        userData.completed_youtube_subscribe,
+        userData.completed_facebook_follow,
+        userData.completed_discord_join,
+        userData.completed_share
+      ].filter(Boolean).length * 50;
 
       // חשב ערך פריטים
       const purchasedItems = userData.purchased_items || [];
@@ -307,6 +317,8 @@ export default function EconomyAdminPanel() {
         math_coins: mathCoins,
         survey_coins: surveyCoins,
         quiz_coins: quizCoins,
+        profile_completion_coins: profileCompletionCoins,
+        social_missions_coins: socialMissionsCoins,
         items_value: itemsValue,
         investments_value: investmentsValue,
         investments_spent: investmentsSpent,
@@ -763,6 +775,14 @@ export default function EconomyAdminPanel() {
                   <div>
                     <span className="text-white/70">total_work_earnings (הכנסות עבודה)</span>
                     <div className="font-bold text-green-300">{(debugStudent.total_work_earnings || 0).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">profile_completion_coins (פרטי פרופיל)</span>
+                    <div className="font-bold text-yellow-300">{(debugStudent.profile_completion_coins || 0).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">social_missions_coins (משימות פרופיל)</span>
+                    <div className="font-bold text-yellow-300">{(debugStudent.social_missions_coins || 0).toLocaleString()}</div>
                   </div>
                   <div>
                     <span className="text-white/70">investment_profit (רווח/הפסד לא ממומש)</span>
