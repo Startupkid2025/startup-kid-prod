@@ -102,6 +102,108 @@ export default function EconomyAdminPanel() {
     setSelectedEmails(newSelected);
   };
 
+  const calculateStudentEconomy = async (studentEmail) => {
+    // Fetch all data
+    const [user, wordProgress, mathProgress, participations, quizProgress, investments] = await Promise.all([
+      base44.entities.User.filter({ email: studentEmail }).then(users => users[0]),
+      base44.entities.WordProgress.filter({ student_email: studentEmail }),
+      base44.entities.MathProgress.filter({ student_email: studentEmail }),
+      base44.entities.LessonParticipation.filter({ student_email: studentEmail }),
+      base44.entities.QuizProgress.filter({ student_email: studentEmail }),
+      base44.entities.Investment.filter({ student_email: studentEmail })
+    ]);
+
+    if (!user) throw new Error("User not found");
+
+    // Calculate income
+    const income = {
+      base_signup: 500,
+      lessons: (user.total_lessons || 0) * 100,
+      vocabulary: wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0),
+      math: mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0),
+      surveys: participations.filter(p => p.survey_completed === true).length * 70,
+      quizzes: quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0),
+      work: user.total_work_earnings || 0,
+      profile_age: user.age ? 20 : 0,
+      profile_bio: (user.bio && user.bio.length > 10) ? 30 : 0,
+      profile_phone: user.phone_number ? 20 : 0,
+      instagram_follow: user.completed_instagram_follow ? 50 : 0,
+      youtube_subscribe: user.completed_youtube_subscribe ? 50 : 0,
+      facebook_follow: user.completed_facebook_follow ? 50 : 0,
+      discord_join: user.completed_discord_join ? 50 : 0,
+      share_bonus: user.completed_share ? 100 : 0,
+      collaboration: user.total_collaboration_coins || 0,
+      login_streak: user.total_login_streak_coins || 0,
+      passive_income: user.total_passive_income || 0,
+      admin_bonus: user.total_admin_coins || 0,
+      investment_profit_realized: user.total_realized_investment_profit || 0
+    };
+
+    // Calculate expenses
+    const expenses = {
+      inflation: user.total_inflation_lost || 0,
+      capital_gains_tax: user.total_capital_gains_tax || 0,
+      investment_fees: user.total_investment_fees || 0,
+      item_sale_losses: user.total_item_sale_losses || 0
+    };
+
+    // Items value
+    const purchasedItems = user.purchased_items || [];
+    const AVATAR_ITEMS = {
+      "body_blue": { price: 0 }, "body_pink": { price: 200 }, "body_purple": { price: 400 },
+      "body_green": { price: 600 }, "body_orange": { price: 800 }, "body_red": { price: 1000 },
+      "body_gold": { price: 1500 }, "body_rainbow": { price: 2000 },
+      "eyes_sparkle": { price: 0 }, "eyes_determined": { price: 300 }, "eyes_heart": { price: 500 },
+      "eyes_star": { price: 700 }, "eyes_cool": { price: 1000 }, "eyes_laser": { price: 1200 },
+      "eyes_cyber": { price: 1500 }, "eyes_diamond": { price: 2000 },
+      "mouth_smile": { price: 0 }, "mouth_happy": { price: 250 }, "mouth_confident": { price: 400 },
+      "mouth_cat": { price: 550 }, "mouth_wink": { price: 700 }, "mouth_laugh": { price: 900 },
+      "mouth_cool": { price: 1100 }, "mouth_boss": { price: 1500 },
+      "hat_cap": { price: 300 }, "hat_party": { price: 450 }, "hat_tophat": { price: 600 },
+      "hat_graduate": { price: 800 }, "hat_cowboy": { price: 1000 }, "hat_crown": { price: 1300 },
+      "hat_wizard": { price: 1600 }, "hat_diamond": { price: 2500 },
+      "accessory_phone": { price: 400 }, "accessory_tie": { price: 600 }, "accessory_briefcase": { price: 800 },
+      "accessory_laptop": { price: 1000 }, "accessory_suit": { price: 1300 }, "accessory_rocket": { price: 1600 },
+      "accessory_trophy": { price: 2000 }, "accessory_diamond_brief": { price: 3000 },
+      "shoes_sneakers": { price: 0 }, "shoes_running": { price: 350 }, "shoes_boots": { price: 500 },
+      "shoes_heels": { price: 700 }, "shoes_dress": { price: 1000 }, "shoes_rocket": { price: 1400 },
+      "shoes_fire": { price: 1800 }, "shoes_diamond": { price: 2500 },
+      "background_basic": { price: 0 }, "background_apartment": { price: 400 }, "background_villa": { price: 700 },
+      "background_penthouse": { price: 1000 }, "background_mansion": { price: 1500 }, "background_island": { price: 2000 },
+      "background_space": { price: 2500 }, "background_universe": { price: 3500 },
+      "jewelry_watch": { price: 600 }, "jewelry_necklace": { price: 900 }, "jewelry_ring": { price: 1200 },
+      "jewelry_crown_small": { price: 1500 }, "jewelry_amulet": { price: 2000 }, "jewelry_infinity": { price: 3000 }
+    };
+
+    let itemsValue = 0;
+    purchasedItems.forEach(itemId => {
+      const item = AVATAR_ITEMS[itemId];
+      if (item && item.price) itemsValue += item.price;
+    });
+
+    // Investments
+    const investmentsSpent = investments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
+    const investmentsValue = investments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+    const investmentProfitUnrealized = investmentsValue - investmentsSpent;
+    income.investment_profit_unrealized = investmentProfitUnrealized;
+
+    const totalIncome = Object.values(income).reduce((sum, val) => sum + val, 0);
+    const totalExpenses = Object.values(expenses).reduce((sum, val) => sum + val, 0);
+    const coinsCash = Math.round(totalIncome - totalExpenses - itemsValue - investmentsSpent);
+    const totalAssets = coinsCash + investmentsValue + itemsValue;
+
+    return {
+      email: studentEmail,
+      full_name: user.full_name,
+      coins_cash: coinsCash,
+      investments_value: investmentsValue,
+      items_value: itemsValue,
+      total_assets: totalAssets,
+      income_breakdown: income,
+      expense_breakdown: expenses
+    };
+  };
+
   const previewSelected = async () => {
     if (selectedEmails.size === 0) {
       toast.error("בחר לפחות תלמיד אחד");
@@ -114,21 +216,14 @@ export default function EconomyAdminPanel() {
     const emails = Array.from(selectedEmails);
     const results = [];
 
-    console.log("base44.functions keys:", Object.keys(base44.functions || {}));
-
     for (let i = 0; i < emails.length; i++) {
       try {
-        console.log(`Calling recalculateStudentEconomySnapshot for ${emails[i]} (preview mode)`);
-        const result = await base44.functions.invoke('recalculateStudentEconomySnapshot', {
-          studentEmail: emails[i],
-          reason: "preview",
-          previewOnly: true
-        });
-        results.push({ email: emails[i], ...result });
+        const result = await calculateStudentEconomy(emails[i]);
+        results.push(result);
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 100));
       } catch (error) {
-        console.error(`Error for ${emails[i]}:`, error, error?.response?.data);
+        console.error(`Error for ${emails[i]}:`, error);
         results.push({ email: emails[i], error: error.message });
         setProgress(prev => ({ ...prev, current: i + 1 }));
       }
@@ -154,23 +249,47 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < previewResults.length; i++) {
       try {
-        console.log(`Calling recalculateStudentEconomySnapshot for ${previewResults[i].email} (apply mode)`);
-        await base44.functions.invoke('recalculateStudentEconomySnapshot', {
-          studentEmail: previewResults[i].email,
-          reason: "admin_selected",
-          previewOnly: false
+        const result = previewResults[i];
+        if (result.error) {
+          errors.push({ email: result.email, error: result.error });
+          continue;
+        }
+
+        // Create or update snapshot
+        const existingSnapshots = await base44.entities.StudentEconomySnapshot.filter({ 
+          student_email: result.email 
         });
+
+        const snapshotData = {
+          student_email: result.email,
+          full_name: result.full_name,
+          coins_cash: result.coins_cash,
+          investments_value: result.investments_value,
+          items_value: result.items_value,
+          total_assets: result.total_assets,
+          income_breakdown: result.income_breakdown,
+          expense_breakdown: result.expense_breakdown,
+          last_calculated_at: new Date().toISOString(),
+          snapshot_version: 2
+        };
+
+        if (existingSnapshots.length > 0) {
+          await base44.entities.StudentEconomySnapshot.update(existingSnapshots[0].id, snapshotData);
+        } else {
+          await base44.entities.StudentEconomySnapshot.create(snapshotData);
+        }
+
         setProgress(prev => ({ ...prev, current: i + 1 }));
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 100));
       } catch (error) {
-        console.error(`Error for ${previewResults[i].email}:`, error, error?.response?.data);
+        console.error(`Error for ${previewResults[i].email}:`, error);
         errors.push({ email: previewResults[i].email, error: error.message });
         setProgress(prev => ({ ...prev, current: i + 1, errors }));
       }
     }
 
     setIsRecalculating(false);
-    
+
     if (errors.length === 0) {
       toast.success(`✅ עודכן עבור ${previewResults.length} תלמידים`);
     } else {
@@ -195,23 +314,43 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < students.length; i++) {
       try {
-        console.log(`Calling recalculateStudentEconomySnapshot for ${students[i].student_email} (all mode)`);
-        await base44.functions.invoke('recalculateStudentEconomySnapshot', {
-          studentEmail: students[i].student_email,
-          reason: "admin_all",
-          previewOnly: false
+        const result = await calculateStudentEconomy(students[i].student_email);
+
+        // Create or update snapshot
+        const existingSnapshots = await base44.entities.StudentEconomySnapshot.filter({ 
+          student_email: result.email 
         });
+
+        const snapshotData = {
+          student_email: result.email,
+          full_name: result.full_name,
+          coins_cash: result.coins_cash,
+          investments_value: result.investments_value,
+          items_value: result.items_value,
+          total_assets: result.total_assets,
+          income_breakdown: result.income_breakdown,
+          expense_breakdown: result.expense_breakdown,
+          last_calculated_at: new Date().toISOString(),
+          snapshot_version: 2
+        };
+
+        if (existingSnapshots.length > 0) {
+          await base44.entities.StudentEconomySnapshot.update(existingSnapshots[0].id, snapshotData);
+        } else {
+          await base44.entities.StudentEconomySnapshot.create(snapshotData);
+        }
+
         setProgress(prev => ({ ...prev, current: i + 1 }));
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 100));
       } catch (error) {
-        console.error(`Error for ${students[i].student_email}:`, error, error?.response?.data);
+        console.error(`Error for ${students[i].student_email}:`, error);
         errors.push({ email: students[i].student_email, error: error.message });
         setProgress(prev => ({ ...prev, current: i + 1, errors }));
       }
     }
 
     setIsRecalculating(false);
-    
+
     if (errors.length === 0) {
       toast.success(`✅ חושב מחדש עבור כל התלמידים`);
     } else {
