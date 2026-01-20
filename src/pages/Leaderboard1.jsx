@@ -202,15 +202,15 @@ const LeaderboardRow = React.memo(({
               </TooltipProvider>
             </div>
 
-            {/* Right Side: Networth + Collaborate Button */}
+            {/* Right Side: Income + Collaborate Button */}
             <div className="flex-shrink-0 flex flex-col items-center gap-1 sm:gap-2">
-              {/* Total Networth */}
-              <div className="text-center">
-                <div className={`bg-gradient-to-br ${getRankColor(actualIndex)} text-white font-black px-2 sm:px-4 py-1 sm:py-2 rounded-xl shadow-lg`}>
-                  <div className="text-base sm:text-2xl">{player.totalValue}</div>
-                  <div className="text-[8px] sm:text-[10px] opacity-80">מטבעות</div>
-                </div>
+            {/* Total Income */}
+            <div className="text-center">
+              <div className={`bg-gradient-to-br ${getRankColor(actualIndex)} text-white font-black px-2 sm:px-4 py-1 sm:py-2 rounded-xl shadow-lg`}>
+                <div className="text-base sm:text-2xl">{player.total_income?.toLocaleString() || player.totalValue}</div>
+                <div className="text-[8px] sm:text-[10px] opacity-80">הכנסות</div>
               </div>
+            </div>
 
               {/* Collaborate Button - Only for OTHER users */}
               {!isCurrentUser && (() => {
@@ -507,7 +507,8 @@ export default function Leaderboard() {
                total_lessons: (s.ai_tech_lessons ?? 0) + (s.social_skills_lessons ?? 0) + (s.money_business_lessons ?? 0),
                crowns: s.crowns || [],
                daily_collaborations: s.daily_collaborations || [],
-               is_bootstrap: s.is_bootstrap || false
+               is_bootstrap: s.is_bootstrap || false,
+               total_income: s.total_income ?? 0
              };
            });
 
@@ -806,8 +807,8 @@ export default function Leaderboard() {
         };
       });
 
-      // Sort by totalValue (Networth) instead of totalXP
-      usersWithAllStats.sort((a, b) => b.totalValue - a.totalValue);
+      // Sort by total_income (gross income) instead of totalValue
+      usersWithAllStats.sort((a, b) => (b.total_income || b.totalValue) - (a.total_income || a.totalValue));
 
       // Find kings in each category - ONLY from real students (not demo users)
       const realStudents = usersWithAllStats.filter(u => u.user_type === 'student');
@@ -1097,7 +1098,7 @@ export default function Leaderboard() {
           🎯 טבלת שיאים 🎯
         </h1>
         <p className="text-white/80 text-lg">
-          מי הכי עשיר? 💰
+          מי הרוויח הכי הרבה? 💰
         </p>
       </motion.div>
 
