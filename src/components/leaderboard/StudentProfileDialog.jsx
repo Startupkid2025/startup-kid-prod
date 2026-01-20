@@ -126,11 +126,11 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
 
       // Initial income calculation (before fullUserData)
       const income = {
-        base: 500,
+        base: 500, // Will be set from fullUserData
         lessonsCoins: 0, // Will be set from fullUserData
         vocabulary: wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0),
         math: mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0),
-        surveys: participations.filter(p => p.survey_completed).length * 70,
+        surveys: 0, // Will be set from fullUserData with fallback
         quizzes: quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0),
         workEarnings: 0, // Will be set from fullUserData
         profileTasks: 0,
@@ -183,13 +183,19 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       if (fullUserData.bio && fullUserData.bio.length > 10) income.profileDetails += 30;
       if (fullUserData.phone_number) income.profileDetails += 20;
 
-      // A) Lesson income - SINGLE SOURCE OF TRUTH (no double counting)
-      // Use total_lessons_coins if exists, otherwise fallback to 0
-      income.lessonsCoins = safeNum(fullUserData.total_lessons_coins);
-      if (!income.lessonsCoins && fullUserData.total_lessons) {
-        // Fallback: if total_lessons_coins doesn't exist but total_lessons does
-        income.lessonsCoins = fullUserData.total_lessons * 100;
+      // 5) Base - use stored value with fallback to 500
+      income.base = safeNum(fullUserData.base_coins ?? fullUserData.base ?? 500);
+
+      // 2) A) Lesson income - SINGLE SOURCE OF TRUTH (no double counting)
+      if (fullUserData.total_lessons_coins != null) {
+        income.lessonsCoins = safeNum(fullUserData.total_lessons_coins);
+      } else {
+        income.lessonsCoins = 0; // No fallback to prevent double counting
       }
+
+      // 7) Surveys - prefer stored value with fallback
+      income.surveys = safeNum(fullUserData.survey_coins ?? fullUserData.total_survey_coins)
+        || (participations.filter(p => p.survey_completed).length * 70);
 
       // Use safeNum to handle 0 values correctly (not falsy!)
       income.collaboration = safeNum(fullUserData.total_collaboration_coins);
@@ -198,9 +204,21 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       income.passiveIncome = safeNum(fullUserData.total_passive_income);
       income.adminCoins = safeNum(fullUserData.total_admin_coins);
 
-      // B) Investment profits - unrealized + realized
+      // 3) B) Investment profits - unrealized + realized
       const realizedProfit = safeNum(fullUserData.total_realized_investment_profit);
-      income.investmentProfits = investmentUnrealizedProfit + realizedProfit;
+      
+      // Prefer stored unrealized profit if exists
+      let unrealized = 0;
+      if (fullUserData.investment_profit != null) {
+        unrealized = safeNum(fullUserData.investment_profit);
+      } else {
+        // Fallback: compute from investments
+        const totalInvestedLocal = studentInvestments.reduce((sum, inv) => sum + safeNum(inv.invested_amount), 0);
+        const totalValueLocal = studentInvestments.reduce((sum, inv) => sum + safeNum(inv.current_value), 0);
+        unrealized = totalValueLocal - totalInvestedLocal;
+      }
+      
+      income.investmentProfits = unrealized + realizedProfit;
 
       // Assets - use merged fullUserData
       const purchasedItems = fullUserData.purchased_items ?? [];
@@ -229,16 +247,21 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         itemSaleLosses: safeNum(fullUserData.total_item_sale_losses)
       };
       
-      // F) Accounting consistency - compute balance
-      console.log("Finance Report - Student:", studentEmail, { income, losses, assets, totals: { totalIncome, totalAssets, totalLosses } });
+      // 4) F) Accounting consistency - compute totals FIRST, then log
+      const totalIncome = Object.values(income).reduce((sum, val) => sum + safeNum(val), 0);
+      const totalAssets = Object.values(assets).reduce((sum, val) => sum + safeNum(val), 0);
+      const totalLosses = Object.values(losses).reduce((sum, val) => sum + safeNum(val), 0);
 
-      const totalIncome = Object.values(income).reduce((sum, val) => sum + val, 0);
-      const totalAssets = Object.values(assets).reduce((sum, val) => sum + val, 0);
-      const totalLosses = Object.values(losses).reduce((sum, val) => sum + val, 0);
-
-      // Calculate delta (mismatch)
       const delta = totalIncome - (totalAssets + totalLosses);
       const incomeMatch = Math.abs(delta) < 1;
+
+      // 1) Log AFTER totals are calculated
+      console.log("Finance Report - Student:", studentEmail, {
+        income,
+        losses,
+        assets,
+        totals: { totalIncome, totalAssets, totalLosses, delta, incomeMatch }
+      });
 
       // Enhanced debug logging for mismatches
       if (!incomeMatch) {
