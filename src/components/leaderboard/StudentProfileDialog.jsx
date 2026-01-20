@@ -198,8 +198,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       income.passiveIncome = safeNum(fullUserData.total_passive_income);
       income.adminCoins = safeNum(fullUserData.total_admin_coins);
 
-      // B) Investment profits - unrealized + realized
-      const unrealizedProfit = unrealizedProfit; // Already calculated above
+      // B) Investment profits - unrealized + realized (unrealizedProfit already calculated at line 125)
       const realizedProfit = safeNum(fullUserData.total_realized_investment_profit);
       income.investmentProfits = unrealizedProfit + realizedProfit;
 
