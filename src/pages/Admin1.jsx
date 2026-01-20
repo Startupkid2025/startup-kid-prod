@@ -24,6 +24,7 @@ import TeacherManagement from "../components/admin/TeacherManagement";
 import QuizQuestionsManager from "../components/admin/QuizQuestionsManager";
 import VocabularyManager from "../components/admin/VocabularyManager";
 import EconomyAdminPanel from "../components/admin/EconomyAdminPanel";
+import InvestmentsManager from "../components/admin/InvestmentsManager";
 import { AVATAR_ITEMS } from '../components/avatar/TamagotchiAvatar';
 
 export default function Admin() {
