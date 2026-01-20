@@ -395,16 +395,17 @@ export default function Leaderboard() {
   const calculateTotalValue = (user, investmentsValue) => {
     const purchasedItems = user.purchased_items || [];
 
-    let spentOnItems = 0;
+    let itemsValue = 0;
     purchasedItems.forEach(itemId => {
       const item = AVATAR_ITEMS[itemId];
       if (item) {
-        spentOnItems += item.price || 0;
+        itemsValue += item.price || 0;
       }
     });
 
-    const currentCoins = Math.round(user.coins || 0);
-    return Math.round(currentCoins + spentOnItems + investmentsValue);
+    const coins = Math.round(user.coins || 0);
+    const totalValue = coins + itemsValue + investmentsValue;
+    return Math.round(totalValue);
   };
 
   const loadData = async () => {
