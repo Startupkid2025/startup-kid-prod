@@ -486,6 +486,21 @@ export default function Leaderboard() {
              const userMathProgress = mathProgressByEmail.get(s.student_email) || [];
              const masteredMathQuestions = userMathProgress.filter(m => m.mastered === true).length;
 
+             // Calculate items value from purchased_items
+             const purchasedItems = s.purchased_items || [];
+             let itemsValue = 0;
+             purchasedItems.forEach(itemId => {
+               const item = AVATAR_ITEMS[itemId];
+               if (item && item.price) {
+                 itemsValue += item.price;
+               }
+             });
+
+             // Calculate total value: coins + items + investments (same as finance report)
+             const coins = s.coins ?? 0;
+             const investmentsValue = s.investments_value ?? 0;
+             const totalValue = coins + itemsValue + investmentsValue;
+
              return {
                id: s.id,
                student_email: s.student_email,
@@ -493,10 +508,10 @@ export default function Leaderboard() {
                first_name: s.first_name,
                last_name: s.last_name,
                user_type: s.user_type || 'student',
-               coins: s.coins ?? 0,
-               purchased_items: s.purchased_items || [],
+               coins: coins,
+               purchased_items: purchasedItems,
                equipped_items: s.equipped_items || {},
-               totalValue: s.total_value ?? 0,
+               totalValue: Math.round(totalValue),
                masteredWords: masteredWords,
                masteredMathQuestions: masteredMathQuestions,
                loginStreak: s.login_streak ?? 0,
