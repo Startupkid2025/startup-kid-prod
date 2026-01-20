@@ -502,20 +502,20 @@ export default function EconomyAdminPanel() {
 
         const user = users[0];
 
-        // Fetch additional data sequentially with larger delays to avoid rate limits
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Fetch additional data sequentially with VERY LONG delays to avoid rate limits
+        await new Promise(resolve => setTimeout(resolve, 800));
         const wordProgress = await base44.entities.WordProgress.filter({ student_email: studentEmail });
 
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 800));
         const mathProgress = await base44.entities.MathProgress.filter({ student_email: studentEmail });
 
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 800));
         const participations = await base44.entities.LessonParticipation.filter({ student_email: studentEmail });
 
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 800));
         const quizProgress = await base44.entities.QuizProgress.filter({ student_email: studentEmail });
 
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 800));
         const investments = await base44.entities.Investment.filter({ student_email: studentEmail });
 
         const safeNum = (val) => typeof val === 'number' ? val : 0;
@@ -606,7 +606,7 @@ export default function EconomyAdminPanel() {
         await base44.entities.User.update(user.id, { coins: balancedCoins });
 
         setProgress(prev => ({ ...prev, current: i + 1 }));
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 1200));
       } catch (error) {
         console.error(`Error for ${students[i].student_email}:`, error);
         errors.push({ email: students[i].student_email, error: error.message });
