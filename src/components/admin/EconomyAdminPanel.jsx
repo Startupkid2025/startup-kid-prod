@@ -188,6 +188,86 @@ export default function EconomyAdminPanel() {
     };
   };
 
+  const previewSelected = async () => {
+    if (selectedEmails.size === 0) {
+      toast.error("בחר לפחות תלמיד אחד");
+      return;
+    }
+
+    setIsRecalculating(true);
+    setProgress({ current: 0, total: selectedEmails.size, errors: [] });
+
+    const emails = Array.from(selectedEmails);
+    const results = [];
+
+    for (let i = 0; i < emails.length; i++) {
+      try {
+        const result = await calculateStudentEconomy(emails[i]);
+        results.push(result);
+        setProgress(prev => ({ ...prev, current: i + 1 }));
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(`Error for ${emails[i]}:`, error);
+        results.push({ email: emails[i], error: error.message });
+        setProgress(prev => ({ ...prev, current: i + 1 }));
+      }
+    }
+
+    setIsRecalculating(false);
+    setPreviewResults(results);
+    setShowPreview(true);
+    toast.success(`👁️ תצוגה מקדימה מוכנה`);
+  };
+
+  const applyPreview = async () => {
+    if (!previewResults || previewResults.length === 0) return;
+
+    if (!confirm(`לעדכן עו"ש עבור ${previewResults.length} תלמידים?`)) {
+      return;
+    }
+
+    setIsRecalculating(true);
+    setProgress({ current: 0, total: previewResults.length, errors: [] });
+
+    const errors = [];
+
+    for (let i = 0; i < previewResults.length; i++) {
+      try {
+        const result = previewResults[i];
+        if (result.error) {
+          errors.push({ email: result.email, error: result.error });
+          continue;
+        }
+
+        const users = await base44.entities.User.filter({ email: result.email });
+        if (!users || users.length === 0) continue;
+
+        const user = users[0];
+        await base44.entities.User.update(user.id, { coins: result.coins_cash });
+
+        setProgress(prev => ({ ...prev, current: i + 1 }));
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } catch (error) {
+        console.error(`Error for ${previewResults[i].email}:`, error);
+        errors.push({ email: previewResults[i].email, error: error.message });
+        setProgress(prev => ({ ...prev, current: i + 1, errors }));
+      }
+    }
+
+    setIsRecalculating(false);
+
+    if (errors.length === 0) {
+      toast.success(`✅ עודכן עבור ${previewResults.length} תלמידים`);
+    } else {
+      toast.warning(`⚠️ ${previewResults.length - errors.length} הצליחו, ${errors.length} נכשלו`);
+    }
+
+    await loadSnapshots();
+    setSelectedEmails(new Set());
+    setPreviewResults(null);
+    setShowPreview(false);
+  };
+
 
 
 
@@ -664,8 +744,7 @@ export default function EconomyAdminPanel() {
           </Button>
         </div>
 
-        {/* Removed preview section */}
-        {false && selectedEmails.size > 0 && (
+        {selectedEmails.size > 0 && (
           <div className="bg-emerald-500/20 border-2 border-emerald-500/50 rounded-lg p-3">
             <div className="flex items-center justify-between mb-2">
               <span className="text-white font-bold">נבחרו {selectedEmails.size} תלמידים:</span>
@@ -701,11 +780,26 @@ export default function EconomyAdminPanel() {
           </div>
         )}
 
-        <div className="text-white/70 text-sm">
-          מערכת ניהול הכסף עברה לעמוד הניהול הראשי
+        <div className="flex gap-4">
+          <Button
+            onClick={previewSelected}
+            disabled={isRecalculating || selectedEmails.size === 0}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
+          >
+            👁️ תצוגה מקדימה ({selectedEmails.size})
+          </Button>
+          {previewResults && previewResults.length > 0 && (
+            <Button
+              onClick={applyPreview}
+              disabled={isRecalculating}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold animate-pulse"
+            >
+              ✅ עדכן עכשיו ({previewResults.length})
+            </Button>
+          )}
         </div>
 
-        {false && isRecalculating && (
+        {isRecalculating && (
           <div className="bg-white/5 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-white font-bold">
@@ -846,10 +940,10 @@ export default function EconomyAdminPanel() {
                       }}
                       size="sm"
                       variant="ghost"
-                      className="text-blue-400 hover:text-blue-300 h-6 px-2 text-xs"
-                      title="חשב מחדש כסף אנגלית"
+                      className="text-white/60 hover:text-white h-6 px-2"
+                      disabled={loadingStudentData}
                     >
-                      📚💰
+                      <Eye className="w-3 h-3" />
                     </Button>
                   </div>
                 </div>
@@ -928,8 +1022,8 @@ export default function EconomyAdminPanel() {
         </div>
       </div>
 
-      {/* Preview Dialog - removed */}
-      <Dialog open={false} onOpenChange={setShowPreview}>
+      {/* Preview Dialog */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-blue-900 to-indigo-900 text-white">
           <DialogHeader>
             <DialogTitle className="text-2xl">
