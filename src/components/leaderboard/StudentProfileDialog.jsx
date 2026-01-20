@@ -124,20 +124,18 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       const totalInvestmentValue = studentInvestments.reduce((sum, inv) => sum + inv.current_value, 0);
       const unrealizedProfit = totalInvestmentValue - totalInvested;
 
-      // Calculate finance report - use ACTUAL participations, not total_lessons field
-      const actualLessonsAttended = participations.filter(p => p.attended).length;
-      
+      // Initial income calculation (before fullUserData)
       const income = {
         base: 500,
-        lessons: actualLessonsAttended * 100,
+        lessonsCoins: 0, // Will be set from fullUserData
         vocabulary: wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0),
         math: mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0),
         surveys: participations.filter(p => p.survey_completed).length * 70,
         quizzes: quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0),
-        work: 0,
+        workEarnings: 0, // Will be set from fullUserData
         profileTasks: 0,
         profileDetails: 0,
-        investmentProfits: safeNum(student.total_realized_investment_profit)
+        investmentProfits: 0 // Will be calculated properly
       };
 
       // Single source of truth - no more complex merging
@@ -185,12 +183,25 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       if (fullUserData.bio && fullUserData.bio.length > 10) income.profileDetails += 30;
       if (fullUserData.phone_number) income.profileDetails += 20;
 
+      // A) Lesson income - SINGLE SOURCE OF TRUTH (no double counting)
+      // Use total_lessons_coins if exists, otherwise fallback to 0
+      income.lessonsCoins = safeNum(fullUserData.total_lessons_coins);
+      if (!income.lessonsCoins && fullUserData.total_lessons) {
+        // Fallback: if total_lessons_coins doesn't exist but total_lessons does
+        income.lessonsCoins = fullUserData.total_lessons * 100;
+      }
+
       // Use safeNum to handle 0 values correctly (not falsy!)
       income.collaboration = safeNum(fullUserData.total_collaboration_coins);
-      income.loginStreak = safeNum(fullUserData.total_login_streak_coins);
-      income.work = safeNum(fullUserData.total_work_earnings);
+      income.loginStreakIncome = safeNum(fullUserData.total_login_streak_coins); // C) Renamed
+      income.workEarnings = safeNum(fullUserData.total_work_earnings); // D) Clear work mapping
       income.passiveIncome = safeNum(fullUserData.total_passive_income);
       income.adminCoins = safeNum(fullUserData.total_admin_coins);
+
+      // B) Investment profits - unrealized + realized
+      const unrealizedProfit = unrealizedProfit; // Already calculated above
+      const realizedProfit = safeNum(fullUserData.total_realized_investment_profit);
+      income.investmentProfits = unrealizedProfit + realizedProfit;
 
       // Assets - use merged fullUserData
       const purchasedItems = fullUserData.purchased_items ?? [];
@@ -219,10 +230,8 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         itemSaleLosses: safeNum(fullUserData.total_item_sale_losses)
       };
       
-      console.log("📊 Finance Report - Student:", studentEmail);
-      console.log("💰 Income breakdown:", income);
-      console.log("📉 Losses breakdown:", losses);
-      console.log("🏦 Assets:", assets);
+      // F) Accounting consistency - compute balance
+      console.log("Finance Report - Student:", studentEmail, { income, losses, assets, totals: { totalIncome, totalAssets, totalLosses } });
 
       const totalIncome = Object.values(income).reduce((sum, val) => sum + val, 0);
       const totalAssets = Object.values(assets).reduce((sum, val) => sum + val, 0);
@@ -417,16 +426,16 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                   </div>
                   <div className="bg-white/10 rounded-lg p-3 space-y-1 text-xs">
                     <div className="flex justify-between"><span className="text-white/70">🎯 התחלה:</span><span className="text-white font-bold">{Math.round(financeReport.income.base)}</span></div>
-                    <div className="flex justify-between"><span className="text-white/70">📚 שיעורים:</span><span className="text-white font-bold">{Math.round(financeReport.income.lessons)}</span></div>
+                    <div className="flex justify-between"><span className="text-white/70">📚 שיעורים:</span><span className="text-white font-bold">{Math.round(financeReport.income.lessonsCoins)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">🔤 אנגלית:</span><span className="text-white font-bold">{Math.round(financeReport.income.vocabulary)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">🔢 חשבון:</span><span className="text-white font-bold">{Math.round(financeReport.income.math)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">📝 סקרים:</span><span className="text-white font-bold">{Math.round(financeReport.income.surveys)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">❓ חידונים:</span><span className="text-white font-bold">{Math.round(financeReport.income.quizzes)}</span></div>
-                    <div className="flex justify-between"><span className="text-white/70">💼 עבודות:</span><span className="text-white font-bold">{Math.round(financeReport.income.work)}</span></div>
+                    <div className="flex justify-between"><span className="text-white/70">💼 הכנסות מעבודה:</span><span className="text-white font-bold">{Math.round(financeReport.income.workEarnings)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">✅ משימות פרופיל:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileTasks)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">👤 פרטי פרופיל:</span><span className="text-white font-bold">{Math.round(financeReport.income.profileDetails)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">🤝 שיתופי פעולה:</span><span className="text-white font-bold">{Math.round(financeReport.income.collaboration)}</span></div>
-                    <div className="flex justify-between"><span className="text-white/70">🔥 רצף כניסות:</span><span className="text-white font-bold">{Math.round(financeReport.income.loginStreak)}</span></div>
+                    <div className="flex justify-between"><span className="text-white/70">🔥 הכנסות מרצף כניסות:</span><span className="text-white font-bold">{Math.round(financeReport.income.loginStreakIncome)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">🏠 הכנסה פסיבית:</span><span className="text-white font-bold">{Math.round(financeReport.income.passiveIncome)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">📈 רווחי השקעות:</span><span className="text-white font-bold">{Math.round(financeReport.income.investmentProfits)}</span></div>
                     <div className="flex justify-between"><span className="text-white/70">👑 עדכוני אדמין:</span><span className="text-white font-bold">{Math.round(financeReport.income.adminCoins || 0)}</span></div>
