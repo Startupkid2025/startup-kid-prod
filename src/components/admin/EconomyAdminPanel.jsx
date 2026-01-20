@@ -780,7 +780,7 @@ export default function EconomyAdminPanel() {
           </div>
         )}
 
-        <div className="flex gap-4">
+        <div className="flex gap-4 flex-wrap">
           <Button
             onClick={previewSelected}
             disabled={isRecalculating || selectedEmails.size === 0}
@@ -797,6 +797,22 @@ export default function EconomyAdminPanel() {
               ✅ עדכן עכשיו ({previewResults.length})
             </Button>
           )}
+          {selectedEmails.size > 0 && (
+            <Button
+              onClick={balanceSelectedCoins}
+              disabled={isRecalculating}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-bold"
+            >
+              ⚖️ אזן נבחרים ({selectedEmails.size})
+            </Button>
+          )}
+          <Button
+            onClick={balanceAllCoins}
+            disabled={isRecalculating}
+            className="bg-purple-600 hover:bg-purple-700 text-white font-bold"
+          >
+            ⚖️ אזן הכל ({students.length})
+          </Button>
         </div>
 
         {isRecalculating && (
