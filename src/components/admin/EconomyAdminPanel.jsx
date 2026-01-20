@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -988,6 +987,57 @@ export default function EconomyAdminPanel() {
                   <div>
                     <span className="text-white/70">total_item_sale_losses</span>
                     <div className="font-bold text-red-300">{(debugStudent.total_item_sale_losses || 0).toLocaleString()}</div>
+                  </div>
+                </div>
+
+                {/* Summary Lines */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm mt-4 pt-4 border-t border-red-500/30">
+                  <div className="col-span-2 md:col-span-3">
+                    <div className="text-red-100 font-bold mb-2">📊 סיכום לפי קטגוריות:</div>
+                  </div>
+
+                  <div className="bg-red-500/10 rounded p-2">
+                    <span className="text-white/70 text-xs">סה"כ מיסים</span>
+                    <div className="font-bold text-red-200 text-lg">
+                      {(
+                        (debugStudent.total_income_tax || 0) +
+                        (debugStudent.total_capital_gains_tax || 0) +
+                        (debugStudent.total_dividend_tax || 0)
+                      ).toLocaleString()}
+                    </div>
+                  </div>
+
+                  <div className="bg-red-500/10 rounded p-2">
+                    <span className="text-white/70 text-xs">סה"כ אינפלציה</span>
+                    <div className="font-bold text-red-200 text-lg">
+                      {(debugStudent.total_inflation_lost || 0).toLocaleString()}
+                    </div>
+                  </div>
+
+                  <div className="bg-red-500/10 rounded p-2">
+                    <span className="text-white/70 text-xs">סה"כ עמלות והפסדים</span>
+                    <div className="font-bold text-red-200 text-lg">
+                      {(
+                        (debugStudent.total_investment_fees || 0) +
+                        (debugStudent.total_item_sale_losses || 0) +
+                        (debugStudent.total_credit_interest || 0)
+                      ).toLocaleString()}
+                    </div>
+                  </div>
+
+                  <div className="bg-red-400/20 rounded p-2 border-2 border-red-400/50 col-span-2 md:col-span-3">
+                    <span className="text-red-100 text-xs font-bold">💸 סה"כ הוצאות</span>
+                    <div className="font-bold text-red-100 text-xl">
+                      {(
+                        (debugStudent.total_inflation_lost || 0) +
+                        (debugStudent.total_income_tax || 0) +
+                        (debugStudent.total_capital_gains_tax || 0) +
+                        (debugStudent.total_dividend_tax || 0) +
+                        (debugStudent.total_credit_interest || 0) +
+                        (debugStudent.total_investment_fees || 0) +
+                        (debugStudent.total_item_sale_losses || 0)
+                      ).toLocaleString()}
+                    </div>
                   </div>
                 </div>
               </div>
