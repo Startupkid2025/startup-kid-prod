@@ -119,7 +119,7 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
     const user = users[0];
     
     // ========================================
-    // INCOME BREAKDOWN
+    // INCOME BREAKDOWN (זהה ל-💰 סה"כ הכנסות ברוטו)
     // ========================================
     const income = {
       base_signup: 500,
@@ -129,24 +129,25 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
       surveys: participations.filter(p => p.survey_completed === true).length * 70,
       quizzes: quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0),
       work: user.total_work_earnings || 0,
+      
+      // Profile completion
+      profile_age: user.age ? 20 : 0,
+      profile_bio: (user.bio && user.bio.length > 10) ? 30 : 0,
+      profile_phone: user.phone_number ? 20 : 0,
+      
+      // Social missions
+      instagram_follow: user.completed_instagram_follow ? 50 : 0,
+      youtube_subscribe: user.completed_youtube_subscribe ? 50 : 0,
+      facebook_follow: user.completed_facebook_follow ? 50 : 0,
+      discord_join: user.completed_discord_join ? 50 : 0,
+      share_bonus: user.completed_share ? 100 : 0,
+      
       collaboration: user.total_collaboration_coins || 0,
       login_streak: user.total_login_streak_coins || 0,
       passive_income: user.total_passive_income || 0,
       admin_bonus: user.total_admin_coins || 0,
       investment_profit_realized: user.total_realized_investment_profit || 0
     };
-    
-    // Profile tasks
-    if (user.completed_instagram_follow) income.instagram_follow = 50;
-    if (user.completed_youtube_subscribe) income.youtube_subscribe = 50;
-    if (user.completed_facebook_follow) income.facebook_follow = 50;
-    if (user.completed_discord_join) income.discord_join = 50;
-    if (user.completed_share) income.share_bonus = 100;
-    
-    // Profile details
-    if (user.age) income.profile_age = 20;
-    if (user.bio && user.bio.length > 10) income.profile_bio = 30;
-    if (user.phone_number) income.profile_phone = 20;
     
     const totalIncome = Object.values(income).reduce((sum, val) => sum + val, 0);
     
@@ -180,6 +181,9 @@ export async function recalculateStudentEconomySnapshot(studentEmail, reason = "
     const investmentsSpent = investments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
     const investmentsValue = investments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
     const investmentProfitUnrealized = investmentsValue - investmentsSpent;
+    
+    // Add unrealized profit to income for gross income calculation
+    income.investment_profit_unrealized = investmentProfitUnrealized;
     
     // ========================================
     // CALCULATE COINS_CASH (Source of Truth)
