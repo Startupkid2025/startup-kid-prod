@@ -65,6 +65,39 @@ export default async function recomputeStudentSnapshot({ studentEmail }, { base4
     const workEarnings = entry.total_work_earnings || 0;
     const loginStreak = entry.login_streak || 0;
     const lastLoginDate = entry.last_login_date || null;
+    
+    // Calculate total income (זהה ל-💰 סה"כ הכנסות ברוטו)
+    const vocabEarnings = wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
+    const mathEarnings = mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
+    const quizEarnings = entry.total_quiz_coins || 0;
+    const surveyEarnings = participations.filter(p => p.survey_completed === true).length * 70;
+    
+    // Investment profit
+    const investmentsSpent = investments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
+    const investmentProfitUnrealized = investmentsValue - investmentsSpent;
+    
+    const totalIncome = 
+      500 + // base_signup
+      ((aiTechLessons + socialSkillsLessons + moneyBusinessLessons) * 100) + // lessons
+      vocabEarnings + // vocabulary
+      mathEarnings + // math
+      surveyEarnings + // surveys
+      quizEarnings + // quizzes
+      workEarnings + // work
+      (entry.age ? 20 : 0) + // profile_age
+      ((entry.bio && entry.bio.length > 10) ? 30 : 0) + // profile_bio
+      (entry.phone_number ? 20 : 0) + // profile_phone
+      (entry.completed_instagram_follow ? 50 : 0) + // instagram
+      (entry.completed_youtube_subscribe ? 50 : 0) + // youtube
+      (entry.completed_facebook_follow ? 50 : 0) + // facebook
+      (entry.completed_discord_join ? 50 : 0) + // discord
+      (entry.completed_share ? 100 : 0) + // share
+      (entry.total_collaboration_coins || 0) + // collaboration
+      (entry.total_login_streak_coins || 0) + // login_streak
+      (entry.total_passive_income || 0) + // passive_income
+      (entry.total_admin_coins || 0) + // admin_bonus
+      (entry.total_realized_investment_profit || 0) + // realized profit
+      investmentProfitUnrealized; // unrealized profit
 
     // UPSERT snapshot
     const existingSnapshot = await base44.entities.LeaderboardSnapshot.filter({ 
@@ -83,6 +116,7 @@ export default async function recomputeStudentSnapshot({ studentEmail }, { base4
       investments_value: investmentsValue,
       items_value: itemsValue,
       total_value: totalValue,
+      total_income: totalIncome,
       mastered_words: masteredWords,
       mastered_math_questions: masteredMathQuestions,
       login_streak: loginStreak,
