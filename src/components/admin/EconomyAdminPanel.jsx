@@ -19,6 +19,7 @@ export default function EconomyAdminPanel() {
   const [showDebug, setShowDebug] = useState(false);
   const [previewResults, setPreviewResults] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [loadingStudentData, setLoadingStudentData] = useState(false);
 
   useEffect(() => {
     loadSnapshots();
@@ -375,15 +376,27 @@ export default function EconomyAdminPanel() {
   };
 
   const loadStudentData = async (studentEmail) => {
+    if (loadingStudentData) return; // Prevent double clicks
+    
+    setLoadingStudentData(true);
     try {
-      const [user, wordProgress, mathProgress, participations, quizProgress, investments] = await Promise.all([
-        base44.entities.User.filter({ email: studentEmail }),
-        base44.entities.WordProgress.filter({ student_email: studentEmail }),
-        base44.entities.MathProgress.filter({ student_email: studentEmail }),
-        base44.entities.LessonParticipation.filter({ student_email: studentEmail }),
-        base44.entities.QuizProgress.filter({ student_email: studentEmail }),
-        base44.entities.Investment.filter({ student_email: studentEmail })
-      ]);
+      // Fetch sequentially to avoid rate limits
+      const user = await base44.entities.User.filter({ email: studentEmail });
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const wordProgress = await base44.entities.WordProgress.filter({ student_email: studentEmail });
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const mathProgress = await base44.entities.MathProgress.filter({ student_email: studentEmail });
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const participations = await base44.entities.LessonParticipation.filter({ student_email: studentEmail });
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const quizProgress = await base44.entities.QuizProgress.filter({ student_email: studentEmail });
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const investments = await base44.entities.Investment.filter({ student_email: studentEmail });
 
       if (user.length === 0) {
         toast.error("תלמיד לא נמצא");
@@ -471,6 +484,8 @@ export default function EconomyAdminPanel() {
     } catch (error) {
       console.error("Error loading student data:", error);
       toast.error("שגיאה בטעינת נתוני התלמיד");
+    } finally {
+      setLoadingStudentData(false);
     }
   };
 
@@ -704,6 +719,7 @@ export default function EconomyAdminPanel() {
                       size="sm"
                       variant="ghost"
                       className="text-white/60 hover:text-white h-6 px-2"
+                      disabled={loadingStudentData}
                     >
                       <Eye className="w-3 h-3" />
                     </Button>
