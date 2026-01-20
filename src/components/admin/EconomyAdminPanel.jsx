@@ -425,7 +425,7 @@ export default function EconomyAdminPanel() {
         await base44.entities.User.update(user.id, { coins: balancedCoins });
 
         setProgress(prev => ({ ...prev, current: i + 1 }));
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
         console.error(`Error for ${students[i].student_email}:`, error);
         errors.push({ email: students[i].student_email, error: error.message });
