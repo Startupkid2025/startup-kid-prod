@@ -1534,19 +1534,32 @@ export default function Admin() {
                   </Button>
                   <Button
                     onClick={() => {
-                      // Generate CSV
-                      const headers = ['email', 'full_name', 'first_name', 'last_name', 'user_type', 'role', 'coins', 'total_lessons', 'created_date'];
+                      // Generate CSV with all columns
+                      if (students.length === 0) {
+                        toast.error('אין נתונים לייצוא');
+                        return;
+                      }
+                      
+                      // Get all unique keys from all student records
+                      const allKeys = new Set();
+                      students.forEach(student => {
+                        Object.keys(student).forEach(key => allKeys.add(key));
+                      });
+                      
+                      const headers = Array.from(allKeys).sort();
                       const csvRows = [headers.join(',')];
                       
                       students.forEach(student => {
                         const row = headers.map(header => {
-                          const value = student[header] || '';
+                          const value = student[header];
+                          if (value === null || value === undefined) return '""';
+                          if (typeof value === 'object') return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
                           return `"${String(value).replace(/"/g, '""')}"`;
                         });
                         csvRows.push(row.join(','));
                       });
                       
-                      const csvContent = csvRows.join('\n');
+                      const csvContent = '\uFEFF' + csvRows.join('\n'); // Add BOM for Excel
                       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                       const url = URL.createObjectURL(blob);
                       const link = document.createElement('a');
