@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -643,7 +644,7 @@ export default function EconomyAdminPanel() {
                   </td>
                   <td className="px-4 py-3">
                     <Button
-                      onClick={() => showDebugBreakdown(snapshot)}
+                      onClick={() => loadStudentData(snapshot.student_email)}
                       size="sm"
                       variant="ghost"
                     >
@@ -798,6 +799,94 @@ export default function EconomyAdminPanel() {
                     <span className="text-white/70">total_realized_investment_profit (רווח/הפסד מצטבר ממומש)</span>
                     <div className={`font-bold ${(debugStudent.total_realized_investment_profit || 0) >= 0 ? 'text-green-300' : 'text-red-300'}`}>
                       {(debugStudent.total_realized_investment_profit || 0) >= 0 ? '+' : ''}{(debugStudent.total_realized_investment_profit || 0).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Summary Lines */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm mt-4 pt-4 border-t border-yellow-500/30">
+                  <div className="col-span-2 md:col-span-3">
+                    <div className="text-yellow-100 font-bold mb-2">📊 סיכום לפי קטגוריות:</div>
+                  </div>
+                  
+                  <div className="bg-yellow-500/10 rounded p-2">
+                    <span className="text-white/70 text-xs">סה"כ הכנסות מלימוד</span>
+                    <div className="font-bold text-yellow-200 text-lg">
+                      {(
+                        ((debugStudent.total_lessons || 0) * 100) +
+                        (debugStudent.vocabulary_coins || 0) +
+                        (debugStudent.math_coins || 0) +
+                        (debugStudent.quiz_coins || 0) +
+                        (debugStudent.survey_coins || 0)
+                      ).toLocaleString()}
+                    </div>
+                  </div>
+
+                  <div className="bg-yellow-500/10 rounded p-2">
+                    <span className="text-white/70 text-xs">סה"כ הכנסות מפרופיל</span>
+                    <div className="font-bold text-yellow-200 text-lg">
+                      {(
+                        (debugStudent.profile_completion_coins || 0) +
+                        (debugStudent.social_missions_coins || 0)
+                      ).toLocaleString()}
+                    </div>
+                  </div>
+
+                  <div className="bg-green-500/10 rounded p-2">
+                    <span className="text-white/70 text-xs">סה"כ הכנסות מעבודה</span>
+                    <div className="font-bold text-green-200 text-lg">
+                      {(debugStudent.total_work_earnings || 0).toLocaleString()}
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-500/10 rounded p-2">
+                    <span className="text-white/70 text-xs">סה"כ הכנסות אחרות</span>
+                    <div className="font-bold text-blue-200 text-lg">
+                      {(
+                        500 + // base_coins
+                        (debugStudent.total_collaboration_coins || 0) +
+                        (debugStudent.total_login_streak_coins || 0) +
+                        (debugStudent.total_passive_income || 0) +
+                        (debugStudent.total_admin_coins || 0)
+                      ).toLocaleString()}
+                    </div>
+                  </div>
+
+                  <div className="bg-emerald-500/10 rounded p-2">
+                    <span className="text-white/70 text-xs">סה"כ רווחי השקעות</span>
+                    <div className={`font-bold text-lg ${
+                      ((debugStudent.investment_profit || 0) + (debugStudent.total_realized_investment_profit || 0)) >= 0 
+                        ? 'text-emerald-200' 
+                        : 'text-red-200'
+                    }`}>
+                      {((debugStudent.investment_profit || 0) + (debugStudent.total_realized_investment_profit || 0)) >= 0 ? '+' : ''}
+                      {(
+                        (debugStudent.investment_profit || 0) +
+                        (debugStudent.total_realized_investment_profit || 0)
+                      ).toLocaleString()}
+                    </div>
+                  </div>
+
+                  <div className="bg-yellow-400/20 rounded p-2 border-2 border-yellow-400/50">
+                    <span className="text-yellow-100 text-xs font-bold">💰 סה"כ הכנסות ברוטו</span>
+                    <div className="font-bold text-yellow-100 text-xl">
+                      {(
+                        500 + // base
+                        ((debugStudent.total_lessons || 0) * 100) +
+                        (debugStudent.vocabulary_coins || 0) +
+                        (debugStudent.math_coins || 0) +
+                        (debugStudent.quiz_coins || 0) +
+                        (debugStudent.survey_coins || 0) +
+                        (debugStudent.profile_completion_coins || 0) +
+                        (debugStudent.social_missions_coins || 0) +
+                        (debugStudent.total_work_earnings || 0) +
+                        (debugStudent.total_collaboration_coins || 0) +
+                        (debugStudent.total_login_streak_coins || 0) +
+                        (debugStudent.total_passive_income || 0) +
+                        (debugStudent.total_admin_coins || 0) +
+                        (debugStudent.investment_profit || 0) +
+                        (debugStudent.total_realized_investment_profit || 0)
+                      ).toLocaleString()}
                     </div>
                   </div>
                 </div>
