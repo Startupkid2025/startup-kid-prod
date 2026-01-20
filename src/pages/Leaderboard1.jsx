@@ -410,13 +410,19 @@ export default function Leaderboard() {
       const user = await base44.auth.me();
       setCurrentUser(user);
 
-      // Load all students and their investments
-      const [allUsers, allInvestments, allWordProgress, allMathProgress] = await Promise.all([
-        listAll(base44.entities.User),
-        listAll(base44.entities.Investment),
-        listAll(base44.entities.WordProgress),
-        listAll(base44.entities.MathProgress)
-      ]);
+      // Load students only - simplified leaderboard
+      const allUsers = await base44.entities.User.list();
+      
+      // Load investments for net worth calculation
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const allInvestments = await base44.entities.Investment.list();
+      
+      // Load word/math progress for stats only
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const allWordProgress = await base44.entities.WordProgress.list();
+      
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const allMathProgress = await base44.entities.MathProgress.list();
 
       // Filter: Show ONLY students, exclude demo/parent/admin
       const students = allUsers.filter(u => {
