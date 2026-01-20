@@ -259,15 +259,19 @@ export default function EconomyAdminPanel() {
       const surveyCoins = participations.filter(p => p.survey_completed === true).length * 70;
       const quizCoins = quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
       
-      // Profile completion and social missions
-      const profileCompletionCoins = (userData.age && userData.bio && userData.phone_number ? 70 : 0);
-      const socialMissionsCoins = [
-        userData.completed_instagram_follow,
-        userData.completed_youtube_subscribe,
-        userData.completed_facebook_follow,
-        userData.completed_discord_join,
-        userData.completed_share
-      ].filter(Boolean).length * 50;
+      // Profile completion (20 + 30 + 20 = 70 total)
+      let profileCompletionCoins = 0;
+      if (userData.age) profileCompletionCoins += 20;
+      if (userData.bio && userData.bio.length > 10) profileCompletionCoins += 30;
+      if (userData.phone_number) profileCompletionCoins += 20;
+      
+      // Social missions
+      let socialMissionsCoins = 0;
+      if (userData.completed_instagram_follow) socialMissionsCoins += 50;
+      if (userData.completed_youtube_subscribe) socialMissionsCoins += 50;
+      if (userData.completed_facebook_follow) socialMissionsCoins += 50;
+      if (userData.completed_discord_join) socialMissionsCoins += 50;
+      if (userData.completed_share) socialMissionsCoins += 100;
 
       // חשב ערך פריטים
       const purchasedItems = userData.purchased_items || [];
