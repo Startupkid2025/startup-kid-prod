@@ -760,6 +760,18 @@ export default function EconomyAdminPanel() {
                     <span className="text-white/70">total_admin_coins</span>
                     <div className="font-bold text-green-300">{(debugStudent.total_admin_coins || 0).toLocaleString()}</div>
                   </div>
+                  <div>
+                    <span className="text-white/70">investment_profit (רווח/הפסד לא ממומש)</span>
+                    <div className={`font-bold ${(debugStudent.investment_profit || 0) >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                      {(debugStudent.investment_profit || 0) >= 0 ? '+' : ''}{(debugStudent.investment_profit || 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-white/70">total_realized_investment_profit (רווח/הפסד מצטבר ממומש)</span>
+                    <div className={`font-bold ${(debugStudent.total_realized_investment_profit || 0) >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                      {(debugStudent.total_realized_investment_profit || 0) >= 0 ? '+' : ''}{(debugStudent.total_realized_investment_profit || 0).toLocaleString()}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -800,36 +812,31 @@ export default function EconomyAdminPanel() {
               </div>
 
               {/* Assets */}
-              <div className="grid grid-cols-5 gap-4">
-                <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 rounded-lg p-4 border border-yellow-500/30">
-                  <div className="text-yellow-200 text-xs mb-1 font-bold">coins (עו״ש בעובר ושב)</div>
-                  <div className={`text-2xl font-bold ${(debugStudent.coins || 0) >= 0 ? 'text-yellow-300' : 'text-red-300'}`}>
-                    {(debugStudent.coins || 0).toLocaleString()}
+              <div className="bg-cyan-500/10 rounded-lg p-4 border border-cyan-500/30 mb-6">
+                <h3 className="text-cyan-200 text-lg font-bold mb-3">🏦 נכסים</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 rounded-lg p-4 border border-yellow-500/30">
+                    <div className="text-yellow-200 text-xs mb-1 font-bold">coins (עו״ש בעובר ושב)</div>
+                    <div className={`text-2xl font-bold ${(debugStudent.coins || 0) >= 0 ? 'text-yellow-300' : 'text-red-300'}`}>
+                      {(debugStudent.coins || 0).toLocaleString()}
+                    </div>
                   </div>
-                </div>
-                <div className={`bg-gradient-to-br ${(debugStudent.investment_profit || 0) >= 0 ? 'from-emerald-500/20 to-emerald-500/5' : 'from-red-500/20 to-red-500/5'} rounded-lg p-4 border ${(debugStudent.investment_profit || 0) >= 0 ? 'border-emerald-500/30' : 'border-red-500/30'}`}>
-                  <div className={`${(debugStudent.investment_profit || 0) >= 0 ? 'text-emerald-200' : 'text-red-200'} text-xs mb-1 font-bold`}>investment_profit (רווח/הפסד לא ממומש)</div>
-                  <div className={`text-2xl font-bold ${(debugStudent.investment_profit || 0) >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
-                    {(debugStudent.investment_profit || 0) >= 0 ? '+' : ''}{(debugStudent.investment_profit || 0).toLocaleString()}
+                  <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 rounded-lg p-4 border border-emerald-500/30">
+                    <div className="text-emerald-200 text-xs mb-1 font-bold">investments_value (השקעות נוכחי)</div>
+                    <div className="text-2xl font-bold text-white">{(debugStudent.investments_value || 0).toLocaleString()}</div>
+                    <div className="text-white/60 text-xs mt-2">
+                      השקעה: {(debugStudent.investments_spent || 0).toLocaleString()}
+                    </div>
                   </div>
-                  <div className="text-white/60 text-xs mt-2">
-                    השקעה: {(debugStudent.investments_spent || 0).toLocaleString()} | נוכחי: {(debugStudent.investments_value || 0).toLocaleString()}
+                  <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/5 rounded-lg p-4 border border-purple-500/30">
+                    <div className="text-purple-200 text-xs mb-1 font-bold">items_value (ערך פריטים מהחנות)</div>
+                    <div className="text-2xl font-bold text-white">{(debugStudent.items_value || 0).toLocaleString()}</div>
+                    <div className="text-white/60 text-xs mt-2">מספר פריטים: {((debugStudent.purchased_items || []).length)}</div>
                   </div>
-                </div>
-                <div className={`bg-gradient-to-br ${(debugStudent.total_realized_investment_profit || 0) >= 0 ? 'from-green-500/20 to-green-500/5' : 'from-red-500/20 to-red-500/5'} rounded-lg p-4 border ${(debugStudent.total_realized_investment_profit || 0) >= 0 ? 'border-green-500/30' : 'border-red-500/30'}`}>
-                  <div className={`${(debugStudent.total_realized_investment_profit || 0) >= 0 ? 'text-green-200' : 'text-red-200'} text-xs mb-1 font-bold`}>רווח/הפסד מצטבר (ממומש)</div>
-                  <div className={`text-2xl font-bold ${(debugStudent.total_realized_investment_profit || 0) >= 0 ? 'text-green-300' : 'text-red-300'}`}>
-                    {(debugStudent.total_realized_investment_profit || 0) >= 0 ? '+' : ''}{(debugStudent.total_realized_investment_profit || 0).toLocaleString()}
+                  <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 rounded-lg p-4 border border-yellow-500/30">
+                    <div className="text-yellow-200 text-xs mb-1 font-bold">total_assets (שווי כולל)</div>
+                    <div className="text-2xl font-bold text-white">{((debugStudent.coins || 0) + (debugStudent.investments_value || 0) + (debugStudent.items_value || 0)).toLocaleString()}</div>
                   </div>
-                </div>
-                <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/5 rounded-lg p-4 border border-purple-500/30">
-                  <div className="text-purple-200 text-xs mb-1 font-bold">items_value (ערך פריטים מהחנות)</div>
-                  <div className="text-2xl font-bold text-white">{(debugStudent.items_value || 0).toLocaleString()}</div>
-                  <div className="text-white/60 text-xs mt-2">מספר פריטים: {((debugStudent.purchased_items || []).length)}</div>
-                </div>
-                <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 rounded-lg p-4 border border-yellow-500/30">
-                  <div className="text-yellow-200 text-xs mb-1 font-bold">total_assets (שווי כולל)</div>
-                  <div className="text-2xl font-bold text-white">{((debugStudent.coins || 0) + (debugStudent.investments_value || 0) + (debugStudent.items_value || 0)).toLocaleString()}</div>
                 </div>
               </div>
 
