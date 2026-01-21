@@ -39,8 +39,14 @@ Deno.serve(async (req) => {
     // Use LeaderboardEntry instead of User for better performance and permissions
     const leaderboardEntries = await base44.entities.LeaderboardEntry.list();
     
+    // Get all users to check roles
+    const allUsers = await base44.asServiceRole.entities.User.list();
+    const adminEmails = new Set(allUsers.filter(u => u.role === 'admin').map(u => u.email));
+    
     // Filter students only (exclude admins and non-students)
-    const students = leaderboardEntries.filter(entry => entry.user_type === 'student');
+    const students = leaderboardEntries.filter(entry => 
+      entry.user_type === 'student' && !adminEmails.has(entry.student_email)
+    );
 
     // Fetch investments for calculation
     const allInvestments = await base44.entities.Investment.list();
