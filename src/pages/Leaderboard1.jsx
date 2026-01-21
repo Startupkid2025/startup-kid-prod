@@ -7,10 +7,10 @@ import { Trophy, Coins, TrendingUp, BookOpen, Star, Crown, Handshake, Check, Hea
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import TamagotchiAvatar from "../components/avatar/TamagotchiAvatar";
-import { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
 import StudentProfileDialog from "../components/leaderboard/StudentProfileDialog";
 import { toast } from "sonner";
 import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
+import { calculateStudentNetWorth } from "@/functions/calculateStudentNetWorth";
 
 // 3️⃣ Memoized LeaderboardRow to prevent unnecessary re-renders
 const LeaderboardRow = React.memo(({ 
@@ -389,58 +389,31 @@ export default function Leaderboard() {
     }
   }, [currentUser, users]);
 
-  const calculateTotalValue = (user, investmentsValue) => {
-    const purchasedItems = user.purchased_items || [];
-
-    let itemsValue = 0;
-    purchasedItems.forEach(itemId => {
-      const item = AVATAR_ITEMS[itemId];
-      if (item) {
-        itemsValue += item.price || 0;
-      }
-    });
-
-    const coins = Math.round(user.coins || 0);
-    const totalValue = coins + itemsValue + investmentsValue;
-    return Math.round(totalValue);
-  };
-
   const loadData = async () => {
     try {
       const user = await base44.auth.me();
       setCurrentUser(user);
 
-      // Load students only - simplified leaderboard
+      // Call backend to calculate net worth
+      const netWorthResponse = await calculateStudentNetWorth();
+      
+      if (!netWorthResponse.success) {
+        throw new Error(netWorthResponse.error || "Failed to calculate net worth");
+      }
+
+      const studentsFromBackend = netWorthResponse.students;
+
+      // Load all users to get additional data not in backend response
       const allUsers = await base44.entities.User.list();
       
-      // Load investments for net worth calculation
-      await new Promise(resolve => setTimeout(resolve, 300));
-      const allInvestments = await base44.entities.Investment.list();
-      
-      // Load word/math progress for stats only
+      // Load word/math progress for stats
       await new Promise(resolve => setTimeout(resolve, 300));
       const allWordProgress = await base44.entities.WordProgress.list();
       
       await new Promise(resolve => setTimeout(resolve, 300));
       const allMathProgress = await base44.entities.MathProgress.list();
 
-      // Filter: Show ONLY students, exclude demo/parent/admin
-      const students = allUsers.filter(u => {
-        if (user && u.email === user.email) return true;
-        if (u.role === 'admin') return false;
-        if (u.user_type === 'demo' || u.user_type === 'parent') return false;
-        return true;
-      });
-
       // Build lookup maps
-      const investmentsByEmail = new Map();
-      allInvestments.forEach(inv => {
-        if (!investmentsByEmail.has(inv.student_email)) {
-          investmentsByEmail.set(inv.student_email, []);
-        }
-        investmentsByEmail.get(inv.student_email).push(inv);
-      });
-
       const wordProgressByEmail = new Map();
       allWordProgress.forEach(w => {
         if (!wordProgressByEmail.has(w.student_email)) {
@@ -457,56 +430,46 @@ export default function Leaderboard() {
         mathProgressByEmail.get(m.student_email).push(m);
       });
 
-      // Calculate net worth for each student
-      const studentsWithStats = students.map(u => {
-        const userInvestments = investmentsByEmail.get(u.email) || [];
-        const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      const usersByEmail = new Map();
+      allUsers.forEach(u => usersByEmail.set(u.email, u));
 
-        const purchasedItems = u.purchased_items || [];
-        let itemsValue = 0;
-        purchasedItems.forEach(itemId => {
-          const item = AVATAR_ITEMS[itemId];
-          if (item && item.price) itemsValue += item.price;
-        });
+      // Merge backend net worth data with frontend user data
+      const studentsWithStats = studentsFromBackend.map(student => {
+        const fullUser = usersByEmail.get(student.email);
+        if (!fullUser) return null;
 
-        const coins = u.coins || 0;
-        const totalValue = Math.round(coins + itemsValue + investmentsValue);
-
-        const userWordProgress = wordProgressByEmail.get(u.email) || [];
+        const userWordProgress = wordProgressByEmail.get(student.email) || [];
         const masteredWords = userWordProgress.filter(w => w.mastered).length;
 
-        const userMathProgress = mathProgressByEmail.get(u.email) || [];
+        const userMathProgress = mathProgressByEmail.get(student.email) || [];
         const masteredMathQuestions = userMathProgress.filter(m => m.mastered).length;
 
-        const collaborationCount = (u.daily_collaborations || []).filter(c => c && c.completed).length;
+        const collaborationCount = (fullUser.daily_collaborations || []).filter(c => c && c.completed).length;
 
         return {
-          id: u.id,
-          student_email: u.email,
-          full_name: u.full_name,
-          first_name: u.first_name,
-          last_name: u.last_name,
-          user_type: u.user_type || 'student',
-          coins: coins,
-          purchased_items: purchasedItems,
-          equipped_items: u.equipped_items || {},
-          totalValue: totalValue,
+          id: fullUser.id,
+          student_email: student.email,
+          full_name: student.full_name,
+          first_name: student.first_name,
+          last_name: student.last_name,
+          user_type: fullUser.user_type || 'student',
+          coins: student.coins,
+          purchased_items: fullUser.purchased_items || [],
+          equipped_items: fullUser.equipped_items || {},
+          totalValue: student.net_worth,
           masteredWords: masteredWords,
           masteredMathQuestions: masteredMathQuestions,
-          loginStreak: u.login_streak || 0,
+          loginStreak: fullUser.login_streak || 0,
           collaborationCount: collaborationCount,
-          workHours: u.total_work_hours || 0,
-          workEarnings: u.total_work_earnings || 0,
-          last_login_date: u.last_login_date,
-          total_lessons: u.total_lessons || 0,
-          daily_collaborations: u.daily_collaborations || [],
-          currentInvestmentValue: investmentsValue,
+          workHours: fullUser.total_work_hours || 0,
+          workEarnings: fullUser.total_work_earnings || 0,
+          last_login_date: fullUser.last_login_date,
+          total_lessons: fullUser.total_lessons || 0,
+          daily_collaborations: fullUser.daily_collaborations || [],
+          currentInvestmentValue: student.investments_value,
           crowns: []
         };
-      });
-
-      // Sort by totalValue descending
-      studentsWithStats.sort((a, b) => b.totalValue - a.totalValue);
+      }).filter(Boolean); // Remove nulls
 
       // Find kings - ONLY from real students
       const realStudents = studentsWithStats.filter(u => u.user_type === 'student');
