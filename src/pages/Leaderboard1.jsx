@@ -395,7 +395,7 @@ export default function Leaderboard() {
       setCurrentUser(user);
 
       // Call backend to calculate net worth
-      const netWorthResponse = await calculateStudentNetWorth();
+      const { data: netWorthResponse } = await calculateStudentNetWorth({});
       
       if (!netWorthResponse.success) {
         throw new Error(netWorthResponse.error || "Failed to calculate net worth");
