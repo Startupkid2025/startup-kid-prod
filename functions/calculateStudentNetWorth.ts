@@ -39,8 +39,8 @@ Deno.serve(async (req) => {
     // Fetch all users
     const allUsers = await base44.asServiceRole.entities.User.list();
     
-    // Filter students only
-    const students = allUsers.filter(user => user.user_type === 'student');
+    // Filter students only (exclude admins)
+    const students = allUsers.filter(user => user.user_type === 'student' && user.role !== 'admin');
 
     // Fetch all investments once
     const allInvestments = await base44.asServiceRole.entities.Investment.list();
