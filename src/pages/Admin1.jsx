@@ -25,6 +25,7 @@ import QuizQuestionsManager from "../components/admin/QuizQuestionsManager";
 import VocabularyManager from "../components/admin/VocabularyManager";
 import EconomyAdminPanel from "../components/admin/EconomyAdminPanel";
 import InvestmentsManager from "../components/admin/InvestmentsManager";
+import ScheduledTasksPanel from "../components/admin/ScheduledTasksPanel";
 import { AVATAR_ITEMS } from '../components/avatar/TamagotchiAvatar';
 
 export default function Admin() {
@@ -1140,7 +1141,7 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="students" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5 mb-8 bg-white/5 backdrop-blur-md border border-white/10 p-1 rounded-xl">
+        <TabsList className="grid w-full grid-cols-6 mb-8 bg-white/5 backdrop-blur-md border border-white/10 p-1 rounded-xl">
           <TabsTrigger 
             value="students" 
             className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white"
@@ -1175,6 +1176,13 @@ export default function Admin() {
           >
             <Shield className="w-4 h-4 ml-2" />
             Economy Admin
+          </TabsTrigger>
+          <TabsTrigger 
+            value="scheduled"
+            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white"
+          >
+            <RefreshCw className="w-4 h-4 ml-2" />
+            משימות מתוזמנות
           </TabsTrigger>
         </TabsList>
 
@@ -1957,6 +1965,10 @@ export default function Admin() {
             <InvestmentsManager />
             <EconomyAdminPanel />
           </div>
+        </TabsContent>
+
+        <TabsContent value="scheduled">
+          <ScheduledTasksPanel />
         </TabsContent>
       </Tabs>
 
