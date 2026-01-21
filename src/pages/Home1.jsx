@@ -166,11 +166,11 @@ export default function Home() {
       const lessonCounts = await calculateLessonCounts(user);
       
       // Calculate actual current coins based on net worth
-      const recalculatedCoins = await recalculateCoins(user);
-      if (recalculatedCoins !== null && Math.abs(recalculatedCoins - (user.coins || 0)) >= 1) {
-        await base44.auth.updateMe({ coins: recalculatedCoins });
-        user.coins = recalculatedCoins;
-      }
+      // const recalculatedCoins = await recalculateCoins(user);
+      // if (recalculatedCoins !== null && Math.abs(recalculatedCoins - (user.coins || 0)) >= 1) {
+      //   await base44.auth.updateMe({ coins: recalculatedCoins });
+      //   user.coins = recalculatedCoins;
+      // }
 
       setUserData({ ...user, ...lessonCounts });
 
