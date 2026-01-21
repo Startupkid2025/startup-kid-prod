@@ -36,14 +36,23 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // Fetch all users
-    const allUsers = await base44.asServiceRole.entities.User.list();
+    // Use LeaderboardEntry instead of User for better performance and permissions
+    const leaderboardEntries = await base44.entities.LeaderboardEntry.list();
     
-    // Filter students only (exclude admins)
-    const students = allUsers.filter(user => user.user_type === 'student' && user.role !== 'admin');
+    // Filter students only (exclude admins and non-students)
+    const students = leaderboardEntries.filter(entry => entry.user_type === 'student');
 
-    // Fetch all investments once
-    const allInvestments = await base44.asServiceRole.entities.Investment.list();
+    // Fetch investments for calculation
+    const allInvestments = await base44.entities.Investment.list();
+
+    // Build investment map for faster lookup
+    const investmentsByEmail = new Map();
+    allInvestments.forEach(inv => {
+      if (!investmentsByEmail.has(inv.student_email)) {
+        investmentsByEmail.set(inv.student_email, []);
+      }
+      investmentsByEmail.get(inv.student_email).push(inv);
+    });
 
     // Calculate net worth for each student
     const studentsWithNetWorth = students.map(student => {
@@ -54,7 +63,7 @@ Deno.serve(async (req) => {
       }, 0);
 
       // Calculate investments value
-      const studentInvestments = allInvestments.filter(inv => inv.student_email === student.email);
+      const studentInvestments = investmentsByEmail.get(student.student_email) || [];
       const investmentsValue = studentInvestments.reduce((sum, inv) => {
         return sum + (inv.current_value || 0);
       }, 0);
@@ -64,7 +73,7 @@ Deno.serve(async (req) => {
       const netWorth = coins + itemsValue + investmentsValue;
 
       return {
-        email: student.email,
+        email: student.student_email,
         full_name: student.full_name,
         first_name: student.first_name,
         last_name: student.last_name,
