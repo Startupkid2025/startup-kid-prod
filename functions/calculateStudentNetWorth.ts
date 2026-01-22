@@ -48,8 +48,10 @@ Deno.serve(async (req) => {
       entry.user_type === 'student' && !adminEmails.has(entry.student_email)
     );
 
-    // Fetch investments for calculation
+    // Fetch investments, word progress, and math progress for calculation
     const allInvestments = await base44.entities.Investment.list();
+    const allWordProgress = await base44.entities.WordProgress.list();
+    const allMathProgress = await base44.entities.MathProgress.list();
 
     // Build investment map for faster lookup
     const investmentsByEmail = new Map();
@@ -58,6 +60,24 @@ Deno.serve(async (req) => {
         investmentsByEmail.set(inv.student_email, []);
       }
       investmentsByEmail.get(inv.student_email).push(inv);
+    });
+
+    // Build word progress map
+    const wordProgressByEmail = new Map();
+    allWordProgress.forEach(w => {
+      if (!wordProgressByEmail.has(w.student_email)) {
+        wordProgressByEmail.set(w.student_email, []);
+      }
+      wordProgressByEmail.get(w.student_email).push(w);
+    });
+
+    // Build math progress map
+    const mathProgressByEmail = new Map();
+    allMathProgress.forEach(m => {
+      if (!mathProgressByEmail.has(m.student_email)) {
+        mathProgressByEmail.set(m.student_email, []);
+      }
+      mathProgressByEmail.get(m.student_email).push(m);
     });
 
     // Calculate net worth for each student
@@ -74,6 +94,13 @@ Deno.serve(async (req) => {
         return sum + (inv.current_value || 0);
       }, 0);
 
+      // Calculate mastered words and math questions
+      const studentWordProgress = wordProgressByEmail.get(student.student_email) || [];
+      const masteredWords = studentWordProgress.filter(w => w.mastered).length;
+
+      const studentMathProgress = mathProgressByEmail.get(student.student_email) || [];
+      const masteredMathQuestions = studentMathProgress.filter(m => m.mastered).length;
+
       // Calculate net worth
       const coins = student.coins || 0;
       const netWorth = coins + itemsValue + investmentsValue;
@@ -89,6 +116,8 @@ Deno.serve(async (req) => {
         money_business_level: student.money_business_level || 1,
         total_lessons: student.total_lessons || 0,
         login_streak: student.login_streak || 0,
+        mastered_words: masteredWords,
+        mastered_math_questions: masteredMathQuestions,
         items_value: itemsValue,
         investments_value: investmentsValue,
         net_worth: netWorth,
