@@ -448,6 +448,11 @@ export default function StudentRow({
                 <p className="text-white/60 text-[10px] sm:text-xs whitespace-nowrap">השתתפויות</p>
               </div>
               
+              <div className="text-center bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-xl px-3 py-2 border border-green-500/30 shadow-lg backdrop-blur-sm">
+                <p className="text-xl sm:text-2xl font-black text-green-300">{student.total_work_hours || 0}</p>
+                <p className="text-white/60 text-[10px] sm:text-xs whitespace-nowrap">שעות עבודה</p>
+              </div>
+              
               {/* Add Coins Button */}
               <Button
                 variant="ghost"
