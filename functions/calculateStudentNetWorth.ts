@@ -48,10 +48,10 @@ Deno.serve(async (req) => {
       entry.user_type === 'student' && !adminEmails.has(entry.student_email)
     );
 
-    // Fetch all required data
-    const allInvestments = await base44.entities.Investment.list();
-    const allWordProgress = await base44.entities.WordProgress.list();
-    const allMathProgress = await base44.entities.MathProgress.list();
+    // Fetch all required data using service role for access to all students
+    const allInvestments = await base44.asServiceRole.entities.Investment.list();
+    const allWordProgress = await base44.asServiceRole.entities.WordProgress.list();
+    const allMathProgress = await base44.asServiceRole.entities.MathProgress.list();
 
     // Build investment map for faster lookup
     const investmentsByEmail = new Map();
