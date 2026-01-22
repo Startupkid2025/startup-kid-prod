@@ -395,13 +395,17 @@ export default function Leaderboard() {
       setCurrentUser(user);
 
       // Call backend to calculate net worth
+      console.log("Calling calculateStudentNetWorth...");
       const netWorthResponse = await calculateStudentNetWorth({});
+      console.log("Backend response:", netWorthResponse);
 
       if (!netWorthResponse || !netWorthResponse.success) {
+        console.error("Backend error:", netWorthResponse);
         throw new Error(netWorthResponse?.error || "Failed to calculate net worth");
       }
 
       const studentsFromBackend = netWorthResponse.students || [];
+      console.log("Students from backend:", studentsFromBackend.length);
 
       // Load all users to get additional data not in backend response
       const allUsers = await base44.entities.User.list();
@@ -501,13 +505,15 @@ export default function Leaderboard() {
         }
       });
 
+      console.log("Final students with stats:", studentsWithStats.length);
       setUsers(studentsWithStats);
-    } catch (error) {
+      } catch (error) {
       console.error("Error loading leaderboard:", error);
+      console.error("Error details:", error.message, error.stack);
       toast.error("שגיאה בטעינת טבלת השיאים");
-    } finally {
+      } finally {
       setIsLoading(false);
-    }
+      }
   };
 
   const handleCollaborate = async (targetUser, e) => {
