@@ -42,15 +42,31 @@ export default function EconomyAdminPanel() {
       const usersData = await base44.entities.User.list();
       const allStudents = usersData.filter(u => u.user_type === 'student');
       
-      setStudents(allStudents.map(user => ({
-        student_email: user.email,
-        full_name: user.full_name,
-        coins_cash: user.coins || 0,
-        investments_value: 0,
-        items_value: 0,
-        total_assets: user.coins || 0,
-        last_calculated_at: null
-      })));
+      // Load math progress to get mastered math questions
+      const allMathProgress = await base44.entities.MathProgress.list();
+      const mathProgressByEmail = new Map();
+      allMathProgress.forEach(m => {
+        if (!mathProgressByEmail.has(m.student_email)) {
+          mathProgressByEmail.set(m.student_email, []);
+        }
+        mathProgressByEmail.get(m.student_email).push(m);
+      });
+      
+      setStudents(allStudents.map(user => {
+        const studentMathProgress = mathProgressByEmail.get(user.email) || [];
+        const masteredMathQuestions = studentMathProgress.filter(m => m.mastered || m.correct_streak > 0).length;
+        
+        return {
+          student_email: user.email,
+          full_name: user.full_name,
+          coins_cash: user.coins || 0,
+          investments_value: 0,
+          items_value: 0,
+          total_assets: user.coins || 0,
+          masteredMathQuestions: masteredMathQuestions,
+          last_calculated_at: null
+        };
+      }));
       setSnapshots([]);
     } catch (error) {
       console.error("Error loading data:", error);
@@ -923,6 +939,10 @@ export default function EconomyAdminPanel() {
                   <div>
                     <div className="text-white/60 text-xs">שווי כולל</div>
                     <div className="text-yellow-400 font-bold">{snapshot.total_assets?.toLocaleString() || 0}</div>
+                  </div>
+                  <div>
+                    <div className="text-white/60 text-xs">תרגילים</div>
+                    <div className="text-orange-400 font-bold">{snapshot.masteredMathQuestions || 0}</div>
                   </div>
                 </div>
 
