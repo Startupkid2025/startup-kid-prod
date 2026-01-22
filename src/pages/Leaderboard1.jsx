@@ -411,12 +411,12 @@ export default function Leaderboard() {
       const usersByEmail = new Map();
       leaderboardEntries.forEach(u => usersByEmail.set(u.student_email, u));
 
-      // Merge backend net worth data with frontend user data
+      // Merge backend net worth data with LeaderboardEntry data
       const studentsWithStats = studentsFromBackend.map(student => {
-        const fullUser = usersByEmail.get(student.email);
-        if (!fullUser) return null;
+        const leaderboardEntry = usersByEmail.get(student.email);
+        if (!leaderboardEntry) return null;
 
-        const collaborationCount = (fullUser.daily_collaborations || []).filter(c => c && c.completed).length;
+        const collaborationCount = (leaderboardEntry.daily_collaborations || []).filter(c => c && c.completed).length;
 
         return {
           id: fullUser.id,
