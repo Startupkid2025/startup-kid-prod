@@ -99,7 +99,8 @@ Deno.serve(async (req) => {
       const masteredWords = studentWordProgress.filter(w => w.mastered).length;
 
       const studentMathProgress = mathProgressByEmail.get(student.student_email) || [];
-      const masteredMathQuestions = studentMathProgress.filter(m => m.mastered).length;
+      // Count math questions that have correct_streak > 0 or are mastered (aligns with MathGames1.js)
+      const masteredMathQuestions = studentMathProgress.filter(m => m.mastered || m.correct_streak > 0).length;
 
       // Calculate net worth
       const coins = student.coins || 0;
