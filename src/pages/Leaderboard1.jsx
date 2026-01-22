@@ -397,11 +397,11 @@ export default function Leaderboard() {
       // Call backend to calculate net worth
       const netWorthResponse = await calculateStudentNetWorth({});
 
-      if (!netWorthResponse.success) {
-        throw new Error(netWorthResponse.error || "Failed to calculate net worth");
+      if (!netWorthResponse || !netWorthResponse.success) {
+        throw new Error(netWorthResponse?.error || "Failed to calculate net worth");
       }
 
-      const studentsFromBackend = netWorthResponse.students;
+      const studentsFromBackend = netWorthResponse.students || [];
 
       // Load all users to get additional data not in backend response
       const allUsers = await base44.entities.User.list();
