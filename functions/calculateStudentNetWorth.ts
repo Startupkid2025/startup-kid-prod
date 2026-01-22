@@ -94,9 +94,9 @@ Deno.serve(async (req) => {
         return sum + (inv.current_value || 0);
       }, 0);
 
-      // Calculate mastered words and math questions
+      // Calculate mastered words and math questions (aligns with Vocabulary1.js and MathGames1.js)
       const studentWordProgress = wordProgressByEmail.get(student.student_email) || [];
-      const masteredWords = studentWordProgress.filter(w => w.mastered).length;
+      const masteredWords = studentWordProgress.filter(w => w.mastered || w.correct_streak > 0).length;
 
       const studentMathProgress = mathProgressByEmail.get(student.student_email) || [];
       // Count math questions that have correct_streak > 0 or are mastered (aligns with MathGames1.js)
