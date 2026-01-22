@@ -406,13 +406,41 @@ export default function Leaderboard() {
       // Load all users to get additional data not in backend response
       const allUsers = await base44.entities.User.list();
 
+      // Load word/math progress for stats
+      const allWordProgress = await base44.entities.WordProgress.list();
+      const allMathProgress = await base44.entities.MathProgress.list();
+
       const usersByEmail = new Map();
       allUsers.forEach(u => usersByEmail.set(u.email, u));
+
+      // Build word progress map
+      const wordProgressByEmail = new Map();
+      allWordProgress.forEach(w => {
+        if (!wordProgressByEmail.has(w.student_email)) {
+          wordProgressByEmail.set(w.student_email, []);
+        }
+        wordProgressByEmail.get(w.student_email).push(w);
+      });
+
+      // Build math progress map
+      const mathProgressByEmail = new Map();
+      allMathProgress.forEach(m => {
+        if (!mathProgressByEmail.has(m.student_email)) {
+          mathProgressByEmail.set(m.student_email, []);
+        }
+        mathProgressByEmail.get(m.student_email).push(m);
+      });
 
       // Merge backend net worth data with frontend user data
       const studentsWithStats = studentsFromBackend.map(student => {
         const fullUser = usersByEmail.get(student.email);
         if (!fullUser) return null;
+
+        const userWordProgress = wordProgressByEmail.get(student.email) || [];
+        const masteredWords = userWordProgress.filter(w => w.mastered).length;
+
+        const userMathProgress = mathProgressByEmail.get(student.email) || [];
+        const masteredMathQuestions = userMathProgress.filter(m => m.mastered).length;
 
         const collaborationCount = (fullUser.daily_collaborations || []).filter(c => c && c.completed).length;
 
@@ -432,8 +460,8 @@ export default function Leaderboard() {
           purchased_items: fullUser.purchased_items || [],
           equipped_items: fullUser.equipped_items || {},
           totalValue: student.net_worth,
-          masteredWords: student.mastered_words || 0,
-          masteredMathQuestions: student.mastered_math_questions || 0,
+          masteredWords: masteredWords,
+          masteredMathQuestions: masteredMathQuestions,
           loginStreak: student.login_streak,
           collaborationCount: collaborationCount,
           workHours: fullUser.total_work_hours || 0,
