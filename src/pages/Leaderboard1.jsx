@@ -405,11 +405,11 @@ export default function Leaderboard() {
 
       const studentsFromBackend = netWorthResponse.students || [];
 
-      // Load all users to get additional data not in backend response
-      const allUsers = await base44.entities.User.list();
+      // Load LeaderboardEntry data for additional fields
+      const leaderboardEntries = await base44.entities.LeaderboardEntry.list();
 
       const usersByEmail = new Map();
-      allUsers.forEach(u => usersByEmail.set(u.email, u));
+      leaderboardEntries.forEach(u => usersByEmail.set(u.student_email, u));
 
       // Merge backend net worth data with frontend user data
       const studentsWithStats = studentsFromBackend.map(student => {
