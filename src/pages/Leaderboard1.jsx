@@ -417,8 +417,6 @@ export default function Leaderboard() {
 
         const collaborationCount = (fullUser.daily_collaborations || []).filter(c => c && c.completed).length;
 
-        console.log(`Student ${student.email}: mastered_words=${student.mastered_words}, mastered_math=${student.mastered_math_questions}`);
-
         return {
           id: fullUser.id,
           student_email: student.email,
