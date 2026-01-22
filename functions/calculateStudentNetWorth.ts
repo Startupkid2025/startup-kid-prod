@@ -48,10 +48,23 @@ Deno.serve(async (req) => {
       entry.user_type === 'student' && !adminEmails.has(entry.student_email)
     );
 
+    // Helper function to load all records with pagination
+    const listAll = async (entityHandler, pageSize = 1000) => {
+      let all = [];
+      let skip = 0;
+      while (true) {
+        const page = await entityHandler.list('-created_date', pageSize, skip);
+        all = all.concat(page);
+        if (page.length < pageSize) break;
+        skip += pageSize;
+      }
+      return all;
+    };
+
     // Fetch all required data using service role for access to all students
-    const allInvestments = await base44.asServiceRole.entities.Investment.list();
-    const allWordProgress = await base44.asServiceRole.entities.WordProgress.list();
-    const allMathProgress = await base44.asServiceRole.entities.MathProgress.list();
+    const allInvestments = await listAll(base44.asServiceRole.entities.Investment);
+    const allWordProgress = await listAll(base44.asServiceRole.entities.WordProgress);
+    const allMathProgress = await listAll(base44.asServiceRole.entities.MathProgress);
 
     // Build investment map for faster lookup
     const investmentsByEmail = new Map();
