@@ -408,6 +408,7 @@ export default function Leaderboard() {
 
       const studentsFromBackend = netWorthResponse.students || [];
       console.log("Students from backend:", studentsFromBackend.length);
+      console.log("Sample student from backend:", studentsFromBackend[0]);
 
       // Load all users to get additional data not in backend response
       const allUsers = await base44.entities.User.list();
@@ -421,6 +422,8 @@ export default function Leaderboard() {
         if (!fullUser) return null;
 
         const collaborationCount = (fullUser.daily_collaborations || []).filter(c => c && c.completed).length;
+
+        console.log(`Student ${student.email}: mastered_words=${student.mastered_words}, mastered_math=${student.mastered_math_questions}`);
 
         return {
           id: fullUser.id,
