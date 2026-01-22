@@ -396,8 +396,10 @@ export default function Leaderboard() {
 
       // Call backend to calculate net worth
       console.log("Calling calculateStudentNetWorth...");
-      const netWorthResponse = await calculateStudentNetWorth({});
-      console.log("Backend response:", netWorthResponse);
+      const response = await calculateStudentNetWorth({});
+      console.log("Backend response:", response);
+      const netWorthResponse = response.data;
+      console.log("Backend data:", netWorthResponse);
 
       if (!netWorthResponse || !netWorthResponse.success) {
         console.error("Backend error:", netWorthResponse);
