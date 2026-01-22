@@ -403,8 +403,6 @@ export default function Leaderboard() {
       }
 
       const studentsFromBackend = netWorthResponse.students || [];
-      console.log("Students from backend:", studentsFromBackend.length);
-      console.log("Sample student from backend:", studentsFromBackend[0]);
 
       // Load all users to get additional data not in backend response
       const allUsers = await base44.entities.User.list();
