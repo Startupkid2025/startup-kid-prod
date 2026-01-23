@@ -6,6 +6,8 @@ import { Briefcase, Clock, Coins, Rocket, Lightbulb, TrendingUp, Building, Crown
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { AVATAR_ITEMS } from "../avatar/TamagotchiAvatar";
+import { updateNetWorth } from "../utils/networthCalculator";
+import { syncLeaderboardEntry } from "../utils/leaderboardSync";
 
 const JOBS = [
   {
@@ -215,18 +217,15 @@ export default function AvatarWork({ userData, onWorkComplete }) {
       work_status: null
     });
 
-    // Update leaderboard with work earnings
-    try {
-      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
-      if (leaderboardEntries.length > 0) {
-        await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-          coins: finalCoins,
-          total_work_earnings: totalWorkEarnings
-        });
-      }
-    } catch (error) {
-      console.error("Error updating leaderboard:", error);
-    }
+    // Update net worth
+    const newNetWorth = await updateNetWorth(userData.email);
+
+    // Sync to LeaderboardEntry
+    await syncLeaderboardEntry(userData.email, {
+      coins: finalCoins,
+      total_work_earnings: totalWorkEarnings,
+      total_networth: newNetWorth
+    });
 
     toast.success(`${userData.avatar_name} חזר מהעבודה! קיבלת ${coinsToAdd} מטבעות! 🎉`);
     setWorkStatus(null);

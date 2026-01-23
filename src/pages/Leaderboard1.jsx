@@ -11,6 +11,7 @@ import StudentProfileDialog from "../components/leaderboard/StudentProfileDialog
 import { toast } from "sonner";
 import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
 import { calculateStudentNetWorth } from "@/functions/calculateStudentNetWorth";
+import { updateNetWorth } from "../components/utils/networthCalculator";
 
 // 3️⃣ Memoized LeaderboardRow to prevent unnecessary re-renders
 const LeaderboardRow = React.memo(({ 
@@ -602,24 +603,25 @@ export default function Leaderboard() {
           }
         }
 
-        // Sync to LeaderboardEntry for public visibility
-        await syncLeaderboardEntry(targetUser.student_email, {
-          coins: (targetUserFull.coins || 0) + coinsReward,
-          daily_collaborations: updatedTargetCollaborations,
-          total_collaboration_coins: (targetUserFull.total_collaboration_coins || 0) + coinsReward
-        });
+        // Update net worth for both users
+        const [currentNetWorth, targetNetWorth] = await Promise.all([
+          updateNetWorth(currentUser.email),
+          updateNetWorth(targetUser.student_email)
+        ]);
 
         // Sync both users to LeaderboardEntry for public visibility
         await Promise.all([
           syncLeaderboardEntry(currentUser.email, {
             coins: (currentUserFull.coins || 0) + coinsReward,
             daily_collaborations: updatedCurrentCollaborations,
-            total_collaboration_coins: (currentUserFull.total_collaboration_coins || 0) + coinsReward
+            total_collaboration_coins: (currentUserFull.total_collaboration_coins || 0) + coinsReward,
+            total_networth: currentNetWorth
           }),
           syncLeaderboardEntry(targetUser.student_email, {
             coins: (targetUserFull.coins || 0) + coinsReward,
             daily_collaborations: updatedTargetCollaborations,
-            total_collaboration_coins: (targetUserFull.total_collaboration_coins || 0) + coinsReward
+            total_collaboration_coins: (targetUserFull.total_collaboration_coins || 0) + coinsReward,
+            total_networth: targetNetWorth
           })
         ]);
 
@@ -635,7 +637,7 @@ export default function Leaderboard() {
           daily_collaborations: updatedCollaborations
         });
 
-        // Sync to LeaderboardEntry for public visibility
+        // Sync to LeaderboardEntry for public visibility (no net worth change, just daily_collaborations)
         await syncLeaderboardEntry(currentUser.email, {
           daily_collaborations: updatedCollaborations
         });

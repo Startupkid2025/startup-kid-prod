@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
+import { updateNetWorth } from "../components/utils/networthCalculator";
 
 const BUSINESSES = [
   {
@@ -351,10 +352,14 @@ export default function Investments() {
         total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE
       });
 
+      // Update net worth
+      const newNetWorth = await updateNetWorth(userData.email);
+
       // Sync to LeaderboardEntry for public visibility
       await syncLeaderboardEntry(userData.email, {
         coins: newCoinsBalance,
-        total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE
+        total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE,
+        total_networth: newNetWorth
       });
 
       toast.success(`השקעת ${amount} מטבעות ב${business.name}! (עמלה: ${TRANSACTION_FEE}) 🎉`);
@@ -530,12 +535,16 @@ export default function Investments() {
         total_realized_investment_profit: newRealizedProfit
       });
 
+      // Update net worth
+      const newNetWorth = await updateNetWorth(userData.email);
+
       // Sync to LeaderboardEntry for public visibility
       await syncLeaderboardEntry(userData.email, {
         coins: newCoins,
         total_investment_fees: newTotalFees,
         total_capital_gains_tax: newCapitalGainsTax,
-        total_realized_investment_profit: newRealizedProfit
+        total_realized_investment_profit: newRealizedProfit,
+        total_networth: newNetWorth
       });
 
       const grossProfit = investmentProfit;

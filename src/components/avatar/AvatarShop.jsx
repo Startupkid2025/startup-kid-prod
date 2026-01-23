@@ -14,6 +14,8 @@ import { AVATAR_ITEMS } from "./TamagotchiAvatar";
 import TamagotchiAvatar from "./TamagotchiAvatar";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
+import { updateNetWorth } from "../utils/networthCalculator";
+import { syncLeaderboardEntry } from "../utils/leaderboardSync";
 
 const categories = {
   body: { name: "גוף", icon: "🎨" },
@@ -111,20 +113,16 @@ export default function AvatarShop({
       coins: newCoins
     });
 
-    // Update leaderboard entry
-    try {
-      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
-        student_email: userData.email 
-      });
+    // Update net worth
+    const newNetWorth = await updateNetWorth(userData.email);
 
-      if (leaderboardEntries.length > 0 && userData.user_type !== 'parent' && userData.user_type !== 'demo') {
-        await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-          purchased_items: newPurchasedItems,
-          coins: newCoins
-        });
-      }
-    } catch (error) {
-      console.error("Error updating leaderboard:", error);
+    // Sync to LeaderboardEntry
+    if (userData.user_type !== 'parent' && userData.user_type !== 'demo') {
+      await syncLeaderboardEntry(userData.email, {
+        purchased_items: newPurchasedItems,
+        coins: newCoins,
+        total_networth: newNetWorth
+      });
     }
 
     toast.success(`רכשת את ${item.name}! 🎉`);

@@ -185,6 +185,9 @@ export default function Layout({ children }) {
         }
       }
 
+      // Calculate new net worth
+      const { updateNetWorth } = await import("./components/utils/networthCalculator");
+
       // Update user
       await base44.auth.updateMe({
         coins: newCoins,
@@ -194,12 +197,16 @@ export default function Layout({ children }) {
         total_passive_income: (user.total_passive_income || 0) + totalPassiveIncome
       });
 
+      // Update net worth
+      const newNetWorth = await updateNetWorth(user.email);
+
       // Sync to LeaderboardEntry
       await syncLeaderboardEntry(user.email, {
         coins: newCoins,
         total_inflation_lost: (user.total_inflation_lost || 0) + totalInflationLoss,
         total_credit_interest: (user.total_credit_interest || 0) + totalCreditInterest,
-        total_passive_income: (user.total_passive_income || 0) + totalPassiveIncome
+        total_passive_income: (user.total_passive_income || 0) + totalPassiveIncome,
+        total_networth: newNetWorth
       });
     } catch (error) {
       console.error("Error applying daily economy:", error);
