@@ -124,12 +124,18 @@ Deno.serve(async (req) => {
         return sum + (inv.current_value || 0);
       }, 0);
 
+      // Calculate items value for display
+      const purchasedItems = student.purchased_items || [];
+      const itemsValue = purchasedItems.reduce((sum, itemId) => {
+        return sum + (ITEM_PRICES[itemId] || 0);
+      }, 0);
+
       return {
         email: student.student_email,
         full_name: student.full_name,
         first_name: student.first_name,
         last_name: student.last_name,
-        coins: coins,
+        coins: student.coins || 0,
         ai_tech_level: student.ai_tech_level || 1,
         personal_skills_level: student.personal_skills_level || 1,
         money_business_level: student.money_business_level || 1,
@@ -140,7 +146,7 @@ Deno.serve(async (req) => {
         items_value: itemsValue,
         investments_value: investmentsValue,
         net_worth: netWorth,
-        purchased_items_count: (student.purchased_items || []).length,
+        purchased_items_count: purchasedItems.length,
         investments_count: studentInvestments.length
       };
     });
