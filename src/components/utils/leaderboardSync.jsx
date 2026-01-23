@@ -98,6 +98,7 @@ export async function syncLeaderboardEntry(studentEmail, patch) {
       coins: cleanPatch.coins ?? user.coins ?? 0,
       login_streak: cleanPatch.login_streak ?? user.login_streak ?? 0,
       last_login_date: cleanPatch.last_login_date ?? user.last_login_date ?? null,
+      total_networth: cleanPatch.total_networth ?? user.total_networth ?? 0,
       ...cleanPatch
     });
 
