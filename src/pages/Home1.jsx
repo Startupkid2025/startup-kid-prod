@@ -528,6 +528,13 @@ export default function Home() {
   const calculateNetWorth = async () => {
     if (!userData) return 0;
 
+    // Try to use pre-calculated total_networth from User entity first
+    if (userData.total_networth !== undefined && userData.total_networth !== null) {
+      console.log(`\n💎 HOME1 - Using pre-calculated net worth for ${userData.email}: ${userData.total_networth}\n`);
+      return userData.total_networth;
+    }
+
+    // Fallback: calculate manually if not available
     const currentCoins = userData.coins || 0;
     const purchasedItems = userData.purchased_items || [];
     
@@ -546,7 +553,7 @@ export default function Home() {
       const investmentsValue = myInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
       const netWorth = currentCoins + itemsValue + investmentsValue;
       
-      console.log(`\n💎 HOME1 - Net Worth Calculation for ${userData.email}:`);
+      console.log(`\n💎 HOME1 - Net Worth Calculation (fallback) for ${userData.email}:`);
       console.log(`  coins: ${currentCoins}`);
       console.log(`  items: ${itemsValue}`);
       console.log(`  investments: ${investmentsValue}`);
