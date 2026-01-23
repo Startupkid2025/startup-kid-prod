@@ -33,6 +33,7 @@ export default function Home() {
   const [userGroup, setUserGroup] = useState(null);
   const [nextLesson, setNextLesson] = useState(null);
   const [netWorth, setNetWorth] = useState(0);
+  const [investmentsValue, setInvestmentsValue] = useState(0);
 
   useEffect(() => {
     loadData();
@@ -174,9 +175,13 @@ export default function Home() {
 
       setUserData({ ...user, ...lessonCounts });
 
-      // Calculate net worth
+      // Calculate net worth and fetch investments
       const worth = await calculateNetWorth();
       setNetWorth(worth);
+      
+      // Fetch actual investments value
+      const invValue = await fetchInvestmentsValue(user.email);
+      setInvestmentsValue(invValue);
 
       // Fetch user group and next lesson
       try {
@@ -217,10 +222,11 @@ export default function Home() {
     }
   };
 
-  // Update net worth when data changes
+  // Update net worth and investments when data changes
   React.useEffect(() => {
     if (userData) {
       calculateNetWorth().then(setNetWorth);
+      fetchInvestmentsValue(userData.email).then(setInvestmentsValue);
     }
   }, [userData]);
 
@@ -525,6 +531,18 @@ export default function Home() {
     toast.success(`מכרת את ${item.name} ב-${salePrice} מטבעות (50% מהמחיר המקורי)`);
   };
 
+  const fetchInvestmentsValue = async (userEmail) => {
+    try {
+      const userInvestments = await base44.entities.Investment.list();
+      const myInvestments = userInvestments.filter(inv => inv.student_email === userEmail);
+      const investmentsValue = myInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      return investmentsValue;
+    } catch (error) {
+      console.error("Error fetching investments value:", error);
+      return 0;
+    }
+  };
+
   const calculateNetWorth = async () => {
     if (!userData) return 0;
 
@@ -547,23 +565,16 @@ export default function Home() {
     });
 
     // Get investments value
-    try {
-      const userInvestments = await base44.entities.Investment.list();
-      const myInvestments = userInvestments.filter(inv => inv.student_email === userData.email);
-      const investmentsValue = myInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-      const netWorth = currentCoins + itemsValue + investmentsValue;
-      
-      console.log(`\n💎 HOME1 - Net Worth Calculation (fallback) for ${userData.email}:`);
-      console.log(`  coins: ${currentCoins}`);
-      console.log(`  items: ${itemsValue}`);
-      console.log(`  investments: ${investmentsValue}`);
-      console.log(`  ✅ NET WORTH: ${netWorth}\n`);
-      
-      return netWorth;
-    } catch (error) {
-      console.error("Error calculating net worth:", error);
-      return currentCoins + itemsValue;
-    }
+    const investmentsValue = await fetchInvestmentsValue(userData.email);
+    const netWorth = currentCoins + itemsValue + investmentsValue;
+    
+    console.log(`\n💎 HOME1 - Net Worth Calculation (fallback) for ${userData.email}:`);
+    console.log(`  coins: ${currentCoins}`);
+    console.log(`  items: ${itemsValue}`);
+    console.log(`  investments: ${investmentsValue}`);
+    console.log(`  ✅ NET WORTH: ${netWorth}\n`);
+    
+    return netWorth;
   };
 
   const calculateExpectedDailyLoss = () => {
@@ -919,15 +930,7 @@ export default function Home() {
                             </div>
                             <span className="text-white/90 text-sm font-medium">השקעות</span>
                           </div>
-                          <span className="font-bold text-white">{(netWorth - (userData?.coins || 0) - (() => {
-                            const purchasedItems = userData?.purchased_items || [];
-                            let itemsValue = 0;
-                            purchasedItems.forEach(itemId => {
-                              const item = AVATAR_ITEMS[itemId];
-                              if (item) itemsValue += item.price || 0;
-                            });
-                            return itemsValue;
-                          })()).toLocaleString('he-IL')}</span>
+                          <span className="font-bold text-white">{investmentsValue.toLocaleString('he-IL')}</span>
                         </motion.div>
                       </div>
                     </CardContent>
