@@ -173,15 +173,27 @@ export default function Home() {
       //   user.coins = recalculatedCoins;
       // }
 
-      // Fetch actual investments value first
-      const invValue = await fetchInvestmentsValue(user.email);
-      setInvestmentsValue(invValue);
-      
       setUserData({ ...user, ...lessonCounts });
 
-      // Calculate net worth
-      const worth = await calculateNetWorth(user, invValue);
-      setNetWorth(worth);
+      // If we have total_networth, calculate investments from it
+      if (user.total_networth !== undefined && user.total_networth !== null) {
+        const currentCoins = user.coins || 0;
+        const purchasedItems = user.purchased_items || [];
+        let itemsValue = 0;
+        purchasedItems.forEach(itemId => {
+          const item = AVATAR_ITEMS[itemId];
+          if (item) itemsValue += item.price || 0;
+        });
+        const calculatedInvestments = user.total_networth - currentCoins - itemsValue;
+        setInvestmentsValue(Math.max(0, calculatedInvestments));
+        setNetWorth(user.total_networth);
+      } else {
+        // Fallback: fetch investments directly
+        const invValue = await fetchInvestmentsValue(user.email);
+        setInvestmentsValue(invValue ?? 0);
+        const worth = await calculateNetWorth(user, invValue);
+        setNetWorth(worth);
+      }
 
       // Fetch user group and next lesson
       try {
@@ -225,10 +237,26 @@ export default function Home() {
   // Update net worth and investments when data changes
   React.useEffect(() => {
     if (userData) {
-      fetchInvestmentsValue(userData.email).then(invValue => {
-        setInvestmentsValue(invValue);
-        calculateNetWorth(userData, invValue).then(setNetWorth);
-      });
+      // Prefer using total_networth to avoid extra API calls
+      if (userData.total_networth !== undefined && userData.total_networth !== null) {
+        const currentCoins = userData.coins || 0;
+        const purchasedItems = userData.purchased_items || [];
+        let itemsValue = 0;
+        purchasedItems.forEach(itemId => {
+          const item = AVATAR_ITEMS[itemId];
+          if (item) itemsValue += item.price || 0;
+        });
+        const calculatedInvestments = userData.total_networth - currentCoins - itemsValue;
+        setInvestmentsValue(Math.max(0, calculatedInvestments));
+        setNetWorth(userData.total_networth);
+      } else {
+        fetchInvestmentsValue(userData.email).then(invValue => {
+          if (invValue !== null) {
+            setInvestmentsValue(invValue);
+            calculateNetWorth(userData, invValue).then(setNetWorth);
+          }
+        });
+      }
     }
   }, [userData?.coins, userData?.purchased_items, userData?.total_networth]);
 
@@ -533,15 +561,25 @@ export default function Home() {
     toast.success(`מכרת את ${item.name} ב-${salePrice} מטבעות (50% מהמחיר המקורי)`);
   };
 
-  const fetchInvestmentsValue = async (userEmail) => {
+  const fetchInvestmentsValue = async (userEmail, retryCount = 0) => {
     try {
       const userInvestments = await base44.entities.Investment.list();
       const myInvestments = userInvestments.filter(inv => inv.student_email === userEmail);
       const investmentsValue = myInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      console.log(`✅ Fetched investments value for ${userEmail}: ${investmentsValue}`);
       return investmentsValue;
     } catch (error) {
+      // Handle rate limiting with exponential backoff
+      if (error.message?.includes('Rate limit') && retryCount < 3) {
+        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+        console.log(`⏳ Rate limited, retrying in ${delay}ms (attempt ${retryCount + 1}/3)`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return fetchInvestmentsValue(userEmail, retryCount + 1);
+      }
+      
       console.error("Error fetching investments value:", error);
-      return 0;
+      // Return null on error to distinguish from 0 investments
+      return null;
     }
   };
 
