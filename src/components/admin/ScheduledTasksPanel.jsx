@@ -88,20 +88,20 @@ export default function ScheduledTasksPanel() {
     {
       id: "market_performance",
       name: "עדכון שוק השקעות",
-      description: "עדכון ערכי השקעות בזמן אמת",
+      description: "עדכון יומי של ערכי השקעות וחישוב net worth",
       icon: Coins,
       color: "from-blue-500/20 to-cyan-500/20",
       borderColor: "border-blue-500/30",
       iconColor: "text-blue-300",
-      frequency: "בזמן אמת",
-      nextTrigger: new Date(),
+      frequency: "יומי בחצות",
+      nextTrigger: nextTriggers.dailyEconomy,
       details: [
-        "עדכון שוק: מחושב דינמית בכל צפייה",
-        "שינוי יומי אקראי: ±0-15% בהתאם לסוג ההשקעה",
-        "מגמה נוכחית: מוטה לפי הסטוריה",
-        "מתבצע client-side בלי שמירה לדאטאבייס"
+        "יוצר רשומת DailyMarketPerformance עם שינויים אקראיים",
+        "מעדכן את כל ההשקעות לפי השינויים בשוק",
+        "מחשב מחדש net worth לכל המשתמשים",
+        "רץ אוטומטית כל יום בחצות"
       ],
-      location: "Investments1.js - calculateDailyChange"
+      location: "functions/updateDailyMarket (scheduled automation)"
     },
     {
       id: "kings_update",
