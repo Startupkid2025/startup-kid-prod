@@ -36,17 +36,29 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // Use LeaderboardEntry for student data
-    const leaderboardEntries = await base44.entities.LeaderboardEntry.list();
+    // Parse request body for pagination params
+    const { page = 1, pageSize = 20 } = await req.json().catch(() => ({ page: 1, pageSize: 20 }));
+    const skip = (page - 1) * pageSize;
+
+    // Fetch total count first (without pagination)
+    const allLeaderboardEntries = await base44.entities.LeaderboardEntry.list();
 
     // Get all users to check roles
     const allUsers = await base44.asServiceRole.entities.User.list();
     const adminEmails = new Set(allUsers.filter(u => u.role === 'admin').map(u => u.email));
 
     // Filter students only (exclude admins and non-students)
-    const students = leaderboardEntries.filter(entry => 
+    const allStudents = allLeaderboardEntries.filter(entry => 
       entry.user_type === 'student' && !adminEmails.has(entry.student_email)
     );
+
+    const total_students = allStudents.length;
+
+    // Sort by total_networth descending
+    allStudents.sort((a, b) => (b.total_networth || 0) - (a.total_networth || 0));
+
+    // Get paginated subset
+    const students = allStudents.slice(skip, skip + pageSize);
 
     // Helper function to load all records with pagination
     const listAll = async (entityHandler, pageSize = 1000) => {
@@ -95,18 +107,6 @@ Deno.serve(async (req) => {
 
     // Calculate net worth for each student
     const studentsWithNetWorth = students.map(student => {
-      // Calculate items value
-      const purchasedItems = student.purchased_items || [];
-      const itemsValue = purchasedItems.reduce((sum, itemId) => {
-        return sum + (ITEM_PRICES[itemId] || 0);
-      }, 0);
-
-      // Calculate investments value
-      const studentInvestments = investmentsByEmail.get(student.student_email) || [];
-      const investmentsValue = studentInvestments.reduce((sum, inv) => {
-        return sum + (inv.current_value || 0);
-      }, 0);
-
       // Calculate mastered words and math questions (aligns with Vocabulary1.js and MathGames1.js)
       const studentWordProgress = wordProgressByEmail.get(student.student_email) || [];
       const masteredWords = studentWordProgress.filter(w => w.mastered).length;
@@ -115,9 +115,14 @@ Deno.serve(async (req) => {
       // Count math questions that have correct_streak > 0 or are mastered (aligns with MathGames1.js)
       const masteredMathQuestions = studentMathProgress.filter(m => m.mastered || m.correct_streak > 0).length;
 
-      // Calculate net worth
-      const coins = student.coins || 0;
-      const netWorth = coins + itemsValue + investmentsValue;
+      // Use pre-calculated total_networth from LeaderboardEntry
+      const netWorth = student.total_networth || 0;
+
+      // Calculate investments value for display
+      const studentInvestments = investmentsByEmail.get(student.student_email) || [];
+      const investmentsValue = studentInvestments.reduce((sum, inv) => {
+        return sum + (inv.current_value || 0);
+      }, 0);
 
       return {
         email: student.student_email,
@@ -135,17 +140,16 @@ Deno.serve(async (req) => {
         items_value: itemsValue,
         investments_value: investmentsValue,
         net_worth: netWorth,
-        purchased_items_count: purchasedItems.length,
+        purchased_items_count: (student.purchased_items || []).length,
         investments_count: studentInvestments.length
       };
     });
 
-    // Sort by net worth (highest to lowest)
-    studentsWithNetWorth.sort((a, b) => b.net_worth - a.net_worth);
-
     return Response.json({
       success: true,
-      total_students: studentsWithNetWorth.length,
+      total_students: total_students,
+      page: page,
+      pageSize: pageSize,
       students: studentsWithNetWorth
     });
 

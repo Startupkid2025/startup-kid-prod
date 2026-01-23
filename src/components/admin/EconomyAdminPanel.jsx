@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { RefreshCw, Search, Eye } from "lucide-react";
+import { RefreshCw, Search, Eye, Calculator } from "lucide-react";
 import MaintenanceModeToggle from "./MaintenanceModeToggle";
+import { recalculateUserNetWorth } from "@/functions/recalculateUserNetWorth";
 
 export default function EconomyAdminPanel() {
   const [snapshots, setSnapshots] = useState([]);
@@ -21,6 +22,7 @@ export default function EconomyAdminPanel() {
   const [previewResults, setPreviewResults] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
   const [loadingStudentData, setLoadingStudentData] = useState(false);
+  const [isRecalculatingNetWorth, setIsRecalculatingNetWorth] = useState(false);
 
   useEffect(() => {
     loadSnapshots();
@@ -612,6 +614,71 @@ export default function EconomyAdminPanel() {
     await loadSnapshots();
   };
 
+  const recalculateAllNetWorth = async () => {
+    if (!confirm(`🔄 לחשב מחדש total_networth עבור כל ${students.length} התלמידים?`)) {
+      return;
+    }
+
+    setIsRecalculatingNetWorth(true);
+
+    try {
+      const response = await recalculateUserNetWorth({});
+      const result = response.data;
+
+      if (result.success) {
+        toast.success(`✅ ${result.message}`);
+      } else {
+        toast.error(`❌ ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Error recalculating net worth:", error);
+      toast.error("שגיאה בחישוב מחדש");
+    } finally {
+      setIsRecalculatingNetWorth(false);
+    }
+  };
+
+  const recalculateSelectedNetWorth = async () => {
+    if (selectedEmails.size === 0) {
+      toast.error("בחר לפחות תלמיד אחד");
+      return;
+    }
+
+    if (!confirm(`🔄 לחשב מחדש total_networth עבור ${selectedEmails.size} תלמידים נבחרים?`)) {
+      return;
+    }
+
+    setIsRecalculatingNetWorth(true);
+
+    try {
+      const emails = Array.from(selectedEmails);
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const email of emails) {
+        try {
+          const response = await recalculateUserNetWorth({ userEmail: email });
+          const result = response.data;
+          if (result.success) {
+            successCount++;
+          } else {
+            failCount++;
+          }
+        } catch (error) {
+          console.error(`Error for ${email}:`, error);
+          failCount++;
+        }
+      }
+
+      toast.success(`✅ ${successCount} הצליחו, ${failCount} נכשלו`);
+    } catch (error) {
+      console.error("Error recalculating net worth:", error);
+      toast.error("שגיאה בחישוב מחדש");
+    } finally {
+      setIsRecalculatingNetWorth(false);
+    }
+  };
+
 
 
 
@@ -828,6 +895,24 @@ export default function EconomyAdminPanel() {
             className="bg-purple-600 hover:bg-purple-700 text-white font-bold"
           >
             ⚖️ אזן הכל ({students.length})
+          </Button>
+          {selectedEmails.size > 0 && (
+            <Button
+              onClick={recalculateSelectedNetWorth}
+              disabled={isRecalculatingNetWorth}
+              className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold"
+            >
+              <Calculator className="w-4 h-4 mr-2" />
+              חשב Net Worth ({selectedEmails.size})
+            </Button>
+          )}
+          <Button
+            onClick={recalculateAllNetWorth}
+            disabled={isRecalculatingNetWorth}
+            className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold"
+          >
+            <Calculator className="w-4 h-4 mr-2" />
+            חשב Net Worth הכל ({students.length})
           </Button>
         </div>
 

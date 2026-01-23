@@ -335,11 +335,14 @@ export default function Leaderboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [isInitializing, setIsInitializing] = useState(false);
+  const [totalUsers, setTotalUsers] = useState(0);
   const USERS_PER_PAGE = 20;
 
   useEffect(() => {
     loadData();
-    
+  }, [currentPage]); // Reload when page changes
+
+  useEffect(() => {
     // Calculate time until season end (31.03.2026)
     const calculateTimeLeft = () => {
       const seasonEnd = new Date('2026-03-31T23:59:59');
@@ -394,8 +397,11 @@ export default function Leaderboard() {
       const user = await base44.auth.me();
       setCurrentUser(user);
 
-      // Call backend to calculate net worth
-      const response = await calculateStudentNetWorth({});
+      // Call backend to calculate net worth with pagination
+      const response = await calculateStudentNetWorth({
+        page: currentPage,
+        pageSize: USERS_PER_PAGE
+      });
       const netWorthResponse = response.data;
 
       if (!netWorthResponse || !netWorthResponse.success) {
@@ -404,6 +410,9 @@ export default function Leaderboard() {
       }
 
       const studentsFromBackend = netWorthResponse.students || [];
+      const totalStudentsCount = netWorthResponse.total_students || 0;
+
+      setTotalUsers(totalStudentsCount);
 
       // Load LeaderboardEntry data for additional fields
       const leaderboardEntries = await base44.entities.LeaderboardEntry.list();
@@ -484,7 +493,7 @@ export default function Leaderboard() {
       } finally {
       setIsLoading(false);
       }
-  };
+      };
 
   const handleCollaborate = async (targetUser, e) => {
     e.stopPropagation();
@@ -898,16 +907,7 @@ export default function Leaderboard() {
 
       {/* Leaderboard */}
       <div className="space-y-4">
-        {users
-          .filter(user => {
-            if (!searchTerm.trim()) return true;
-            const fullName = user.full_name?.toLowerCase() || '';
-            const firstName = user.first_name?.toLowerCase() || '';
-            const lastName = user.last_name?.toLowerCase() || '';
-            const search = searchTerm.toLowerCase();
-            return fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
-          })
-          .slice((currentPage - 1) * USERS_PER_PAGE, currentPage * USERS_PER_PAGE).map((player, index) => {
+        {users.map((player, index) => {
           const actualIndex = (currentPage - 1) * USERS_PER_PAGE + index;
           
           return (
@@ -929,14 +929,7 @@ export default function Leaderboard() {
       </div>
 
       {/* Pagination */}
-      {users.filter(user => {
-        if (!searchTerm.trim()) return true;
-        const fullName = user.full_name?.toLowerCase() || '';
-        const firstName = user.first_name?.toLowerCase() || '';
-        const lastName = user.last_name?.toLowerCase() || '';
-        const search = searchTerm.toLowerCase();
-        return fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
-      }).length > USERS_PER_PAGE && (
+      {totalUsers > USERS_PER_PAGE && (
         <div className="flex items-center justify-center gap-2 mt-6">
           <Button
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
@@ -949,14 +942,7 @@ export default function Leaderboard() {
           </Button>
           
           <div className="flex gap-1">
-            {Array.from({ length: Math.ceil(users.filter(user => {
-              if (!searchTerm.trim()) return true;
-              const fullName = user.full_name?.toLowerCase() || '';
-              const firstName = user.first_name?.toLowerCase() || '';
-              const lastName = user.last_name?.toLowerCase() || '';
-              const search = searchTerm.toLowerCase();
-              return fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
-            }).length / USERS_PER_PAGE) }, (_, i) => i + 1).map(page => (
+            {Array.from({ length: Math.ceil(totalUsers / USERS_PER_PAGE) }, (_, i) => i + 1).map(page => (
               <Button
                 key={page}
                 onClick={() => setCurrentPage(page)}
@@ -973,22 +959,8 @@ export default function Leaderboard() {
           </div>
 
           <Button
-            onClick={() => setCurrentPage(prev => Math.min(Math.ceil(users.filter(user => {
-              if (!searchTerm.trim()) return true;
-              const fullName = user.full_name?.toLowerCase() || '';
-              const firstName = user.first_name?.toLowerCase() || '';
-              const lastName = user.last_name?.toLowerCase() || '';
-              const search = searchTerm.toLowerCase();
-              return fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
-            }).length / USERS_PER_PAGE), prev + 1))}
-            disabled={currentPage === Math.ceil(users.filter(user => {
-              if (!searchTerm.trim()) return true;
-              const fullName = user.full_name?.toLowerCase() || '';
-              const firstName = user.first_name?.toLowerCase() || '';
-              const lastName = user.last_name?.toLowerCase() || '';
-              const search = searchTerm.toLowerCase();
-              return fullName.includes(search) || firstName.includes(search) || lastName.includes(search);
-            }).length / USERS_PER_PAGE)}
+            onClick={() => setCurrentPage(prev => Math.min(Math.ceil(totalUsers / USERS_PER_PAGE), prev + 1))}
+            disabled={currentPage === Math.ceil(totalUsers / USERS_PER_PAGE)}
             variant="outline"
             size="sm"
             className="bg-white/10 border-white/20 text-white hover:bg-white/20"
