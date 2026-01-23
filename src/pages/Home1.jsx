@@ -33,7 +33,7 @@ export default function Home() {
   const [userGroup, setUserGroup] = useState(null);
   const [nextLesson, setNextLesson] = useState(null);
   const [netWorth, setNetWorth] = useState(0);
-  const [investmentsValue, setInvestmentsValue] = useState(0);
+  const [investmentsValue, setInvestmentsValue] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -173,15 +173,15 @@ export default function Home() {
       //   user.coins = recalculatedCoins;
       // }
 
-      setUserData({ ...user, ...lessonCounts });
-
-      // Calculate net worth and fetch investments
-      const worth = await calculateNetWorth();
-      setNetWorth(worth);
-      
-      // Fetch actual investments value
+      // Fetch actual investments value first
       const invValue = await fetchInvestmentsValue(user.email);
       setInvestmentsValue(invValue);
+      
+      setUserData({ ...user, ...lessonCounts });
+
+      // Calculate net worth
+      const worth = await calculateNetWorth(user, invValue);
+      setNetWorth(worth);
 
       // Fetch user group and next lesson
       try {
@@ -225,10 +225,12 @@ export default function Home() {
   // Update net worth and investments when data changes
   React.useEffect(() => {
     if (userData) {
-      calculateNetWorth().then(setNetWorth);
-      fetchInvestmentsValue(userData.email).then(setInvestmentsValue);
+      fetchInvestmentsValue(userData.email).then(invValue => {
+        setInvestmentsValue(invValue);
+        calculateNetWorth(userData, invValue).then(setNetWorth);
+      });
     }
-  }, [userData]);
+  }, [userData?.coins, userData?.purchased_items, userData?.total_networth]);
 
   const calculateLessonCounts = async (user) => {
     try {
@@ -543,18 +545,18 @@ export default function Home() {
     }
   };
 
-  const calculateNetWorth = async () => {
-    if (!userData) return 0;
+  const calculateNetWorth = async (user = userData, cachedInvestmentsValue = null) => {
+    if (!user) return 0;
 
     // Try to use pre-calculated total_networth from User entity first
-    if (userData.total_networth !== undefined && userData.total_networth !== null) {
-      console.log(`\n💎 HOME1 - Using pre-calculated net worth for ${userData.email}: ${userData.total_networth}\n`);
-      return userData.total_networth;
+    if (user.total_networth !== undefined && user.total_networth !== null) {
+      console.log(`\n💎 HOME1 - Using pre-calculated net worth for ${user.email}: ${user.total_networth}\n`);
+      return user.total_networth;
     }
 
     // Fallback: calculate manually if not available
-    const currentCoins = userData.coins || 0;
-    const purchasedItems = userData.purchased_items || [];
+    const currentCoins = user.coins || 0;
+    const purchasedItems = user.purchased_items || [];
     
     let itemsValue = 0;
     purchasedItems.forEach(itemId => {
@@ -564,11 +566,11 @@ export default function Home() {
       }
     });
 
-    // Get investments value
-    const investmentsValue = await fetchInvestmentsValue(userData.email);
+    // Use cached investments value if provided, otherwise fetch
+    const investmentsValue = cachedInvestmentsValue !== null ? cachedInvestmentsValue : await fetchInvestmentsValue(user.email);
     const netWorth = currentCoins + itemsValue + investmentsValue;
     
-    console.log(`\n💎 HOME1 - Net Worth Calculation (fallback) for ${userData.email}:`);
+    console.log(`\n💎 HOME1 - Net Worth Calculation (fallback) for ${user.email}:`);
     console.log(`  coins: ${currentCoins}`);
     console.log(`  items: ${itemsValue}`);
     console.log(`  investments: ${investmentsValue}`);
@@ -930,7 +932,9 @@ export default function Home() {
                             </div>
                             <span className="text-white/90 text-sm font-medium">השקעות</span>
                           </div>
-                          <span className="font-bold text-white">{investmentsValue.toLocaleString('he-IL')}</span>
+                          <span className="font-bold text-white">
+                            {investmentsValue !== null ? investmentsValue.toLocaleString('he-IL') : '...'}
+                          </span>
                         </motion.div>
                       </div>
                     </CardContent>
