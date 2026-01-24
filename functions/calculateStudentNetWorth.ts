@@ -111,9 +111,9 @@ Deno.serve(async (req) => {
       const studentWordProgress = wordProgressByEmail.get(student.student_email) || [];
       const masteredWords = studentWordProgress.filter(w => w.mastered).length;
 
-      const studentMathProgress = mathProgressByEmail.get(student.student_email) || [];
-      // Count math questions that have correct_streak > 0 or are mastered (aligns with MathGames1.js)
-      const masteredMathQuestions = studentMathProgress.filter(m => m.mastered || m.correct_streak > 0).length;
+      // Get total_correct_math_answers from User entity
+      const userRecord = allUsers.find(u => u.email === student.student_email);
+      const masteredMathQuestions = userRecord?.total_correct_math_answers || 0;
 
       // Use pre-calculated total_networth from LeaderboardEntry
       const netWorth = student.total_networth || 0;
