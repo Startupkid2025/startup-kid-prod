@@ -715,10 +715,9 @@ export default function EconomyAdminPanel() {
 
       const userData = user[0];
       const masteredWords = wordProgress.filter(w => w.mastered === true).length;
-      const mathCoins = mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
-      const correctMathAnswers = Math.round(mathCoins / 5.6);
       const vocabularyCoins = wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
       const mathCoins = mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
+      const correctMathAnswers = Math.round(mathCoins / 5.6);
       const surveyCoins = participations.filter(p => p.survey_completed === true).length * 70;
       const quizCoins = quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
       
