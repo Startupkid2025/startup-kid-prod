@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { RefreshCw, Search, Eye, Calculator } from "lucide-react";
 import MaintenanceModeToggle from "./MaintenanceModeToggle";
-import { AVATAR_ITEM_PRICES } from "@/constants/avatarItems";
+import { AVATAR_ITEM_PRICES } from "@/components/constants/avatarItemPrices";
 
 export default function EconomyAdminPanel() {
   const [snapshots, setSnapshots] = useState([]);

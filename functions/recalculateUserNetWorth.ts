@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
-import { AVATAR_ITEM_PRICES } from '../constants/avatarItems.js';
+import { AVATAR_ITEM_PRICES } from '../components/constants/avatarItemPrices.js';
 
 Deno.serve(async (req) => {
   try {
