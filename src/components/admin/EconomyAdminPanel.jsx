@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { RefreshCw, Search, Eye, Calculator } from "lucide-react";
 import MaintenanceModeToggle from "./MaintenanceModeToggle";
-import { recalculateUserNetWorth } from "@/functions/recalculateUserNetWorth";
+import { AVATAR_ITEM_PRICES } from "@/constants/avatarItems";
 
 export default function EconomyAdminPanel() {
   const [snapshots, setSnapshots] = useState([]);
@@ -55,15 +55,20 @@ export default function EconomyAdminPanel() {
       });
       
       setStudents(allStudents.map(user => {
+        const coins = user.coins || 0;
+        const investments_value = user.investments_value || 0;
+        const items_value = user.items_value || 0;
+        const total_networth = user.total_networth ?? (coins + investments_value + items_value);
+        
         return {
           student_email: user.email,
           full_name: user.full_name,
-          coins_cash: user.coins || 0,
-          investments_value: 0,
-          items_value: 0,
-          total_assets: user.coins || 0,
+          coins: coins,
+          investments_value: investments_value,
+          items_value: items_value,
+          total_networth: total_networth,
           correctMathAnswers: user.total_correct_math_answers || 0,
-          last_calculated_at: null
+          last_calculated_at: user.last_calculated_at || null
         };
       }));
       setSnapshots([]);
@@ -140,37 +145,9 @@ export default function EconomyAdminPanel() {
     };
 
     const purchasedItems = user.purchased_items || [];
-    const AVATAR_ITEMS = {
-      "body_blue": { price: 0 }, "body_pink": { price: 200 }, "body_purple": { price: 400 },
-      "body_green": { price: 600 }, "body_orange": { price: 800 }, "body_red": { price: 1000 },
-      "body_gold": { price: 1500 }, "body_rainbow": { price: 2000 },
-      "eyes_sparkle": { price: 0 }, "eyes_determined": { price: 300 }, "eyes_heart": { price: 500 },
-      "eyes_star": { price: 700 }, "eyes_cool": { price: 1000 }, "eyes_laser": { price: 1200 },
-      "eyes_cyber": { price: 1500 }, "eyes_diamond": { price: 2000 },
-      "mouth_smile": { price: 0 }, "mouth_happy": { price: 250 }, "mouth_confident": { price: 400 },
-      "mouth_cat": { price: 550 }, "mouth_wink": { price: 700 }, "mouth_laugh": { price: 900 },
-      "mouth_cool": { price: 1100 }, "mouth_boss": { price: 1500 },
-      "hat_cap": { price: 300 }, "hat_party": { price: 450 }, "hat_tophat": { price: 600 },
-      "hat_graduate": { price: 800 }, "hat_cowboy": { price: 1000 }, "hat_crown": { price: 1300 },
-      "hat_wizard": { price: 1600 }, "hat_diamond": { price: 2500 },
-      "accessory_phone": { price: 400 }, "accessory_tie": { price: 600 }, "accessory_briefcase": { price: 800 },
-      "accessory_laptop": { price: 1000 }, "accessory_suit": { price: 1300 }, "accessory_rocket": { price: 1600 },
-      "accessory_trophy": { price: 2000 }, "accessory_diamond_brief": { price: 3000 },
-      "shoes_sneakers": { price: 0 }, "shoes_running": { price: 350 }, "shoes_boots": { price: 500 },
-      "shoes_heels": { price: 700 }, "shoes_dress": { price: 1000 }, "shoes_rocket": { price: 1400 },
-      "shoes_fire": { price: 1800 }, "shoes_diamond": { price: 2500 },
-      "background_basic": { price: 0 }, "background_apartment": { price: 400 }, "background_villa": { price: 700 },
-      "background_penthouse": { price: 1000 }, "background_mansion": { price: 1500 }, "background_island": { price: 2000 },
-      "background_space": { price: 2500 }, "background_universe": { price: 3500 },
-      "jewelry_watch": { price: 600 }, "jewelry_necklace": { price: 900 }, "jewelry_ring": { price: 1200 },
-      "jewelry_crown_small": { price: 1500 }, "jewelry_amulet": { price: 2000 }, "jewelry_infinity": { price: 3000 }
-    };
-
-    let itemsValue = 0;
-    purchasedItems.forEach(itemId => {
-      const item = AVATAR_ITEMS[itemId];
-      if (item && item.price) itemsValue += item.price;
-    });
+    const itemsValue = purchasedItems.reduce((sum, itemId) => {
+      return sum + (AVATAR_ITEM_PRICES[itemId] || 0);
+    }, 0);
 
     const investmentsSpent = investments.reduce((sum, inv) => sum + safeNum(inv.invested_amount), 0);
     const investmentsValue = investments.reduce((sum, inv) => sum + safeNum(inv.current_value), 0);
@@ -183,8 +160,8 @@ export default function EconomyAdminPanel() {
     const totalIncome = Object.values(income).reduce((sum, val) => sum + safeNum(val), 0);
     const totalLosses = Object.values(losses).reduce((sum, val) => sum + safeNum(val), 0);
 
-    const coinsCash = Math.round(totalIncome - totalLosses - itemsValue - investmentsValue);
-    const totalAssets = coinsCash + investmentsValue + itemsValue;
+    const coins = Math.round(totalIncome - totalLosses - itemsValue - investmentsValue);
+    const total_networth = coins + investmentsValue + itemsValue;
 
     return {
       email: studentEmail,
@@ -192,10 +169,10 @@ export default function EconomyAdminPanel() {
       first_name: user.first_name,
       last_name: user.last_name,
       user_type: user.user_type,
-      coins_cash: coinsCash,
+      coins: coins,
       investments_value: investmentsValue,
       items_value: itemsValue,
-      total_assets: totalAssets,
+      total_networth: total_networth,
       income_breakdown: income,
       expense_breakdown: losses,
       purchased_items: purchasedItems,
@@ -258,7 +235,7 @@ export default function EconomyAdminPanel() {
         if (!users || users.length === 0) continue;
 
         const user = users[0];
-        await base44.entities.User.update(user.id, { coins: result.coins_cash });
+        await base44.entities.User.update(user.id, { coins: result.coins });
 
         setProgress(prev => ({ ...prev, current: i + 1 }));
         await new Promise(resolve => setTimeout(resolve, 200));
@@ -398,6 +375,8 @@ export default function EconomyAdminPanel() {
 
         const balancedCoins = Math.round(totalIncome - totalLosses - itemsValue - investmentsValue);
 
+        const total_networth = balancedCoins + investmentsValue + itemsValue;
+        
         previewData.push({
           email: studentEmail,
           name: user.full_name,
@@ -406,8 +385,9 @@ export default function EconomyAdminPanel() {
           diff: balancedCoins - (user.coins || 0),
           totalIncome,
           totalLosses,
-          itemsValue,
-          investmentsValue
+          items_value: itemsValue,
+          investments_value: investmentsValue,
+          total_networth: total_networth
         });
 
         setProgress(prev => ({ ...prev, current: i + 1 }));
@@ -425,7 +405,7 @@ export default function EconomyAdminPanel() {
       `  עו"ש נוכחי: ${p.currentCoins.toLocaleString()}\n` +
       `  עו"ש חדש: ${p.newCoins.toLocaleString()}\n` +
       `  הפרש: ${p.diff >= 0 ? '+' : ''}${p.diff.toLocaleString()}\n` +
-      `  (הכנסות: ${p.totalIncome.toLocaleString()} - הפסדים: ${p.totalLosses.toLocaleString()} - פריטים: ${p.itemsValue.toLocaleString()} - השקעות: ${p.investmentsValue.toLocaleString()})`
+      `  (הכנסות: ${p.totalIncome.toLocaleString()} - הפסדים: ${p.totalLosses.toLocaleString()} - פריטים: ${p.items_value.toLocaleString()} - השקעות: ${p.investments_value.toLocaleString()})`
     ).join('\n\n');
 
     if (!confirm(`⚠️ לאזן עו"ש עבור ${previewData.length} תלמידים?\n\n${previewText}\n\nלהמשיך?`)) {
@@ -533,39 +513,10 @@ export default function EconomyAdminPanel() {
         };
         const totalLosses = Object.values(losses).reduce((sum, val) => sum + safeNum(val), 0);
 
-        // Calculate items value
         const purchasedItems = user.purchased_items || [];
-        const AVATAR_ITEMS = {
-          "body_blue": { price: 0 }, "body_pink": { price: 200 }, "body_purple": { price: 400 },
-          "body_green": { price: 600 }, "body_orange": { price: 800 }, "body_red": { price: 1000 },
-          "body_gold": { price: 1500 }, "body_rainbow": { price: 2000 },
-          "eyes_sparkle": { price: 0 }, "eyes_determined": { price: 300 }, "eyes_heart": { price: 500 },
-          "eyes_star": { price: 700 }, "eyes_cool": { price: 1000 }, "eyes_laser": { price: 1200 },
-          "eyes_cyber": { price: 1500 }, "eyes_diamond": { price: 2000 },
-          "mouth_smile": { price: 0 }, "mouth_happy": { price: 250 }, "mouth_confident": { price: 400 },
-          "mouth_cat": { price: 550 }, "mouth_wink": { price: 700 }, "mouth_laugh": { price: 900 },
-          "mouth_cool": { price: 1100 }, "mouth_boss": { price: 1500 },
-          "hat_cap": { price: 300 }, "hat_party": { price: 450 }, "hat_tophat": { price: 600 },
-          "hat_graduate": { price: 800 }, "hat_cowboy": { price: 1000 }, "hat_crown": { price: 1300 },
-          "hat_wizard": { price: 1600 }, "hat_diamond": { price: 2500 },
-          "accessory_phone": { price: 400 }, "accessory_tie": { price: 600 }, "accessory_briefcase": { price: 800 },
-          "accessory_laptop": { price: 1000 }, "accessory_suit": { price: 1300 }, "accessory_rocket": { price: 1600 },
-          "accessory_trophy": { price: 2000 }, "accessory_diamond_brief": { price: 3000 },
-          "shoes_sneakers": { price: 0 }, "shoes_running": { price: 350 }, "shoes_boots": { price: 500 },
-          "shoes_heels": { price: 700 }, "shoes_dress": { price: 1000 }, "shoes_rocket": { price: 1400 },
-          "shoes_fire": { price: 1800 }, "shoes_diamond": { price: 2500 },
-          "background_basic": { price: 0 }, "background_apartment": { price: 400 }, "background_villa": { price: 700 },
-          "background_penthouse": { price: 1000 }, "background_mansion": { price: 1500 }, "background_island": { price: 2000 },
-          "background_space": { price: 2500 }, "background_universe": { price: 3500 },
-          "jewelry_watch": { price: 600 }, "jewelry_necklace": { price: 900 }, "jewelry_ring": { price: 1200 },
-          "jewelry_crown_small": { price: 1500 }, "jewelry_amulet": { price: 2000 }, "jewelry_infinity": { price: 3000 }
-        };
-
-        let itemsValue = 0;
-        purchasedItems.forEach(itemId => {
-          const item = AVATAR_ITEMS[itemId];
-          if (item && item.price) itemsValue += item.price;
-        });
+        const itemsValue = purchasedItems.reduce((sum, itemId) => {
+          return sum + (AVATAR_ITEM_PRICES[itemId] || 0);
+        }, 0);
 
         // Calculate investments - SPENT not current value
         const investmentsSpent = investments.reduce((sum, inv) => sum + safeNum(inv.invested_amount), 0);
@@ -619,11 +570,12 @@ export default function EconomyAdminPanel() {
     setIsRecalculatingNetWorth(true);
 
     try {
-      const response = await recalculateUserNetWorth({});
+      const response = await base44.functions.invoke('recalculateUserNetWorth', {});
       const result = response.data;
 
       if (result.success) {
         toast.success(`✅ ${result.message}`);
+        await loadSnapshots(); // Refresh data
       } else {
         toast.error(`❌ ${result.error}`);
       }
@@ -654,7 +606,7 @@ export default function EconomyAdminPanel() {
 
       for (const email of emails) {
         try {
-          const response = await recalculateUserNetWorth({ userEmail: email });
+          const response = await base44.functions.invoke('recalculateUserNetWorth', { userEmail: email });
           const result = response.data;
           if (result.success) {
             successCount++;
@@ -668,6 +620,7 @@ export default function EconomyAdminPanel() {
       }
 
       toast.success(`✅ ${successCount} הצליחו, ${failCount} נכשלו`);
+      await loadSnapshots(); // Refresh data
     } catch (error) {
       console.error("Error recalculating net worth:", error);
       toast.error("שגיאה בחישוב מחדש");
@@ -729,40 +682,10 @@ export default function EconomyAdminPanel() {
       if (userData.completed_discord_join) socialMissionsCoins += 50;
       if (userData.completed_share) socialMissionsCoins += 100;
 
-      // חשב ערך פריטים
       const purchasedItems = userData.purchased_items || [];
-      let itemsValue = 0;
-      purchasedItems.forEach(itemId => {
-        const AVATAR_ITEMS = {
-          "body_blue": { price: 0 }, "body_pink": { price: 200 }, "body_purple": { price: 400 },
-          "body_green": { price: 600 }, "body_orange": { price: 800 }, "body_red": { price: 1000 },
-          "body_gold": { price: 1500 }, "body_rainbow": { price: 2000 },
-          "eyes_sparkle": { price: 0 }, "eyes_determined": { price: 300 }, "eyes_heart": { price: 500 },
-          "eyes_star": { price: 700 }, "eyes_cool": { price: 1000 }, "eyes_laser": { price: 1200 },
-          "eyes_cyber": { price: 1500 }, "eyes_diamond": { price: 2000 },
-          "mouth_smile": { price: 0 }, "mouth_happy": { price: 250 }, "mouth_confident": { price: 400 },
-          "mouth_cat": { price: 550 }, "mouth_wink": { price: 700 }, "mouth_laugh": { price: 900 },
-          "mouth_cool": { price: 1100 }, "mouth_boss": { price: 1500 },
-          "hat_cap": { price: 300 }, "hat_party": { price: 450 }, "hat_tophat": { price: 600 },
-          "hat_graduate": { price: 800 }, "hat_cowboy": { price: 1000 }, "hat_crown": { price: 1300 },
-          "hat_wizard": { price: 1600 }, "hat_diamond": { price: 2500 },
-          "accessory_phone": { price: 400 }, "accessory_tie": { price: 600 }, "accessory_briefcase": { price: 800 },
-          "accessory_laptop": { price: 1000 }, "accessory_suit": { price: 1300 }, "accessory_rocket": { price: 1600 },
-          "accessory_trophy": { price: 2000 }, "accessory_diamond_brief": { price: 3000 },
-          "shoes_sneakers": { price: 0 }, "shoes_running": { price: 350 }, "shoes_boots": { price: 500 },
-          "shoes_heels": { price: 700 }, "shoes_dress": { price: 1000 }, "shoes_rocket": { price: 1400 },
-          "shoes_fire": { price: 1800 }, "shoes_diamond": { price: 2500 },
-          "background_basic": { price: 0 }, "background_apartment": { price: 400 }, "background_villa": { price: 700 },
-          "background_penthouse": { price: 1000 }, "background_mansion": { price: 1500 }, "background_island": { price: 2000 },
-          "background_space": { price: 2500 }, "background_universe": { price: 3500 },
-          "jewelry_watch": { price: 600 }, "jewelry_necklace": { price: 900 }, "jewelry_ring": { price: 1200 },
-          "jewelry_crown_small": { price: 1500 }, "jewelry_amulet": { price: 2000 }, "jewelry_infinity": { price: 3000 }
-        };
-        const item = AVATAR_ITEMS[itemId];
-        if (item && item.price) {
-          itemsValue += item.price;
-        }
-      });
+      const itemsValue = purchasedItems.reduce((sum, itemId) => {
+        return sum + (AVATAR_ITEM_PRICES[itemId] || 0);
+      }, 0);
 
       // חשב ערך השקעות
       const investmentsSpent = investments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
@@ -1006,7 +929,7 @@ export default function EconomyAdminPanel() {
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <div className="text-white/60 text-xs">עו"ש</div>
-                    <div className="text-white font-bold">{snapshot.coins_cash?.toLocaleString() || 0}</div>
+                    <div className="text-white font-bold">{snapshot.coins?.toLocaleString() || 0}</div>
                   </div>
                   <div>
                     <div className="text-white/60 text-xs">השקעות</div>
@@ -1018,7 +941,7 @@ export default function EconomyAdminPanel() {
                   </div>
                   <div>
                     <div className="text-white/60 text-xs">שווי כולל</div>
-                    <div className="text-yellow-400 font-bold">{snapshot.total_assets?.toLocaleString() || 0}</div>
+                    <div className="text-yellow-400 font-bold">{snapshot.total_networth?.toLocaleString() || 0}</div>
                   </div>
                   <div>
                     <div className="text-white/60 text-xs">תרגילים נכונים</div>
@@ -1106,7 +1029,7 @@ export default function EconomyAdminPanel() {
                     {snapshot.student_email}
                   </td>
                   <td className="px-4 py-3 text-white font-bold">
-                    {snapshot.coins_cash?.toLocaleString() || 0}
+                    {snapshot.coins?.toLocaleString() || 0}
                   </td>
                   <td className="px-4 py-3 text-emerald-400">
                     {snapshot.investments_value?.toLocaleString() || 0}
@@ -1115,7 +1038,7 @@ export default function EconomyAdminPanel() {
                     {snapshot.items_value?.toLocaleString() || 0}
                   </td>
                   <td className="px-4 py-3 text-yellow-400 font-bold text-lg">
-                    {snapshot.total_assets?.toLocaleString() || 0}
+                    {snapshot.total_networth?.toLocaleString() || 0}
                   </td>
                   <td className="px-4 py-3 text-white/60 text-sm">
                     {snapshot.last_calculated_at 
@@ -1159,8 +1082,8 @@ export default function EconomyAdminPanel() {
                     {result.error ? (
                       <div className="text-red-400 font-bold">❌ שגיאה</div>
                     ) : (
-                      <div className={`font-bold text-lg ${result.coins_cash >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {result.coins_cash?.toLocaleString()} מטבעות
+                      <div className={`font-bold text-lg ${result.coins >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {result.coins?.toLocaleString()} מטבעות
                       </div>
                     )}
                   </div>
@@ -1176,7 +1099,7 @@ export default function EconomyAdminPanel() {
                       </div>
                       <div>
                         <div className="text-white/60">שווי כולל</div>
-                        <div className="font-bold text-yellow-400">{result.total_assets?.toLocaleString()}</div>
+                        <div className="font-bold text-yellow-400">{result.total_networth?.toLocaleString()}</div>
                       </div>
                     </div>
                   )}
@@ -1431,8 +1354,11 @@ export default function EconomyAdminPanel() {
                     <div className="text-white/60 text-xs mt-2">מספר פריטים: {((debugStudent.purchased_items || []).length)}</div>
                   </div>
                   <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 rounded-lg p-4 border border-yellow-500/30">
-                    <div className="text-yellow-200 text-xs mb-1 font-bold">total_assets (שווי כולל)</div>
-                    <div className="text-2xl font-bold text-white">{((debugStudent.coins || 0) + (debugStudent.investments_value || 0) + (debugStudent.items_value || 0)).toLocaleString()}</div>
+                    <div className="text-yellow-200 text-xs mb-1 font-bold">total_networth (שווי כולל)</div>
+                    <div className="text-2xl font-bold text-white">{(debugStudent.total_networth || ((debugStudent.coins || 0) + (debugStudent.investments_value || 0) + (debugStudent.items_value || 0))).toLocaleString()}</div>
+                    <div className="text-white/50 text-[10px] mt-1">
+                      {debugStudent.coins || 0} + {debugStudent.investments_value || 0} + {debugStudent.items_value || 0} = {((debugStudent.coins || 0) + (debugStudent.investments_value || 0) + (debugStudent.items_value || 0)).toLocaleString()}
+                    </div>
                   </div>
                 </div>
               </div>
