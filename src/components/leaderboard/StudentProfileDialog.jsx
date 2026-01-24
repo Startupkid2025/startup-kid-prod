@@ -117,6 +117,10 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       
       const quizProgress = await base44.entities.QuizProgress.filter({ student_email: studentEmail });
 
+      // Calculate stats for display
+      const masteredWords = wordProgress.filter(w => w.mastered === true).length;
+      const masteredMath = mathProgress.filter(m => m.mastered === true).length;
+
       setInvestments(studentInvestments);
 
       // Calculate investment data
@@ -295,7 +299,9 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
         totalLosses,
         netWorth: totalAssets,
         delta,
-        incomeMatch
+        incomeMatch,
+        masteredWords,
+        masteredMath
       });
 
     } catch (error) {
@@ -621,6 +627,18 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                 <p className="text-2xl font-black text-green-300">{Math.round(student.coins || 0)}</p>
                 <p className="text-white/70 text-xs">מטבעות</p>
               </div>
+              {financeReport && (
+                <>
+                  <div className="bg-white/10 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-black text-blue-300">{financeReport.masteredWords || 0}</p>
+                    <p className="text-white/70 text-xs">מילים נשלטו</p>
+                  </div>
+                  <div className="bg-white/10 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-black text-purple-300">{financeReport.masteredMath || 0}</p>
+                    <p className="text-white/70 text-xs">תרגילים נשלטו</p>
+                  </div>
+                </>
+              )}
               </div>
             </CardContent>
           </Card>
