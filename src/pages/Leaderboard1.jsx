@@ -517,138 +517,28 @@ export default function Leaderboard() {
     }
 
     try {
-      const today = new Date().toISOString().split('T')[0];
+      // Call server function to handle collaboration
+      const response = await base44.functions.invoke('collaborateDaily', { 
+        targetEmail: targetUser.student_email 
+      });
       
-      // Fetch fresh user data - use me() for current user
-      const currentUserFull = await base44.auth.me();
-      
-      if (!currentUserFull) {
-        toast.error("לא מצאתי את המשתמש שלך במערכת");
+      const result = response.data;
+
+      if (!result.success) {
+        toast.error(result.error || 'שגיאה בשיתוף הפעולה');
         return;
       }
 
-      // For non-admin users: ALWAYS use LeaderboardEntry data (no User entity access)
-      // For admins: Try User entity, fall back to LeaderboardEntry
-      let targetUserFull = null;
-
-      if (currentUserFull.role === 'admin') {
-        try {
-          const allUsers = await base44.entities.User.list();
-          targetUserFull = allUsers.find(u => u.email === targetUser.student_email);
-        } catch (e) {
-          console.log("Admin: Cannot access User.list, using LeaderboardEntry data");
-        }
-      }
-
-      // If not found or not admin, use LeaderboardEntry data
-      if (!targetUserFull) {
-        targetUserFull = {
-          id: targetUser.id,
-          email: targetUser.student_email,
-          coins: targetUser.coins,
-          daily_collaborations: targetUser.daily_collaborations || [],
-          total_collaboration_coins: targetUser.total_collaboration_coins || 0
-        };
-      }
-
-      if (!targetUserFull) {
-        toast.error("לא מצאתי את המשתמש השני במערכת");
-        return;
-      }
-      
-      // Check if already collaborated with THIS SPECIFIC user today
-      const dailyCollaborations = currentUserFull.daily_collaborations || [];
-      const alreadyCollaboratedToday = dailyCollaborations.some(
-        collab => collab && collab.email === targetUser.student_email && collab.date === today
-      );
-      
-      if (alreadyCollaboratedToday) {
+      // Show appropriate message based on status
+      if (result.status === 'already_sent') {
         toast.error(`כבר שלחת בקשה ל-${targetUser.full_name} היום! 🤝`);
-        return;
-      }
-
-      // Check if target user already sent collaboration request to current user
-      const targetDailyCollaborations = targetUserFull.daily_collaborations || [];
-      const targetAlreadySentRequest = targetDailyCollaborations.some(
-        collab => collab && collab.email === currentUser.email && collab.date === today && !collab.completed
-      );
-
-      if (targetAlreadySentRequest) {
-        // MUTUAL COLLABORATION! Both users get 25 coins!
-        const coinsReward = 25;
-
-        // Mark both collaborations as completed - keep ALL previous collaborations
-        const updatedCurrentCollaborations = [
-          ...dailyCollaborations,
-          { email: targetUser.student_email, date: today, completed: true }
-        ];
-
-        const updatedTargetCollaborations = targetDailyCollaborations.map(c => 
-          (c && c.email === currentUser.email && c.date === today) 
-            ? { ...c, completed: true } 
-            : c
-        );
-
-        // Update current user
-        await base44.auth.updateMe({
-          coins: (currentUserFull.coins || 0) + coinsReward,
-          daily_collaborations: updatedCurrentCollaborations,
-          total_collaboration_coins: (currentUserFull.total_collaboration_coins || 0) + coinsReward
-        });
-
-        // Update target user - admins update User entity
-        if (currentUserFull.role === 'admin') {
-          try {
-            await base44.entities.User.update(targetUserFull.id, {
-              coins: (targetUserFull.coins || 0) + coinsReward,
-              daily_collaborations: updatedTargetCollaborations,
-              total_collaboration_coins: (targetUserFull.total_collaboration_coins || 0) + coinsReward
-            });
-          } catch (userUpdateError) {
-            console.log("Admin: Cannot update User entity");
-          }
-        }
-
-        // Update total_networth directly (add coins to existing networth)
-        const currentNewNetWorth = (currentUserFull.total_networth || 0) + coinsReward;
-        const targetNewNetWorth = (targetUserFull.total_networth || 0) + coinsReward;
-
-        // Sync both users to LeaderboardEntry for public visibility
-        await Promise.all([
-          syncLeaderboardEntry(currentUser.email, {
-            coins: (currentUserFull.coins || 0) + coinsReward,
-            daily_collaborations: updatedCurrentCollaborations,
-            total_collaboration_coins: (currentUserFull.total_collaboration_coins || 0) + coinsReward,
-            total_networth: currentNewNetWorth
-          }),
-          syncLeaderboardEntry(targetUser.student_email, {
-            coins: (targetUserFull.coins || 0) + coinsReward,
-            daily_collaborations: updatedTargetCollaborations,
-            total_collaboration_coins: (targetUserFull.total_collaboration_coins || 0) + coinsReward,
-            total_networth: targetNewNetWorth
-          })
-        ]);
-
-        toast.success(`🎉 שיתוף פעולה הדדי! ${targetUser.full_name} ואתה קיבלתם ${coinsReward} מטבעות כל אחד! 💰✨`);
-      } else {
-        // Just send collaboration request (no coins yet) - keep ALL previous collaborations
-        const updatedCollaborations = [
-          ...dailyCollaborations,
-          { email: targetUser.student_email, date: today, completed: false }
-        ];
-
-        await base44.auth.updateMe({
-          daily_collaborations: updatedCollaborations
-        });
-
-        // Sync to LeaderboardEntry for public visibility (no net worth change, just daily_collaborations)
-        await syncLeaderboardEntry(currentUser.email, {
-          daily_collaborations: updatedCollaborations
-        });
-
+      } else if (result.status === 'request_sent') {
         toast.info(`📤 שלחת בקשת שיתוף פעולה ל-${targetUser.full_name}! אם גם הם ישלחו לך, תקבלו 25 מטבעות כל אחד! 🤝`);
+      } else if (result.status === 'mutual_completed') {
+        toast.success(`🎉 שיתוף פעולה הדדי! ${targetUser.full_name} ואתה קיבלתם 25 מטבעות כל אחד! 💰✨`);
       }
 
+      // Reload data to reflect changes
       loadData();
     } catch (error) {
       console.error("Error collaborating:", error);
