@@ -55,11 +55,6 @@ export default function EconomyAdminPanel() {
       });
       
       setStudents(allStudents.map(user => {
-        const studentMathProgress = mathProgressByEmail.get(user.email) || [];
-        // Calculate correct answers from coins earned (base 5 coins per correct answer)
-        const mathCoins = studentMathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
-        const correctMathAnswers = Math.round(mathCoins / 5.6); // Average coins per question
-        
         return {
           student_email: user.email,
           full_name: user.full_name,
@@ -67,7 +62,7 @@ export default function EconomyAdminPanel() {
           investments_value: 0,
           items_value: 0,
           total_assets: user.coins || 0,
-          correctMathAnswers: correctMathAnswers,
+          correctMathAnswers: user.total_correct_math_answers || 0,
           last_calculated_at: null
         };
       }));
@@ -717,7 +712,6 @@ export default function EconomyAdminPanel() {
       const masteredWords = wordProgress.filter(w => w.mastered === true).length;
       const vocabularyCoins = wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
       const mathCoins = mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
-      const correctMathAnswers = Math.round(mathCoins / 5.6);
       const surveyCoins = participations.filter(p => p.survey_completed === true).length * 70;
       const quizCoins = quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
       
@@ -778,7 +772,6 @@ export default function EconomyAdminPanel() {
       setDebugStudent({
         ...userData,
         mastered_words: masteredWords,
-        correct_math_answers: correctMathAnswers,
         vocabulary_coins: vocabularyCoins,
         math_coins: mathCoins,
         survey_coins: surveyCoins,
@@ -1390,8 +1383,8 @@ export default function EconomyAdminPanel() {
                   <div className="text-2xl font-bold text-white">{(debugStudent.mastered_words || 0).toLocaleString()}</div>
                 </div>
                 <div className="bg-gradient-to-br from-orange-500/20 to-orange-500/5 rounded-lg p-4 border border-orange-500/30">
-                  <div className="text-orange-200 text-xs mb-1 font-bold">correct_math_answers (תרגילים נכונים)</div>
-                  <div className="text-2xl font-bold text-white">{(debugStudent.correct_math_answers || 0).toLocaleString()}</div>
+                  <div className="text-orange-200 text-xs mb-1 font-bold">total_correct_math_answers (תרגילים נכונים)</div>
+                  <div className="text-2xl font-bold text-white">{(debugStudent.total_correct_math_answers || 0).toLocaleString()}</div>
                 </div>
                 <div className="bg-gradient-to-br from-pink-500/20 to-pink-500/5 rounded-lg p-4 border border-pink-500/30">
                   <div className="text-pink-200 text-xs mb-1 font-bold">age (גיל)</div>

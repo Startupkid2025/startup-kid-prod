@@ -561,7 +561,8 @@ ${question} = ${correctAnswer}
         await base44.auth.updateMe({
           coins: newCoins,
           daily_math_count: (userData.daily_math_count || 0) + 1,
-          total_math_earnings: (userData.total_math_earnings || 0) + coinsEarned
+          total_math_earnings: (userData.total_math_earnings || 0) + coinsEarned,
+          total_correct_math_answers: (userData.total_correct_math_answers || 0) + 1
         });
         setDailyCount(prev => prev + 1);
         
