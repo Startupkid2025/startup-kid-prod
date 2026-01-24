@@ -2067,11 +2067,42 @@ export default function Admin() {
                   <SelectValue placeholder="בחר שיעור..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {lessons.map(lesson => (
-                    <SelectItem key={lesson.id} value={lesson.id}>
-                      {lesson.lesson_name} - {lesson.lesson_date || 'ללא תאריך'}
-                    </SelectItem>
-                  ))}
+                  {(() => {
+                    // Group lessons by category
+                    const categoryNames = {
+                      ai_tech: "🤖 AI & Tech",
+                      personal_skills: "💪 מיומנויות אישיות",
+                      money_business: "💰 כסף ועסקים"
+                    };
+
+                    const lessonsByCategory = {};
+                    lessons.forEach(lesson => {
+                      const cat = lesson.category || 'uncategorized';
+                      if (!lessonsByCategory[cat]) lessonsByCategory[cat] = [];
+                      lessonsByCategory[cat].push(lesson);
+                    });
+
+                    // Check for duplicates
+                    const categoriesWithDuplicates = Object.keys(lessonsByCategory).filter(
+                      cat => lessonsByCategory[cat].length > 1
+                    );
+
+                    return lessons.map(lesson => {
+                      const cat = lesson.category || 'uncategorized';
+                      const categoryLabel = categoryNames[cat] || cat;
+                      const isDuplicate = categoriesWithDuplicates.includes(cat);
+                      const duplicateIndex = isDuplicate 
+                        ? lessonsByCategory[cat].findIndex(l => l.id === lesson.id) + 1
+                        : null;
+
+                      return (
+                        <SelectItem key={lesson.id} value={lesson.id}>
+                          {isDuplicate && `(${duplicateIndex}/${lessonsByCategory[cat].length}) `}
+                          {lesson.lesson_name} - {categoryLabel} - {lesson.lesson_date || 'ללא תאריך'}
+                        </SelectItem>
+                      );
+                    });
+                  })()}
                 </SelectContent>
               </Select>
             </div>
