@@ -139,11 +139,15 @@ Deno.serve(async (req) => {
 
         if (existingEntries.length > 0) {
           // Update existing entry
-          await base44.asServiceRole.entities.LeaderboardEntry.update(existingEntries[0].id, leaderboardData);
+          console.log(`Updating LeaderboardEntry for ${userEmail}: total_networth=${total_networth}`);
+          const result = await base44.asServiceRole.entities.LeaderboardEntry.update(existingEntries[0].id, leaderboardData);
+          console.log(`Updated result:`, result);
           updatedCount++;
         } else {
           // Create new entry
-          await base44.asServiceRole.entities.LeaderboardEntry.create(leaderboardData);
+          console.log(`Creating LeaderboardEntry for ${userEmail}: total_networth=${total_networth}`);
+          const result = await base44.asServiceRole.entities.LeaderboardEntry.create(leaderboardData);
+          console.log(`Created result:`, result);
           createdCount++;
         }
 
