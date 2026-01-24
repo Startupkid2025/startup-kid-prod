@@ -2067,6 +2067,39 @@ export default function Admin() {
                     </Button>
                   </div>
                 </div>
+
+                <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-white font-bold mb-1">סנכרון מילים ששלטו בהן (mastered_words)</h3>
+                      <p className="text-white/70 text-sm">
+                        מחשב את mastered_words לכל התלמידים מתוך WordProgress ומסנכרן ל-User
+                      </p>
+                    </div>
+                    <Button
+                      onClick={async () => {
+                        if (!confirm("לסנכרן mastered_words לכל התלמידים?")) return;
+                        setIsRecalculatingCoins(true);
+                        try {
+                          const response = await base44.functions.invoke('syncMasteredWords', {});
+                          const result = response.data;
+                          toast.success(result.message || "הסנכרון הושלם!");
+                          await refreshCurrentTab();
+                        } catch (error) {
+                          console.error("Error:", error);
+                          toast.error("שגיאה בסנכרון: " + (error.message || error));
+                        } finally {
+                          setIsRecalculatingCoins(false);
+                        }
+                      }}
+                      disabled={isRecalculatingCoins}
+                      className="bg-purple-600 hover:bg-purple-700"
+                    >
+                      {isRecalculatingCoins ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : "📚"}
+                      הרץ סנכרון
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>

@@ -470,7 +470,7 @@ export default function Vocabulary() {
 
           // Calculate new mastered_words count
           const currentMasteredCount = wordProgress.filter(w => w.mastered).length;
-          const newMasteredCount = isMastered ? currentMasteredCount + 1 : currentMasteredCount;
+          const newMasteredCount = isMastered && !existingWordProg.mastered ? currentMasteredCount + 1 : currentMasteredCount;
 
           Promise.all([
             base44.auth.updateMe({
