@@ -47,6 +47,7 @@ export default function Admin() {
   const [filterGroup, setFilterGroup] = useState("all");
   const [filterUserType, setFilterUserType] = useState("student");
   const [filterRecommendation, setFilterRecommendation] = useState("all");
+  const [filterDuplicates, setFilterDuplicates] = useState("all");
   const [lessonSortBy, setLessonSortBy] = useState("date");
   const [searchTerm, setSearchTerm] = useState("");
   const [studentSortBy, setStudentSortBy] = useState("name");
@@ -1277,6 +1278,18 @@ export default function Admin() {
                   </SelectContent>
                 </Select>
                 </div>
+              <div className="flex items-center gap-2">
+                <span className="text-white/70 text-sm">כפל שיעורים:</span>
+                <Select value={filterDuplicates} onValueChange={setFilterDuplicates}>
+                  <SelectTrigger className="w-44 bg-white/10 border-white/20 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">הכל</SelectItem>
+                    <SelectItem value="has_duplicates">יש כפל שיעורים</SelectItem>
+                  </SelectContent>
+                </Select>
+                </div>
               </div>
               <div className="text-white/70 text-sm">
                 סה״כ {students.filter(s => {
@@ -1310,7 +1323,16 @@ export default function Admin() {
                       }
                     }
                   }
-                  return typeMatch && groupMatch && recommendationMatch;
+                  let duplicatesMatch = true;
+                  if (filterDuplicates === 'has_duplicates') {
+                    const studentParticipations = participations.filter(p => p.student_email === s.email);
+                    const lessonCounts = {};
+                    studentParticipations.forEach(p => {
+                      lessonCounts[p.lesson_id] = (lessonCounts[p.lesson_id] || 0) + 1;
+                    });
+                    duplicatesMatch = Object.values(lessonCounts).some(count => count > 1);
+                  }
+                  return typeMatch && groupMatch && recommendationMatch && duplicatesMatch;
                 }).length} מ-{students.length}
               </div>
             </div>
@@ -1446,7 +1468,16 @@ export default function Admin() {
                             }
                           }
                         }
-                        return typeMatch && groupMatch && searchMatch && recommendationMatch;
+                        let duplicatesMatch = true;
+                        if (filterDuplicates === 'has_duplicates') {
+                          const studentParticipations = participations.filter(p => p.student_email === s.email);
+                          const lessonCounts = {};
+                          studentParticipations.forEach(p => {
+                            lessonCounts[p.lesson_id] = (lessonCounts[p.lesson_id] || 0) + 1;
+                          });
+                          duplicatesMatch = Object.values(lessonCounts).some(count => count > 1);
+                        }
+                        return typeMatch && groupMatch && searchMatch && recommendationMatch && duplicatesMatch;
                       });
                       if (selectedStudents.length === filteredStudents.length) {
                         setSelectedStudents([]);
@@ -1496,7 +1527,16 @@ export default function Admin() {
                           }
                         }
                       }
-                      return typeMatch && groupMatch && searchMatch && recommendationMatch;
+                      let duplicatesMatch = true;
+                      if (filterDuplicates === 'has_duplicates') {
+                        const studentParticipations = participations.filter(p => p.student_email === s.email);
+                        const lessonCounts = {};
+                        studentParticipations.forEach(p => {
+                          lessonCounts[p.lesson_id] = (lessonCounts[p.lesson_id] || 0) + 1;
+                        });
+                        duplicatesMatch = Object.values(lessonCounts).some(count => count > 1);
+                      }
+                      return typeMatch && groupMatch && searchMatch && recommendationMatch && duplicatesMatch;
                     }).length ? '✓ בטל בחירת הכל' : '☑ בחר הכל'}
                   </Button>
                 )}
@@ -1564,7 +1604,18 @@ export default function Admin() {
                       }
                     }
 
-                    return typeMatch && groupMatch && searchMatch && recommendationMatch;
+                    // Filter by duplicate lessons
+                    let duplicatesMatch = true;
+                    if (filterDuplicates === 'has_duplicates') {
+                      const studentParticipations = participations.filter(p => p.student_email === student.email);
+                      const lessonCounts = {};
+                      studentParticipations.forEach(p => {
+                        lessonCounts[p.lesson_id] = (lessonCounts[p.lesson_id] || 0) + 1;
+                      });
+                      duplicatesMatch = Object.values(lessonCounts).some(count => count > 1);
+                    }
+
+                    return typeMatch && groupMatch && searchMatch && recommendationMatch && duplicatesMatch;
                   })
                   .sort((a, b) => {
                     if (studentSortBy === "name") {
