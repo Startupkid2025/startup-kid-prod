@@ -64,23 +64,28 @@ Deno.serve(async (req) => {
         totalProcessed++;
         const userEmail = userData.email;
 
+        // Helper to safely convert to number
+        const safeNum = (v) => (v == null || v === '' || Number.isNaN(Number(v))) ? 0 : Number(v);
+
         // Calculate items value
         const purchasedItems = userData.purchased_items || [];
-        const items_value = purchasedItems.reduce((sum, itemId) => {
-          return sum + (AVATAR_ITEM_PRICES[itemId] || 0);
-        }, 0);
+        const items_value_raw = purchasedItems.reduce((sum, itemId) => sum + (AVATAR_ITEM_PRICES[itemId] || 0), 0);
 
         // Calculate investments value
         const investments = await base44.asServiceRole.entities.Investment.filter({ student_email: userEmail });
-        const investments_value = investments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+        const investments_value_raw = investments.reduce((sum, inv) => sum + safeNum(inv.current_value), 0);
+
+        // Round all values to prevent floating point issues
+        const items_value = Math.round(items_value_raw);
+        const investments_value = Math.round(investments_value_raw);
 
         // Use cached counts from User entity instead of recalculating
         const mastered_words = userData.mastered_words || 0;
         const mastered_math_questions = userData.mastered_math_questions || 0;
 
-        // Calculate net worth: coins + investments_value + items_value
-        const coins = userData.coins || 0;
-        const total_networth = coins + investments_value + items_value;
+        // Calculate net worth: coins + investments_value + items_value (all rounded)
+        const coins = safeNum(userData.coins);
+        const total_networth = Math.round(coins + investments_value + items_value);
 
         // Prepare LeaderboardEntry data - sync all important fields from User
         const leaderboardData = {
