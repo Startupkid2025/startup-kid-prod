@@ -317,6 +317,8 @@ export default function EconomyAdminPanel() {
 
         const safeNum = (val) => typeof val === 'number' ? val : 0;
 
+        const { profileCompletionCoins, socialMissionsCoins } = computeProfileCoins(user);
+
         const income = {
           base: safeNum(user.base_coins ?? user.base ?? 500),
           lessonsCoins: safeNum(user.total_lessons_coins ?? (user.total_lessons * 100)),
@@ -360,6 +362,8 @@ export default function EconomyAdminPanel() {
         const totalInvestmentProfits = unrealized + realizedProfit;
 
         income.investmentProfits = totalInvestmentProfits;
+        income.profileCompletion = profileCompletionCoins;
+        income.socialMissions = socialMissionsCoins;
         const totalIncome = Object.values(income).reduce((sum, val) => sum + safeNum(val), 0);
 
         const balancedCoins = Math.round(totalIncome - totalLosses - itemsValue - investmentsValue);
@@ -376,7 +380,9 @@ export default function EconomyAdminPanel() {
           totalLosses,
           items_value: itemsValue,
           investments_value: investmentsValue,
-          total_networth: total_networth
+          total_networth: total_networth,
+          profileCompletionCoins,
+          socialMissionsCoins
         });
 
         setProgress(prev => ({ ...prev, current: i + 1 }));
