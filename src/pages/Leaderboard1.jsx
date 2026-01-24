@@ -10,7 +10,6 @@ import TamagotchiAvatar from "../components/avatar/TamagotchiAvatar";
 import StudentProfileDialog from "../components/leaderboard/StudentProfileDialog";
 import { toast } from "sonner";
 import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
-import { calculateStudentNetWorth } from "@/functions/calculateStudentNetWorth";
 import { updateNetWorth } from "../components/utils/networthCalculator";
 
 // 3️⃣ Memoized LeaderboardRow to prevent unnecessary re-renders
@@ -209,7 +208,7 @@ const LeaderboardRow = React.memo(({
             <div className="text-center">
               <div className={`bg-gradient-to-br ${getRankColor(actualIndex)} text-white font-black px-2 sm:px-4 py-1 sm:py-2 rounded-xl shadow-lg`}>
                 <div className="text-base sm:text-2xl">{player.totalValue}</div>
-                <div className="text-[8px] sm:text-[10px] opacity-80">מטבעות</div>
+                <div className="text-[8px] sm:text-[10px] opacity-80">שווי</div>
               </div>
             </div>
 
@@ -341,7 +340,7 @@ export default function Leaderboard() {
 
   useEffect(() => {
     loadData();
-  }, [currentPage]); // Reload when page changes
+  }, [currentPage, searchTerm]); // Reload when page or search changes
 
   useEffect(() => {
     // Calculate time until season end (31.03.2026)
@@ -398,72 +397,77 @@ export default function Leaderboard() {
       const user = await base44.auth.me();
       setCurrentUser(user);
 
-      // Call backend to calculate net worth with pagination
-      const response = await calculateStudentNetWorth({
-        page: currentPage,
-        pageSize: USERS_PER_PAGE
-      });
-      const netWorthResponse = response.data;
+      // Fetch ALL LeaderboardEntry records with pagination and sort by total_networth
+      const allEntries = await listAll(base44.entities.LeaderboardEntry, "-total_networth", 100);
 
-      if (!netWorthResponse || !netWorthResponse.success) {
-        console.error("Backend error:", netWorthResponse);
-        throw new Error(netWorthResponse?.error || "Failed to calculate net worth");
+      // Filter by search term
+      let filteredEntries = allEntries;
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        filteredEntries = allEntries.filter(entry => {
+          const fullName = entry.full_name?.toLowerCase() || '';
+          const firstName = entry.first_name?.toLowerCase() || '';
+          const lastName = entry.last_name?.toLowerCase() || '';
+          return fullName.includes(searchLower) || firstName.includes(searchLower) || lastName.includes(searchLower);
+        });
       }
 
-      const studentsFromBackend = netWorthResponse.students || [];
-      const totalStudentsCount = netWorthResponse.total_students || 0;
+      // Sort by total_networth descending
+      const sortedEntries = [...filteredEntries].sort((a, b) => (b.total_networth || 0) - (a.total_networth || 0));
 
-      setTotalUsers(totalStudentsCount);
+      // Client-side pagination
+      const start = (currentPage - 1) * USERS_PER_PAGE;
+      const pageSlice = sortedEntries.slice(start, start + USERS_PER_PAGE);
+      setTotalUsers(sortedEntries.length);
 
-      // Load LeaderboardEntry data for additional fields
-      const leaderboardEntries = await base44.entities.LeaderboardEntry.list();
-
-      const usersByEmail = new Map();
-      leaderboardEntries.forEach(u => usersByEmail.set(u.student_email, u));
-
-      // Merge backend net worth data with LeaderboardEntry data
-      const studentsWithStats = studentsFromBackend.map(student => {
-        const leaderboardEntry = usersByEmail.get(student.email);
-        if (!leaderboardEntry) return null;
-
-        const collaborationCount = (leaderboardEntry.daily_collaborations || []).filter(c => c && c.completed).length;
+      // Map LeaderboardEntry to UI model
+      const studentsWithStats = pageSlice.map(entry => {
+        const collaborationCount = (entry.daily_collaborations || []).filter(c => c && c.completed).length;
 
         return {
-          id: leaderboardEntry.id,
-          student_email: student.email,
-          full_name: student.full_name,
-          first_name: student.first_name,
-          last_name: student.last_name,
-          user_type: leaderboardEntry.user_type || 'student',
-          coins: student.coins,
-          ai_tech_level: student.ai_tech_level,
-          personal_skills_level: student.personal_skills_level,
-          money_business_level: student.money_business_level,
-          total_lessons: student.total_lessons,
-          login_streak: student.login_streak,
-          purchased_items: leaderboardEntry.purchased_items || [],
-          equipped_items: leaderboardEntry.equipped_items || {},
-          totalValue: student.net_worth,
-          masteredWords: student.mastered_words || 0,
-          masteredMathQuestions: student.mastered_math_questions || 0,
-          loginStreak: student.login_streak,
+          id: entry.id,
+          student_email: entry.student_email,
+          full_name: entry.full_name,
+          first_name: entry.first_name,
+          last_name: entry.last_name,
+          user_type: entry.user_type || 'student',
+          coins: entry.coins || 0,
+          ai_tech_level: entry.ai_tech_level || 1,
+          personal_skills_level: entry.personal_skills_level || 1,
+          money_business_level: entry.money_business_level || 1,
+          total_lessons: entry.total_lessons || 0,
+          login_streak: entry.login_streak || 0,
+          purchased_items: entry.purchased_items || [],
+          equipped_items: entry.equipped_items || {},
+          totalValue: entry.total_networth || 0,
+          masteredWords: entry.mastered_words || 0,
+          masteredMathQuestions: entry.mastered_math_questions || 0,
+          loginStreak: entry.login_streak || 0,
           collaborationCount: collaborationCount,
-          workHours: leaderboardEntry.total_work_hours || 0,
-          workEarnings: leaderboardEntry.total_work_earnings || 0,
-          last_login_date: leaderboardEntry.last_login_date,
-          daily_collaborations: leaderboardEntry.daily_collaborations || [],
-          currentInvestmentValue: student.investments_value,
+          workHours: entry.total_work_hours || 0,
+          workEarnings: entry.total_work_earnings || 0,
+          last_login_date: entry.last_login_date,
+          daily_collaborations: entry.daily_collaborations || [],
+          currentInvestmentValue: entry.investments_value || 0,
           crowns: []
         };
-      }).filter(Boolean); // Remove nulls
+      });
 
-      // Find kings - ONLY from real students
-      const realStudents = studentsWithStats.filter(u => u.user_type === 'student');
-      const mathKing = [...realStudents].sort((a, b) => b.masteredMathQuestions - a.masteredMathQuestions)[0];
-      const vocabKing = [...realStudents].sort((a, b) => b.masteredWords - a.masteredWords)[0];
-      const investmentKing = [...realStudents].sort((a, b) => b.currentInvestmentValue - a.currentInvestmentValue)[0];
-      const loginStreakKing = [...realStudents].sort((a, b) => b.loginStreak - a.loginStreak)[0];
-      const workKing = [...realStudents].sort((a, b) => b.workHours - a.workHours)[0];
+      // Find kings - ONLY from real students in FULL list (not just current page)
+      const allStudents = sortedEntries.filter(u => u.user_type === 'student').map(entry => ({
+        student_email: entry.student_email,
+        masteredWords: entry.mastered_words || 0,
+        masteredMathQuestions: entry.mastered_math_questions || 0,
+        currentInvestmentValue: entry.investments_value || 0,
+        loginStreak: entry.login_streak || 0,
+        workHours: entry.total_work_hours || 0
+      }));
+
+      const mathKing = [...allStudents].sort((a, b) => b.masteredMathQuestions - a.masteredMathQuestions)[0];
+      const vocabKing = [...allStudents].sort((a, b) => b.masteredWords - a.masteredWords)[0];
+      const investmentKing = [...allStudents].sort((a, b) => b.currentInvestmentValue - a.currentInvestmentValue)[0];
+      const loginStreakKing = [...allStudents].sort((a, b) => b.loginStreak - a.loginStreak)[0];
+      const workKing = [...allStudents].sort((a, b) => b.workHours - a.workHours)[0];
 
       // Add crowns
       studentsWithStats.forEach(u => {
@@ -485,16 +489,14 @@ export default function Leaderboard() {
         }
       });
 
-      console.log("Final students with stats:", studentsWithStats.length);
       setUsers(studentsWithStats);
-      } catch (error) {
+    } catch (error) {
       console.error("Error loading leaderboard:", error);
-      console.error("Error details:", error.message, error.stack);
       toast.error("שגיאה בטעינת טבלת השיאים");
-      } finally {
+    } finally {
       setIsLoading(false);
-      }
-      };
+    }
+  };
 
   const handleCollaborate = async (targetUser, e) => {
     e.stopPropagation();
