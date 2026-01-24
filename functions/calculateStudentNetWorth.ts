@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// Avatar items prices (sync with frontend AVATAR_ITEMS)
-const ITEM_PRICES = {
+// Avatar items prices
+const AVATAR_ITEM_PRICES = {
   "body_blue": 0, "body_pink": 200, "body_purple": 400,
   "body_green": 600, "body_orange": 800, "body_red": 1000,
   "body_gold": 1500, "body_rainbow": 2000,
@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
       // Calculate items value for display
       const purchasedItems = student.purchased_items || [];
       const itemsValue = purchasedItems.reduce((sum, itemId) => {
-        return sum + (ITEM_PRICES[itemId] || 0);
+        return sum + (AVATAR_ITEM_PRICES[itemId] || 0);
       }, 0);
 
       return {
