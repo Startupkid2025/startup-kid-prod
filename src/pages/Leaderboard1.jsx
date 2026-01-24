@@ -10,7 +10,6 @@ import TamagotchiAvatar from "../components/avatar/TamagotchiAvatar";
 import StudentProfileDialog from "../components/leaderboard/StudentProfileDialog";
 import { toast } from "sonner";
 import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
-import { updateNetWorth } from "../components/utils/networthCalculator";
 
 // 3️⃣ Memoized LeaderboardRow to prevent unnecessary re-renders
 const LeaderboardRow = React.memo(({ 
@@ -102,104 +101,102 @@ const LeaderboardRow = React.memo(({
               )}
 
               {/* Stats Display */}
-              <TooltipProvider>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {/* Total Lessons */}
+              <div className="flex flex-wrap gap-1 mt-1">
+                {/* Total Lessons */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-blue-500/20 border border-blue-500/30 cursor-help">
+                      <span className="text-[10px] sm:text-xs">📚</span>
+                      <span className="text-[10px] sm:text-xs font-bold text-blue-200">{player.total_lessons || 0}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">סה"כ שיעורים: {player.total_lessons || 0}</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* English Words */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-purple-500/20 border border-purple-500/30 cursor-help">
+                      <span className="text-[10px] sm:text-xs">🔤</span>
+                      <span className="text-[10px] sm:text-xs font-bold text-purple-200">{player.masteredWords || 0}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">אנגלית: {player.masteredWords || 0} מילים</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Math Questions */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-green-500/20 border border-green-500/30 cursor-help">
+                      <span className="text-[10px] sm:text-xs">🔢</span>
+                      <span className="text-[10px] sm:text-xs font-bold text-green-200">{player.masteredMathQuestions || 0}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">חשבון: {player.masteredMathQuestions || 0} תרגילים</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Login Streak */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-orange-500/20 border border-orange-500/30 cursor-help">
+                      <span className="text-[10px] sm:text-xs">🔥</span>
+                      <span className="text-[10px] sm:text-xs font-bold text-orange-200">{player.loginStreak || 0}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">רצף כניסות: {player.loginStreak || 0} ימים</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Collaborations */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-pink-500/20 border border-pink-500/30 cursor-help">
+                      <span className="text-[10px] sm:text-xs">🤝</span>
+                      <span className="text-[10px] sm:text-xs font-bold text-pink-200">{player.collaborationCount || 0}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">שיתופי פעולה: {player.collaborationCount || 0}</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Work Hours */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-yellow-500/20 border border-yellow-500/30 cursor-help">
+                      <span className="text-[10px] sm:text-xs">💼</span>
+                      <span className="text-[10px] sm:text-xs font-bold text-yellow-200">{player.workHours || 0}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">שעות עבודה: {player.workHours || 0}</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Last Login */}
+                {player.last_login_date && formatLastLoginDM(player.last_login_date) && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-blue-500/20 border border-blue-500/30 cursor-help">
-                        <span className="text-[10px] sm:text-xs">📚</span>
-                        <span className="text-[10px] sm:text-xs font-bold text-blue-200">{player.total_lessons || 0}</span>
+                      <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-500/30 cursor-help">
+                        <span className="text-[10px] sm:text-xs">📅</span>
+                        <span className="text-[10px] sm:text-xs font-bold text-cyan-200">
+                          {formatLastLoginDM(player.last_login_date)}
+                        </span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="text-xs">סה"כ שיעורים: {player.total_lessons || 0}</p>
+                      <p className="text-xs">כניסה אחרונה: {formatLastLoginDM(player.last_login_date)}</p>
                     </TooltipContent>
                   </Tooltip>
-
-                  {/* English Words */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-purple-500/20 border border-purple-500/30 cursor-help">
-                        <span className="text-[10px] sm:text-xs">🔤</span>
-                        <span className="text-[10px] sm:text-xs font-bold text-purple-200">{player.masteredWords || 0}</span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs">אנגלית: {player.masteredWords || 0} מילים</p>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  {/* Math Questions */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-green-500/20 border border-green-500/30 cursor-help">
-                        <span className="text-[10px] sm:text-xs">🔢</span>
-                        <span className="text-[10px] sm:text-xs font-bold text-green-200">{player.masteredMathQuestions || 0}</span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs">חשבון: {player.masteredMathQuestions || 0} תרגילים</p>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  {/* Login Streak */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-orange-500/20 border border-orange-500/30 cursor-help">
-                        <span className="text-[10px] sm:text-xs">🔥</span>
-                        <span className="text-[10px] sm:text-xs font-bold text-orange-200">{player.loginStreak || 0}</span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs">רצף כניסות: {player.loginStreak || 0} ימים</p>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  {/* Collaborations */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-pink-500/20 border border-pink-500/30 cursor-help">
-                        <span className="text-[10px] sm:text-xs">🤝</span>
-                        <span className="text-[10px] sm:text-xs font-bold text-pink-200">{player.collaborationCount || 0}</span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs">שיתופי פעולה: {player.collaborationCount || 0}</p>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  {/* Work Hours */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-yellow-500/20 border border-yellow-500/30 cursor-help">
-                        <span className="text-[10px] sm:text-xs">💼</span>
-                        <span className="text-[10px] sm:text-xs font-bold text-yellow-200">{player.workHours || 0}</span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs">שעות עבודה: {player.workHours || 0}</p>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  {/* Last Login */}
-                  {player.last_login_date && formatLastLoginDM(player.last_login_date) && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-500/30 cursor-help">
-                          <span className="text-[10px] sm:text-xs">📅</span>
-                          <span className="text-[10px] sm:text-xs font-bold text-cyan-200">
-                            {formatLastLoginDM(player.last_login_date)}
-                          </span>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="text-xs">כניסה אחרונה: {formatLastLoginDM(player.last_login_date)}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                </div>
-              </TooltipProvider>
+                )}
+              </div>
             </div>
 
             {/* Right Side: Networth + Collaborate Button */}
@@ -401,19 +398,18 @@ export default function Leaderboard() {
       const allEntries = await listAll(base44.entities.LeaderboardEntry, "-total_networth", 100);
 
       // Filter by search term
-      let filteredEntries = allEntries;
+      let sortedEntries = allEntries;
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
-        filteredEntries = allEntries.filter(entry => {
+        const filteredEntries = allEntries.filter(entry => {
           const fullName = entry.full_name?.toLowerCase() || '';
           const firstName = entry.first_name?.toLowerCase() || '';
           const lastName = entry.last_name?.toLowerCase() || '';
           return fullName.includes(searchLower) || firstName.includes(searchLower) || lastName.includes(searchLower);
         });
+        // Re-sort after filtering
+        sortedEntries = [...filteredEntries].sort((a, b) => (b.total_networth || 0) - (a.total_networth || 0));
       }
-
-      // Sort by total_networth descending
-      const sortedEntries = [...filteredEntries].sort((a, b) => (b.total_networth || 0) - (a.total_networth || 0));
 
       // Client-side pagination
       const start = (currentPage - 1) * USERS_PER_PAGE;
@@ -605,11 +601,9 @@ export default function Leaderboard() {
           }
         }
 
-        // Update net worth for both users
-        const [currentNetWorth, targetNetWorth] = await Promise.all([
-          updateNetWorth(currentUser.email),
-          updateNetWorth(targetUser.student_email)
-        ]);
+        // Update total_networth directly (add coins to existing networth)
+        const currentNewNetWorth = (currentUserFull.total_networth || 0) + coinsReward;
+        const targetNewNetWorth = (targetUserFull.total_networth || 0) + coinsReward;
 
         // Sync both users to LeaderboardEntry for public visibility
         await Promise.all([
@@ -617,13 +611,13 @@ export default function Leaderboard() {
             coins: (currentUserFull.coins || 0) + coinsReward,
             daily_collaborations: updatedCurrentCollaborations,
             total_collaboration_coins: (currentUserFull.total_collaboration_coins || 0) + coinsReward,
-            total_networth: currentNetWorth
+            total_networth: currentNewNetWorth
           }),
           syncLeaderboardEntry(targetUser.student_email, {
             coins: (targetUserFull.coins || 0) + coinsReward,
             daily_collaborations: updatedTargetCollaborations,
             total_collaboration_coins: (targetUserFull.total_collaboration_coins || 0) + coinsReward,
-            total_networth: targetNetWorth
+            total_networth: targetNewNetWorth
           })
         ]);
 
@@ -732,20 +726,21 @@ export default function Leaderboard() {
   }
 
   return (
-    <div className="px-4 py-8 max-w-4xl mx-auto">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-8"
-      >
-        <h1 className="text-4xl font-black text-white mb-2">
-          🎯 טבלת שיאים 🎯
-        </h1>
-        <p className="text-white/80 text-lg">
-          מי הכי עשיר? 💰
-        </p>
-      </motion.div>
+    <TooltipProvider>
+      <div className="px-4 py-8 max-w-4xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
+          <h1 className="text-4xl font-black text-white mb-2">
+            🎯 טבלת שיאים 🎯
+          </h1>
+          <p className="text-white/80 text-lg">
+            מי הכי עשיר? 💰
+          </p>
+        </motion.div>
 
       {/* Prizes Section */}
       <motion.div
@@ -1012,6 +1007,7 @@ export default function Leaderboard() {
         onClose={() => setShowProfileDialog(false)}
         student={selectedStudent}
       />
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
