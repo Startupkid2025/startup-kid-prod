@@ -44,7 +44,7 @@ export default function EconomyAdminPanel() {
       const usersData = await base44.entities.User.list();
       const allStudents = usersData.filter(u => u.user_type === 'student');
       
-      // Load math progress to get mastered math questions
+      // Load math progress to get math questions answered correctly
       const allMathProgress = await base44.entities.MathProgress.list();
       const mathProgressByEmail = new Map();
       allMathProgress.forEach(m => {
@@ -56,7 +56,8 @@ export default function EconomyAdminPanel() {
       
       setStudents(allStudents.map(user => {
         const studentMathProgress = mathProgressByEmail.get(user.email) || [];
-        const masteredMathQuestions = studentMathProgress.filter(m => m.mastered || m.correct_streak > 0).length;
+        // Count total attempts (each attempt = one math question answered)
+        const totalMathQuestions = studentMathProgress.reduce((sum, m) => sum + (m.total_attempts || 0), 0);
         
         return {
           student_email: user.email,
@@ -65,7 +66,7 @@ export default function EconomyAdminPanel() {
           investments_value: 0,
           items_value: 0,
           total_assets: user.coins || 0,
-          masteredMathQuestions: masteredMathQuestions,
+          totalMathQuestions: totalMathQuestions,
           last_calculated_at: null
         };
       }));
@@ -713,7 +714,7 @@ export default function EconomyAdminPanel() {
 
       const userData = user[0];
       const masteredWords = wordProgress.filter(w => w.mastered === true).length;
-      const masteredMath = mathProgress.filter(m => m.mastered === true).length;
+      const totalMathQuestions = mathProgress.reduce((sum, m) => sum + (m.total_attempts || 0), 0);
       const vocabularyCoins = wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
       const mathCoins = mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
       const surveyCoins = participations.filter(p => p.survey_completed === true).length * 70;
@@ -776,7 +777,7 @@ export default function EconomyAdminPanel() {
       setDebugStudent({
         ...userData,
         mastered_words: masteredWords,
-        mastered_math_questions: masteredMath,
+        total_math_questions: totalMathQuestions,
         vocabulary_coins: vocabularyCoins,
         math_coins: mathCoins,
         survey_coins: surveyCoins,
@@ -1027,7 +1028,7 @@ export default function EconomyAdminPanel() {
                   </div>
                   <div>
                     <div className="text-white/60 text-xs">תרגילים</div>
-                    <div className="text-orange-400 font-bold">{snapshot.masteredMathQuestions || 0}</div>
+                    <div className="text-orange-400 font-bold">{snapshot.totalMathQuestions || 0}</div>
                   </div>
                 </div>
 
@@ -1388,8 +1389,8 @@ export default function EconomyAdminPanel() {
                   <div className="text-2xl font-bold text-white">{(debugStudent.mastered_words || 0).toLocaleString()}</div>
                 </div>
                 <div className="bg-gradient-to-br from-orange-500/20 to-orange-500/5 rounded-lg p-4 border border-orange-500/30">
-                  <div className="text-orange-200 text-xs mb-1 font-bold">mastered_math_questions (תרגילים)</div>
-                  <div className="text-2xl font-bold text-white">{(debugStudent.mastered_math_questions || 0).toLocaleString()}</div>
+                  <div className="text-orange-200 text-xs mb-1 font-bold">total_math_questions (תרגילים נענו)</div>
+                  <div className="text-2xl font-bold text-white">{(debugStudent.total_math_questions || 0).toLocaleString()}</div>
                 </div>
                 <div className="bg-gradient-to-br from-pink-500/20 to-pink-500/5 rounded-lg p-4 border border-pink-500/30">
                   <div className="text-pink-200 text-xs mb-1 font-bold">age (גיל)</div>
