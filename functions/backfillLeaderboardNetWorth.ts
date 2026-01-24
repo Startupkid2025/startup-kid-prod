@@ -36,8 +36,23 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // Fetch all users
-    const allUsers = await base44.asServiceRole.entities.User.list();
+    // Get optional userEmails from request body
+    const body = await req.json().catch(() => ({}));
+    const targetEmails = body.userEmails;
+
+    // Fetch all users or filtered by emails
+    let allUsers;
+    if (targetEmails && Array.isArray(targetEmails) && targetEmails.length > 0) {
+      // Fetch only specified users
+      allUsers = [];
+      for (const email of targetEmails) {
+        const users = await base44.asServiceRole.entities.User.filter({ email });
+        if (users.length > 0) allUsers.push(users[0]);
+      }
+    } else {
+      // Fetch all users
+      allUsers = await base44.asServiceRole.entities.User.list();
+    }
     
     let totalProcessed = 0;
     let updatedCount = 0;
