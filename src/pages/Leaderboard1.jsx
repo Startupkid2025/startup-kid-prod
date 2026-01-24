@@ -133,11 +133,11 @@ const LeaderboardRow = React.memo(({
                   <TooltipTrigger asChild>
                     <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-green-500/20 border border-green-500/30 cursor-help">
                       <span className="text-[10px] sm:text-xs">🔢</span>
-                      <span className="text-[10px] sm:text-xs font-bold text-green-200">{entry.mastered_math_questions || 0}</span>
+                      <span className="text-[10px] sm:text-xs font-bold text-green-200">{player.masteredMathQuestions || 0}</span>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs">חשבון: {entry.mastered_math_questions || 0} תרגילים</p>
+                    <p className="text-xs">חשבון: {player.masteredMathQuestions || 0} תרגילים</p>
                   </TooltipContent>
                 </Tooltip>
 
@@ -447,7 +447,7 @@ export default function Leaderboard() {
           masteredWords: entry.mastered_words || 0,
           masteredMathQuestions: entry.mastered_math_questions || 0,
           loginStreak: entry.login_streak || 0,
-          collaborationCount: entry.collaborationCount,
+          collaborationCount: collaborationCount,
           workHours: entry.total_work_hours || 0,
           workEarnings: entry.total_work_earnings || 0,
           last_login_date: entry.last_login_date,
