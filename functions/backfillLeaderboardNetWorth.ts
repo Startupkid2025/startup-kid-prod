@@ -74,6 +74,13 @@ Deno.serve(async (req) => {
         const investments = await base44.asServiceRole.entities.Investment.filter({ student_email: userEmail });
         const investments_value = investments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
 
+        // Calculate mastered words and math questions
+        const wordProgress = await base44.asServiceRole.entities.WordProgress.filter({ student_email: userEmail });
+        const mastered_words = wordProgress.filter(w => w.mastered === true).length;
+        
+        const mathProgress = await base44.asServiceRole.entities.MathProgress.filter({ student_email: userEmail });
+        const mastered_math_questions = mathProgress.filter(m => m.mastered === true).length;
+
         // Calculate net worth: coins + investments_value + items_value
         const coins = userData.coins || 0;
         const total_networth = coins + investments_value + items_value;
@@ -95,6 +102,8 @@ Deno.serve(async (req) => {
           total_collaboration_coins: userData.total_collaboration_coins || 0,
           total_login_streak_coins: userData.total_login_streak_coins || 0,
           total_correct_math_answers: userData.total_correct_math_answers || 0,
+          mastered_words: mastered_words,
+          mastered_math_questions: mastered_math_questions,
           equipped_items: userData.equipped_items || {},
           purchased_items: purchasedItems,
           last_login_date: userData.last_login_date,
@@ -155,6 +164,13 @@ Deno.serve(async (req) => {
       const items_value = purchasedItems.reduce((sum, itemId) => sum + (AVATAR_ITEM_PRICES[itemId] || 0), 0);
       const investments = await base44.asServiceRole.entities.Investment.filter({ student_email: userEmail });
       const investments_value = investments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      
+      const wordProgress = await base44.asServiceRole.entities.WordProgress.filter({ student_email: userEmail });
+      const mastered_words = wordProgress.filter(w => w.mastered === true).length;
+      
+      const mathProgress = await base44.asServiceRole.entities.MathProgress.filter({ student_email: userEmail });
+      const mastered_math_questions = mathProgress.filter(m => m.mastered === true).length;
+      
       const coins = userData.coins || 0;
       const total_networth = coins + investments_value + items_value;
       
@@ -169,7 +185,9 @@ Deno.serve(async (req) => {
         total_work_hours: userData.total_work_hours || 0,
         total_collaboration_coins: userData.total_collaboration_coins || 0,
         login_streak: userData.login_streak || 0,
-        total_correct_math_answers: userData.total_correct_math_answers || 0
+        total_correct_math_answers: userData.total_correct_math_answers || 0,
+        mastered_words: mastered_words,
+        mastered_math_questions: mastered_math_questions
       });
     }
 
