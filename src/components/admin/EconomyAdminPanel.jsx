@@ -744,14 +744,16 @@ export default function EconomyAdminPanel() {
     }
   };
 
-  const filteredSnapshots = students.filter(s => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      s.full_name?.toLowerCase().includes(query) ||
-      s.student_email?.toLowerCase().includes(query)
-    );
-  });
+  const filteredSnapshots = students
+    .filter(s => {
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        s.full_name?.toLowerCase().includes(query) ||
+        s.student_email?.toLowerCase().includes(query)
+      );
+    })
+    .sort((a, b) => (b.total_networth || 0) - (a.total_networth || 0));
 
   return (
     <div className="space-y-6">
