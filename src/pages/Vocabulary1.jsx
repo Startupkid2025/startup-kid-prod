@@ -468,10 +468,15 @@ export default function Vocabulary() {
           );
           setAvailableVocabWords(updatedAvailableWords);
 
+          // Calculate new mastered_words count
+          const currentMasteredCount = wordProgress.filter(w => w.mastered).length;
+          const newMasteredCount = isMastered ? currentMasteredCount + 1 : currentMasteredCount;
+
           Promise.all([
             base44.auth.updateMe({
               coins: (userData.coins || 0) + coinsEarned,
-              daily_vocabulary_words: updatedDailyWords
+              daily_vocabulary_words: updatedDailyWords,
+              mastered_words: newMasteredCount
             }),
             base44.entities.WordProgress.update(existingWordProg.id, {
               correct_streak: newStreak,
@@ -485,14 +490,16 @@ export default function Vocabulary() {
             setUserData(prev => ({ 
               ...prev, 
               coins: (prev.coins || 0) + coinsEarned,
-              daily_vocabulary_words: updatedDailyWords
+              daily_vocabulary_words: updatedDailyWords,
+              mastered_words: newMasteredCount
             }));
             
             // Update leaderboard
             base44.entities.LeaderboardEntry.filter({ student_email: userData.email }).then(leaderboardEntries => {
               if (leaderboardEntries.length > 0) {
                 base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-                  coins: (userData.coins || 0) + coinsEarned
+                  coins: (userData.coins || 0) + coinsEarned,
+                  mastered_words: newMasteredCount
                 });
               }
             });
