@@ -1990,13 +1990,12 @@ export default function Admin() {
                         if (!confirm("האם להריץ אתחול ספירת תרגילי חשבון? (פעם אחת בלבד)")) return;
                         setIsRecalculatingCoins(true);
                         try {
-                          const { initializeMathAnswers } = await import('../functions/initializeMathAnswers');
-                          const response = await initializeMathAnswers();
+                          const response = await base44.functions.invoke('initializeMathAnswers', {});
                           toast.success(response.message || "האתחול הושלם!");
                           await refreshCurrentTab();
                         } catch (error) {
                           console.error("Error:", error);
-                          toast.error("שגיאה באתחול");
+                          toast.error("שגיאה באתחול: " + (error.message || error));
                         } finally {
                           setIsRecalculatingCoins(false);
                         }
