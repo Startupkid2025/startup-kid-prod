@@ -9,6 +9,23 @@ import { RefreshCw, Search, Eye, Calculator } from "lucide-react";
 import MaintenanceModeToggle from "./MaintenanceModeToggle";
 import { AVATAR_ITEM_PRICES } from "@/components/constants/avatarItemPrices";
 
+// Helper function to compute profile-related coins
+const computeProfileCoins = (user) => {
+  let profileCompletionCoins = 0;
+  if (user.age) profileCompletionCoins += 20;
+  if (user.bio && user.bio.length > 10) profileCompletionCoins += 30;
+  if (user.phone_number) profileCompletionCoins += 20;
+
+  let socialMissionsCoins = 0;
+  if (user.completed_instagram_follow) socialMissionsCoins += 50;
+  if (user.completed_youtube_subscribe) socialMissionsCoins += 50;
+  if (user.completed_facebook_follow) socialMissionsCoins += 50;
+  if (user.completed_discord_join) socialMissionsCoins += 50;
+  if (user.completed_share) socialMissionsCoins += 100;
+
+  return { profileCompletionCoins, socialMissionsCoins };
+};
+
 export default function EconomyAdminPanel() {
   const [snapshots, setSnapshots] = useState([]);
   const [students, setStudents] = useState([]);
@@ -377,7 +394,8 @@ export default function EconomyAdminPanel() {
       `  עו"ש נוכחי: ${p.currentCoins.toLocaleString()}\n` +
       `  עו"ש חדש: ${p.newCoins.toLocaleString()}\n` +
       `  הפרש: ${p.diff >= 0 ? '+' : ''}${p.diff.toLocaleString()}\n` +
-      `  (הכנסות: ${p.totalIncome.toLocaleString()} - הפסדים: ${p.totalLosses.toLocaleString()} - פריטים: ${p.items_value.toLocaleString()} - השקעות: ${p.investments_value.toLocaleString()})`
+      `  (הכנסות: ${p.totalIncome.toLocaleString()} - הפסדים: ${p.totalLosses.toLocaleString()} - פריטים: ${p.items_value.toLocaleString()} - השקעות: ${p.investments_value.toLocaleString()})\n` +
+      `  פרופיל: ${p.profileCompletionCoins} | משימות חברתיות: ${p.socialMissionsCoins}`
     ).join('\n\n');
 
     if (!confirm(`⚠️ לאזן עו"ש עבור ${previewData.length} תלמידים?\n\n${previewText}\n\nלהמשיך?`)) {
@@ -458,6 +476,8 @@ export default function EconomyAdminPanel() {
 
         const safeNum = (val) => typeof val === 'number' ? val : 0;
 
+        const { profileCompletionCoins, socialMissionsCoins } = computeProfileCoins(user);
+
         // Calculate total income
         const income = {
           base: safeNum(user.base_coins ?? user.base ?? 500),
@@ -506,6 +526,8 @@ export default function EconomyAdminPanel() {
 
         // Calculate total income
         income.investmentProfits = totalInvestmentProfits;
+        income.profileCompletion = profileCompletionCoins;
+        income.socialMissions = socialMissionsCoins;
         const totalIncome = Object.values(income).reduce((sum, val) => sum + safeNum(val), 0);
 
         // Calculate balanced coins: coins = totalIncome - totalLosses - itemsValue - investmentsValue
