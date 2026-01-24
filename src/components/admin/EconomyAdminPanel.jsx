@@ -41,6 +41,7 @@ export default function EconomyAdminPanel() {
   const [loadingStudentData, setLoadingStudentData] = useState(false);
   const [isRecalculatingNetWorth, setIsRecalculatingNetWorth] = useState(false);
   const [isBackfilling, setIsBackfilling] = useState(false);
+  const [backfillProgress, setBackfillProgress] = useState({ current: 0, total: 0, logs: [] });
 
   useEffect(() => {
     loadSnapshots();
@@ -636,20 +637,50 @@ export default function EconomyAdminPanel() {
     }
 
     setIsBackfilling(true);
+    setBackfillProgress({ current: 0, total: students.length, logs: [] });
 
     try {
-      const response = await base44.functions.invoke('backfillLeaderboardNetWorth', {});
-      const result = response.data;
+      // Process each student manually with live progress
+      let processed = 0;
+      let updated = 0;
+      let created = 0;
+      const errors = [];
+      const logs = [];
 
-      if (result.success) {
-        toast.success(`✅ ${result.message}\nעודכן: ${result.updatedCount}, נוצר: ${result.createdCount}`);
-        if (result.errors.length > 0) {
-          toast.warning(`⚠️ ${result.errors.length} שגיאות`);
+      for (const student of students) {
+        try {
+          const email = student.student_email;
+          const response = await base44.functions.invoke('backfillLeaderboardNetWorth', { userEmails: [email] });
+          const result = response.data;
+
+          if (result.success) {
+            const action = result.createdCount > 0 ? '🆕 נוצר' : '♻️ עודכן';
+            const log = `${action} ${student.full_name || email}: total_networth=${result.details?.[0]?.total_networth || '?'}`;
+            logs.push(log);
+            if (result.createdCount > 0) created++;
+            else updated++;
+          } else {
+            logs.push(`❌ ${student.full_name || email}: שגיאה`);
+            errors.push({ email, error: result.error });
+          }
+
+          processed++;
+          setBackfillProgress({ current: processed, total: students.length, logs: [...logs] });
+        } catch (error) {
+          console.error(`Error for ${student.student_email}:`, error);
+          logs.push(`❌ ${student.full_name || student.student_email}: ${error.message}`);
+          errors.push({ email: student.student_email, error: error.message });
+          processed++;
+          setBackfillProgress({ current: processed, total: students.length, logs: [...logs] });
         }
-        await loadSnapshots(); // Refresh data
-      } else {
-        toast.error(`❌ ${result.error}`);
       }
+
+      if (errors.length === 0) {
+        toast.success(`✅ הושלם: ${updated} עודכנו, ${created} נוצרו`);
+      } else {
+        toast.warning(`⚠️ ${updated + created} הצליחו, ${errors.length} נכשלו`);
+      }
+      await loadSnapshots();
     } catch (error) {
       console.error("Error backfilling leaderboard:", error);
       toast.error("שגיאה במילוי נתונים");
@@ -669,21 +700,51 @@ export default function EconomyAdminPanel() {
     }
 
     setIsBackfilling(true);
+    const selectedStudents = students.filter(s => selectedEmails.has(s.student_email));
+    setBackfillProgress({ current: 0, total: selectedStudents.length, logs: [] });
 
     try {
-      const emails = Array.from(selectedEmails);
-      const response = await base44.functions.invoke('backfillLeaderboardNetWorth', { userEmails: emails });
-      const result = response.data;
+      let processed = 0;
+      let updated = 0;
+      let created = 0;
+      const errors = [];
+      const logs = [];
 
-      if (result.success) {
-        toast.success(`✅ ${result.message}\nעודכן: ${result.updatedCount}, נוצר: ${result.createdCount}`);
-        if (result.errors.length > 0) {
-          toast.warning(`⚠️ ${result.errors.length} שגיאות`);
+      for (const student of selectedStudents) {
+        try {
+          const email = student.student_email;
+          const response = await base44.functions.invoke('backfillLeaderboardNetWorth', { userEmails: [email] });
+          const result = response.data;
+
+          if (result.success && result.details && result.details.length > 0) {
+            const detail = result.details[0];
+            const action = result.createdCount > 0 ? '🆕 נוצר' : '♻️ עודכן';
+            const log = `${action} ${student.full_name || email}: net_worth=${detail.total_networth?.toLocaleString()}, coins=${detail.coins?.toLocaleString()}, investments=${detail.investments_value?.toLocaleString()}, items=${detail.items_value?.toLocaleString()}`;
+            logs.push(log);
+            if (result.createdCount > 0) created++;
+            else updated++;
+          } else {
+            logs.push(`❌ ${student.full_name || email}: שגיאה`);
+            errors.push({ email, error: result.error || 'Unknown error' });
+          }
+
+          processed++;
+          setBackfillProgress({ current: processed, total: selectedStudents.length, logs: [...logs] });
+        } catch (error) {
+          console.error(`Error for ${student.student_email}:`, error);
+          logs.push(`❌ ${student.full_name || student.student_email}: ${error.message}`);
+          errors.push({ email: student.student_email, error: error.message });
+          processed++;
+          setBackfillProgress({ current: processed, total: selectedStudents.length, logs: [...logs] });
         }
-        await loadSnapshots(); // Refresh data
-      } else {
-        toast.error(`❌ ${result.error}`);
       }
+
+      if (errors.length === 0) {
+        toast.success(`✅ הושלם: ${updated} עודכנו, ${created} נוצרו`);
+      } else {
+        toast.warning(`⚠️ ${updated + created} הצליחו, ${errors.length} נכשלו`);
+      }
+      await loadSnapshots();
     } catch (error) {
       console.error("Error backfilling leaderboard:", error);
       toast.error("שגיאה במילוי נתונים");
@@ -938,6 +999,30 @@ export default function EconomyAdminPanel() {
                 {progress.errors.length} שגיאות
               </div>
             )}
+          </div>
+        )}
+
+        {isBackfilling && (
+          <div className="bg-indigo-500/10 rounded-lg p-4 border border-indigo-500/30">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-white font-bold">
+                ממלא LeaderboardEntry... {backfillProgress.current} / {backfillProgress.total}
+              </span>
+              <span className="text-white/60">
+                {backfillProgress.total > 0 ? Math.round((backfillProgress.current / backfillProgress.total) * 100) : 0}%
+              </span>
+            </div>
+            <div className="w-full bg-white/20 rounded-full h-2 mb-3">
+              <div
+                className="bg-indigo-500 h-2 rounded-full transition-all"
+                style={{ width: `${backfillProgress.total > 0 ? (backfillProgress.current / backfillProgress.total) * 100 : 0}%` }}
+              />
+            </div>
+            <div className="max-h-40 overflow-y-auto bg-black/20 rounded p-2 text-xs text-white/80 font-mono space-y-1">
+              {backfillProgress.logs.slice(-10).map((log, idx) => (
+                <div key={idx} className="whitespace-nowrap overflow-x-auto">{log}</div>
+              ))}
+            </div>
           </div>
         )}
       </div>

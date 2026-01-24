@@ -133,13 +133,35 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Collect details for the response
+    const details = [];
+    for (const userData of allUsers) {
+      const userEmail = userData.email;
+      const purchasedItems = userData.purchased_items || [];
+      const items_value = purchasedItems.reduce((sum, itemId) => sum + (AVATAR_ITEM_PRICES[itemId] || 0), 0);
+      const investments = await base44.asServiceRole.entities.Investment.filter({ student_email: userEmail });
+      const investments_value = investments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      const coins = userData.coins || 0;
+      const total_networth = coins + investments_value + items_value;
+      
+      details.push({
+        email: userEmail,
+        full_name: userData.full_name,
+        total_networth,
+        coins,
+        investments_value,
+        items_value
+      });
+    }
+
     return Response.json({
       success: true,
       message: `Backfill completed: ${totalProcessed} processed, ${updatedCount} updated, ${createdCount} created`,
       totalProcessed,
       updatedCount,
       createdCount,
-      errors
+      errors,
+      details
     });
 
   } catch (error) {
