@@ -1217,16 +1217,17 @@ export default function Admin() {
 
           {/* Filters Bar */}
           <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 mb-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-white/70 text-sm">
-                <Filter className="w-4 h-4" />
-                <span>סינון ומיון:</span>
-              </div>
-              <div className="flex gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-white/70 text-sm">מיין לפי:</span>
+            <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
+              <Filter className="w-4 h-4" />
+              <span className="font-bold">סינון ומיון:</span>
+            </div>
+            
+            {/* Row 1: Sort + User Type + Group */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <span className="text-white/70 text-xs">מיין לפי:</span>
                 <Select value={studentSortBy} onValueChange={setStudentSortBy}>
-                  <SelectTrigger className="w-44 bg-white/10 border-white/20 text-white">
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1236,10 +1237,26 @@ export default function Admin() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-white/70 text-sm">קבוצה:</span>
+              
+              <div className="space-y-1">
+                <span className="text-white/70 text-xs">סוג משתמש:</span>
+                <Select value={filterUserType} onValueChange={setFilterUserType}>
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="student">תלמיד</SelectItem>
+                    <SelectItem value="demo">דמו</SelectItem>
+                    <SelectItem value="parent">הורה</SelectItem>
+                    <SelectItem value="all">הכל</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-white/70 text-xs">קבוצה:</span>
                 <Select value={filterGroup} onValueChange={setFilterGroup}>
-                  <SelectTrigger className="w-40 bg-white/10 border-white/20 text-white">
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
                     <SelectValue placeholder="כל הקבוצות" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1252,24 +1269,14 @@ export default function Admin() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-white/70 text-sm">סוג משתמש:</span>
-                <Select value={filterUserType} onValueChange={setFilterUserType}>
-                  <SelectTrigger className="w-32 bg-white/10 border-white/20 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="student">תלמיד</SelectItem>
-                    <SelectItem value="demo">דמו</SelectItem>
-                    <SelectItem value="parent">הורה</SelectItem>
-                    <SelectItem value="all">הכל</SelectItem>
-                  </SelectContent>
-                </Select>
-                </div>
-              <div className="flex items-center gap-2">
-                <span className="text-white/70 text-sm">המלצות:</span>
+            </div>
+
+            {/* Row 2: Recommendations + Duplicates */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <span className="text-white/70 text-xs">המלצות:</span>
                 <Select value={filterRecommendation} onValueChange={setFilterRecommendation}>
-                  <SelectTrigger className="w-44 bg-white/10 border-white/20 text-white">
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1277,11 +1284,12 @@ export default function Admin() {
                     <SelectItem value="pending">יש המלצה ממתינה</SelectItem>
                   </SelectContent>
                 </Select>
-                </div>
-              <div className="flex items-center gap-2">
-                <span className="text-white/70 text-sm">כפל שיעורים:</span>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-white/70 text-xs">כפל שיעורים:</span>
                 <Select value={filterDuplicates} onValueChange={setFilterDuplicates}>
-                  <SelectTrigger className="w-44 bg-white/10 border-white/20 text-white">
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1289,8 +1297,11 @@ export default function Admin() {
                     <SelectItem value="has_duplicates">יש כפל שיעורים</SelectItem>
                   </SelectContent>
                 </Select>
-                </div>
               </div>
+            </div>
+
+            {/* Counter */}
+            <div className="pt-2 border-t border-white/10">
               <div className="text-white/70 text-sm">
                 סה״כ {students.filter(s => {
                   const typeMatch = filterUserType === 'all' || s.user_type === filterUserType;

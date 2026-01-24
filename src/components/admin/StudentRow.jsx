@@ -539,15 +539,48 @@ export default function StudentRow({
           >
             <div className="space-y-4">
               {lessons.map((lesson) => {
-                const participation = getParticipationForLesson(lesson.id);
+                const studentParticipations = participations.filter(
+                  p => p.lesson_id === lesson.id && p.student_email === student.email
+                );
+                const hasDuplicates = studentParticipations.length > 1;
+                const participation = studentParticipations[0];
                 const isRecommended = recommendedScheduledLesson?.lesson_id === lesson.id;
                 
                 return (
                   <div key={lesson.id} className={`bg-white/5 rounded-xl p-4 border ${
-                    isRecommended && !participation 
+                    hasDuplicates
+                      ? 'border-red-400 bg-red-500/10 shadow-lg shadow-red-500/20'
+                      : isRecommended && !participation 
                       ? 'border-yellow-400 bg-yellow-500/10 shadow-lg shadow-yellow-500/20' 
                       : 'border-white/10'
                   }`}>
+                    {hasDuplicates && (
+                      <div className="bg-red-500/20 border border-red-400/50 rounded-lg p-2 mb-3 flex items-center justify-between">
+                        <span className="text-red-200 text-sm font-bold">
+                          ⚠️ כפל שיעורים! יש {studentParticipations.length} רשומות
+                        </span>
+                        <Button
+                          onClick={async () => {
+                            if (!confirm(`למחוק את כל ${studentParticipations.length} ההשתתפויות?`)) return;
+                            try {
+                              for (const p of studentParticipations) {
+                                await base44.entities.LessonParticipation.delete(p.id);
+                              }
+                              toast.success("כל הכפילויות נמחקו");
+                              if (onRefresh) await onRefresh();
+                            } catch (error) {
+                              console.error("Error deleting duplicates:", error);
+                              toast.error("שגיאה במחיקה");
+                            }
+                          }}
+                          size="sm"
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                          <Trash2 className="w-3 h-3 ml-1" />
+                          מחק הכל
+                        </Button>
+                      </div>
+                    )}
                     <div className="flex items-start justify-between mb-3">
                       {!participation && (
                         <div className="flex items-center gap-2">
@@ -582,80 +615,88 @@ export default function StudentRow({
 
                     {/* Participation info */}
                     {participation && (
-                      <div className="mt-3 pt-3 border-t border-white/10">
-                        <div
-                          className={`flex items-center justify-between rounded-lg p-3 border ${
-                            participation.attended 
-                              ? 'bg-green-500/10 border-green-500/20' 
-                              : participation.watched_recording
-                                ? 'bg-blue-500/10 border-blue-500/20'
-                                : 'bg-orange-500/10 border-orange-500/20'
-                          }`}
-                        >
-                          <div className="flex gap-2">
-                            <Button
-                              onClick={() => handleEditParticipation(lesson, participation)}
-                              size="sm"
-                              variant="ghost"
-                              className="text-blue-300 hover:text-blue-200 hover:bg-blue-500/20"
-                            >
-                              ערוך
-                            </Button>
-                            <Button
-                              onClick={() => handleRemoveParticipation(lesson, participation.id)}
-                              size="sm"
-                              variant="ghost"
-                              className="text-red-300 hover:text-red-200 hover:bg-red-500/20"
-                              disabled={deletingParticipations.has(participation.id)}
-                            >
-                              {deletingParticipations.has(participation.id) ? "מוחק..." : "הסר"}
-                            </Button>
+                      <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
+                        {studentParticipations.map((p, idx) => (
+                          <div
+                            key={p.id}
+                            className={`flex items-center justify-between rounded-lg p-3 border ${
+                              p.attended 
+                                ? 'bg-green-500/10 border-green-500/20' 
+                                : p.watched_recording
+                                  ? 'bg-blue-500/10 border-blue-500/20'
+                                  : 'bg-orange-500/10 border-orange-500/20'
+                            }`}
+                          >
+                            <div className="flex gap-2">
+                              {hasDuplicates && (
+                                <span className="text-white/60 text-xs font-bold px-2 py-1 bg-white/10 rounded">
+                                  #{idx + 1}
+                                </span>
+                              )}
+                              <Button
+                                onClick={() => handleEditParticipation(lesson, p)}
+                                size="sm"
+                                variant="ghost"
+                                className="text-blue-300 hover:text-blue-200 hover:bg-blue-500/20"
+                              >
+                                ערוך
+                              </Button>
+                              <Button
+                                onClick={() => handleRemoveParticipation(lesson, p.id)}
+                                size="sm"
+                                variant="ghost"
+                                className="text-red-300 hover:text-red-200 hover:bg-red-500/20"
+                                disabled={deletingParticipations.has(p.id)}
+                              >
+                                {deletingParticipations.has(p.id) ? "מוחק..." : "הסר"}
+                              </Button>
+                            </div>
+                            <div className="flex items-center gap-2 text-right">
+                              {p.survey_completed && (
+                                <span className="text-xs bg-yellow-500/20 text-yellow-200 px-2 py-1 rounded-full">
+                                  ⭐ מילא סקר
+                                </span>
+                              )}
+                              {p.attended ? (
+                                <>
+                                  <span className="text-green-300 text-sm">
+                                    ✓ נוכח
+                                  </span>
+                                  <span className="text-white font-medium">
+                                    {new Date(p.lesson_date).toLocaleDateString("he-IL")}
+                                  </span>
+                                  <Calendar className="w-4 h-4 text-white/60" />
+                                  <UserCheck className="w-4 h-4 text-green-400" />
+                                </>
+                              ) : p.watched_recording ? (
+                                <>
+                                  <span className="text-blue-300 text-sm">
+                                    📹 צפה במוקלט
+                                  </span>
+                                  <span className="text-white font-medium">
+                                    {new Date(p.lesson_date).toLocaleDateString("he-IL")}
+                                  </span>
+                                  <Calendar className="w-4 h-4 text-white/60" />
+                                  <Play className="w-4 h-4 text-blue-400" />
+                                </>
+                              ) : (
+                                <>
+                                  <span className="text-orange-300 text-sm">
+                                    ✗ לא נוכח
+                                  </span>
+                                  <span className="text-white font-medium">
+                                    {new Date(p.lesson_date).toLocaleDateString("he-IL")}
+                                  </span>
+                                  <Calendar className="w-4 h-4 text-white/60" />
+                                  <UserX className="w-4 h-4 text-orange-400" />
+                                </>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 text-right">
-                            {participation.survey_completed && (
-                              <span className="text-xs bg-yellow-500/20 text-yellow-200 px-2 py-1 rounded-full">
-                                ⭐ מילא סקר
-                              </span>
-                            )}
-                            {participation.attended ? (
-                              <>
-                                <span className="text-green-300 text-sm">
-                                  ✓ נוכח
-                                </span>
-                                <span className="text-white font-medium">
-                                  {new Date(participation.lesson_date).toLocaleDateString("he-IL")}
-                                </span>
-                                <Calendar className="w-4 h-4 text-white/60" />
-                                <UserCheck className="w-4 h-4 text-green-400" />
-                              </>
-                            ) : participation.watched_recording ? (
-                              <>
-                                <span className="text-blue-300 text-sm">
-                                  📹 צפה במוקלט
-                                </span>
-                                <span className="text-white font-medium">
-                                  {new Date(participation.lesson_date).toLocaleDateString("he-IL")}
-                                </span>
-                                <Calendar className="w-4 h-4 text-white/60" />
-                                <Play className="w-4 h-4 text-blue-400" />
-                              </>
-                            ) : (
-                              <>
-                                <span className="text-orange-300 text-sm">
-                                  ✗ לא נוכח
-                                </span>
-                                <span className="text-white font-medium">
-                                  {new Date(participation.lesson_date).toLocaleDateString("he-IL")}
-                                </span>
-                                <Calendar className="w-4 h-4 text-white/60" />
-                                <UserX className="w-4 h-4 text-orange-400" />
-                              </>
-                            )}
-                          </div>
-                        </div>
+                        ))}
 
                         {/* Survey Results - Only if completed */}
-                        {participation.survey_completed && (
+                        {participation && participation.survey_completed && (
                           <div className="mt-2 bg-purple-500/10 rounded-lg p-4 border border-purple-500/30">
                             <div className="flex items-center justify-between mb-3">
                               <p className="text-sm text-white font-bold">
