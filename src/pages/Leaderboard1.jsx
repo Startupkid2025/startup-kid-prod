@@ -416,6 +416,14 @@ export default function Leaderboard() {
       const pageSlice = sortedEntries.slice(start, start + USERS_PER_PAGE);
       setTotalUsers(sortedEntries.length);
 
+      // Debug logging
+      const withNetWorth = sortedEntries.filter(e => (e.total_networth || 0) > 0).length;
+      const withoutNetWorth = sortedEntries.filter(e => !(e.total_networth || 0)).slice(0, 5);
+      console.log(`📊 Leaderboard Debug: ${withNetWorth}/${sortedEntries.length} entries have net worth > 0`);
+      if (withoutNetWorth.length > 0) {
+        console.log(`⚠️ Entries with 0 net worth:`, withoutNetWorth.map(e => e.student_email));
+      }
+
       // Map LeaderboardEntry to UI model
       const studentsWithStats = pageSlice.map(entry => {
         const collaborationCount = (entry.daily_collaborations || []).filter(c => c && c.completed).length;

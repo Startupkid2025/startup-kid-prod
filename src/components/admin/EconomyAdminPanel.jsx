@@ -40,6 +40,7 @@ export default function EconomyAdminPanel() {
   const [showPreview, setShowPreview] = useState(false);
   const [loadingStudentData, setLoadingStudentData] = useState(false);
   const [isRecalculatingNetWorth, setIsRecalculatingNetWorth] = useState(false);
+  const [isBackfilling, setIsBackfilling] = useState(false);
 
   useEffect(() => {
     loadSnapshots();
@@ -629,6 +630,34 @@ export default function EconomyAdminPanel() {
     }
   };
 
+  const backfillLeaderboardNetWorth = async () => {
+    if (!confirm(`🔄 למלא את LeaderboardEntry עבור כל התלמידים?\n\nזה יעדכן/ייצור רשומות עבור כולם`)) {
+      return;
+    }
+
+    setIsBackfilling(true);
+
+    try {
+      const response = await base44.functions.invoke('backfillLeaderboardNetWorth', {});
+      const result = response.data;
+
+      if (result.success) {
+        toast.success(`✅ ${result.message}\nעודכן: ${result.updatedCount}, נוצר: ${result.createdCount}`);
+        if (result.errors.length > 0) {
+          toast.warning(`⚠️ ${result.errors.length} שגיאות`);
+        }
+        await loadSnapshots(); // Refresh data
+      } else {
+        toast.error(`❌ ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Error backfilling leaderboard:", error);
+      toast.error("שגיאה במילוי נתונים");
+    } finally {
+      setIsBackfilling(false);
+    }
+  };
+
 
 
 
@@ -831,6 +860,14 @@ export default function EconomyAdminPanel() {
           >
             <Calculator className="w-4 h-4 mr-2" />
             חשב Net Worth הכל ({students.length})
+          </Button>
+          <Button
+            onClick={backfillLeaderboardNetWorth}
+            disabled={isBackfilling}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isBackfilling ? 'animate-spin' : ''}`} />
+            מלא LeaderboardEntry
           </Button>
         </div>
 
