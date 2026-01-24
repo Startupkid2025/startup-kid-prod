@@ -648,31 +648,51 @@ export default function EconomyAdminPanel() {
       const logs = [];
 
       for (const student of students) {
-        try {
-          const email = student.student_email;
-          const response = await base44.functions.invoke('backfillLeaderboardNetWorth', { userEmails: [email] });
-          const result = response.data;
+        let success = false;
+        let retries = 0;
+        const maxRetries = 2;
+        
+        while (!success && retries <= maxRetries) {
+          try {
+            const email = student.student_email;
+            const response = await base44.functions.invoke('backfillLeaderboardNetWorth', { userEmails: [email] });
+            const result = response.data;
 
-          if (result.success) {
-            const action = result.createdCount > 0 ? '🆕 נוצר' : '♻️ עודכן';
-            const log = `${action} ${student.full_name || email}: total_networth=${result.details?.[0]?.total_networth || '?'}`;
-            logs.push(log);
-            if (result.createdCount > 0) created++;
-            else updated++;
-          } else {
-            logs.push(`❌ ${student.full_name || email}: שגיאה`);
-            errors.push({ email, error: result.error });
+            if (result.success) {
+              const action = result.createdCount > 0 ? '🆕 נוצר' : '♻️ עודכן';
+              const retryText = retries > 0 ? ` (ניסיון ${retries + 1})` : '';
+              const log = `${action} ${student.full_name || email}${retryText}: total_networth=${result.details?.[0]?.total_networth || '?'}`;
+              logs.push(log);
+              if (result.createdCount > 0) created++;
+              else updated++;
+              success = true;
+            } else {
+              if (retries < maxRetries) {
+                logs.push(`⚠️ ${student.full_name || email}: שגיאה, מנסה שוב...`);
+                setBackfillProgress({ current: processed, total: students.length, logs: [...logs] });
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                retries++;
+              } else {
+                logs.push(`❌ ${student.full_name || email}: שגיאה אחרי ${maxRetries + 1} ניסיונות`);
+                errors.push({ email, error: result.error });
+              }
+            }
+          } catch (error) {
+            console.error(`Error for ${student.student_email}:`, error);
+            if (retries < maxRetries) {
+              logs.push(`⚠️ ${student.full_name || student.student_email}: ${error.message}, מנסה שוב...`);
+              setBackfillProgress({ current: processed, total: students.length, logs: [...logs] });
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              retries++;
+            } else {
+              logs.push(`❌ ${student.full_name || student.student_email}: ${error.message} אחרי ${maxRetries + 1} ניסיונות`);
+              errors.push({ email: student.student_email, error: error.message });
+            }
           }
-
-          processed++;
-          setBackfillProgress({ current: processed, total: students.length, logs: [...logs] });
-        } catch (error) {
-          console.error(`Error for ${student.student_email}:`, error);
-          logs.push(`❌ ${student.full_name || student.student_email}: ${error.message}`);
-          errors.push({ email: student.student_email, error: error.message });
-          processed++;
-          setBackfillProgress({ current: processed, total: students.length, logs: [...logs] });
         }
+
+        processed++;
+        setBackfillProgress({ current: processed, total: students.length, logs: [...logs] });
       }
 
       if (errors.length === 0) {
@@ -711,32 +731,52 @@ export default function EconomyAdminPanel() {
       const logs = [];
 
       for (const student of selectedStudents) {
-        try {
-          const email = student.student_email;
-          const response = await base44.functions.invoke('backfillLeaderboardNetWorth', { userEmails: [email] });
-          const result = response.data;
+        let success = false;
+        let retries = 0;
+        const maxRetries = 2;
+        
+        while (!success && retries <= maxRetries) {
+          try {
+            const email = student.student_email;
+            const response = await base44.functions.invoke('backfillLeaderboardNetWorth', { userEmails: [email] });
+            const result = response.data;
 
-          if (result.success && result.details && result.details.length > 0) {
-            const detail = result.details[0];
-            const action = result.createdCount > 0 ? '🆕 נוצר' : '♻️ עודכן';
-            const log = `${action} ${student.full_name || email}: net_worth=${detail.total_networth?.toLocaleString()}, coins=${detail.coins?.toLocaleString()}, investments=${detail.investments_value?.toLocaleString()}, items=${detail.items_value?.toLocaleString()}`;
-            logs.push(log);
-            if (result.createdCount > 0) created++;
-            else updated++;
-          } else {
-            logs.push(`❌ ${student.full_name || email}: שגיאה`);
-            errors.push({ email, error: result.error || 'Unknown error' });
+            if (result.success && result.details && result.details.length > 0) {
+              const detail = result.details[0];
+              const action = result.createdCount > 0 ? '🆕 נוצר' : '♻️ עודכן';
+              const retryText = retries > 0 ? ` (ניסיון ${retries + 1})` : '';
+              const log = `${action} ${student.full_name || email}${retryText}: net_worth=${detail.total_networth?.toLocaleString()}, coins=${detail.coins?.toLocaleString()}, investments=${detail.investments_value?.toLocaleString()}, items=${detail.items_value?.toLocaleString()}`;
+              logs.push(log);
+              if (result.createdCount > 0) created++;
+              else updated++;
+              success = true;
+            } else {
+              if (retries < maxRetries) {
+                logs.push(`⚠️ ${student.full_name || email}: שגיאה, מנסה שוב...`);
+                setBackfillProgress({ current: processed, total: selectedStudents.length, logs: [...logs] });
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                retries++;
+              } else {
+                logs.push(`❌ ${student.full_name || email}: שגיאה אחרי ${maxRetries + 1} ניסיונות`);
+                errors.push({ email, error: result.error || 'Unknown error' });
+              }
+            }
+          } catch (error) {
+            console.error(`Error for ${student.student_email}:`, error);
+            if (retries < maxRetries) {
+              logs.push(`⚠️ ${student.full_name || student.student_email}: ${error.message}, מנסה שוב...`);
+              setBackfillProgress({ current: processed, total: selectedStudents.length, logs: [...logs] });
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              retries++;
+            } else {
+              logs.push(`❌ ${student.full_name || student.student_email}: ${error.message} אחרי ${maxRetries + 1} ניסיונות`);
+              errors.push({ email: student.student_email, error: error.message });
+            }
           }
-
-          processed++;
-          setBackfillProgress({ current: processed, total: selectedStudents.length, logs: [...logs] });
-        } catch (error) {
-          console.error(`Error for ${student.student_email}:`, error);
-          logs.push(`❌ ${student.full_name || student.student_email}: ${error.message}`);
-          errors.push({ email: student.student_email, error: error.message });
-          processed++;
-          setBackfillProgress({ current: processed, total: selectedStudents.length, logs: [...logs] });
         }
+
+        processed++;
+        setBackfillProgress({ current: processed, total: selectedStudents.length, logs: [...logs] });
       }
 
       if (errors.length === 0) {
