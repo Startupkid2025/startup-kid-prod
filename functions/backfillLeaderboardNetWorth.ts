@@ -64,39 +64,16 @@ Deno.serve(async (req) => {
         totalProcessed++;
         const userEmail = userData.email;
 
-        // Helper to safely convert to number
-        const safeNum = (v) => (v == null || v === '' || Number.isNaN(Number(v))) ? 0 : Number(v);
-
-        // Calculate items value
-        const purchasedItems = userData.purchased_items || [];
-        const items_value_raw = purchasedItems.reduce((sum, itemId) => sum + (AVATAR_ITEM_PRICES[itemId] || 0), 0);
-
-        // Calculate investments value
-        const investments = await base44.asServiceRole.entities.Investment.filter({ student_email: userEmail });
-        const investments_value_raw = investments.reduce((sum, inv) => sum + safeNum(inv.current_value), 0);
-
-        // Round all values to prevent floating point issues
-        const items_value = Math.round(items_value_raw);
-        const investments_value = Math.round(investments_value_raw);
-
-        // Use cached counts from User entity instead of recalculating
-        const mastered_words = userData.mastered_words || 0;
-        const mastered_math_questions = userData.mastered_math_questions || 0;
-
-        // Calculate net worth: coins + investments_value + items_value (all rounded)
-        const coins = safeNum(userData.coins);
-        const total_networth = Math.round(coins + investments_value + items_value);
-
         // Prepare LeaderboardEntry data - sync all important fields from User
         const leaderboardData = {
           student_email: userEmail,
           full_name: userData.full_name,
           first_name: userData.first_name,
           last_name: userData.last_name,
-          total_networth: total_networth,
-          coins: coins,
-          investments_value: investments_value,
-          items_value: items_value,
+          total_networth: userData.total_networth,
+          coins: userData.coins,
+          investments_value: userdata.investments_value,
+          items_value: userData.items_value,
           total_lessons: userData.total_lessons || 0,
           login_streak: userData.login_streak || 0,
           total_work_hours: userData.total_work_hours || 0,
@@ -104,10 +81,10 @@ Deno.serve(async (req) => {
           total_collaboration_coins: userData.total_collaboration_coins || 0,
           total_login_streak_coins: userData.total_login_streak_coins || 0,
           total_correct_math_answers: userData.total_correct_math_answers || 0,
-          mastered_words: mastered_words,
-          mastered_math_questions: mastered_math_questions,
+          mastered_words: userData.mastered_words,
+          mastered_math_questions: userData.mastered_math_questions,
           equipped_items: userData.equipped_items || {},
-          purchased_items: purchasedItems,
+          purchased_items: userData.purchasedItems,
           last_login_date: userData.last_login_date,
           daily_collaborations: userData.daily_collaborations || [],
           user_type: userData.user_type || 'student',
@@ -166,7 +143,7 @@ Deno.serve(async (req) => {
     const details = allUsers.map(userData => ({
       email: userData.email,
       full_name: userData.full_name,
-      total_networth: (userData.coins || 0) + (userData.investments_value || 0) + (userData.items_value || 0),
+      total_networth: userData.total_networth,
       coins: userData.coins || 0,
       investments_value: userData.investments_value || 0,
       items_value: userData.items_value || 0,
