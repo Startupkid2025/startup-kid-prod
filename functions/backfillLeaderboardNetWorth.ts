@@ -78,14 +78,7 @@ Deno.serve(async (req) => {
         const coins = userData.coins || 0;
         const total_networth = coins + investments_value + items_value;
 
-        // Get mastered words and math questions
-        const wordProgress = await base44.asServiceRole.entities.WordProgress.filter({ student_email: userEmail });
-        const mastered_words = wordProgress.filter(w => w.mastered === true).length;
-
-        const mathProgress = await base44.asServiceRole.entities.MathProgress.filter({ student_email: userEmail });
-        const mastered_math_questions = mathProgress.filter(m => m.mastered === true).length;
-
-        // Prepare LeaderboardEntry data
+        // Prepare LeaderboardEntry data - sync all important fields from User
         const leaderboardData = {
           student_email: userEmail,
           full_name: userData.full_name,
@@ -96,19 +89,40 @@ Deno.serve(async (req) => {
           investments_value: investments_value,
           items_value: items_value,
           total_lessons: userData.total_lessons || 0,
-          mastered_words: mastered_words,
-          mastered_math_questions: mastered_math_questions,
           login_streak: userData.login_streak || 0,
           total_work_hours: userData.total_work_hours || 0,
           total_work_earnings: userData.total_work_earnings || 0,
+          total_collaboration_coins: userData.total_collaboration_coins || 0,
+          total_login_streak_coins: userData.total_login_streak_coins || 0,
+          total_correct_math_answers: userData.total_correct_math_answers || 0,
           equipped_items: userData.equipped_items || {},
           purchased_items: purchasedItems,
           last_login_date: userData.last_login_date,
           daily_collaborations: userData.daily_collaborations || [],
           user_type: userData.user_type || 'student',
           ai_tech_level: userData.ai_tech_level || 1,
+          ai_tech_xp: userData.ai_tech_xp || 0,
           personal_skills_level: userData.personal_skills_level || 1,
-          money_business_level: userData.money_business_level || 1
+          personal_skills_xp: userData.personal_skills_xp || 0,
+          money_business_level: userData.money_business_level || 1,
+          money_business_xp: userData.money_business_xp || 0,
+          age: userData.age,
+          bio: userData.bio,
+          phone_number: userData.phone_number,
+          total_passive_income: userData.total_passive_income || 0,
+          total_inflation_lost: userData.total_inflation_lost || 0,
+          total_income_tax: userData.total_income_tax || 0,
+          total_dividend_tax: userData.total_dividend_tax || 0,
+          total_capital_gains_tax: userData.total_capital_gains_tax || 0,
+          total_credit_interest: userData.total_credit_interest || 0,
+          total_investment_fees: userData.total_investment_fees || 0,
+          total_item_sale_losses: userData.total_item_sale_losses || 0,
+          total_realized_investment_profit: userData.total_realized_investment_profit || 0,
+          completed_instagram_follow: userData.completed_instagram_follow || false,
+          completed_youtube_subscribe: userData.completed_youtube_subscribe || false,
+          completed_facebook_follow: userData.completed_facebook_follow || false,
+          completed_discord_join: userData.completed_discord_join || false,
+          completed_share: userData.completed_share || false
         };
 
         // Check if LeaderboardEntry exists
@@ -150,7 +164,12 @@ Deno.serve(async (req) => {
         total_networth,
         coins,
         investments_value,
-        items_value
+        items_value,
+        total_lessons: userData.total_lessons || 0,
+        total_work_hours: userData.total_work_hours || 0,
+        total_collaboration_coins: userData.total_collaboration_coins || 0,
+        login_streak: userData.login_streak || 0,
+        total_correct_math_answers: userData.total_correct_math_answers || 0
       });
     }
 
