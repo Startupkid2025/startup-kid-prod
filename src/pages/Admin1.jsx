@@ -96,20 +96,20 @@ export default function Admin() {
       console.log(`Loading ${tab} data...`);
       
       if (tab === "students") {
-        // Load in smaller batches with delays to avoid rate limits
+        // Load sequentially with longer delays to avoid rate limits
         const allUsers = await retryWithBackoff(() => base44.entities.User.list());
-        await sleep(200);
+        await sleep(500);
         
         const allLessons = await retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date"));
-        await sleep(200);
+        await sleep(500);
         
         const allParticipations = await retryWithBackoff(() => base44.entities.LessonParticipation.list());
-        await sleep(200);
+        await sleep(500);
         
-        const [allGroups, allScheduledLessons] = await Promise.all([
-          retryWithBackoff(() => base44.entities.Group.list()),
-          retryWithBackoff(() => base44.entities.ScheduledLesson.list())
-        ]);
+        const allGroups = await retryWithBackoff(() => base44.entities.Group.list());
+        await sleep(500);
+        
+        const allScheduledLessons = await retryWithBackoff(() => base44.entities.ScheduledLesson.list());
         
         setStudents(allUsers);
         setLessons(allLessons);
@@ -118,10 +118,10 @@ export default function Admin() {
         setScheduledLessons(allScheduledLessons);
       } else if (tab === "lessons") {
         const allLessons = await retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date"));
-        await sleep(200);
+        await sleep(500);
         
         const allParticipations = await retryWithBackoff(() => base44.entities.LessonParticipation.list());
-        await sleep(200);
+        await sleep(500);
         
         const allUsers = await retryWithBackoff(() => base44.entities.User.list());
         
@@ -140,11 +140,7 @@ export default function Admin() {
       
       // More specific error message for rate limits
       if (error?.response?.status === 429 || error?.message?.includes('429') || error?.message?.includes('Rate limit')) {
-        toast.error("יותר מדי בקשות. מנסה שוב...");
-        // Auto-retry after a delay
-        await sleep(2000);
-        setLoadedTabs(prev => ({ ...prev, [tab]: false }));
-        await loadTabData(tab);
+        toast.error("יותר מדי בקשות. רענן את הדף בעוד כמה שניות...");
       } else {
         toast.error("שגיאה בטעינת נתונים");
       }
@@ -160,15 +156,16 @@ export default function Admin() {
 
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const retryWithBackoff = async (fn, maxRetries = 5) => {
+  const retryWithBackoff = async (fn, maxRetries = 3) => {
     for (let i = 0; i < maxRetries; i++) {
       try {
         return await fn();
       } catch (error) {
         if (error?.response?.status === 429 || error?.message?.includes('429')) {
           const retryAfter = error?.response?.headers?.['retry-after'];
-          const delay = retryAfter ? parseInt(retryAfter) * 1000 : Math.min(500 * Math.pow(2, i), 8000);
+          const delay = retryAfter ? parseInt(retryAfter) * 1000 : Math.min(1000 * Math.pow(2, i), 5000);
           if (i < maxRetries - 1) {
+            console.log(`Rate limit hit, waiting ${delay}ms before retry ${i + 1}/${maxRetries}`);
             await sleep(delay);
             continue;
           }
