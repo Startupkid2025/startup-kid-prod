@@ -133,11 +133,11 @@ const LeaderboardRow = React.memo(({
                   <TooltipTrigger asChild>
                     <div className="flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-green-500/20 border border-green-500/30 cursor-help">
                       <span className="text-[10px] sm:text-xs">🔢</span>
-                      <span className="text-[10px] sm:text-xs font-bold text-green-200">{player.total_correct_math_answers || 0}</span>
+                      <span className="text-[10px] sm:text-xs font-bold text-green-200">{player.masteredMathQuestions || 0}</span>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs">חשבון: {player.total_correct_math_answers || 0} תרגילים</p>
+                    <p className="text-xs">חשבון: {player.masteredMathQuestions || 0} תרגילים</p>
                   </TooltipContent>
                 </Tooltip>
 
@@ -467,7 +467,7 @@ export default function Leaderboard() {
         workHours: entry.total_work_hours || 0
       }));
 
-      const mathKing = [...allStudents].sort((a, b) => b.total_correct_math_answers - a.total_correct_math_answers)[0];
+      const mathKing = [...allStudents].sort((a, b) => b.masteredMathQuestions - a.masteredMathQuestions)[0];
       const vocabKing = [...allStudents].sort((a, b) => b.masteredWords - a.masteredWords)[0];
       const investmentKing = [...allStudents].sort((a, b) => b.currentInvestmentValue - a.currentInvestmentValue)[0];
       const loginStreakKing = [...allStudents].sort((a, b) => b.loginStreak - a.loginStreak)[0];
@@ -476,7 +476,7 @@ export default function Leaderboard() {
       // Add crowns
       studentsWithStats.forEach(u => {
         u.crowns = [];
-        if (mathKing && u.student_email === mathKing.student_email && mathKing.total_correct_math_answers > 0) {
+        if (mathKing && u.student_email === mathKing.student_email && mathKing.masteredMathQuestions > 0) {
           u.crowns.push({ type: 'math', name: '🔢 מלך החשבון', bonus: '+5 מטבעות לתרגיל' });
         }
         if (vocabKing && u.student_email === vocabKing.student_email && vocabKing.masteredWords > 0) {
