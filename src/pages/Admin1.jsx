@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, BookOpen, Shield, Edit2, Trash2, FileText, Languages, Filter, Search, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { Plus, Users, BookOpen, Shield, Edit2, Trash2, FileText, Languages, Filter, Search, ChevronDown, ChevronUp, RefreshCw, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -1968,7 +1968,50 @@ export default function Admin() {
         </TabsContent>
 
         <TabsContent value="scheduled">
-          <ScheduledTasksPanel />
+          <div className="space-y-6">
+            <ScheduledTasksPanel />
+            
+            {/* One-time Functions */}
+            <Card className="bg-white/5 backdrop-blur-md border-white/10">
+              <CardHeader>
+                <CardTitle className="text-white">פונקציות חד-פעמיות</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-white font-bold mb-1">אתחול ספירת תרגילי חשבון</h3>
+                      <p className="text-white/70 text-sm">
+                        מחשב את total_correct_math_answers לכל התלמידים מתוך MathProgress (פעם אחת בלבד)
+                      </p>
+                    </div>
+                    <Button
+                      onClick={async () => {
+                        if (!confirm("האם להריץ אתחול ספירת תרגילי חשבון? (פעם אחת בלבד)")) return;
+                        setIsRecalculatingCoins(true);
+                        try {
+                          const { initializeMathAnswers } = await import('../functions/initializeMathAnswers');
+                          const response = await initializeMathAnswers();
+                          toast.success(response.message || "האתחול הושלם!");
+                          await refreshCurrentTab();
+                        } catch (error) {
+                          console.error("Error:", error);
+                          toast.error("שגיאה באתחול");
+                        } finally {
+                          setIsRecalculatingCoins(false);
+                        }
+                      }}
+                      disabled={isRecalculatingCoins}
+                      className="bg-orange-600 hover:bg-orange-700"
+                    >
+                      {isRecalculatingCoins ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : "🔢"}
+                      הרץ אתחול
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
 
