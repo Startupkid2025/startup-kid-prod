@@ -782,6 +782,9 @@ export default function Investments() {
                        <p className={`text-xs font-bold ${profitInBusiness >= 0 ? 'text-green-200' : 'text-red-200'}`}>
                          {profitInBusiness >= 0 ? '+' : ''}{Math.round(profitInBusiness)}
                        </p>
+                       <p className={`text-[10px] font-bold ${todayProfit >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>
+                         היום: {todayProfit >= 0 ? '+' : ''}{todayProfit} 🪙
+                       </p>
                      </div>
                      )}
                      </div>
