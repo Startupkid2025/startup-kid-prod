@@ -75,8 +75,16 @@ export async function syncLeaderboardEntry(studentEmail, patch) {
 
     // No entry found - create one automatically
     // Get user data to populate initial entry
-    const allUsers = await base44.entities.User.list();
-    const user = allUsers.find(u => u.email === studentEmail);
+    let user = null;
+    try {
+      const me = await base44.auth.me();
+      if (me && me.email === studentEmail) {
+        user = me;
+      }
+    } catch (e) {
+      console.log(`⚠️ Cannot create LeaderboardEntry for ${studentEmail} - no access to user data`);
+      return;
+    }
 
     if (!user) {
       console.log(`⚠️ User not found for ${studentEmail}, cannot create LeaderboardEntry`);
