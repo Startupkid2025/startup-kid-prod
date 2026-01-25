@@ -397,8 +397,13 @@ export default function Leaderboard() {
       // Fetch ALL LeaderboardEntry records with pagination and sort by total_networth
       const allEntries = await listAll(base44.entities.LeaderboardEntry, "-total_networth", 100);
 
+      // Filter out DEMO and PARENT users
+      const filteredEntries = allEntries.filter(entry => 
+        entry.user_type !== 'demo' && entry.user_type !== 'parent'
+      );
+
       // Filter by search term
-      let sortedEntries = allEntries;
+      let sortedEntries = filteredEntries;
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         const filteredEntries = allEntries.filter(entry => {
