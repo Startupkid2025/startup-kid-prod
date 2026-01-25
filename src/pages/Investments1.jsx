@@ -591,6 +591,13 @@ export default function Investments() {
   const realizedProfit = userData?.total_realized_investment_profit || 0;
   const totalProfit = unrealizedProfit + realizedProfit;
   const totalProfitPercent = totalInvested > 0 ? Math.round((unrealizedProfit / totalInvested) * 100) : 0;
+  
+  // Calculate total daily profit across all investments
+  const totalDailyProfit = investments.reduce((sum, inv) => {
+    const dailyChange = inv.daily_change_percent || 0;
+    const todayEarnings = Math.round(inv.current_value * (dailyChange / (100 + dailyChange)));
+    return sum + todayEarnings;
+  }, 0);
 
   const investmentsByBusiness = investments.reduce((acc, inv) => {
     if (!acc[inv.business_type]) {
@@ -672,6 +679,9 @@ export default function Investments() {
                   <p className="text-white/70 text-sm">סה"כ רווח/הפסד</p>
                   <p className={`text-2xl font-black ${unrealizedProfit >= 0 ? 'text-green-300' : 'text-red-300'}`}>
                     {unrealizedProfit >= 0 ? '+' : ''}{Math.round(unrealizedProfit)} ({totalProfitPercent}%)
+                  </p>
+                  <p className={`text-sm font-bold ${totalDailyProfit >= 0 ? 'text-emerald-200' : 'text-rose-200'}`}>
+                    היום: {totalDailyProfit >= 0 ? '+' : ''}{totalDailyProfit} 🪙
                   </p>
                 </div>
               </div>
