@@ -194,7 +194,7 @@ export default function Profile() {
             {/* Name */}
             <div>
               <Label className="text-white/70 text-sm">שם מלא</Label>
-              <p className="text-xl font-bold text-white mt-1">{userData?.full_name}</p>
+              <p className="text-xl font-bold text-white mt-1">{userData?.first_name + " " + userData?.last_name}</p>
             </div>
 
             {/* Email */}
