@@ -340,8 +340,8 @@ export default function Investments() {
       await base44.entities.Investment.create({
         student_email: userData.email,
         business_type: businessId,
-        invested_amount: amount,
-        current_value: amount,
+        invested_amount: Math.round(amount),
+        current_value: Math.round(amount),
         daily_change_percent: 0,
         last_updated: new Date().toISOString()
       });
@@ -483,8 +483,8 @@ export default function Investments() {
           totalInvestedSold += investedToDeduct;
 
           await base44.entities.Investment.update(investment.id, {
-            current_value: investment.current_value - remainingToSell,
-            invested_amount: investment.invested_amount - investedToDeduct
+            current_value: Math.round(investment.current_value - remainingToSell),
+            invested_amount: Math.round(investment.invested_amount - investedToDeduct)
           });
           remainingToSell = 0;
         }

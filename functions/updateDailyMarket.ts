@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     let updatedCount = 0;
     for (const investment of allInvestments) {
       const changePercent = businessTypeToChangeMap[investment.business_type] || 0;
-      const newValue = investment.current_value * (1 + changePercent / 100);
+      const newValue = Math.round(investment.current_value * (1 + changePercent / 100));
       
       await base44.asServiceRole.entities.Investment.update(investment.id, {
         current_value: newValue,
@@ -76,12 +76,13 @@ Deno.serve(async (req) => {
           // You'd need to import AVATAR_ITEMS here or calculate differently
           
           const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
-          const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+          const investmentsValue = Math.round(userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0));
           
-          const totalNetworth = currentCoins + itemsValue + investmentsValue;
+          const totalNetworth = Math.round(currentCoins + itemsValue + investmentsValue);
           
           await base44.asServiceRole.entities.User.update(user.id, {
-            total_networth: totalNetworth
+            total_networth: totalNetworth,
+            investments_value: investmentsValue
           });
         } catch (error) {
           console.error(`Error updating net worth for ${user.email}:`, error);

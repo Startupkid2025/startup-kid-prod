@@ -64,16 +64,19 @@ Deno.serve(async (req) => {
         totalProcessed++;
         const userEmail = userData.email;
 
+        // Helper to ensure integer values
+        const safeInt = (val) => Math.round(val || 0);
+
         // Prepare LeaderboardEntry data - sync all important fields from User
         const leaderboardData = {
           student_email: userEmail,
           full_name: userData.full_name,
           first_name: userData.first_name,
           last_name: userData.last_name,
-          total_networth: userData.total_networth || 0,
-          coins: userData.coins || 0,
-          investments_value: userData.investments_value || 0,
-          items_value: userData.items_value || 0,
+          total_networth: safeInt(userData.total_networth),
+          coins: safeInt(userData.coins),
+          investments_value: safeInt(userData.investments_value),
+          items_value: safeInt(userData.items_value),
           total_lessons: userData.total_lessons || 0,
           login_streak: userData.login_streak || 0,
           total_work_hours: userData.total_work_hours || 0,
