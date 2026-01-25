@@ -756,6 +756,13 @@ export default function Investments() {
               const totalValueInBusiness = hasInvestments ? businessInvestments.reduce((sum, inv) => sum + inv.current_value, 0) : 0;
               const profitInBusiness = totalValueInBusiness - totalInvestedInBusiness;
               const profitPercent = totalInvestedInBusiness > 0 ? ((profitInBusiness / totalInvestedInBusiness) * 100).toFixed(1) : 0;
+              
+              // Calculate today's profit
+              const todayProfit = hasInvestments ? businessInvestments.reduce((sum, inv) => {
+                const dailyChange = inv.daily_change_percent || 0;
+                const todayEarnings = Math.round(inv.current_value * (dailyChange / (100 + dailyChange)));
+                return sum + todayEarnings;
+              }, 0) : 0;
 
               return (
                 <div key={business.id} className={`bg-gradient-to-r ${business.color} rounded-lg p-3`}>
