@@ -124,7 +124,7 @@ export default function Investments() {
 
 
 
-  const getOrCreateTodayMarket = async () => {
+  const getTodayMarket = async () => {
     const today = getTodayDate();
     
     try {
@@ -158,7 +158,7 @@ export default function Investments() {
     }
   };
 
-  const getOrCreateYesterdayMarket = async () => {
+  const getYesterdayMarket = async () => {
     const yesterday = getYesterdayDate();
     
     try {
@@ -203,10 +203,17 @@ export default function Investments() {
       const user = await base44.auth.me();
       setUserData(user);
 
+      // Optionally trigger server-side update to ensure today's data exists
+      try {
+        await base44.functions.invoke('runDailyMarketAndInvestmentsUpdate', {});
+      } catch (error) {
+        console.log("Server update already ran or error:", error.message);
+      }
+
       // Load market data in parallel (read only)
       const [todayMarket, yesterdayMarket] = await Promise.all([
-        getOrCreateTodayMarket(),
-        getOrCreateYesterdayMarket()
+        getTodayMarket(),
+        getYesterdayMarket()
       ]);
       
       setTodayPerformance(todayMarket);
