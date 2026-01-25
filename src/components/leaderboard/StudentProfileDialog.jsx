@@ -173,6 +173,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       }
 
       console.log("Source of truth data:", fullUserData);
+      console.log("📊 profile_completion_coins value:", fullUserData?.profile_completion_coins);
 
       // Profile tasks - these ARE saved in User entity
       const profileCoinsValue = safeNum(fullUserData.profile_completion_coins);
