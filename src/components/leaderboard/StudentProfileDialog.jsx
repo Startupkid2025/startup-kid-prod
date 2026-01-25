@@ -246,7 +246,6 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       const losses = {
         inflation: safeNum(fullUserData.total_inflation_lost),
         incomeTax: safeNum(fullUserData.total_income_tax),
-        dividendTax: safeNum(fullUserData.total_dividend_tax),
         capitalGainsTax: safeNum(fullUserData.total_capital_gains_tax),
         creditInterest: safeNum(fullUserData.total_credit_interest),
         investmentFees: safeNum(fullUserData.total_investment_fees),
@@ -509,9 +508,6 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                       )}
                       {financeReport.losses.incomeTax > 0 && (
                         <div className="flex justify-between"><span className="text-white/70">🏛️ מס הכנסה:</span><span className="text-white font-bold">{Math.round(financeReport.losses.incomeTax)}</span></div>
-                      )}
-                      {financeReport.losses.dividendTax > 0 && (
-                        <div className="flex justify-between"><span className="text-white/70">💎 מס דיבידנד:</span><span className="text-white font-bold">{Math.round(financeReport.losses.dividendTax)}</span></div>
                       )}
                       {financeReport.losses.capitalGainsTax > 0 && (
                         <div className="flex justify-between"><span className="text-white/70">📈 מס רווחי הון:</span><span className="text-white font-bold">{Math.round(financeReport.losses.capitalGainsTax)}</span></div>
