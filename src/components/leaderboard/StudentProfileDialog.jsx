@@ -175,7 +175,9 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       console.log("Source of truth data:", fullUserData);
 
       // Profile tasks - these ARE saved in User entity
-      income.profileTasks += safeNum(fullUserData.profile_completion_coins);
+      const profileCoinsValue = safeNum(fullUserData.profile_completion_coins);
+      console.log(`📝 Profile completion coins for ${studentEmail}:`, profileCoinsValue);
+      income.profileTasks += profileCoinsValue;
       if (fullUserData.completed_instagram_follow) income.profileTasks += 50;
       if (fullUserData.completed_youtube_subscribe) income.profileTasks += 50;
       if (fullUserData.completed_facebook_follow) income.profileTasks += 50;
