@@ -390,9 +390,8 @@ export default function Home() {
       const creditInterest = user.total_credit_interest || 0;
       const itemSaleLosses = user.total_item_sale_losses || 0;
       const investmentFees = user.total_investment_fees || 0;
-      const dividendTax = user.total_dividend_tax || 0;
 
-      const totalLosses = inflationLoss + incomeTax + capitalGainsTax + creditInterest + itemSaleLosses + investmentFees + dividendTax;
+      const totalLosses = inflationLoss + incomeTax + capitalGainsTax + creditInterest + itemSaleLosses + investmentFees;
 
       // DON'T subtract investments! They are assets, not expenses
       const correctCoins = Math.round(totalIncome - itemsValue - totalLosses);
@@ -423,7 +422,6 @@ export default function Home() {
       console.log(`    creditInterest: ${creditInterest}`);
       console.log(`    itemSaleLosses: ${itemSaleLosses}`);
       console.log(`    investmentFees: ${investmentFees}`);
-      console.log(`    dividendTax: ${dividendTax}`);
       console.log(`    ✅ TOTAL LOSSES: ${totalLosses}`);
       console.log(`\n  🧮 CALCULATION:`);
       console.log(`    ${totalIncome} - ${itemsValue} - ${totalLosses} = ${correctCoins}`);
@@ -738,7 +736,6 @@ export default function Home() {
                       let inflationLoss = 0;
                       let incomeTax = 0;
                       let creditInterest = 0;
-                      let dividendTax = 0;
 
                       if (currentCoins > 0) {
                         inflationLoss = Math.floor(currentCoins * 0.03);
@@ -756,8 +753,6 @@ export default function Home() {
                       if (currentCoins < 0) {
                         creditInterest = Math.floor(Math.abs(currentCoins) * 0.10);
                       }
-
-                      dividendTax = userData?.daily_dividend_tax || 0;
                       
                       console.log(`\n💸 HOME1 - Expected Daily Losses for ${userData?.email}:`);
                       console.log(`  currentCoins: ${currentCoins}`);
@@ -765,8 +760,7 @@ export default function Home() {
                       console.log(`  inflationLoss (3% on cash): ${inflationLoss}`);
                       console.log(`  incomeTax (${(incomeTaxRate * 100).toFixed(2)}% on netWorth): ${incomeTax}`);
                       console.log(`  creditInterest (10% on negative): ${creditInterest}`);
-                      console.log(`  dividendTax (from investments): ${dividendTax}`);
-                      console.log(`  ✅ TOTAL EXPECTED DAILY LOSS: ${inflationLoss + incomeTax + creditInterest + dividendTax}\n`);
+                      console.log(`  ✅ TOTAL EXPECTED DAILY LOSS: ${inflationLoss + incomeTax + creditInterest}\n`);
 
                       return (
                         <>
@@ -838,30 +832,7 @@ export default function Home() {
                               </TooltipContent>
                             </Tooltip>
                           )}
-                          {dividendTax > 0 && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <motion.div 
-                                  className="flex items-center justify-between bg-white/15 rounded-lg px-3 py-2.5 cursor-help hover:bg-white/25 transition-all border border-white/10"
-                                  whileHover={{ x: 5 }}
-                                >
-                                  <span className="text-white/90 text-sm font-medium flex items-center gap-1">
-                                    📈 מס דיבידנד
-                                    <span className="text-white/60 text-[10px]">(25%)</span>
-                                  </span>
-                                  <span className="text-white font-bold flex items-center gap-2">
-                                    <span className="text-white">-{dividendTax}</span>
-                                    <span className="text-xs">🪙</span>
-                                  </span>
-                                </motion.div>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="bg-slate-900 text-white border-slate-700">
-                                <p className="text-xs">מס דיבידנד: 25% על רווחי השקעות יומיים</p>
-                                <p className="text-xs text-slate-400 mt-1">ניתן להפחית עם פריטי פה שונים</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                          {inflationLoss === 0 && incomeTax === 0 && creditInterest === 0 && dividendTax === 0 && (
+                          {inflationLoss === 0 && incomeTax === 0 && creditInterest === 0 && (
                             <div className="text-center py-3 bg-green-500/20 rounded-lg border border-green-400/30">
                               <p className="text-white font-medium text-sm">🎉 אין הפסדים צפויים!</p>
                             </div>
