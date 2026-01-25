@@ -2100,6 +2100,39 @@ export default function Admin() {
                     </Button>
                   </div>
                 </div>
+
+                <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-white font-bold mb-1">עיגול כל ההשקעות</h3>
+                      <p className="text-white/70 text-sm">
+                        מעגל את current_value ו-invested_amount לכל ההשקעות במערכת למספרים שלמים
+                      </p>
+                    </div>
+                    <Button
+                      onClick={async () => {
+                        if (!confirm("לעגל את כל ההשקעות למספרים שלמים?")) return;
+                        setIsRecalculatingCoins(true);
+                        try {
+                          const response = await base44.functions.invoke('roundAllInvestments', {});
+                          const result = response.data;
+                          toast.success(result.message || "העיגול הושלם!");
+                          await refreshCurrentTab();
+                        } catch (error) {
+                          console.error("Error:", error);
+                          toast.error("שגיאה בעיגול: " + (error.message || error));
+                        } finally {
+                          setIsRecalculatingCoins(false);
+                        }
+                      }}
+                      disabled={isRecalculatingCoins}
+                      className="bg-cyan-600 hover:bg-cyan-700"
+                    >
+                      {isRecalculatingCoins ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : "🔢"}
+                      עגל הכל
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
