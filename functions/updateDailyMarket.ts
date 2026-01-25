@@ -25,13 +25,12 @@ Deno.serve(async (req) => {
     // Generate daily market changes
     const marketChanges = {
       date: today,
-      government_bonds_change: (Math.random() * 0.6 - 0.3).toFixed(2), // -0.3% to +0.3%
-      real_estate_change: (Math.random() * 1.4 - 0.7).toFixed(2), // -0.7% to +0.7%
-      gold_change: (Math.random() * 2 - 1).toFixed(2), // -1% to +1%
-      stock_market_change: (Math.random() * 4 - 2).toFixed(2), // -2% to +2%
-      restaurant_change: (Math.random() * 6 - 3).toFixed(2), // -3% to +3%
-      tech_startup_change: (Math.random() * 10 - 5).toFixed(2), // -5% to +5%
-      crypto_change: (Math.random() * 20 - 10).toFixed(2) // -10% to +10%
+      government_bonds_change: (Math.random() * 0.3).toFixed(2), // 0% to +0.3%
+      real_estate_change: (Math.random() * 1.1 - 0.5).toFixed(2), // -0.5% to +0.6%
+      gold_change: (Math.random() * 0.75 - 0.3).toFixed(2), // -0.3% to +0.45%
+      stock_market_change: (Math.random() * 5 - 2).toFixed(2), // -2% to +3%
+      crypto_change: (Math.random() * 6.5 - 3).toFixed(2), // -3% to +3.5%
+      tech_startup_change: (Math.random() * 7.5 - 3.5).toFixed(2) // -3.5% to +4%
     };
 
     // Create daily market record
@@ -52,12 +51,15 @@ Deno.serve(async (req) => {
     let updatedCount = 0;
     for (const investment of allInvestments) {
       const changePercent = businessTypeToChangeMap[investment.business_type] || 0;
-      const newValue = Math.round(investment.current_value * (1 + changePercent / 100));
+      const prevValue = investment.current_value;
+      const newValue = Math.round(prevValue * (1 + changePercent / 100));
+      const delta = newValue - prevValue;
       
       await base44.asServiceRole.entities.Investment.update(investment.id, {
         current_value: newValue,
         daily_change_percent: changePercent,
-        last_updated: new Date().toISOString()
+        last_updated: new Date().toISOString(),
+        unrealized_profit: (investment.unrealized_profit || 0) + delta
       });
       
       updatedCount++;
@@ -84,6 +86,32 @@ Deno.serve(async (req) => {
             total_networth: totalNetworth,
             investments_value: investmentsValue
           });
+
+          // Upsert to LeaderboardEntry
+          const existingEntry = await base44.asServiceRole.entities.LeaderboardEntry.filter({
+            student_email: user.email
+          });
+
+          const leaderboardData = {
+            total_networth: totalNetworth,
+            investments_value: investmentsValue,
+            coins: currentCoins,
+            last_updated: new Date().toISOString()
+          };
+
+          if (existingEntry.length > 0) {
+            // Update existing entry
+            await base44.asServiceRole.entities.LeaderboardEntry.update(existingEntry[0].id, leaderboardData);
+          } else {
+            // Create new entry
+            await base44.asServiceRole.entities.LeaderboardEntry.create({
+              student_email: user.email,
+              full_name: user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email,
+              first_name: user.first_name || '',
+              last_name: user.last_name || '',
+              ...leaderboardData
+            });
+          }
         } catch (error) {
           console.error(`Error updating net worth for ${user.email}:`, error);
         }
