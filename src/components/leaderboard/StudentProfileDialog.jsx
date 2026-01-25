@@ -88,6 +88,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       leaderboardData = allEntries.find(e => e.student_email === studentEmail);
       if (leaderboardData) {
         console.log("Fetched LeaderboardEntry from DB:", leaderboardData);
+        console.log("📊 LeaderboardEntry.profile_completion_coins:", leaderboardData.profile_completion_coins);
       }
     } catch (e) {
       console.error("Error fetching LeaderboardEntry:", e);
