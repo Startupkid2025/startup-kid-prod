@@ -831,12 +831,15 @@ export default function EconomyAdminPanel() {
       const mathCoins = mathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
       const surveyCoins = participations.filter(p => p.survey_completed === true).length * 70;
       const quizCoins = quizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
-      
+
       // Profile completion (20 + 30 + 20 = 70 total)
       let profileCompletionCoins = 0;
       if (userData.age) profileCompletionCoins += 20;
       if (userData.bio && userData.bio.length > 10) profileCompletionCoins += 30;
       if (userData.phone_number) profileCompletionCoins += 20;
+
+      // Store it
+      const calculatedProfileCoins = profileCompletionCoins;
       
       // Social missions
       let socialMissionsCoins = 0;
@@ -863,7 +866,7 @@ export default function EconomyAdminPanel() {
         math_coins: mathCoins,
         survey_coins: surveyCoins,
         quiz_coins: quizCoins,
-        profile_completion_coins: profileCompletionCoins,
+        profile_completion_coins: calculatedProfileCoins,
         social_missions_coins: socialMissionsCoins,
         items_value: itemsValue,
         investments_value: investmentsValue,

@@ -67,6 +67,12 @@ Deno.serve(async (req) => {
         // Helper to ensure integer values
         const safeInt = (val) => Math.round(val || 0);
 
+        // Calculate profile_completion_coins
+        let profileCompletionCoins = 0;
+        if (userData.age) profileCompletionCoins += 20;
+        if (userData.bio && userData.bio.length > 10) profileCompletionCoins += 30;
+        if (userData.phone_number) profileCompletionCoins += 20;
+
         // Prepare LeaderboardEntry data - sync all important fields from User
         const leaderboardData = {
           student_email: userEmail,
@@ -86,6 +92,7 @@ Deno.serve(async (req) => {
           total_correct_math_answers: userData.total_correct_math_answers || 0,
           mastered_words: userData.mastered_words || 0,
           mastered_math_questions: userData.mastered_math_questions || 0,
+          profile_completion_coins: profileCompletionCoins,
           equipped_items: userData.equipped_items || {},
           purchased_items: userData.purchased_items || [],
           last_login_date: userData.last_login_date,
