@@ -406,14 +406,14 @@ export default function Leaderboard() {
       let sortedEntries = filteredEntries;
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
-        const filteredEntries = allEntries.filter(entry => {
+        const searchFiltered = filteredEntries.filter(entry => {
           const fullName = entry.full_name?.toLowerCase() || '';
           const firstName = entry.first_name?.toLowerCase() || '';
           const lastName = entry.last_name?.toLowerCase() || '';
           return fullName.includes(searchLower) || firstName.includes(searchLower) || lastName.includes(searchLower);
         });
         // Re-sort after filtering
-        sortedEntries = [...filteredEntries].sort((a, b) => (b.total_networth || 0) - (a.total_networth || 0));
+        sortedEntries = [...searchFiltered].sort((a, b) => (b.total_networth || 0) - (a.total_networth || 0));
       }
 
       // Client-side pagination
