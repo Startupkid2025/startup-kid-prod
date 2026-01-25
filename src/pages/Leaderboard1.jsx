@@ -397,15 +397,9 @@ export default function Leaderboard() {
       // Fetch ALL LeaderboardEntry records with pagination and sort by total_networth
       const allEntries = await listAll(base44.entities.LeaderboardEntry, "-total_networth", 100);
 
-      // Fetch all User emails to check which ones still exist
-      const allUsers = await base44.entities.User.list();
-      const existingUserEmails = new Set(allUsers.map(u => u.email));
-
-      // Filter out DEMO, PARENT users, and deleted users
+      // Filter out DEMO and PARENT users
       const filteredEntries = allEntries.filter(entry => 
-        entry.user_type !== 'demo' && 
-        entry.user_type !== 'parent' &&
-        existingUserEmails.has(entry.student_email)
+        entry.user_type !== 'demo' && entry.user_type !== 'parent'
       );
 
       // Filter by search term
