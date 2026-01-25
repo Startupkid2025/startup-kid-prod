@@ -101,32 +101,28 @@ export default function Investments() {
   }, []);
 
   const getTodayDate = () => {
-    return new Date().toISOString().split('T')[0];
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Jerusalem',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    return formatter.format(new Date());
   };
 
   const getYesterdayDate = () => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    return yesterday.toISOString().split('T')[0];
+    const now = new Date();
+    now.setDate(now.getDate() - 1);
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Jerusalem',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    return formatter.format(now);
   };
 
-  const calculateDailyChange = (volatility) => {
-    const ranges = {
-      ultra_safe: { min: 0.1, max: 0.4 },
-      very_low: { min: -0.5, max: 0.7 },
-      low: { min: -1.5, max: 1.85 },
-      optimal_medium: { min: -2, max: 2.5 },
-      high: { min: -2.8, max: 3.2 },
-      extreme: { min: -3.7, max: 4 }
-    };
 
-    const range = ranges[volatility];
-    if (!range) {
-      console.warn(`Volatility range not found for: ${volatility}. Defaulting to 0.`);
-      return 0;
-    }
-    return Math.random() * (range.max - range.min) + range.min;
-  };
 
   const getOrCreateTodayMarket = async () => {
     const today = getTodayDate();
@@ -137,34 +133,23 @@ export default function Investments() {
       if (existingMarket.length > 0) {
         const market = existingMarket[0];
         return {
-          government_bonds: market.government_bonds_change,
-          real_estate: market.real_estate_change,
-          gold: market.gold_change,
-          stock_market: market.stock_market_change,
-          tech_startup: market.tech_startup_change,
-          crypto: market.crypto_change
+          government_bonds: market.government_bonds_change || 0,
+          real_estate: market.real_estate_change || 0,
+          gold: market.gold_change || 0,
+          stock_market: market.stock_market_change || 0,
+          tech_startup: market.tech_startup_change || 0,
+          crypto: market.crypto_change || 0
         };
       } else {
-        const newMarket = {};
+        // No market data for today - return zeros
+        const defaultMarket = {};
         BUSINESSES.forEach(business => {
-          newMarket[business.id] = calculateDailyChange(business.volatility);
+          defaultMarket[business.id] = 0;
         });
-
-        await base44.entities.DailyMarketPerformance.create({
-          date: today,
-          government_bonds_change: newMarket.government_bonds,
-          real_estate_change: newMarket.real_estate,
-          gold_change: newMarket.gold,
-          stock_market_change: newMarket.stock_market,
-          tech_startup_change: newMarket.tech_startup,
-          crypto_change: newMarket.crypto
-        });
-
-        return newMarket;
+        return { ...defaultMarket, notCreatedYet: true };
       }
     } catch (error) {
       console.error("Error in getOrCreateTodayMarket:", error);
-      // Return default values if there's an error
       const defaultMarket = {};
       BUSINESSES.forEach(business => {
         defaultMarket[business.id] = 0;
@@ -182,30 +167,20 @@ export default function Investments() {
       if (yesterdayMarket.length > 0) {
         const market = yesterdayMarket[0];
         return {
-          government_bonds: market.government_bonds_change,
-          real_estate: market.real_estate_change,
-          gold: market.gold_change,
-          stock_market: market.stock_market_change,
-          tech_startup: market.tech_startup_change,
-          crypto: market.crypto_change
+          government_bonds: market.government_bonds_change || 0,
+          real_estate: market.real_estate_change || 0,
+          gold: market.gold_change || 0,
+          stock_market: market.stock_market_change || 0,
+          tech_startup: market.tech_startup_change || 0,
+          crypto: market.crypto_change || 0
         };
       } else {
-        const newMarket = {};
+        // No market data for yesterday - return zeros
+        const defaultMarket = {};
         BUSINESSES.forEach(business => {
-          newMarket[business.id] = calculateDailyChange(business.volatility);
+          defaultMarket[business.id] = 0;
         });
-
-        await base44.entities.DailyMarketPerformance.create({
-          date: yesterday,
-          government_bonds_change: newMarket.government_bonds,
-          real_estate_change: newMarket.real_estate,
-          gold_change: newMarket.gold,
-          stock_market_change: newMarket.stock_market,
-          tech_startup_change: newMarket.tech_startup,
-          crypto_change: newMarket.crypto
-        });
-
-        return newMarket;
+        return { ...defaultMarket, noDataAvailable: true };
       }
     } catch (error) {
       console.error("Error in getOrCreateYesterdayMarket:", error);
@@ -228,7 +203,7 @@ export default function Investments() {
       const user = await base44.auth.me();
       setUserData(user);
 
-      // Load market data in parallel
+      // Load market data in parallel (read only)
       const [todayMarket, yesterdayMarket] = await Promise.all([
         getOrCreateTodayMarket(),
         getOrCreateYesterdayMarket()
@@ -237,75 +212,10 @@ export default function Investments() {
       setTodayPerformance(todayMarket);
       setYesterdayPerformance(yesterdayMarket);
 
-      // Load investments
+      // Load user's investments (as-is from server)
       const allInvestments = await base44.entities.Investment.list();
       const myInvestments = allInvestments.filter(inv => inv.student_email === user.email);
-      
-      // Check if any investments need updating
-      const today = getTodayDate();
-      const investmentsNeedingUpdate = myInvestments.filter(investment => {
-        const lastUpdate = investment.last_updated.split('T')[0];
-        return lastUpdate !== today;
-      });
-
-      // Check if current user is investment king
-      const allInvestmentsForKing = await base44.entities.Investment.list();
-      let maxInvestmentValue = 0;
-      let investmentKingEmail = null;
-
-      const investmentsByUser = {};
-      allInvestmentsForKing.forEach(inv => {
-        if (!investmentsByUser[inv.student_email]) {
-          investmentsByUser[inv.student_email] = 0;
-        }
-        investmentsByUser[inv.student_email] += inv.current_value || 0;
-      });
-
-      Object.keys(investmentsByUser).forEach(email => {
-        if (investmentsByUser[email] > maxInvestmentValue) {
-          maxInvestmentValue = investmentsByUser[email];
-          investmentKingEmail = email;
-        }
-      });
-
-      const isInvestmentKing = investmentKingEmail === user.email && maxInvestmentValue > 0;
-
-      // Update investments in batches to avoid rate limiting
-      if (investmentsNeedingUpdate.length > 0) {
-        // Update in smaller batches with delays
-        for (let i = 0; i < investmentsNeedingUpdate.length; i++) {
-          const investment = investmentsNeedingUpdate[i];
-          let changePercent = todayMarket[investment.business_type] || 0;
-
-          // Add 0.1% bonus for investment king
-          if (isInvestmentKing) {
-            changePercent += 0.1;
-          }
-
-          try {
-            const newValue = Math.round(investment.current_value * (1 + changePercent / 100));
-            await base44.entities.Investment.update(investment.id, {
-              current_value: newValue,
-              daily_change_percent: Math.round(changePercent * 10) / 10,
-              last_updated: new Date().toISOString()
-            });
-
-            // Add small delay between updates to avoid rate limiting
-            if (i < investmentsNeedingUpdate.length - 1) {
-              await new Promise(resolve => setTimeout(resolve, 100));
-            }
-          } catch (error) {
-            console.error(`Error updating investment ${investment.id}:`, error);
-          }
-        }
-
-        // Reload investments after updates
-        const allInvestmentsReload = await base44.entities.Investment.list();
-        const updatedInvestments = allInvestmentsReload.filter(inv => inv.student_email === user.email);
-        setInvestments(updatedInvestments);
-      } else {
-        setInvestments(myInvestments);
-      }
+      setInvestments(myInvestments);
     } catch (error) {
       console.error("Error loading investments:", error);
       toast.error("שגיאה בטעינת נתונים. אנא נסה שוב מאוחר יותר.");
@@ -707,6 +617,11 @@ export default function Investments() {
               <span className="block mt-1 text-yellow-300 font-bold">
                 שים לב: כל קניה ומכירה כוללת עמלה של {TRANSACTION_FEE} מטבעות!
               </span>
+              {yesterdayPerformance?.noDataAvailable && (
+                <span className="block mt-2 text-white/50 text-xs">
+                  ⚠️ אין נתוני אתמול זמינים
+                </span>
+              )}
             </p>
           </CardHeader>
           <CardContent className="space-y-2">
