@@ -2133,6 +2133,41 @@ export default function Admin() {
                     </Button>
                   </div>
                 </div>
+
+                <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-white font-bold mb-1">עדכון שוק השקעות ידני</h3>
+                      <p className="text-white/70 text-sm">
+                        מריץ את עדכון השוק וההשקעות היומי באופן ידני (בדרך כלל רץ אוטומטית בחצות)
+                      </p>
+                    </div>
+                    <Button
+                      onClick={async () => {
+                        if (!confirm("להריץ עדכון שוק והשקעות ידני?\n\nזה יעדכן את נתוני השוק והשקעות של כל התלמידים.")) return;
+                        setIsRecalculatingCoins(true);
+                        try {
+                          const response = await base44.functions.invoke('runDailyMarketAndInvestmentsUpdate', {});
+                          const result = response.data;
+                          toast.success(`✅ עדכון הושלם!\n📊 ${result.investmentsUpdated} השקעות עודכנו\n👥 ${result.usersUpdated} משתמשים עודכנו`, {
+                            duration: 5000
+                          });
+                          await refreshCurrentTab();
+                        } catch (error) {
+                          console.error("Error:", error);
+                          toast.error("שגיאה בעדכון שוק: " + (error.message || error));
+                        } finally {
+                          setIsRecalculatingCoins(false);
+                        }
+                      }}
+                      disabled={isRecalculatingCoins}
+                      className="bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      {isRecalculatingCoins ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : "📈"}
+                      הרץ עדכון ידני
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
