@@ -175,20 +175,25 @@ export default function Home() {
 
       setUserData({ ...user, ...lessonCounts });
 
-      // Fetch investments value directly from Investment entity (same as Investments page)
-      const invValue = await fetchInvestmentsValue(user.email);
-      setInvestmentsValue(invValue ?? 0);
-      
-      // Calculate net worth from actual components
-      const currentCoins = user.coins || 0;
-      const purchasedItems = user.purchased_items || [];
-      let itemsValue = 0;
-      purchasedItems.forEach(itemId => {
-        const item = AVATAR_ITEMS[itemId];
-        if (item) itemsValue += item.price || 0;
-      });
-      const calculatedNetWorth = currentCoins + itemsValue + (invValue ?? 0);
-      setNetWorth(calculatedNetWorth);
+      // If we have total_networth, calculate investments from it
+      if (user.total_networth !== undefined && user.total_networth !== null) {
+        const currentCoins = user.coins || 0;
+        const purchasedItems = user.purchased_items || [];
+        let itemsValue = 0;
+        purchasedItems.forEach(itemId => {
+          const item = AVATAR_ITEMS[itemId];
+          if (item) itemsValue += item.price || 0;
+        });
+        const calculatedInvestments = user.total_networth - currentCoins - itemsValue;
+        setInvestmentsValue(Math.max(0, calculatedInvestments));
+        setNetWorth(user.total_networth);
+      } else {
+        // Fallback: fetch investments directly
+        const invValue = await fetchInvestmentsValue(user.email);
+        setInvestmentsValue(invValue ?? 0);
+        const worth = await calculateNetWorth(user, invValue);
+        setNetWorth(worth);
+      }
 
       // Fetch user group and next lesson
       try {
@@ -232,24 +237,28 @@ export default function Home() {
   // Update net worth and investments when data changes
   React.useEffect(() => {
     if (userData) {
-      fetchInvestmentsValue(userData.email).then(invValue => {
-        if (invValue !== null) {
-          setInvestmentsValue(invValue);
-          
-          // Recalculate net worth from actual components
-          const currentCoins = userData.coins || 0;
-          const purchasedItems = userData.purchased_items || [];
-          let itemsValue = 0;
-          purchasedItems.forEach(itemId => {
-            const item = AVATAR_ITEMS[itemId];
-            if (item) itemsValue += item.price || 0;
-          });
-          const calculatedNetWorth = currentCoins + itemsValue + invValue;
-          setNetWorth(calculatedNetWorth);
-        }
-      });
+      // Prefer using total_networth to avoid extra API calls
+      if (userData.total_networth !== undefined && userData.total_networth !== null) {
+        const currentCoins = userData.coins || 0;
+        const purchasedItems = userData.purchased_items || [];
+        let itemsValue = 0;
+        purchasedItems.forEach(itemId => {
+          const item = AVATAR_ITEMS[itemId];
+          if (item) itemsValue += item.price || 0;
+        });
+        const calculatedInvestments = userData.total_networth - currentCoins - itemsValue;
+        setInvestmentsValue(Math.max(0, calculatedInvestments));
+        setNetWorth(userData.total_networth);
+      } else {
+        fetchInvestmentsValue(userData.email).then(invValue => {
+          if (invValue !== null) {
+            setInvestmentsValue(invValue);
+            calculateNetWorth(userData, invValue).then(setNetWorth);
+          }
+        });
+      }
     }
-  }, [userData?.coins, userData?.purchased_items]);
+  }, [userData?.coins, userData?.purchased_items, userData?.total_networth]);
 
   const calculateLessonCounts = async (user) => {
     try {
