@@ -76,11 +76,9 @@ Deno.serve(async (req) => {
     // ========== STEP 2: Update Investments ==========
     const allInvestments = await base44.asServiceRole.entities.Investment.list();
     
-    // Filter investments that need updating (last_updated is not today)
+    // Filter investments that need updating (use date_key to avoid timezone issues)
     const investmentsNeedingUpdate = allInvestments.filter(inv => {
-      if (!inv.last_updated) return true;
-      const lastUpdateDate = inv.last_updated.split('T')[0];
-      return lastUpdateDate !== dateKey;
+      return inv.last_updated_date_key !== dateKey;
     });
     
     console.log(`📈 Found ${investmentsNeedingUpdate.length} investments to update`);
