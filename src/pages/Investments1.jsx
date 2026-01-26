@@ -105,41 +105,39 @@ export default function Investments() {
     if (didLoadRef.current) return;
     didLoadRef.current = true;
     
-    console.log("todayKey", getTodayDate(), "yesterdayKey", getYesterdayDate());
+    console.log("TODAY KEY:", getDateKeyJerusalem(0), "YESTERDAY KEY:", getDateKeyJerusalem(-1));
     loadData();
   }, []);
 
-  const getTodayDate = () => {
-    const formatter = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Asia/Jerusalem',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-    return formatter.format(new Date());
-  };
+  const DATE_TZ = "Asia/Jerusalem";
+  const fmtIL = new Intl.DateTimeFormat("en-CA", {
+    timeZone: DATE_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
 
-  const getYesterdayDate = () => {
-    const now = new Date();
-    now.setDate(now.getDate() - 1);
-    const formatter = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Asia/Jerusalem',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-    return formatter.format(now);
+  // YYYY-MM-DD string with offset support
+  const getDateKeyJerusalem = (daysOffset = 0) => {
+    const todayKey = fmtIL.format(new Date()); // "YYYY-MM-DD" של היום בירושלים
+    const [y, m, d] = todayKey.split("-").map(Number);
+
+    // מייצרים "תאריך UTC" מהחלקים ואז מזיזים ימים – יציב ולא תלוי ב-timezone של המחשב
+    const dt = new Date(Date.UTC(y, m - 1, d + daysOffset));
+
+    // מחזירים שוב כ-YYYY-MM-DD לפי Asia/Jerusalem (כדי להישאר עקבי עם ה-DB)
+    return fmtIL.format(dt);
   };
 
 
 
   const getTodayMarket = async () => {
-    const today = getTodayDate();
+    const today = getDateKeyJerusalem(0);
     
     try {
       const existingMarket = await safeRequest(
         () => base44.entities.DailyMarketPerformance.filter({ date: today }),
-        { key: `DMP:${today}`, ttlMs: 6 * 60 * 60 * 1000, retries: 1 }
+        { key: `DMP:${today}:v2`, ttlMs: 5 * 60 * 1000, retries: 1 }
       );
       
       if (existingMarket.length > 0) {
@@ -171,12 +169,12 @@ export default function Investments() {
   };
 
   const getYesterdayMarket = async () => {
-    const yesterday = getYesterdayDate();
+    const yesterday = getDateKeyJerusalem(-1);
     
     try {
       const yesterdayMarket = await safeRequest(
         () => base44.entities.DailyMarketPerformance.filter({ date: yesterday }),
-        { key: `DMP:${yesterday}`, ttlMs: 6 * 60 * 60 * 1000, retries: 1 }
+        { key: `DMP:${yesterday}:v2`, ttlMs: 5 * 60 * 1000, retries: 1 }
       );
       
       if (yesterdayMarket.length > 0) {
