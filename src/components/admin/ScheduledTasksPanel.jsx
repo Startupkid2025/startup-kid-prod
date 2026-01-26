@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Calendar, Activity, TrendingUp, Coins, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Clock, Calendar, Activity, TrendingUp, Coins, Shield, Loader2 } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 
 export default function ScheduledTasksPanel() {
   const [nextTriggers, setNextTriggers] = useState({});
+  const [isRunningMarketUpdate, setIsRunningMarketUpdate] = useState(false);
 
   useEffect(() => {
     calculateNextTriggers();
@@ -187,6 +191,43 @@ export default function ScheduledTasksPanel() {
                           <div className="text-white/50 text-[10px] mt-3 pt-2 border-t border-white/10">
                             📍 מיקום בקוד: <code className="text-white/70">{task.location}</code>
                           </div>
+
+                          {task.id === "market_performance" && (
+                            <div className="mt-3 pt-3 border-t border-white/10">
+                              <Button
+                                onClick={async () => {
+                                  if (!confirm("להריץ עדכון שוק והשקעות ידני?\n\nזה יעדכן את נתוני השוק והשקעות של כל התלמידים.")) return;
+                                  setIsRunningMarketUpdate(true);
+                                  try {
+                                    const response = await base44.functions.invoke('runDailyMarketAndInvestmentsUpdate', {});
+                                    const result = response.data;
+                                    toast.success(`✅ עדכון הושלם!\n📊 ${result.investmentsUpdated} השקעות עודכנו\n👥 ${result.usersUpdated} משתמשים עודכנו`, {
+                                      duration: 5000
+                                    });
+                                  } catch (error) {
+                                    console.error("Error:", error);
+                                    toast.error("שגיאה בעדכון שוק: " + (error.message || error));
+                                  } finally {
+                                    setIsRunningMarketUpdate(false);
+                                  }
+                                }}
+                                disabled={isRunningMarketUpdate}
+                                className="w-full bg-indigo-600 hover:bg-indigo-700"
+                                size="sm"
+                              >
+                                {isRunningMarketUpdate ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                                    מריץ עדכון...
+                                  </>
+                                ) : (
+                                  <>
+                                    📈 הרץ עדכון ידני
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
