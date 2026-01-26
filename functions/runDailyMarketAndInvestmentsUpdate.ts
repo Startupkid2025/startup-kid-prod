@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
       marketChanges = {
         government_bonds: (Math.random() * 0.5).toFixed(2), // 0% to +1%, Eff = 0.5%
         gold: (Math.random() * 1.4 - 0.3).toFixed(2), // -0.3% to +1.1% ~ 0.4%, Eff = +0.399%
-        real_estate: (Math.random() * 2 - 1.5).toFixed(2), // -1.5% to +2.2% ~ +0.35%, Eff = +0.345%
+        real_estate: (Math.random() * 2.2 - 1.5).toFixed(2), // -1.5% to +2.2% ~ +0.35%, Eff = +0.345%
         stock_market: (Math.random() * 7.5 - 3).toFixed(2), // -3% to +4.5% ~ 0.75%, Eff ≈ +0.7267% 
         crypto: (Math.random() * 32 - 15).toFixed(2), // -15% to +17% ~ +1% , Eff = +0.575%
         tech_startup: (Math.random() * 76 - 35).toFixed(2) // -35% to +41% ~ +3% , Eff = +0.59%
