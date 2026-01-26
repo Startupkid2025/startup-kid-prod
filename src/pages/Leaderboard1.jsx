@@ -78,6 +78,11 @@ const LeaderboardRow = React.memo(({
                     ? `${player.first_name} ${player.last_name}`
                     : player.full_name}
                 </h3>
+                {player.groupName && (
+                  <span className="text-[9px] sm:text-[11px] bg-indigo-500/40 text-indigo-100 px-1.5 sm:px-2 py-0.5 rounded-full font-bold border border-indigo-400/50">
+                    {player.groupName}
+                  </span>
+                )}
                 {isCurrentUser && (
                   <span className="text-[10px] sm:text-xs bg-yellow-400 text-gray-900 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-bold whitespace-nowrap">
                     אתה!
@@ -396,6 +401,9 @@ export default function Leaderboard() {
 
       // Fetch ALL LeaderboardEntry records with pagination and sort by total_networth
       const allEntries = await listAll(base44.entities.LeaderboardEntry, "-total_networth", 100);
+      
+      // Fetch all groups to map students to their groups
+      const allGroups = await base44.entities.Group.list();
 
       // Filter out DEMO and PARENT users
       const filteredEntries = allEntries.filter(entry => 
@@ -432,6 +440,9 @@ export default function Leaderboard() {
       // Map LeaderboardEntry to UI model
       const studentsWithStats = pageSlice.map(entry => {
         const collaborationCount = (entry.daily_collaborations || []).filter(c => c && c.completed).length;
+        
+        // Find the student's group
+        const studentGroup = allGroups.find(g => g.student_emails?.includes(entry.student_email));
 
         return {
           id: entry.id,
@@ -458,7 +469,8 @@ export default function Leaderboard() {
           last_login_date: entry.last_login_date,
           daily_collaborations: entry.daily_collaborations || [],
           currentInvestmentValue: entry.investments_value || 0,
-          crowns: []
+          crowns: [],
+          groupName: studentGroup?.group_name || null
         };
       });
 
