@@ -97,6 +97,7 @@ export default function Investments() {
   const [isSelling, setIsSelling] = useState({});
 
   useEffect(() => {
+    console.log("todayKey", getTodayDate(), "yesterdayKey", getYesterdayDate());
     loadData();
   }, []);
 
