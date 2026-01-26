@@ -42,12 +42,12 @@ Deno.serve(async (req) => {
       // Create new market data
       console.log(`📊 Creating new market data for ${dateKey}`);
       marketChanges = {
-        government_bonds: (Math.random() * 0.3).toFixed(2), // 0% to +0.3%
-        gold: (Math.random() * 0.75 - 0.3).toFixed(2), // -0.3% to +0.45%
-        real_estate: (Math.random() * 1.1 - 0.45).toFixed(2), // -0.5% to +0.65%
-        stock_market: (Math.random() * 5 - 2).toFixed(2), // -2% to +3%
-        crypto: (Math.random() * 6.7 - 3).toFixed(2), // -3% to +3.7%
-        tech_startup: (Math.random() * 7.5 - 3.5).toFixed(2) // -3.5% to +4%
+        government_bonds: (Math.random() * 0.5).toFixed(2), // 0% to +0.5%
+        gold: (Math.random() * 1.2 - 0.3).toFixed(2), // -0.3% to +0.9% ~ 0.3%
+        real_estate: (Math.random() * 1.5 - 0.5).toFixed(2), // -0.5% to +1% ~ +0.25%
+        stock_market: (Math.random() * 9 - 3).toFixed(2), // -3% to +6% ~ 1.5%
+        crypto: (Math.random() * 42 - 20).toFixed(2), // -20% to +22% ~ 1%
+        tech_startup: (Math.random() * 72 - 35).toFixed(2) // -35% to +37% ~ 1%
       };
       
       await base44.asServiceRole.entities.DailyMarketPerformance.create({
