@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -95,8 +95,13 @@ export default function Investments() {
   const [yesterdayPerformance, setYesterdayPerformance] = useState({});
   const [isInvesting, setIsInvesting] = useState({});
   const [isSelling, setIsSelling] = useState({});
+  const didLoadRef = useRef(false);
 
   useEffect(() => {
+    // Prevent double loading (React StrictMode in dev)
+    if (didLoadRef.current) return;
+    didLoadRef.current = true;
+    
     console.log("todayKey", getTodayDate(), "yesterdayKey", getYesterdayDate());
     loadData();
   }, []);
@@ -194,24 +199,17 @@ export default function Investments() {
   };
 
   const loadData = async () => {
-    if (isLoading === false) {
-      // Prevent multiple simultaneous loads
+    // Prevent multiple simultaneous loads
+    if (!isLoading) {
       return;
     }
     
     try {
-      // Load user data
+      // READ ONLY: Load user data
       const user = await base44.auth.me();
       setUserData(user);
 
-      // Optionally trigger server-side update to ensure today's data exists
-      try {
-        await base44.functions.invoke('runDailyMarketAndInvestmentsUpdate', {});
-      } catch (error) {
-        console.log("Server update already ran or error:", error.message);
-      }
-
-      // Load market data in parallel (read only)
+      // READ ONLY: Load market data in parallel
       const [todayMarket, yesterdayMarket] = await Promise.all([
         getTodayMarket(),
         getYesterdayMarket()
@@ -220,15 +218,16 @@ export default function Investments() {
       setTodayPerformance(todayMarket);
       setYesterdayPerformance(yesterdayMarket);
 
-      // Load user's investments (as-is from server)
+      // READ ONLY: Load user's investments (as-is from server)
       const allInvestments = await base44.entities.Investment.list();
       const myInvestments = allInvestments.filter(inv => inv.student_email === user.email);
       setInvestments(myInvestments);
     } catch (error) {
       console.error("Error loading investments:", error);
       toast.error("שגיאה בטעינת נתונים. אנא נסה שוב מאוחר יותר.");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const handleInvest = async (businessId) => {
