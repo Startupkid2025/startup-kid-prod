@@ -175,8 +175,13 @@ export default function Home() {
 
       setUserData({ ...user, ...lessonCounts });
 
-      // תמיד מחשבים השקעות מה-DB כדי להיות עקביים עם עמוד ההשקעות
-      const invValue = await fetchInvestmentsValue(user.email);
+      // Use pre-calculated investments_value if available (set by CRON or on trades)
+      let invValue = user.investments_value;
+      
+      // Fallback: fetch if not available
+      if (invValue === undefined || invValue === null) {
+        invValue = await fetchInvestmentsValue(user.email);
+      }
 
       const purchasedItems = user.purchased_items || [];
       let itemsValue = 0;
@@ -190,9 +195,17 @@ export default function Home() {
       const worth = (user.coins || 0) + itemsValue + (invValue ?? 0);
       setNetWorth(worth);
 
-      // אופציונלי: לשמור total_networth כדי שיהיה זמין בכל מקום
-      if (user.total_networth !== worth) {
-        await base44.auth.updateMe({ total_networth: worth });
+      // Save calculated values if they changed
+      const needsUpdate = 
+        user.investments_value !== invValue || 
+        user.total_networth !== worth;
+      
+      if (needsUpdate) {
+        await base44.auth.updateMe({ 
+          investments_value: invValue ?? 0, 
+          total_networth: worth 
+        });
+        user.investments_value = invValue ?? 0;
         user.total_networth = worth;
       }
 
@@ -536,21 +549,15 @@ export default function Home() {
     toast.success(`מכרת את ${item.name} ב-${salePrice} מטבעות (50% מהמחיר המקורי)`);
   };
 
-  const fetchInvestmentsValue = async (userEmail, retryCount = 0) => {
+  const fetchInvestmentsValue = async (userEmail) => {
     try {
-      const myInvestments = await base44.entities.Investment.filter({ student_email: userEmail });
+      const myInvestments = await safeRequest(() =>
+        base44.entities.Investment.filter({ student_email: userEmail })
+      );
       const investmentsValue = myInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
       console.log(`✅ Fetched investments value for ${userEmail}: ${investmentsValue}`);
       return investmentsValue;
     } catch (error) {
-      // Handle rate limiting with exponential backoff
-      if (error.message?.includes('Rate limit') && retryCount < 3) {
-        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
-        console.log(`⏳ Rate limited, retrying in ${delay}ms (attempt ${retryCount + 1}/3)`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        return fetchInvestmentsValue(userEmail, retryCount + 1);
-      }
-      
       console.error("Error fetching investments value:", error);
       // Return null on error to distinguish from 0 investments
       return null;

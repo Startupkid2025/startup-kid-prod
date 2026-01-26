@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
 import { updateNetWorth } from "../components/utils/networthCalculator";
+import { safeRequest } from "../components/utils/base44SafeRequest";
 
 const BUSINESSES = [
   {
@@ -134,7 +135,9 @@ export default function Investments() {
     const today = getTodayDate();
     
     try {
-      const existingMarket = await base44.entities.DailyMarketPerformance.filter({ date: today });
+      const existingMarket = await safeRequest(() => 
+        base44.entities.DailyMarketPerformance.filter({ date: today })
+      );
       
       if (existingMarket.length > 0) {
         const market = existingMarket[0];
@@ -168,7 +171,9 @@ export default function Investments() {
     const yesterday = getYesterdayDate();
     
     try {
-      const yesterdayMarket = await base44.entities.DailyMarketPerformance.filter({ date: yesterday });
+      const yesterdayMarket = await safeRequest(() =>
+        base44.entities.DailyMarketPerformance.filter({ date: yesterday })
+      );
       
       if (yesterdayMarket.length > 0) {
         const market = yesterdayMarket[0];
@@ -218,9 +223,10 @@ export default function Investments() {
       setTodayPerformance(todayMarket);
       setYesterdayPerformance(yesterdayMarket);
 
-      // READ ONLY: Load user's investments (as-is from server)
-      const allInvestments = await base44.entities.Investment.list();
-      const myInvestments = allInvestments.filter(inv => inv.student_email === user.email);
+      // READ ONLY: Load user's investments directly (avoid list() and filter)
+      const myInvestments = await safeRequest(() =>
+        base44.entities.Investment.filter({ student_email: user.email })
+      );
       setInvestments(myInvestments);
     } catch (error) {
       console.error("Error loading investments:", error);
@@ -265,9 +271,17 @@ export default function Investments() {
       });
 
       const newCoinsBalance = userData.coins - totalCost;
+      
+      // Calculate investments_value after creation
+      const allUserInvestments = await safeRequest(() =>
+        base44.entities.Investment.filter({ student_email: userData.email })
+      );
+      const investmentsValue = allUserInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0) + amount;
+
       await base44.auth.updateMe({
         coins: newCoinsBalance,
-        total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE
+        total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE,
+        investments_value: investmentsValue
       });
 
       // Update net worth
@@ -277,6 +291,7 @@ export default function Investments() {
       await syncLeaderboardEntry(userData.email, {
         coins: newCoinsBalance,
         total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE,
+        investments_value: investmentsValue,
         total_networth: newNetWorth
       });
 
@@ -438,11 +453,18 @@ export default function Investments() {
       const newRealizedProfit = (userData.total_realized_investment_profit || 0) + Math.round(investmentProfit);
       const newTotalFees = (userData.total_investment_fees || 0) + TRANSACTION_FEE;
 
+      // Calculate investments_value after sale
+      const allUserInvestmentsAfterSale = await safeRequest(() =>
+        base44.entities.Investment.filter({ student_email: userData.email })
+      );
+      const investmentsValue = allUserInvestmentsAfterSale.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+
       await base44.auth.updateMe({ 
         coins: newCoins,
         total_investment_fees: newTotalFees,
         total_capital_gains_tax: newCapitalGainsTax,
-        total_realized_investment_profit: newRealizedProfit
+        total_realized_investment_profit: newRealizedProfit,
+        investments_value: investmentsValue
       });
 
       // Update net worth
@@ -454,6 +476,7 @@ export default function Investments() {
         total_investment_fees: newTotalFees,
         total_capital_gains_tax: newCapitalGainsTax,
         total_realized_investment_profit: newRealizedProfit,
+        investments_value: investmentsValue,
         total_networth: newNetWorth
       });
 
@@ -469,8 +492,9 @@ export default function Investments() {
       setSellAmounts({ ...sellAmounts, [businessId]: 0 });
       
       // Update local state instead of full reload
-      const allInvestmentsReload = await base44.entities.Investment.list();
-      const updatedInvestments = allInvestmentsReload.filter(inv => inv.student_email === userData.email);
+      const updatedInvestments = await safeRequest(() =>
+        base44.entities.Investment.filter({ student_email: userData.email })
+      );
       setInvestments(updatedInvestments);
       setUserData({ ...userData, coins: newCoins });
     } catch (error) {
