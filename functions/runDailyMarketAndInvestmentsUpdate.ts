@@ -43,10 +43,10 @@ Deno.serve(async (req) => {
       console.log(`📊 Creating new market data for ${dateKey}`);
       marketChanges = {
         government_bonds: (Math.random() * 0.3).toFixed(2), // 0% to +0.3%
-        real_estate: (Math.random() * 1.1 - 0.5).toFixed(2), // -0.5% to +0.6%
         gold: (Math.random() * 0.75 - 0.3).toFixed(2), // -0.3% to +0.45%
+        real_estate: (Math.random() * 1.1 - 0.45).toFixed(2), // -0.5% to +0.65%
         stock_market: (Math.random() * 5 - 2).toFixed(2), // -2% to +3%
-        crypto: (Math.random() * 6.5 - 3).toFixed(2), // -3% to +3.5%
+        crypto: (Math.random() * 6.7 - 3).toFixed(2), // -3% to +3.7%
         tech_startup: (Math.random() * 7.5 - 3.5).toFixed(2) // -3.5% to +4%
       };
       
