@@ -175,16 +175,25 @@ export default function Home() {
 
       setUserData({ ...user, ...lessonCounts });
 
-      // Use investments_value directly from user entity (set by CRON)
-      if (user.investments_value !== undefined && user.investments_value !== null) {
-        setInvestmentsValue(user.investments_value);
-        setNetWorth(user.total_networth ?? 0);
-      } else {
-        // Fallback: fetch investments directly
-        const invValue = await fetchInvestmentsValue(user.email);
-        setInvestmentsValue(invValue ?? 0);
-        const worth = await calculateNetWorth(user, invValue);
-        setNetWorth(worth);
+      // תמיד מחשבים השקעות מה-DB כדי להיות עקביים עם עמוד ההשקעות
+      const invValue = await fetchInvestmentsValue(user.email);
+
+      const purchasedItems = user.purchased_items || [];
+      let itemsValue = 0;
+      purchasedItems.forEach(itemId => {
+        const item = AVATAR_ITEMS[itemId];
+        if (item) itemsValue += item.price || 0;
+      });
+
+      setInvestmentsValue(invValue ?? 0);
+
+      const worth = (user.coins || 0) + itemsValue + (invValue ?? 0);
+      setNetWorth(worth);
+
+      // אופציונלי: לשמור total_networth כדי שיהיה זמין בכל מקום
+      if (user.total_networth !== worth) {
+        await base44.auth.updateMe({ total_networth: worth });
+        user.total_networth = worth;
       }
 
       // Fetch user group and next lesson
@@ -226,23 +235,7 @@ export default function Home() {
     }
   };
 
-  // Update net worth and investments when data changes
-  React.useEffect(() => {
-    if (userData) {
-      // Use investments_value directly (set by CRON)
-      if (userData.investments_value !== undefined && userData.investments_value !== null) {
-        setInvestmentsValue(userData.investments_value);
-        setNetWorth(userData.total_networth ?? 0);
-      } else {
-        fetchInvestmentsValue(userData.email).then(invValue => {
-          if (invValue !== null) {
-            setInvestmentsValue(invValue);
-            calculateNetWorth(userData, invValue).then(setNetWorth);
-          }
-        });
-      }
-    }
-  }, [userData?.coins, userData?.purchased_items, userData?.total_networth, userData?.investments_value]);
+
 
   const calculateLessonCounts = async (user) => {
     try {
@@ -545,8 +538,7 @@ export default function Home() {
 
   const fetchInvestmentsValue = async (userEmail, retryCount = 0) => {
     try {
-      const userInvestments = await base44.entities.Investment.list();
-      const myInvestments = userInvestments.filter(inv => inv.student_email === userEmail);
+      const myInvestments = await base44.entities.Investment.filter({ student_email: userEmail });
       const investmentsValue = myInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
       console.log(`✅ Fetched investments value for ${userEmail}: ${investmentsValue}`);
       return investmentsValue;
