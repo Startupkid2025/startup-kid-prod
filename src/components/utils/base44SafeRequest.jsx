@@ -1,35 +1,105 @@
-/**
- * Safe request wrapper with exponential backoff for rate limit handling
- * @param {Function} fn - The async function to execute
- * @param {number} maxRetries - Maximum number of retries (default 4)
- * @returns {Promise} - Result of the function or null on failure
- */
-export async function safeRequest(fn, maxRetries = 4) {
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (error) {
-      const isRateLimit = 
-        error?.status === 429 || 
-        error?.message?.includes('Rate limit') ||
-        error?.message?.includes('429');
-      
-      if (!isRateLimit || attempt === maxRetries) {
-        // Not a rate limit error, or we've exhausted retries
-        throw error;
-      }
-      
-      // Calculate delay with exponential backoff + jitter
-      const baseDelay = 800 * Math.pow(2, attempt); // 800ms, 1600ms, 3200ms, 6400ms
-      const jitter = Math.random() * 200; // 0-200ms random jitter
-      const delay = baseDelay + jitter;
-      
-      console.log(`⏳ Rate limit hit, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries})`);
-      
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
+// components/utils/base44SafeRequest.js
+const inflight = new Map(); // key -> Promise
+const cache = new Map();    // key -> { ts, ttlMs, data }
+const queue = [];
+let active = 0;
+const MAX_CONCURRENCY = 2;
+
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+function getCache(key) {
+  const v = cache.get(key);
+  if (!v) return null;
+  if (Date.now() - v.ts > v.ttlMs) { 
+    cache.delete(key); 
+    return null; 
   }
-  
-  // Should never reach here, but just in case
-  return null;
+  return v.data;
+}
+
+function setCache(key, data, ttlMs) {
+  cache.set(key, { ts: Date.now(), ttlMs, data });
+}
+
+async function runQueued(fn) {
+  if (active >= MAX_CONCURRENCY) {
+    await new Promise(resolve => queue.push(resolve));
+  }
+  active++;
+  try { 
+    return await fn(); 
+  } finally {
+    active--;
+    const next = queue.shift();
+    if (next) next();
+  }
+}
+
+function isRateLimitError(err) {
+  const status = err?.status || err?.response?.status;
+  const msg = err?.message || err?.toString?.() || "";
+  return status === 429 || msg.includes("Rate limit exceeded") || msg.includes("429");
+}
+
+export async function safeRequest(fn, {
+  key,
+  ttlMs = 0,
+  retries = 1,         // חשוב: לא 4
+  baseDelayMs = 1500,  // דיליי ארוך יותר
+} = {}) {
+  if (!key) {
+    // בלי key אין דה-דופליקציה, עדיין נריץ בתור כדי לא לעשות burst
+    return runQueued(fn);
+  }
+
+  // Cache hit
+  const cached = ttlMs ? getCache(key) : null;
+  if (cached != null) {
+    console.log(`✅ Cache hit for key: ${key}`);
+    return cached;
+  }
+
+  // Single-flight
+  if (inflight.has(key)) {
+    console.log(`🔄 Reusing in-flight request for key: ${key}`);
+    return inflight.get(key);
+  }
+
+  const p = (async () => {
+    let attempt = 0;
+    while (true) {
+      try {
+        const res = await runQueued(fn);
+        if (ttlMs) setCache(key, res, ttlMs);
+        return res;
+      } catch (err) {
+        // אם 429 ויש קאש, חוזרים לקאש במקום להמשיך להפציץ
+        if (isRateLimitError(err)) {
+          const fallback = ttlMs ? getCache(key) : null;
+          if (fallback != null) {
+            console.log(`⚠️ Rate limit but using cached fallback for key: ${key}`);
+            return fallback;
+          }
+        }
+
+        if (attempt >= retries) {
+          console.error(`❌ Request failed after ${attempt + 1} attempts for key: ${key}`);
+          throw err;
+        }
+
+        const jitter = Math.floor(Math.random() * 400);
+        const delay = baseDelayMs * (2 ** attempt) + jitter;
+        console.log(`⏳ Rate limit / transient error, retrying in ${delay}ms (attempt ${attempt + 1}/${retries})`);
+        await sleep(delay);
+        attempt++;
+      }
+    }
+  })();
+
+  inflight.set(key, p);
+  try { 
+    return await p; 
+  } finally { 
+    inflight.delete(key); 
+  }
 }

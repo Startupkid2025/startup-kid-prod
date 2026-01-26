@@ -551,8 +551,9 @@ export default function Home() {
 
   const fetchInvestmentsValue = async (userEmail) => {
     try {
-      const myInvestments = await safeRequest(() =>
-        base44.entities.Investment.filter({ student_email: userEmail })
+      const myInvestments = await safeRequest(
+        () => base44.entities.Investment.filter({ student_email: userEmail }),
+        { key: `INV:${userEmail}`, ttlMs: 15000, retries: 1 }
       );
       const investmentsValue = myInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
       console.log(`✅ Fetched investments value for ${userEmail}: ${investmentsValue}`);

@@ -97,6 +97,7 @@ export default function Investments() {
   const [isInvesting, setIsInvesting] = useState({});
   const [isSelling, setIsSelling] = useState({});
   const didLoadRef = useRef(false);
+  const loadInFlightRef = useRef(false);
 
   useEffect(() => {
     // Prevent double loading (React StrictMode in dev)
@@ -135,8 +136,9 @@ export default function Investments() {
     const today = getTodayDate();
     
     try {
-      const existingMarket = await safeRequest(() => 
-        base44.entities.DailyMarketPerformance.filter({ date: today })
+      const existingMarket = await safeRequest(
+        () => base44.entities.DailyMarketPerformance.filter({ date: today }),
+        { key: `DMP:${today}`, ttlMs: 6 * 60 * 60 * 1000, retries: 1 }
       );
       
       if (existingMarket.length > 0) {
@@ -171,8 +173,9 @@ export default function Investments() {
     const yesterday = getYesterdayDate();
     
     try {
-      const yesterdayMarket = await safeRequest(() =>
-        base44.entities.DailyMarketPerformance.filter({ date: yesterday })
+      const yesterdayMarket = await safeRequest(
+        () => base44.entities.DailyMarketPerformance.filter({ date: yesterday }),
+        { key: `DMP:${yesterday}`, ttlMs: 6 * 60 * 60 * 1000, retries: 1 }
       );
       
       if (yesterdayMarket.length > 0) {
@@ -205,33 +208,34 @@ export default function Investments() {
 
   const loadData = async () => {
     // Prevent multiple simultaneous loads
-    if (!isLoading) {
+    if (loadInFlightRef.current) {
       return;
     }
+    loadInFlightRef.current = true;
     
     try {
       // READ ONLY: Load user data
       const user = await base44.auth.me();
       setUserData(user);
 
-      // READ ONLY: Load market data in parallel
-      const [todayMarket, yesterdayMarket] = await Promise.all([
-        getTodayMarket(),
-        getYesterdayMarket()
-      ]);
+      // READ ONLY: Load market data sequentially to reduce burst
+      const todayMarket = await getTodayMarket();
+      const yesterdayMarket = await getYesterdayMarket();
       
       setTodayPerformance(todayMarket);
       setYesterdayPerformance(yesterdayMarket);
 
-      // READ ONLY: Load user's investments directly (avoid list() and filter)
-      const myInvestments = await safeRequest(() =>
-        base44.entities.Investment.filter({ student_email: user.email })
+      // READ ONLY: Load user's investments with cache
+      const myInvestments = await safeRequest(
+        () => base44.entities.Investment.filter({ student_email: user.email }),
+        { key: `INV:${user.email}`, ttlMs: 15000, retries: 1 }
       );
       setInvestments(myInvestments);
     } catch (error) {
       console.error("Error loading investments:", error);
       toast.error("שגיאה בטעינת נתונים. אנא נסה שוב מאוחר יותר.");
     } finally {
+      loadInFlightRef.current = false;
       setIsLoading(false);
     }
   };
@@ -272,11 +276,9 @@ export default function Investments() {
 
       const newCoinsBalance = userData.coins - totalCost;
       
-      // Calculate investments_value after creation
-      const allUserInvestments = await safeRequest(() =>
-        base44.entities.Investment.filter({ student_email: userData.email })
-      );
-      const investmentsValue = allUserInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0) + amount;
+      // Calculate investments_value from local state (avoid extra API call)
+      const newInvestments = [...investments, createdInvestment];
+      const investmentsValue = newInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
 
       await base44.auth.updateMe({
         coins: newCoinsBalance,
@@ -299,7 +301,7 @@ export default function Investments() {
       setInvestmentAmounts({ ...investmentAmounts, [businessId]: 0 });
       
       // Update local state with created investment (includes id)
-      setInvestments([...investments, createdInvestment]);
+      setInvestments(newInvestments);
       setUserData({ ...userData, coins: newCoinsBalance });
     } catch (error) {
       console.error("Error investing:", error);
@@ -424,27 +426,23 @@ export default function Investments() {
       const amountAfterFee = sellAmount - TRANSACTION_FEE;
       const capitalGainsTax = investmentProfit > 0 ? investmentProfit * 0.25 : 0;
 
-      // Check if user is investment king and add bonus
+      // Check if user is investment king and add bonus (using LeaderboardKings to avoid heavy User.list)
       let kingBonus = 0;
       try {
-        const allUsers = await base44.entities.User.list();
-        let maxInvestmentEarnings = 0;
-        let investmentKingEmail = null;
-
-        allUsers.forEach(user => {
-          const earnings = user.total_realized_investment_profit || 0;
-          if (earnings > maxInvestmentEarnings) {
-            maxInvestmentEarnings = earnings;
-            investmentKingEmail = user.email;
+        const kings = await safeRequest(
+          () => base44.entities.LeaderboardKings.list(),
+          { key: 'kings', ttlMs: 10 * 60 * 1000, retries: 1 }
+        );
+        
+        if (kings && kings.length > 0) {
+          const king = kings[0];
+          if (king.investment_king_email === userData.email && investmentProfit > 0) {
+            kingBonus = Math.round(investmentProfit * 0.10); // Investment king gets 10% bonus on profits!
           }
-        });
-
-        if (investmentKingEmail === userData.email && maxInvestmentEarnings > 0 && investmentProfit > 0) {
-          kingBonus = Math.round(investmentProfit * 0.10); // Investment king gets 10% bonus on profits!
         }
       } catch (error) {
         console.error("Error checking investment king status:", error);
-        // Continue without king bonus if can't access User entity
+        // Continue without king bonus if can't access LeaderboardKings
       }
 
       const netAmount = amountAfterFee - capitalGainsTax + kingBonus;
@@ -453,9 +451,10 @@ export default function Investments() {
       const newRealizedProfit = (userData.total_realized_investment_profit || 0) + Math.round(investmentProfit);
       const newTotalFees = (userData.total_investment_fees || 0) + TRANSACTION_FEE;
 
-      // Calculate investments_value after sale
-      const allUserInvestmentsAfterSale = await safeRequest(() =>
-        base44.entities.Investment.filter({ student_email: userData.email })
+      // Calculate investments_value after sale (will be refetched below)
+      const allUserInvestmentsAfterSale = await safeRequest(
+        () => base44.entities.Investment.filter({ student_email: userData.email }),
+        { key: `INV:${userData.email}`, ttlMs: 5000, retries: 1 }
       );
       const investmentsValue = allUserInvestmentsAfterSale.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
 
@@ -491,11 +490,8 @@ export default function Investments() {
 
       setSellAmounts({ ...sellAmounts, [businessId]: 0 });
       
-      // Update local state instead of full reload
-      const updatedInvestments = await safeRequest(() =>
-        base44.entities.Investment.filter({ student_email: userData.email })
-      );
-      setInvestments(updatedInvestments);
+      // Update local state (use the same data from allUserInvestmentsAfterSale)
+      setInvestments(allUserInvestmentsAfterSale);
       setUserData({ ...userData, coins: newCoins });
     } catch (error) {
       console.error("Error selling:", error);
