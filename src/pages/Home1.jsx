@@ -175,7 +175,9 @@ export default function Home() {
 
       setUserData({ ...user, ...lessonCounts });
 
-      // חישוב itemsValue
+      // תמיד מחשבים השקעות מה-DB כדי להיות עקביים עם עמוד ההשקעות
+      const invValue = await fetchInvestmentsValue(user.email);
+
       const purchasedItems = user.purchased_items || [];
       let itemsValue = 0;
       purchasedItems.forEach(itemId => {
@@ -183,20 +185,12 @@ export default function Home() {
         if (item) itemsValue += item.price || 0;
       });
 
-      // עדיפות: להשתמש ב-investments_value שהCRON מעדכן (למנוע rate limits)
-      let invValue = user.investments_value;
-      
-      // רק אם אין investments_value, נעשה fetch ידני
-      if (invValue === undefined || invValue === null) {
-        invValue = await fetchInvestmentsValue(user.email);
-      }
-
       setInvestmentsValue(invValue ?? 0);
 
       const worth = (user.coins || 0) + itemsValue + (invValue ?? 0);
       setNetWorth(worth);
 
-      // עדכון total_networth אם השתנה
+      // אופציונלי: לשמור total_networth כדי שיהיה זמין בכל מקום
       if (user.total_networth !== worth) {
         await base44.auth.updateMe({ total_networth: worth });
         user.total_networth = worth;
