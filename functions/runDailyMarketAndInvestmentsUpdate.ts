@@ -99,6 +99,7 @@ Deno.serve(async (req) => {
         current_value: newValue,
         daily_change_percent: changePercent,
         last_updated: new Date().toISOString(),
+        last_updated_date_key: dateKey,
         unrealized_profit: unrealizedProfit
       });
       

@@ -175,18 +175,10 @@ export default function Home() {
 
       setUserData({ ...user, ...lessonCounts });
 
-      // If we have total_networth, calculate investments from it
-      if (user.total_networth !== undefined && user.total_networth !== null) {
-        const currentCoins = user.coins || 0;
-        const purchasedItems = user.purchased_items || [];
-        let itemsValue = 0;
-        purchasedItems.forEach(itemId => {
-          const item = AVATAR_ITEMS[itemId];
-          if (item) itemsValue += item.price || 0;
-        });
-        const calculatedInvestments = user.total_networth - currentCoins - itemsValue;
-        setInvestmentsValue(Math.max(0, calculatedInvestments));
-        setNetWorth(user.total_networth);
+      // Use investments_value directly from user entity (set by CRON)
+      if (user.investments_value !== undefined && user.investments_value !== null) {
+        setInvestmentsValue(user.investments_value);
+        setNetWorth(user.total_networth ?? 0);
       } else {
         // Fallback: fetch investments directly
         const invValue = await fetchInvestmentsValue(user.email);
@@ -237,18 +229,10 @@ export default function Home() {
   // Update net worth and investments when data changes
   React.useEffect(() => {
     if (userData) {
-      // Prefer using total_networth to avoid extra API calls
-      if (userData.total_networth !== undefined && userData.total_networth !== null) {
-        const currentCoins = userData.coins || 0;
-        const purchasedItems = userData.purchased_items || [];
-        let itemsValue = 0;
-        purchasedItems.forEach(itemId => {
-          const item = AVATAR_ITEMS[itemId];
-          if (item) itemsValue += item.price || 0;
-        });
-        const calculatedInvestments = userData.total_networth - currentCoins - itemsValue;
-        setInvestmentsValue(Math.max(0, calculatedInvestments));
-        setNetWorth(userData.total_networth);
+      // Use investments_value directly (set by CRON)
+      if (userData.investments_value !== undefined && userData.investments_value !== null) {
+        setInvestmentsValue(userData.investments_value);
+        setNetWorth(userData.total_networth ?? 0);
       } else {
         fetchInvestmentsValue(userData.email).then(invValue => {
           if (invValue !== null) {
@@ -258,7 +242,7 @@ export default function Home() {
         });
       }
     }
-  }, [userData?.coins, userData?.purchased_items, userData?.total_networth]);
+  }, [userData?.coins, userData?.purchased_items, userData?.total_networth, userData?.investments_value]);
 
   const calculateLessonCounts = async (user) => {
     try {

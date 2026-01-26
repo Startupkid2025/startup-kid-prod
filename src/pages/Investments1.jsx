@@ -254,13 +254,14 @@ export default function Investments() {
     setIsInvesting({ ...isInvesting, [businessId]: true });
 
     try {
-      await base44.entities.Investment.create({
+      const createdInvestment = await base44.entities.Investment.create({
         student_email: userData.email,
         business_type: businessId,
         invested_amount: Math.round(amount),
         current_value: Math.round(amount),
         daily_change_percent: 0,
-        last_updated: new Date().toISOString()
+        last_updated: new Date().toISOString(),
+        last_updated_date_key: getTodayDate()
       });
 
       const newCoinsBalance = userData.coins - totalCost;
@@ -282,16 +283,8 @@ export default function Investments() {
       toast.success(`השקעת ${amount} מטבעות ב${business.name}! (עמלה: ${TRANSACTION_FEE}) 🎉`);
       setInvestmentAmounts({ ...investmentAmounts, [businessId]: 0 });
       
-      // Update local state instead of full reload
-      const newInvestment = {
-        student_email: userData.email,
-        business_type: businessId,
-        invested_amount: amount,
-        current_value: amount,
-        daily_change_percent: 0,
-        last_updated: new Date().toISOString()
-      };
-      setInvestments([...investments, newInvestment]);
+      // Update local state with created investment (includes id)
+      setInvestments([...investments, createdInvestment]);
       setUserData({ ...userData, coins: newCoinsBalance });
     } catch (error) {
       console.error("Error investing:", error);
@@ -593,9 +586,12 @@ export default function Investments() {
                   {totalProfit >= 0 ? <TrendingUp className="w-6 h-6 text-white" /> : <TrendingDown className="w-6 h-6 text-white" />}
                 </div>
                 <div>
-                  <p className="text-white/70 text-sm">סה"כ רווח/הפסד</p>
+                  <p className="text-white/70 text-sm">רווח/הפסד לא ממומש</p>
                   <p className={`text-2xl font-black ${unrealizedProfit >= 0 ? 'text-green-300' : 'text-red-300'}`}>
                     {unrealizedProfit >= 0 ? '+' : ''}{Math.round(unrealizedProfit)} ({totalProfitPercent}%)
+                  </p>
+                  <p className={`text-xs text-white/60 mt-1`}>
+                    ממומש: {realizedProfit >= 0 ? '+' : ''}{Math.round(realizedProfit)} 🪙
                   </p>
                   <p className={`text-sm font-bold ${totalDailyProfit >= 0 ? 'text-emerald-200' : 'text-rose-200'}`}>
                     היום: {totalDailyProfit >= 0 ? '+' : ''}{totalDailyProfit} 🪙
@@ -616,7 +612,7 @@ export default function Investments() {
         <Card className="bg-white/10 backdrop-blur-md border-white/20">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              📊 השוק היום - מה קרה אתמול?
+              📊 השוק היום
             </CardTitle>
             <p className="text-white/60 text-sm mt-2">
               השקעות משתנות כל יום! עסקים בסיכון גבוה יכולים להרוויח יותר אבל גם להפסיד הרבה.
@@ -624,17 +620,18 @@ export default function Investments() {
               <span className="block mt-1 text-yellow-300 font-bold">
                 שים לב: כל קניה ומכירה כוללת עמלה של {TRANSACTION_FEE} מטבעות!
               </span>
-              {yesterdayPerformance?.noDataAvailable && (
+              {todayPerformance?.notCreatedYet && (
                 <span className="block mt-2 text-white/50 text-xs">
-                  ⚠️ אין נתוני אתמול זמינים
+                  ⚠️ השוק עדיין לא עודכן היום
                 </span>
               )}
             </p>
           </CardHeader>
           <CardContent className="space-y-2">
             {BUSINESSES.map((business) => {
+              const todayChange = todayPerformance[business.id] || 0;
               const yesterdayChange = yesterdayPerformance[business.id] || 0;
-              const isPositive = yesterdayChange >= 0;
+              const isPositive = todayChange >= 0;
               
               return (
                 <div key={business.id} className="bg-white/5 rounded-lg p-3 flex items-center justify-between">
@@ -648,14 +645,21 @@ export default function Investments() {
                       </p>
                     </div>
                   </div>
-                  <div className={`px-4 py-2 rounded-lg ${
-                    isPositive ? 'bg-green-500/20' : 'bg-red-500/20'
-                  }`}>
-                    <p className={`font-black text-lg ${
-                      isPositive ? 'text-green-300' : 'text-red-300'
+                  <div className="flex flex-col gap-1">
+                    <div className={`px-4 py-2 rounded-lg ${
+                      isPositive ? 'bg-green-500/20' : 'bg-red-500/20'
                     }`}>
-                      {isPositive ? '+' : ''}{yesterdayChange.toFixed(1)}%
-                    </p>
+                      <p className={`font-black text-lg ${
+                        isPositive ? 'text-green-300' : 'text-red-300'
+                      }`}>
+                        {isPositive ? '+' : ''}{todayChange.toFixed(1)}%
+                      </p>
+                    </div>
+                    {!yesterdayPerformance?.noDataAvailable && (
+                      <p className="text-[10px] text-white/50 text-center">
+                        אתמול: {yesterdayChange >= 0 ? '+' : ''}{yesterdayChange.toFixed(1)}%
+                      </p>
+                    )}
                   </div>
                 </div>
               );
