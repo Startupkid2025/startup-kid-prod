@@ -4,6 +4,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
+    // This function is called by scheduled automation (no user context)
+    // Use asServiceRole for all operations
+    
     // Parse payload
     const payload = await req.json().catch(() => ({}));
     
