@@ -978,7 +978,6 @@ export default function Admin() {
               total_investment_fees: user.total_investment_fees || 0,
               total_inflation_lost: user.total_inflation_lost || 0,
               total_income_tax: user.total_income_tax || 0,
-              total_dividend_tax: user.total_dividend_tax || 0,
               total_credit_interest: user.total_credit_interest || 0,
               total_item_sale_losses: user.total_item_sale_losses || 0,
               total_realized_investment_profit: user.total_realized_investment_profit || 0,
