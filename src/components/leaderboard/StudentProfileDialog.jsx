@@ -387,7 +387,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                 </div>
                 <div className="flex-1">
                   <p className="text-white/70 text-sm">שם מלא</p>
-                  <p className="text-white font-bold text-lg">{student.first_name + student.last_name}</p>
+                  <p className="text-white font-bold text-lg">{student.first_name + " " + student.last_name}</p>
                 </div>
               </div>
             </CardContent>
