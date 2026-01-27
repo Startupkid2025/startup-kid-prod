@@ -156,7 +156,6 @@ export default function EconomyAdminPanel() {
     const losses = {
       inflation: safeNum(user.total_inflation_lost),
       incomeTax: safeNum(user.total_income_tax),
-      dividendTax: safeNum(user.total_dividend_tax),
       capitalGainsTax: safeNum(user.total_capital_gains_tax),
       investmentFees: safeNum(user.total_investment_fees),
       itemSaleLosses: safeNum(user.total_item_sale_losses),
@@ -338,7 +337,6 @@ export default function EconomyAdminPanel() {
         const losses = {
           inflation: safeNum(user.total_inflation_lost),
           incomeTax: safeNum(user.total_income_tax),
-          dividendTax: safeNum(user.total_dividend_tax),
           capitalGainsTax: safeNum(user.total_capital_gains_tax),
           investmentFees: safeNum(user.total_investment_fees),
           itemSaleLosses: safeNum(user.total_item_sale_losses),
@@ -505,7 +503,6 @@ export default function EconomyAdminPanel() {
         const losses = {
           inflation: safeNum(user.total_inflation_lost),
           incomeTax: safeNum(user.total_income_tax),
-          dividendTax: safeNum(user.total_dividend_tax),
           capitalGainsTax: safeNum(user.total_capital_gains_tax),
           investmentFees: safeNum(user.total_investment_fees),
           itemSaleLosses: safeNum(user.total_item_sale_losses),
@@ -1590,10 +1587,7 @@ export default function EconomyAdminPanel() {
                     <span className="text-white/70">total_capital_gains_tax</span>
                     <div className="font-bold text-red-300">{(debugStudent.total_capital_gains_tax || 0).toLocaleString()}</div>
                   </div>
-                  <div>
-                    <span className="text-white/70">total_dividend_tax</span>
-                    <div className="font-bold text-red-300">{(debugStudent.total_dividend_tax || 0).toLocaleString()}</div>
-                  </div>
+
                   <div>
                     <span className="text-white/70">total_credit_interest</span>
                     <div className="font-bold text-red-300">{(debugStudent.total_credit_interest || 0).toLocaleString()}</div>
@@ -1619,8 +1613,7 @@ export default function EconomyAdminPanel() {
                     <div className="font-bold text-red-200 text-lg">
                       {(
                         (debugStudent.total_income_tax || 0) +
-                        (debugStudent.total_capital_gains_tax || 0) +
-                        (debugStudent.total_dividend_tax || 0)
+                        (debugStudent.total_capital_gains_tax || 0)
                       ).toLocaleString()}
                     </div>
                   </div>
@@ -1650,7 +1643,6 @@ export default function EconomyAdminPanel() {
                         (debugStudent.total_inflation_lost || 0) +
                         (debugStudent.total_income_tax || 0) +
                         (debugStudent.total_capital_gains_tax || 0) +
-                        (debugStudent.total_dividend_tax || 0) +
                         (debugStudent.total_credit_interest || 0) +
                         (debugStudent.total_investment_fees || 0) +
                         (debugStudent.total_item_sale_losses || 0)
