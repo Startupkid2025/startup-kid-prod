@@ -84,8 +84,8 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
     // ALWAYS fetch full LeaderboardEntry from DB (accessible to ALL users)
     let leaderboardData = null;
     try {
-      const allEntries = await base44.entities.LeaderboardEntry.list();
-      leaderboardData = allEntries.find(e => e.student_email === studentEmail);
+      const allEntries = await base44.entities.LeaderboardEntry.filter({ student_email: studentEmail });
+      leaderboardData = allEntries[0] || null;
       if (leaderboardData) {
         console.log("Fetched LeaderboardEntry from DB:", leaderboardData);
         console.log("📊 LeaderboardEntry.profile_completion_coins:", leaderboardData.profile_completion_coins);
@@ -153,8 +153,8 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       // If admin viewing someone else → try User entity first, fallback to LeaderboardEntry
       else if (isAdminLocal) {
         try {
-          const allUsers = await base44.entities.User.list();
-          const userEntity = allUsers.find(u => u.email === studentEmail);
+          const allUsers = await base44.entities.User.filter({ email: studentEmail });
+          const userEntity = allUsers[0] || null;
           if (userEntity) {
             fullUserData = userEntity;
             console.log("Admin: Using User entity as source of truth");
