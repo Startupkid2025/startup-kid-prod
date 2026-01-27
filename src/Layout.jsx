@@ -132,12 +132,30 @@ export default function Layout({ children }) {
     try {
       const user = await base44.auth.me();
       
+      // Initialize new user with starting coins
+      if (user.coins === undefined || user.coins === null) {
+        await base44.auth.updateMe({
+          coins: 500,
+          base_coins: 500
+        });
+        
+        // Sync to LeaderboardEntry for new users
+        await syncLeaderboardEntry(user.email, {
+          coins: 500,
+          base_coins: 500
+        });
+        
+        // Reload user data
+        const updatedUser = await base44.auth.me();
+        setCurrentUser(updatedUser);
+      } else {
+        setCurrentUser(user);
+      }
+      
       // Apply daily economy updates for current user only (inflation + credit interest)
       applyDailyEconomyForCurrentUser(user).catch(error => {
         console.error("Error applying daily economy:", error);
       });
-      
-      setCurrentUser(user);
     } catch (error) {
       console.error("Error loading user:", error);
     }
