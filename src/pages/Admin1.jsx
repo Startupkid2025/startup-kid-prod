@@ -56,6 +56,8 @@ export default function Admin() {
   const [showBulkAddDialog, setShowBulkAddDialog] = useState(false);
   const [bulkAddLesson, setBulkAddLesson] = useState("");
   const [bulkAddDate, setBulkAddDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const STUDENTS_PER_PAGE = 30;
 
   useEffect(() => {
     loadInitialData();
@@ -96,20 +98,14 @@ export default function Admin() {
       console.log(`Loading ${tab} data...`);
       
       if (tab === "students") {
-        // Load sequentially with longer delays to avoid rate limits
-        const allUsers = await retryWithBackoff(() => base44.entities.User.list());
-        await sleep(500);
-        
-        const allLessons = await retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date"));
-        await sleep(500);
-        
-        const allParticipations = await retryWithBackoff(() => base44.entities.LessonParticipation.list());
-        await sleep(500);
-        
-        const allGroups = await retryWithBackoff(() => base44.entities.Group.list());
-        await sleep(500);
-        
-        const allScheduledLessons = await retryWithBackoff(() => base44.entities.ScheduledLesson.list());
+        // Load all data in parallel - no sleep delays
+        const [allUsers, allLessons, allParticipations, allGroups, allScheduledLessons] = await Promise.all([
+          retryWithBackoff(() => base44.entities.User.list()),
+          retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date")),
+          retryWithBackoff(() => base44.entities.LessonParticipation.list()),
+          retryWithBackoff(() => base44.entities.Group.list()),
+          retryWithBackoff(() => base44.entities.ScheduledLesson.list())
+        ]);
         
         setStudents(allUsers);
         setLessons(allLessons);
@@ -117,13 +113,11 @@ export default function Admin() {
         setGroups(allGroups);
         setScheduledLessons(allScheduledLessons);
       } else if (tab === "lessons") {
-        const allLessons = await retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date"));
-        await sleep(500);
-        
-        const allParticipations = await retryWithBackoff(() => base44.entities.LessonParticipation.list());
-        await sleep(500);
-        
-        const allUsers = await retryWithBackoff(() => base44.entities.User.list());
+        const [allLessons, allParticipations, allUsers] = await Promise.all([
+          retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date")),
+          retryWithBackoff(() => base44.entities.LessonParticipation.list()),
+          retryWithBackoff(() => base44.entities.User.list())
+        ]);
         
         setLessons(allLessons);
         setParticipations(allParticipations);
@@ -1359,7 +1353,7 @@ export default function Admin() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <CardTitle className="text-white text-lg">
-                    ניהול תלמידים ({students.filter(s => filterUserType === 'all' || s.user_type === filterUserType).length})
+                    ניהול תלמידים ({students.filter(s => filterUserType === 'all' || s.user_type === filterUserType).length}) - עמוד {currentPage}
                   </CardTitle>
                   <Button
                     onClick={refreshCurrentTab}
@@ -1705,6 +1699,34 @@ export default function Admin() {
                       </div>
                       ))}
                       </div>
+
+                      {/* Pagination Controls */}
+                      {totalPages > 1 && (
+                        <div className="flex items-center justify-center gap-2 pt-4 border-t border-white/10">
+                          <Button
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                            variant="outline"
+                            className="bg-white/10 border-white/20 text-white hover:bg-white/20 disabled:opacity-50"
+                          >
+                            ← הקודם
+                          </Button>
+                          <span className="text-white/70 text-sm">
+                            עמוד {currentPage} מתוך {totalPages}
+                          </span>
+                          <Button
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages}
+                            variant="outline"
+                            className="bg-white/10 border-white/20 text-white hover:bg-white/20 disabled:opacity-50"
+                          >
+                            הבא →
+                          </Button>
+                        </div>
+                      )}
+                      </div>
+                      );
+                      })()}
                       </CardContent>
                       </Card>
                       </TabsContent>
