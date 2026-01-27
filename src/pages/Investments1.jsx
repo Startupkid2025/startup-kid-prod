@@ -714,7 +714,7 @@ export default function Investments() {
               
               // Calculate today's profit using today's market performance
               const todayProfit = hasInvestments ? businessInvestments.reduce((sum, inv) => {
-                const todayChange = todayPerformance[businessId] || 0;
+                const todayChange = todayPerformance[business.id] || 0;
                 const todayEarnings = Math.round(inv.current_value * (todayChange / 100));
                 return sum + todayEarnings;
               }, 0) : 0;
