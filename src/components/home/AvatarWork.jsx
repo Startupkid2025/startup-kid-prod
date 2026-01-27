@@ -220,11 +220,12 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     // Update net worth
     const newNetWorth = await updateNetWorth(userData.email);
 
-    // Sync to LeaderboardEntry
+    // Sync to LeaderboardEntry (including total_work_hours)
     await syncLeaderboardEntry(userData.email, {
       coins: finalCoins,
       total_work_earnings: totalWorkEarnings,
-      total_networth: newNetWorth
+      total_networth: newNetWorth,
+      total_work_hours: userData.total_work_hours || 0
     });
 
     toast.success(`${userData.avatar_name} חזר מהעבודה! קיבלת ${coinsToAdd} מטבעות! 🎉`);
