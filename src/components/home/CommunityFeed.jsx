@@ -129,7 +129,7 @@ export default function CommunityFeed({ userData, onRefresh }) {
           console.error("Error updating leaderboard:", leaderboardError);
         }
 
-        toast.success("לייק! +3 מטבעות 💙");
+        toast.success("לייק! +3 סטארטקוין 💙");
       }
 
       await loadPosts();
@@ -182,7 +182,7 @@ export default function CommunityFeed({ userData, onRefresh }) {
       }
 
       setCommentTexts({ ...commentTexts, [post.id]: "" });
-      toast.success("תגובה נוספה! +3 מטבעות 💬");
+      toast.success("תגובה נוספה! +3 סטארטקוין 💬");
       await loadPosts();
     } catch (error) {
       console.error("Error commenting:", error);

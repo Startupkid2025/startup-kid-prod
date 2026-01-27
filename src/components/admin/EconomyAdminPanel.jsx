@@ -1291,7 +1291,7 @@ export default function EconomyAdminPanel() {
                       <div className="text-red-400 font-bold">❌ שגיאה</div>
                     ) : (
                       <div className={`font-bold text-lg ${result.coins >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {result.coins?.toLocaleString()} מטבעות
+                        {result.coins?.toLocaleString()} סטארטקוין
                       </div>
                     )}
                   </div>

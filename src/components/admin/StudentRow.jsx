@@ -160,7 +160,7 @@ export default function StudentRow({
   // Handle adding coins
   const handleAddCoins = async () => {
     if (!coinsToAdd || isNaN(coinsToAdd) || Number(coinsToAdd) === 0) {
-      toast.error("הזן מספר מטבעות תקין");
+      toast.error("הזן מספר סטארטקוין תקין");
       return;
     }
     
@@ -181,7 +181,7 @@ export default function StudentRow({
       
       const action = amount > 0 ? "נוספו" : "הופחתו";
       const absAmount = Math.abs(amount);
-      toast.success(`${action} ${absAmount} מטבעות ל-${student.full_name} ${coinsReason ? `(${coinsReason})` : ""} ✨`);
+      toast.success(`${action} ${absAmount} סטארטקוין ל-${student.full_name} ${coinsReason ? `(${coinsReason})` : ""} ✨`);
       
       setShowAddCoinsDialog(false);
       setCoinsToAdd("");
@@ -189,7 +189,7 @@ export default function StudentRow({
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error("Error adding coins:", error);
-      toast.error("שגיאה בהוספת מטבעות");
+      toast.error("שגיאה בהוספת סטארטקוין");
     }
   };
 
@@ -1011,7 +1011,7 @@ export default function StudentRow({
         <DialogContent className="bg-white/95 backdrop-blur-xl border-2 border-yellow-300">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-yellow-600">
-              הוסף/הפחת מטבעות
+              הוסף/הפחת סטארטקוין
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -1020,13 +1020,13 @@ export default function StudentRow({
                 {student.full_name}
               </p>
               <p className="text-xs text-yellow-600 mt-1">
-                יתרה נוכחית: {student.coins || 0} מטבעות
+                יתרה נוכחית: {student.coins || 0} סטארטקוין
               </p>
             </div>
 
             <div className="space-y-2">
               <Label className="text-gray-700 font-medium">
-                כמות מטבעות (חיובי להוסיף, שלילי להפחית)
+                כמות סטארטקוין (חיובי להוסיף, שלילי להפחית)
               </Label>
               <Input
                 type="number"
