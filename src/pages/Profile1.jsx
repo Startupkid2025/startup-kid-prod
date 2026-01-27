@@ -70,15 +70,20 @@ export default function Profile() {
       coinsToAdd += 20;
     }
     
+    const newCoins = (userData.coins || 0) + coinsToAdd;
+    const newProfileCompletionCoins = (userData.profile_completion_coins || 0) + coinsToAdd;
+    
     // Update user data with new coins
     await base44.auth.updateMe({
       ...editData,
-      coins: (userData.coins || 0) + coinsToAdd
+      coins: newCoins,
+      profile_completion_coins: newProfileCompletionCoins
     });
 
     // Sync to LeaderboardEntry for public visibility
     await syncLeaderboardEntry(userData.email, {
-      coins: (userData.coins || 0) + coinsToAdd,
+      coins: newCoins,
+      profile_completion_coins: newProfileCompletionCoins,
       age: editData.age,
       bio: editData.bio,
       phone_number: editData.phone_number
