@@ -52,8 +52,16 @@ export default function Layout({ children }) {
 
   const updateLoginStreak = async () => {
     try {
-      const user = await base44.auth.me();
+      let user = await base44.auth.me();
       if (!user) return;
+
+      // Initialize new user with starting coins FIRST
+      if (user.coins === undefined || user.coins === null) {
+        await base44.auth.updateMe({
+          coins: 500
+        });
+        user = await base44.auth.me();
+      }
 
       // Use Jerusalem timezone for date calculations
       const DATE_TZ = "Asia/Jerusalem";
@@ -130,27 +138,19 @@ export default function Layout({ children }) {
 
   const loadUser = async () => {
     try {
-      const user = await base44.auth.me();
+      let user = await base44.auth.me();
       
-      // Initialize new user with starting coins
+      // Initialize new user with starting coins BEFORE any other operations
       if (user.coins === undefined || user.coins === null) {
         await base44.auth.updateMe({
-          coins: 500,
-          base_coins: 500
+          coins: 500
         });
         
-        // Sync to LeaderboardEntry for new users
-        await syncLeaderboardEntry(user.email, {
-          coins: 500,
-          base_coins: 500
-        });
-        
-        // Reload user data
-        const updatedUser = await base44.auth.me();
-        setCurrentUser(updatedUser);
-      } else {
-        setCurrentUser(user);
+        // Reload user data with updated coins
+        user = await base44.auth.me();
       }
+      
+      setCurrentUser(user);
       
       // Apply daily economy updates for current user only (inflation + credit interest)
       applyDailyEconomyForCurrentUser(user).catch(error => {
