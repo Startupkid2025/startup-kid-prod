@@ -176,15 +176,17 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
       console.log("Source of truth data:", fullUserData);
       console.log("📊 profile_completion_coins value:", fullUserData?.profile_completion_coins);
 
-      // Profile tasks - these ARE saved in User entity
-      const profileCoinsValue = safeNum(fullUserData.profile_completion_coins);
-      console.log(`📝 Profile completion coins for ${studentEmail}:`, profileCoinsValue);
-      income.profileTasks += profileCoinsValue;
+      // Profile tasks
       if (fullUserData.completed_instagram_follow) income.profileTasks += 50;
       if (fullUserData.completed_youtube_subscribe) income.profileTasks += 50;
       if (fullUserData.completed_facebook_follow) income.profileTasks += 50;
       if (fullUserData.completed_discord_join) income.profileTasks += 50;
       if (fullUserData.completed_share) income.profileTasks += 100;
+      
+      // Profile completion (age, bio, phone) - use stored value from leaderboardData
+      const profileCompletionCoins = safeNum(leaderboardData?.profile_completion_coins);
+      console.log(`📝 Profile completion coins for ${studentEmail}:`, profileCompletionCoins);
+      income.profileTasks += profileCompletionCoins;
 
       // 5) Base - use stored value with fallback to 500
       income.base = safeNum(fullUserData.base_coins ?? fullUserData.base ?? 500);
