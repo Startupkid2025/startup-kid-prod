@@ -2,10 +2,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    
     // This function is called by scheduled automation (no user context)
-    // Use asServiceRole for all operations
+    // Initialize client and use asServiceRole for all operations
+    const base44 = createClientFromRequest(req);
     
     // Parse payload
     const payload = await req.json().catch(() => ({}));
