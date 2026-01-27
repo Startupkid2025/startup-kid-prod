@@ -300,9 +300,8 @@ export default function Admin() {
           const creditInterest = user.total_credit_interest || 0;
           const itemSaleLosses = user.total_item_sale_losses || 0;
           const investmentFees = user.total_investment_fees || 0;
-          const dividendTax = user.total_dividend_tax || 0;
 
-          const totalLosses = inflationLoss + incomeTax + capitalGainsTax + creditInterest + itemSaleLosses + investmentFees + dividendTax;
+          const totalLosses = inflationLoss + incomeTax + capitalGainsTax + creditInterest + itemSaleLosses + investmentFees;
           
           // DON'T subtract investments! They are assets, not expenses
           const correctCoins = Math.round(totalIncome - itemsValue - totalLosses);
@@ -323,7 +322,6 @@ export default function Admin() {
           console.log(`    - creditInterest: ${creditInterest} ⚠️`);
           console.log(`    - itemSaleLosses: ${itemSaleLosses}`);
           console.log(`    - investmentFees: ${investmentFees}`);
-          console.log(`    - dividendTax: ${dividendTax}`);
           console.log(`  ✅ Formula: ${totalIncome} - ${itemsValue} - ${totalLosses} = ${correctCoins}`);
           console.log(`  (investments ${investmentsValue} NOT subtracted - they are assets!)\n`);
           
@@ -498,8 +496,7 @@ export default function Admin() {
                             (user.total_capital_gains_tax || 0) + 
                             (user.total_credit_interest || 0) + 
                             (user.total_item_sale_losses || 0) + 
-                            (user.total_investment_fees || 0) + 
-                            (user.total_dividend_tax || 0);
+                            (user.total_investment_fees || 0);
 
           // Current coins + items + investments = what they actually have
           const actualAssets = (user.coins || 0) + itemsValue + investmentsValue;
@@ -731,12 +728,11 @@ export default function Admin() {
           const inflationLoss = user.total_inflation_lost || 0;
           const incomeTax = user.total_income_tax || 0;
           const capitalGainsTax = user.total_capital_gains_tax || 0;
-          const dividendTax = user.total_dividend_tax || 0;
           const investmentFees = user.total_investment_fees || 0;
           const itemSaleLosses = user.total_item_sale_losses || 0;
           
           const totalLosses = inflationLoss + incomeTax + capitalGainsTax + 
-                            dividendTax + investmentFees + itemSaleLosses;
+                            investmentFees + itemSaleLosses;
           
           // === ITEMS SPENT ===
           const purchasedItems = user.purchased_items || [];
@@ -774,7 +770,7 @@ export default function Admin() {
           console.log(`    📈 TOTAL INCOME: ${totalIncome}`);
           console.log(`  === LOSSES (no creditInterest) ===`);
           console.log(`    inflation: ${inflationLoss}, incomeTax: ${incomeTax}, capitalGainsTax: ${capitalGainsTax}`);
-          console.log(`    dividendTax: ${dividendTax}, investmentFees: ${investmentFees}, itemSaleLosses: ${itemSaleLosses}`);
+          console.log(`    investmentFees: ${investmentFees}, itemSaleLosses: ${itemSaleLosses}`);
           console.log(`    📉 TOTAL LOSSES: ${totalLosses}`);
           console.log(`  === SPENDING ===`);
           console.log(`    itemsSpent: ${itemsSpent} (${purchasedItems.length} items)`);
