@@ -270,7 +270,7 @@ export default function Investments() {
         current_value: Math.round(amount),
         daily_change_percent: 0,
         last_updated: new Date().toISOString(),
-        last_updated_date_key: getTodayDate()
+        last_updated_date_key: getDateKeyJerusalem(0)
       });
 
       const newCoinsBalance = userData.coins - totalCost;
