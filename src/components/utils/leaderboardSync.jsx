@@ -68,6 +68,15 @@ export async function syncLeaderboardEntry(studentEmail, patch) {
     const cleanPatch = sanitizeLeaderboardPatch(patch);
 
     if (entries && entries.length > 0) {
+      // Auto-calculate total_networth if any component changes
+      if ('coins' in cleanPatch || 'investments_value' in cleanPatch || 'items_value' in cleanPatch) {
+        const entry = entries[0];
+        const coins = cleanPatch.coins ?? entry.coins ?? 0;
+        const investments_value = cleanPatch.investments_value ?? entry.investments_value ?? 0;
+        const items_value = cleanPatch.items_value ?? entry.items_value ?? 0;
+        cleanPatch.total_networth = coins + investments_value + items_value;
+      }
+      
       await base44.entities.LeaderboardEntry.update(entries[0].id, cleanPatch);
       console.log(`✅ Synced LeaderboardEntry for ${studentEmail}`);
       return;
