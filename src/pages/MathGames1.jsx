@@ -568,13 +568,11 @@ ${question} = ${correctAnswer}
         
         // Update LeaderboardEntry with all math earnings
         try {
-          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
-          if (leaderboardEntries.length > 0) {
-            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-              coins: newCoins,
-              total_math_earnings: (userData.total_math_earnings || 0) + coinsEarned
-            });
-          }
+          const { syncLeaderboardEntry } = await import('../components/utils/leaderboardSync');
+          await syncLeaderboardEntry(userData.email, {
+            coins: newCoins,
+            total_math_earnings: (userData.total_math_earnings || 0) + coinsEarned
+          });
         } catch (leaderboardError) {
           console.error("Error updating leaderboard:", leaderboardError);
         }

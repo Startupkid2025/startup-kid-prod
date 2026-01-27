@@ -119,12 +119,10 @@ export default function CommunityFeed({ userData, onRefresh }) {
 
         // Update leaderboard
         try {
-          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: currentUser.email });
-          if (leaderboardEntries.length > 0) {
-            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-              coins: newCoins
-            });
-          }
+          const { syncLeaderboardEntry } = await import("../utils/leaderboardSync");
+          await syncLeaderboardEntry(currentUser.email, {
+            coins: newCoins
+          });
         } catch (leaderboardError) {
           console.error("Error updating leaderboard:", leaderboardError);
         }
@@ -171,12 +169,10 @@ export default function CommunityFeed({ userData, onRefresh }) {
 
       // Update leaderboard
       try {
-        const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: currentUser.email });
-        if (leaderboardEntries.length > 0) {
-          await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-            coins: newCoins
-          });
-        }
+        const { syncLeaderboardEntry } = await import("../utils/leaderboardSync");
+        await syncLeaderboardEntry(currentUser.email, {
+          coins: newCoins
+        });
       } catch (leaderboardError) {
         console.error("Error updating leaderboard:", leaderboardError);
       }

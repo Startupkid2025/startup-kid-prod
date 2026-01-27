@@ -495,13 +495,11 @@ export default function Vocabulary() {
             }));
             
             // Update leaderboard
-            base44.entities.LeaderboardEntry.filter({ student_email: userData.email }).then(leaderboardEntries => {
-              if (leaderboardEntries.length > 0) {
-                base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-                  coins: (userData.coins || 0) + coinsEarned,
-                  mastered_words: newMasteredCount
-                });
-              }
+            import("../components/utils/leaderboardSync").then(({ syncLeaderboardEntry }) => {
+              syncLeaderboardEntry(userData.email, {
+                coins: (userData.coins || 0) + coinsEarned,
+                mastered_words: newMasteredCount
+              });
             });
           });
         } else {

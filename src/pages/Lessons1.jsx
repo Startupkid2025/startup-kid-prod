@@ -235,14 +235,10 @@ export default function Lessons() {
 
       // Update LeaderboardEntry
       try {
-        const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
-          student_email: currentUser.email 
+        const { syncLeaderboardEntry } = await import("../components/utils/leaderboardSync");
+        await syncLeaderboardEntry(currentUser.email, {
+          coins: currentCoins + surveyReward
         });
-        if (leaderboardEntries.length > 0) {
-          await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-            coins: currentCoins + surveyReward
-          });
-        }
       } catch (error) {
         console.error("Error updating leaderboard:", error);
       }

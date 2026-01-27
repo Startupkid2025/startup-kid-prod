@@ -142,14 +142,10 @@ export default function LessonQuizDialog({ isOpen, onClose, lesson, onComplete }
         
         // Update leaderboard
         try {
-          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
-            student_email: user.email 
+          const { syncLeaderboardEntry } = await import("../utils/leaderboardSync");
+          await syncLeaderboardEntry(user.email, {
+            coins: (user.coins || 0) + coinsToAdd
           });
-          if (leaderboardEntries.length > 0) {
-            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-              coins: (user.coins || 0) + coinsToAdd
-            });
-          }
         } catch (error) {
           console.error("Error updating leaderboard:", error);
         }
