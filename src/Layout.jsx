@@ -105,12 +105,12 @@ export default function Layout({ children }) {
       // Show toast
       if (reward > 0) {
         if (isNewStreak) {
-          toast.warning(`⚠️ הרצף נשבר! התחלת רצף חדש\n💰 הרווחת ${reward} מטבעות (יום 1)`, {
+          toast.warning(`⚠️ הרצף נשבר! התחלת רצף חדש\n💰 הרווחת ${reward} סטארטקוין (יום 1)`, {
             duration: 5000,
             style: { fontSize: '16px' }
           });
         } else {
-          toast.success(`🔥 רצף כניסות: ${newStreak} ימים ברצף!\n💰 הרווחת ${reward} מטבעות!`, {
+          toast.success(`🔥 רצף כניסות: ${newStreak} ימים ברצף!\n💰 הרווחת ${reward} סטארטקוין!`, {
             duration: 6000,
             style: { fontSize: '16px', fontWeight: 'bold' }
           });

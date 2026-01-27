@@ -228,7 +228,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
       total_work_hours: userData.total_work_hours || 0
     });
 
-    toast.success(`${userData.avatar_name} חזר מהעבודה! קיבלת ${coinsToAdd} מטבעות! 🎉`);
+    toast.success(`${userData.avatar_name} חזר מהעבודה! קיבלת ${coinsToAdd} סטארטקוין! 🎉`);
     setWorkStatus(null);
     if (onWorkComplete) onWorkComplete();
   };
@@ -289,7 +289,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
                 onClick={completeWork}
                 className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-black text-lg py-4 shadow-lg"
               >
-                אסוף מטבעות! 💰
+                אסוף סטארטקוין! 💰
               </Button>
             )}
           </CardContent>
@@ -311,7 +311,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
             שלח את {userData?.avatar_name} לעבוד
           </CardTitle>
           <p className="text-white/70 text-sm mt-2">
-            בחר עבודה ותרוויח מטבעות! 💼
+            בחר עבודה ותרוויח סטארטקוין! 💼
           </p>
           {totalWorkEarnings > 0 && (
             <div className="mt-3 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl px-4 py-2 border-2 border-green-300/50 shadow-lg inline-flex items-center gap-2">

@@ -66,7 +66,7 @@ const BUSINESSES = [
     id: "crypto",
     name: "קריפטו",
     icon: "₿",
-    description: "מטבעות דיגיטליים - סיכון גבוה!",
+    description: "סטארטקוין דיגיטליים - סיכון גבוה!",
     minInvestment: 50,
     volatility: "high",
     riskLevel: 4,
@@ -249,14 +249,14 @@ export default function Investments() {
     const amount = investmentAmounts[businessId] || 0;
 
     if (amount < business.minInvestment) {
-      toast.error(`השקעה מינימלית: ${business.minInvestment} מטבעות`);
+      toast.error(`השקעה מינימלית: ${business.minInvestment} סטארטקוין`);
       return;
     }
 
     const totalCost = amount + TRANSACTION_FEE;
 
     if (totalCost > userData.coins) {
-      toast.error(`אין לך מספיק מטבעות! (${amount} + עמלה ${TRANSACTION_FEE} = ${totalCost})`);
+      toast.error(`אין לך מספיק סטארטקוין! (${amount} + עמלה ${TRANSACTION_FEE} = ${totalCost})`);
       return;
     }
 
@@ -296,7 +296,7 @@ export default function Investments() {
         total_networth: newNetWorth
       });
 
-      toast.success(`השקעת ${amount} מטבעות ב${business.name}! (עמלה: ${TRANSACTION_FEE}) 🎉`);
+      toast.success(`השקעת ${amount} סטארטקוין ב${business.name}! (עמלה: ${TRANSACTION_FEE}) 🎉`);
       setInvestmentAmounts({ ...investmentAmounts, [businessId]: 0 });
       
       // Update local state with created investment (includes id)
@@ -482,9 +482,9 @@ export default function Investments() {
       const netProfit = netAmount - TRANSACTION_FEE;
 
       if (grossProfit > 0) {
-        toast.success(`מכרת! רווח נטו: ${Math.round(netProfit)} מטבעות (עמלה: ${TRANSACTION_FEE}, מס: ${Math.round(capitalGainsTax)}) 💰`);
+        toast.success(`מכרת! רווח נטו: ${Math.round(netProfit)} סטארטקוין (עמלה: ${TRANSACTION_FEE}, מס: ${Math.round(capitalGainsTax)}) 💰`);
       } else {
-        toast.error(`מכרת בהפסד של ${Math.round(Math.abs(grossProfit))} מטבעות (כולל עמלה ${TRANSACTION_FEE}) 😢`);
+        toast.error(`מכרת בהפסד של ${Math.round(Math.abs(grossProfit))} סטארטקוין (כולל עמלה ${TRANSACTION_FEE}) 😢`);
       }
 
       setSellAmounts({ ...sellAmounts, [businessId]: 0 });
@@ -547,7 +547,7 @@ export default function Investments() {
           💼 תיק ההשקעות שלי
         </h1>
         <p className="text-white/80 text-lg">
-          השקע חכם והרווח מטבעות!
+          השקע חכם והרווח סטארטקוין!
         </p>
       </motion.div>
 
@@ -563,7 +563,7 @@ export default function Investments() {
                   <Coins className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-white/70 text-sm">מטבעות זמינים</p>
+                  <p className="text-white/70 text-sm">סטארטקוין זמינים</p>
                   <p className="text-2xl font-black text-white">{userData?.coins || 0}</p>
                 </div>
               </div>
@@ -637,7 +637,7 @@ export default function Investments() {
               השקעות משתנות כל יום! עסקים בסיכון גבוה יכולים להרוויח יותר אבל גם להפסיד הרבה.
               פזר את ההשקעות שלך למספר עסקים כדי להקטין סיכון! 
               <span className="block mt-1 text-yellow-300 font-bold">
-                שים לב: כל קניה ומכירה כוללת עמלה של {TRANSACTION_FEE} מטבעות!
+                שים לב: כל קניה ומכירה כוללת עמלה של {TRANSACTION_FEE} סטארטקוין!
               </span>
               {todayPerformance?.notCreatedYet && (
                 <span className="block mt-2 text-white/50 text-xs">

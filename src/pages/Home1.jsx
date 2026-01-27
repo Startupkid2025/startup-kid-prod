@@ -130,7 +130,7 @@ export default function Home() {
       
       // Show toast notification
       if (amount > 0) {
-        toast.success(`🏠 קיבלת ${amount} מטבעות מהכנסה פסיבית! (${daysDiff} ימים × ${perDay} מטבעות)`, {
+        toast.success(`🏠 קיבלת ${amount} סטארטקוין מהכנסה פסיבית! (${daysDiff} ימים × ${perDay} סטארטקוין)`, {
           duration: 5000
         });
       }
@@ -454,7 +454,7 @@ export default function Home() {
     const itemPrice = item.price || 0;
     
     if ((userData.coins || 0) < itemPrice) {
-      toast.error(`אין לך מספיק מטבעות! צריך ${itemPrice} מטבעות.`);
+      toast.error(`אין לך מספיק סטארטקוין! צריך ${itemPrice} סטארטקוין.`);
       return;
     }
 
@@ -546,7 +546,7 @@ export default function Home() {
       console.error("Error updating leaderboard:", error);
     }
 
-    toast.success(`מכרת את ${item.name} ב-${salePrice} מטבעות (50% מהמחיר המקורי)`);
+    toast.success(`מכרת את ${item.name} ב-${salePrice} סטארטקוין (50% מהמחיר המקורי)`);
   };
 
   const fetchInvestmentsValue = async (userEmail) => {
@@ -698,7 +698,7 @@ export default function Home() {
                     </p>
                     <div className="flex items-center justify-center gap-2 text-white/80 text-sm">
                       <span>💰</span>
-                      <span className="font-medium">מטבעות זמינים</span>
+                      <span className="font-medium">סטארטקוין זמינים</span>
                     </div>
                   </motion.div>
 
@@ -1034,7 +1034,7 @@ export default function Home() {
         <Card className="bg-gradient-to-br from-purple-500/30 to-blue-500/30 backdrop-blur-md border-2 border-purple-400/50">
           <CardHeader>
             <CardTitle className="text-white text-2xl flex items-center gap-2">
-              💰 איך להרוויח מטבעות?
+              💰 איך להרוויח סטארטקוין?
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -1044,7 +1044,7 @@ export default function Home() {
                   <span className="text-2xl">📚</span>
                   <span className="text-white font-bold">השתתפות בשיעורים</span>
                 </div>
-                <p className="text-white/80 text-sm">100 מטבעות לכל שיעור + נסיון</p>
+                <p className="text-white/80 text-sm">100 סטארטקוין לכל שיעור + נסיון</p>
                 <p className="text-white/60 text-xs mt-1">📍 עמוד שיעורים</p>
               </div>
 
@@ -1053,7 +1053,7 @@ export default function Home() {
                   <span className="text-2xl">📝</span>
                   <span className="text-white font-bold">מילוי סקרים</span>
                 </div>
-                <p className="text-white/80 text-sm">50 מטבעות אחרי כל שיעור</p>
+                <p className="text-white/80 text-sm">50 סטארטקוין אחרי כל שיעור</p>
                 <p className="text-white/60 text-xs mt-1">📍 עמוד שיעורים</p>
               </div>
 
@@ -1062,7 +1062,7 @@ export default function Home() {
                   <span className="text-2xl">🎯</span>
                   <span className="text-white font-bold">חידונים</span>
                 </div>
-                <p className="text-white/80 text-sm">מטבעות לפי הציון שלך</p>
+                <p className="text-white/80 text-sm">סטארטקוין לפי הציון שלך</p>
                 <p className="text-white/60 text-xs mt-1">📍 עמוד שיעורים</p>
               </div>
 
@@ -1071,7 +1071,7 @@ export default function Home() {
                   <span className="text-2xl">ABC</span>
                   <span className="text-white font-bold">תרגילי אנגלית</span>
                 </div>
-                <p className="text-white/80 text-sm">מטבעות + בונוס מפריטי פה</p>
+                <p className="text-white/80 text-sm">סטארטקוין + בונוס מפריטי פה</p>
                 <p className="text-white/60 text-xs mt-1">📍 עמוד אנגלית</p>
               </div>
 
@@ -1080,7 +1080,7 @@ export default function Home() {
                   <span className="text-2xl">123</span>
                   <span className="text-white font-bold">תרגילי חשבון</span>
                 </div>
-                <p className="text-white/80 text-sm">מטבעות + בונוס מנעליים</p>
+                <p className="text-white/80 text-sm">סטארטקוין + בונוס מנעליים</p>
                 <p className="text-white/60 text-xs mt-1">📍 עמוד חשבון</p>
               </div>
 
@@ -1089,7 +1089,7 @@ export default function Home() {
                   <span className="text-2xl">🔥</span>
                   <span className="text-white font-bold">רצף כניסות</span>
                 </div>
-                <p className="text-white/80 text-sm">10-20-30... מטבעות כל יום!</p>
+                <p className="text-white/80 text-sm">10-20-30... סטארטקוין כל יום!</p>
                 <p className="text-white/60 text-xs mt-1">📍 אוטומטי בכניסה</p>
               </div>
 
