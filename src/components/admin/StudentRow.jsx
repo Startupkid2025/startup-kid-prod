@@ -342,13 +342,9 @@ export default function StudentRow({
             user_type: editedStudent.user_type
           };
 
-          if (leaderboardEntries.length > 0) {
-            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, leaderboardData);
-            console.log("Updated leaderboard entry with new name:", fullName);
-          } else {
-            await base44.entities.LeaderboardEntry.create(leaderboardData);
-            console.log("Created new leaderboard entry with name:", fullName);
-          }
+          // Always sync (create or update) via syncLeaderboardEntry
+          await syncLeaderboardEntry(student.email, leaderboardData);
+          console.log("Synced leaderboard entry with new name:", fullName);
         }
       } catch (leaderboardError) {
         console.error("Error updating leaderboard:", leaderboardError);
