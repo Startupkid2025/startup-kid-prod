@@ -57,7 +57,7 @@ export default function Admin() {
   const [bulkAddLesson, setBulkAddLesson] = useState("");
   const [bulkAddDate, setBulkAddDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const STUDENTS_PER_PAGE = 30;
+  const STUDENTS_PER_PAGE = 20;
 
   useEffect(() => {
     loadInitialData();
