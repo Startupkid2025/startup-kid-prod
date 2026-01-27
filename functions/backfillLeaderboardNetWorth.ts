@@ -110,7 +110,6 @@ Deno.serve(async (req) => {
           total_passive_income: userData.total_passive_income || 0,
           total_inflation_lost: userData.total_inflation_lost || 0,
           total_income_tax: userData.total_income_tax || 0,
-          total_dividend_tax: userData.total_dividend_tax || 0,
           total_capital_gains_tax: userData.total_capital_gains_tax || 0,
           total_credit_interest: userData.total_credit_interest || 0,
           total_investment_fees: userData.total_investment_fees || 0,
