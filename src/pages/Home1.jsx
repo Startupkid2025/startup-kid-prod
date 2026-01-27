@@ -151,36 +151,59 @@ export default function Home() {
       // Apply passive income FIRST (before any other calculations)
       await applyPassiveIncomeIfNeeded(user);
       
-      // Initialize intro lesson for new users
-      if (!user.tutorial_initialized) {
-        await initializeIntroLesson(user.email);
-        await base44.auth.updateMe({ tutorial_initialized: true });
-      }
-      
-      // Check if user needs to select group/name - only if they DON'T have these fields
+      // Check if user needs to select group/name
       const needsOnboarding = !user.has_selected_group && (!user.first_name || !user.last_name);
       if (needsOnboarding) {
         setShowGroupSelection(true);
       }
       
-      // Calculate lesson counts
-      const lessonCounts = await calculateLessonCounts(user);
-      
-      // Calculate actual current coins based on net worth
-      // const recalculatedCoins = await recalculateCoins(user);
-      // if (recalculatedCoins !== null && Math.abs(recalculatedCoins - (user.coins || 0)) >= 1) {
-      //   await base44.auth.updateMe({ coins: recalculatedCoins });
-      //   user.coins = recalculatedCoins;
-      // }
+      // Initialize intro lesson & calculate lesson counts in parallel
+      const [lessonCounts] = await Promise.all([
+        calculateLessonCounts(user),
+        (async () => {
+          if (!user.tutorial_initialized) {
+            await initializeIntroLesson(user.email);
+            await base44.auth.updateMe({ tutorial_initialized: true });
+          }
+        })()
+      ]);
 
-      setUserData({ ...user, ...lessonCounts });
-
-      // Use pre-calculated investments_value if available (set by CRON or on trades)
+      // Fetch investments value in parallel with group/lesson data
       let invValue = user.investments_value;
-      
-      // Fallback: fetch if not available
+      const [groupData] = await Promise.all([
+        (async () => {
+          try {
+            const allGroups = await base44.entities.Group.list();
+            const myGroup = allGroups.find(g => g.student_emails?.includes(user.email));
+            
+            if (myGroup) {
+              setUserGroup(myGroup);
+              if (myGroup.next_lesson_id) {
+                try {
+                  const lesson = await base44.entities.Lesson.get(myGroup.next_lesson_id);
+                  setNextLesson(lesson);
+                } catch {
+                  setNextLesson(null);
+                }
+              } else {
+                setNextLesson(null);
+              }
+            } else {
+              setUserGroup(null);
+              setNextLesson(null);
+            }
+          } catch (error) {
+            console.error("Error loading group info:", error);
+            setUserGroup(null);
+            setNextLesson(null);
+          }
+        })(),
+        invValue === undefined || invValue === null ? fetchInvestmentsValue(user.email) : Promise.resolve(invValue)
+      ]);
+
+      // Update invValue from parallel call
       if (invValue === undefined || invValue === null) {
-        invValue = await fetchInvestmentsValue(user.email);
+        invValue = groupData;
       }
 
       const purchasedItems = user.purchased_items || [];
@@ -190,6 +213,7 @@ export default function Home() {
         if (item) itemsValue += item.price || 0;
       });
 
+      setUserData({ ...user, ...lessonCounts });
       setInvestmentsValue(invValue ?? 0);
 
       const worth = (user.coins || 0) + itemsValue + (invValue ?? 0);
@@ -205,37 +229,6 @@ export default function Home() {
           investments_value: invValue ?? 0, 
           total_networth: worth 
         });
-        user.investments_value = invValue ?? 0;
-        user.total_networth = worth;
-      }
-
-      // Fetch user group and next lesson
-      try {
-        const allGroups = await base44.entities.Group.list();
-        const myGroup = allGroups.find(g => g.student_emails?.includes(user.email));
-        
-        if (myGroup) {
-          setUserGroup(myGroup);
-          
-          if (myGroup.next_lesson_id) {
-            try {
-              const lesson = await base44.entities.Lesson.get(myGroup.next_lesson_id);
-              setNextLesson(lesson);
-            } catch (lessonError) {
-              console.log("Next lesson not found or deleted");
-              setNextLesson(null);
-            }
-          } else {
-            setNextLesson(null);
-          }
-        } else {
-          setUserGroup(null);
-          setNextLesson(null);
-        }
-      } catch (groupError) {
-        console.error("Error loading group info:", groupError);
-        setUserGroup(null);
-        setNextLesson(null);
       }
 
       setIsLoading(false);
