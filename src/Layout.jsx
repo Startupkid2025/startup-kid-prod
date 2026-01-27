@@ -7,12 +7,22 @@ import { toast } from "sonner";
 import { AVATAR_ITEMS } from "./components/avatar/TamagotchiAvatar";
 import { syncLeaderboardEntry } from "./components/utils/leaderboardSync";
 import MaintenancePage from "./components/MaintenancePage";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 export default function Layout({ children }) {
   const location = useLocation();
   const [currentUser, setCurrentUser] = React.useState(null);
   const [maintenanceMode, setMaintenanceMode] = React.useState(null);
   const [isLoadingMaintenance, setIsLoadingMaintenance] = React.useState(true);
+  const [showLoginReward, setShowLoginReward] = React.useState(false);
+  const [loginRewardData, setLoginRewardData] = React.useState(null);
 
   React.useEffect(() => {
     checkMaintenanceMode();
@@ -102,19 +112,14 @@ export default function Layout({ children }) {
         console.error("Error syncing login streak:", syncError);
       }
 
-      // Show toast
+      // Show welcome dialog
       if (reward > 0) {
-        if (isNewStreak) {
-          toast.warning(`⚠️ הרצף נשבר! התחלת רצף חדש\n💰 הרווחת ${reward} סטארטקוין (יום 1)`, {
-            duration: 5000,
-            style: { fontSize: '16px' }
-          });
-        } else {
-          toast.success(`🔥 רצף כניסות: ${newStreak} ימים ברצף!\n💰 הרווחת ${reward} סטארטקוין!`, {
-            duration: 6000,
-            style: { fontSize: '16px', fontWeight: 'bold' }
-          });
-        }
+        setLoginRewardData({
+          streak: newStreak,
+          reward: reward,
+          isNewStreak: isNewStreak
+        });
+        setShowLoginReward(true);
       }
     } catch (error) {
       console.error("Error updating login streak:", error);
@@ -354,6 +359,69 @@ export default function Layout({ children }) {
           </div>
         </div>
       </nav>
+
+      {/* Login Reward Dialog */}
+      <Dialog open={showLoginReward} onOpenChange={setShowLoginReward}>
+        <DialogContent className="bg-gradient-to-br from-yellow-400 via-orange-400 to-red-400 border-4 border-white shadow-2xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-3xl font-black text-white text-center mb-2">
+              {loginRewardData?.isNewStreak ? "⚠️ רצף חדש!" : "🔥 כל הכבוד!"}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", duration: 0.6 }}
+            className="text-center py-6"
+          >
+            {loginRewardData?.isNewStreak ? (
+              <>
+                <div className="text-7xl mb-4">😅</div>
+                <p className="text-white text-xl font-bold mb-4">
+                  הרצף נשבר! אבל זה בסדר...
+                </p>
+                <p className="text-white/90 text-lg mb-6">
+                  התחלת רצף חדש - יום 1!
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="text-7xl mb-4">🔥</div>
+                <p className="text-white text-2xl font-black mb-2">
+                  רצף של {loginRewardData?.streak} ימים!
+                </p>
+                <p className="text-white/90 text-lg mb-6">
+                  המשך ככה! 💪
+                </p>
+              </>
+            )}
+            
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.3, type: "spring", duration: 0.8 }}
+              className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 border-2 border-white/50"
+            >
+              <p className="text-white/90 text-sm mb-2">קיבלת בונוס:</p>
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-5xl font-black text-white">
+                  {loginRewardData?.reward}
+                </span>
+                <span className="text-3xl">🪙</span>
+              </div>
+              <p className="text-white/80 text-xs mt-2">סטארטקוין</p>
+            </motion.div>
+
+            <Button
+              onClick={() => setShowLoginReward(false)}
+              className="mt-6 w-full bg-white text-orange-600 hover:bg-white/90 font-black text-lg py-6"
+            >
+              יאללה בוא נתחיל! 🚀
+            </Button>
+          </motion.div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
