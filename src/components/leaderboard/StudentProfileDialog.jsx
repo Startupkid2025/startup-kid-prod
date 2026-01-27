@@ -603,34 +603,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
             </CardContent>
           </Card>
 
-          {/* Stats */}
-          <Card className="bg-white/20 backdrop-blur-md border-white/30">
-            <CardContent className="p-4">
-              <p className="text-white/70 text-sm mb-3 text-center">סטטיסטיקות</p>
-              <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white/10 rounded-lg p-3 text-center">
-                <p className="text-2xl font-black text-yellow-300">{Math.round(student.total_lessons || 0)}</p>
-                <p className="text-white/70 text-xs">שיעורים</p>
-              </div>
-              <div className="bg-white/10 rounded-lg p-3 text-center">
-                <p className="text-2xl font-black text-green-300">{Math.round(student.coins || 0)}</p>
-                <p className="text-white/70 text-xs">סטארטקוין</p>
-              </div>
-              {financeReport && (
-                <>
-                  <div className="bg-white/10 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-black text-blue-300">{financeReport.masteredWords || 0}</p>
-                    <p className="text-white/70 text-xs">מילים נשלטו</p>
-                  </div>
-                  <div className="bg-white/10 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-black text-purple-300">{financeReport.masteredMath || 0}</p>
-                    <p className="text-white/70 text-xs">תרגילים נשלטו</p>
-                  </div>
-                </>
-              )}
-              </div>
-            </CardContent>
-          </Card>
+
           </div>
         )}
       </DialogContent>
