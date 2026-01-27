@@ -687,7 +687,7 @@ ${question} = ${correctAnswer}
           משחקי מתמטיקה 🔢
         </h1>
         <p className="text-white/80 text-lg">
-          תרגלו וצברו מטבעות! (כל תרגיל נכון = {MATH_COINS_PER_CORRECT_ANSWER} מטבעות)
+          תרגלו וצברו סטארטקוין! (כל תרגיל נכון = {MATH_COINS_PER_CORRECT_ANSWER} סטארטקוין)
         </p>
       </motion.div>
 
@@ -742,7 +742,7 @@ ${question} = ${correctAnswer}
           <CardContent className="pt-6 text-center">
             <Coins className="w-8 h-8 text-amber-300 mx-auto mb-2" />
             <p className="text-2xl font-black text-white">{totalCoinsEarned}</p>
-            <p className="text-white/70 text-sm">מטבעות צברת</p>
+            <p className="text-white/70 text-sm">סטארטקוין צברת</p>
           </CardContent>
         </Card>
       </div>
@@ -786,7 +786,7 @@ ${question} = ${correctAnswer}
                     </span>
                     <span className="bg-amber-500/20 text-amber-200 px-4 py-2 rounded-full text-sm flex items-center gap-2">
                       <Coins className="w-4 h-4" />
-                      {MATH_COINS_PER_CORRECT_ANSWER} מטבעות
+                      {MATH_COINS_PER_CORRECT_ANSWER} סטארטקוין
                     </span>
                   </div>
 
@@ -838,7 +838,7 @@ ${question} = ${correctAnswer}
                           </p>
                           {feedback.coinsEarned > 0 && (
                             <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white font-black text-xl py-3 px-6 rounded-2xl inline-block mb-4">
-                              +{feedback.coinsEarned} מטבעות! 🪙
+                              +{feedback.coinsEarned} סטארטקוין! 🪙
                             </div>
                           )}
                           {feedback.mastered && (
@@ -927,21 +927,21 @@ ${question} = ${correctAnswer}
       >
         <div className="text-4xl mb-3">💡</div>
         <p className="text-white/90 font-medium mb-2">
-          איך לקבל מטבעות?
+          איך לקבל סטארטקוין?
         </p>
         <p className="text-white/70 text-sm leading-relaxed">
-          💰 <strong>דרכים לקבל מטבעות:</strong><br />
-          🎓 השתתפות בשיעור = 100 מטבעות<br />
-          🔢 תרגיל נכון בחשבון = 5 מטבעות<br />
-          📚 מילה שלמדת באנגלית = 5-15 מטבעות<br />
-          📝 מילוי סקר = 20 מטבעות<br />
-          ❓ חידון = עד 10 מטבעות<br />
-          💼 עבודה (לשעה) = מטבעות לפי פריטים<br />
-          🤝 שיתוף פעולה עם חבר = 2 מטבעות<br />
-          🔥 רצף כניסות יומי = 1-30 מטבעות<br />
+          💰 <strong>דרכים לקבל סטארטקוין:</strong><br />
+          🎓 השתתפות בשיעור = 100 סטארטקוין<br />
+          🔢 תרגיל נכון בחשבון = 5 סטארטקוין<br />
+          📚 מילה שלמדת באנגלית = 5-15 סטארטקוין<br />
+          📝 מילוי סקר = 20 סטארטקוין<br />
+          ❓ חידון = עד 10 סטארטקוין<br />
+          💼 עבודה (לשעה) = סטארטקוין לפי פריטים<br />
+          🤝 שיתוף פעולה עם חבר = 2 סטארטקוין<br />
+          🔥 רצף כניסות יומי = 1-30 סטארטקוין<br />
           📈 רווחי השקעות<br />
-          ✅ משימות בפרופיל = עד 300 מטבעות<br />
-          👤 השלמת פרטי פרופיל = 70 מטבעות
+          ✅ משימות בפרופיל = עד 300 סטארטקוין<br />
+          👤 השלמת פרטי פרופיל = 70 סטארטקוין
         </p>
       </motion.div>
     </div>

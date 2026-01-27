@@ -388,7 +388,7 @@ export default function Leaderboard() {
     });
     
     if (pendingCount > 0) {
-      toast.info(`🤝 יש לך ${pendingCount} בקשות שיתוף פעולה! לחץ על "שתף פעולה" כדי לקבל 25 מטבעות! 💰`, {
+      toast.info(`🤝 יש לך ${pendingCount} בקשות שיתוף פעולה! לחץ על "שתף פעולה" כדי לקבל 25 סטארטקוין! 💰`, {
         duration: 8000
       });
     }
@@ -494,10 +494,10 @@ export default function Leaderboard() {
       studentsWithStats.forEach(u => {
         u.crowns = [];
         if (mathKing && u.student_email === mathKing.student_email && mathKing.masteredMathQuestions > 0) {
-          u.crowns.push({ type: 'math', name: '🔢 מלך החשבון', bonus: '+5 מטבעות לתרגיל' });
+          u.crowns.push({ type: 'math', name: '🔢 מלך החשבון', bonus: '+5 סטארטקוין לתרגיל' });
         }
         if (vocabKing && u.student_email === vocabKing.student_email && vocabKing.masteredWords > 0) {
-          u.crowns.push({ type: 'vocab', name: '📚 מלך האנגלית', bonus: '+5 מטבעות למילה' });
+          u.crowns.push({ type: 'vocab', name: '📚 מלך האנגלית', bonus: '+5 סטארטקוין למילה' });
         }
         if (investmentKing && u.student_email === investmentKing.student_email && investmentKing.currentInvestmentValue > 0) {
           u.crowns.push({ type: 'investment', name: '💼 מלך ההשקעות', bonus: '+0.1% תשואה יומית' });
@@ -506,7 +506,7 @@ export default function Leaderboard() {
           u.crowns.push({ type: 'login', name: '🔥 מלך הרצף', bonus: 'פי 2 על בונוס הרצף' });
         }
         if (workKing && u.student_email === workKing.student_email && workKing.workHours > 0) {
-          u.crowns.push({ type: 'work', name: '💪 מלך העבודה', bonus: '+5 מטבעות לשעה' });
+          u.crowns.push({ type: 'work', name: '💪 מלך העבודה', bonus: '+5 סטארטקוין לשעה' });
         }
       });
 
@@ -550,9 +550,9 @@ export default function Leaderboard() {
       if (result.status === 'already_sent') {
         toast.error(`כבר שלחת בקשה ל-${targetUser.full_name} היום! 🤝`);
       } else if (result.status === 'request_sent') {
-        toast.info(`📤 שלחת בקשת שיתוף פעולה ל-${targetUser.full_name}! אם גם הם ישלחו לך, תקבלו 25 מטבעות כל אחד! 🤝`);
+        toast.info(`📤 שלחת בקשת שיתוף פעולה ל-${targetUser.full_name}! אם גם הם ישלחו לך, תקבלו 25 סטארטקוין כל אחד! 🤝`);
       } else if (result.status === 'mutual_completed') {
-        toast.success(`🎉 שיתוף פעולה הדדי! ${targetUser.full_name} ואתה קיבלתם 25 מטבעות כל אחד! 💰✨`);
+        toast.success(`🎉 שיתוף פעולה הדדי! ${targetUser.full_name} ואתה קיבלתם 25 סטארטקוין כל אחד! 💰✨`);
       }
 
       // Reload data to reflect changes
@@ -908,9 +908,9 @@ export default function Leaderboard() {
           <CardContent className="p-6 text-center">
             <h3 className="font-bold text-white mb-2">💡 טיפ</h3>
             <p className="text-white/70 text-sm">
-              כדי לעלות בטבלה, צבור יותר מטבעות!<br/>
+              כדי לעלות בטבלה, צבור יותר סטארטקוין!<br/>
               השתתף בשיעורים, למד אנגלית, קנה פריטים, ו<span className="text-green-300 font-bold">שתף פעולה</span> עם חברים! 🤝<br/>
-              <span className="text-yellow-300 font-bold">שלח בקשת שיתוף פעולה לחבר - אם גם הוא ישלח לך, תקבלו 25 מטבעות כל אחד! 💰</span>
+              <span className="text-yellow-300 font-bold">שלח בקשת שיתוף פעולה לחבר - אם גם הוא ישלח לך, תקבלו 25 סטארטקוין כל אחד! 💰</span>
             </p>
           </CardContent>
         </Card>

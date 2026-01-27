@@ -249,7 +249,7 @@ export default function Lessons() {
 
       setSurveyLesson(null);
       setSurveyParticipation(null);
-      toast.success("תודה על המשוב! קיבלת 70 מטבעות! 🎉");
+      toast.success("תודה על המשוב! קיבלת 70 סטארטקוין! 🎉");
       loadData();
     } catch (error) {
       console.error("Failed to submit survey:", error);

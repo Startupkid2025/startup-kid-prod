@@ -101,7 +101,7 @@ export default function AvatarShop({
     }
     
     if (currentCoins < item.price) {
-      toast.error("אין לך מספיק מטבעות! 💰");
+      toast.error("אין לך מספיק סטארטקוין! 💰");
       return;
     }
     

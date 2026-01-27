@@ -927,7 +927,7 @@ export default function Admin() {
       }
       
       if (successCount > 0) {
-        toast.success(`✅ הוספו ${totalCoinsAdded} מטבעות ל-${successCount} תלמידים! 🏠`);
+        toast.success(`✅ הוספו ${totalCoinsAdded} סטארטקוין ל-${successCount} תלמידים! 🏠`);
       } else {
         toast.info("אין תלמידים עם מגורים שצריכים הכנסה פסיבית");
       }

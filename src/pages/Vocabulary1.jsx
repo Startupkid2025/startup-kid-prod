@@ -633,7 +633,7 @@ export default function Vocabulary() {
           אוצר מילים באנגלית 📚
         </h1>
         <p className="text-white/80 text-lg">
-          למד מילים חדשות והרווח מטבעות!
+          למד מילים חדשות והרווח סטארטקוין!
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 max-w-2xl mx-auto">
           <div className="bg-blue-500/20 border-2 border-blue-500/40 rounded-xl p-3">
@@ -649,7 +649,7 @@ export default function Vocabulary() {
         </div>
         <div className="bg-yellow-500/20 border-2 border-yellow-500/40 rounded-xl p-3 mt-3 max-w-2xl mx-auto">
           <p className="text-yellow-200 text-sm font-bold">
-            💡 שים לב - בשביל לזכות במטבעות אתה צריך להצליח פעמיים את המילה באנגלית
+            💡 שים לב - בשביל לזכות בסטארטקוין אתה צריך להצליח פעמיים את המילה באנגלית
           </p>
         </div>
       </motion.div>
@@ -684,7 +684,7 @@ export default function Vocabulary() {
           <CardContent className="pt-6 text-center">
             <Coins className="w-8 h-8 text-amber-300 mx-auto mb-2" />
             <p className="text-2xl font-black text-white">{totalCoinsEarned}</p>
-            <p className="text-white/70 text-sm">מטבעות צברת</p>
+            <p className="text-white/70 text-sm">סטארטקוין צברת</p>
           </CardContent>
         </Card>
       </div>
@@ -727,7 +727,7 @@ export default function Vocabulary() {
                   </span>
                   <span className="bg-amber-500/20 text-amber-200 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2">
                     <Coins className="w-4 h-4" />
-                    {getCoinsForDifficulty(currentWord.difficulty)} {currentWord.difficulty === 1 ? "מטבע" : "מטבעות"}
+                    {getCoinsForDifficulty(currentWord.difficulty)} {currentWord.difficulty === 1 ? "מטבע" : "סטארטקוין"}
                   </span>
                 </div>
 
@@ -906,7 +906,7 @@ export default function Vocabulary() {
               <div className="text-2xl">✓</div>
               מילים שעניתי נכון פעם אחת ({wordsWithOneCorrect})
             </h3>
-            <p className="text-white/70 text-sm mb-4">עוד תשובה נכונה אחת ותקבל מטבעות! 🎯</p>
+            <p className="text-white/70 text-sm mb-4">עוד תשובה נכונה אחת ותקבל סטארטקוין! 🎯</p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {wordProgress
                 .filter(w => !w.mastered && w.correct_streak === 1)

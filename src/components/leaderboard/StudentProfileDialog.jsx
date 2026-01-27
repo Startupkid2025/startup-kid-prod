@@ -628,7 +628,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
               </div>
               <div className="bg-white/10 rounded-lg p-3 text-center">
                 <p className="text-2xl font-black text-green-300">{Math.round(student.coins || 0)}</p>
-                <p className="text-white/70 text-xs">מטבעות</p>
+                <p className="text-white/70 text-xs">סטארטקוין</p>
               </div>
               {financeReport && (
                 <>
