@@ -45,8 +45,16 @@ export default function Layout({ children }) {
       const user = await base44.auth.me();
       if (!user) return;
 
-      // Client-side login streak update
-      const today = new Date().toISOString().split('T')[0];
+      // Use Jerusalem timezone for date calculations
+      const DATE_TZ = "Asia/Jerusalem";
+      const fmtIL = new Intl.DateTimeFormat("en-CA", {
+        timeZone: DATE_TZ,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+
+      const today = fmtIL.format(new Date());
       const lastLogin = user.last_login_date;
 
       if (lastLogin === today) {
@@ -54,10 +62,10 @@ export default function Layout({ children }) {
         return;
       }
 
-      // Check if yesterday
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      // Calculate yesterday in Jerusalem timezone
+      const todayParts = today.split("-").map(Number);
+      const yesterdayDate = new Date(Date.UTC(todayParts[0], todayParts[1] - 1, todayParts[2] - 1));
+      const yesterdayStr = fmtIL.format(yesterdayDate);
 
       let newStreak = 1;
       let isNewStreak = true;
