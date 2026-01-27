@@ -158,9 +158,9 @@ export default function LessonQuizDialog({ isOpen, onClose, lesson, onComplete }
       setQuizCompleted(true);
       
       if (coinsToAdd > 0) {
-        toast.success(`קיבלת ${coinsToAdd} מטבעות! 🎉`);
+        toast.success(`קיבלת ${coinsToAdd} סטארטקוין! 🎉`);
       } else if (existingProgress) {
-        toast.info(`סיימת את החידון! ציון: ${finalScore}/${questions.length} (ללא מטבעות נוספים)`);
+        toast.info(`סיימת את החידון! ציון: ${finalScore}/${questions.length} (ללא סטארטקוין נוספים)`);
       } else {
         toast.success(`סיימת את החידון! ציון: ${finalScore}/${questions.length}`);
       }
@@ -246,13 +246,13 @@ export default function LessonQuizDialog({ isOpen, onClose, lesson, onComplete }
             {newCoinsAwarded > 0 ? (
               <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl p-4 mb-6">
                 <p className="text-lg font-bold text-orange-800">
-                  🪙 קיבלת {newCoinsAwarded} מטבעות!
+                  🪙 קיבלת {newCoinsAwarded} סטארטקוין!
                 </p>
               </div>
             ) : existingProgress && (
               <div className="bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl p-4 mb-6">
                 <p className="text-sm text-blue-800">
-                  💡 כבר קיבלת מטבעות על החידון הזה ({existingProgress.coins_earned} מטבעות)
+                  💡 כבר קיבלת סטארטקוין על החידון הזה ({existingProgress.coins_earned} סטארטקוין)
                 </p>
               </div>
             )}
