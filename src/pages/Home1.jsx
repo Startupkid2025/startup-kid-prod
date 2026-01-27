@@ -973,6 +973,22 @@ export default function Home() {
         </motion.div>
       </div>
 
+      {/* Avatar Work Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <AvatarWork
+          isOpen={showWork}
+          onClose={() => {
+            setShowWork(false);
+            loadData();
+          }}
+          userData={userData}
+        />
+      </motion.div>
+
       {/* Community Feed */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -981,8 +997,6 @@ export default function Home() {
       >
         <CommunityFeed userData={userData} onRefresh={loadData} />
       </motion.div>
-
-
 
       <TamagotchiWardrobe
         isOpen={showWardrobe}
