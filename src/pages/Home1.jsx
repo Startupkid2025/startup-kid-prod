@@ -1015,15 +1015,6 @@ export default function Home() {
         onEquipItem={handleEquipItem}
       />
 
-      <AvatarWork
-        isOpen={showWork}
-        onClose={() => {
-          setShowWork(false);
-          loadData();
-        }}
-        userData={userData}
-      />
-
       <GroupSelectionDialog
         isOpen={showGroupSelection}
         onComplete={() => {
