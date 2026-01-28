@@ -10,8 +10,8 @@ import { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
 
 // קבועים
 const DAILY_WORDS_COUNT = 150;
-const RESET_HOUR = 8;
-const VOCAB_SCHEME_VERSION = 2;
+const RESET_HOUR = 0;
+const VOCAB_SCHEME_VERSION = 3;
 
 // פונקציות עזר לתאריך לוקאלי
 const pad2 = (n) => String(n).padStart(2, '0');
@@ -701,11 +701,24 @@ export default function Vocabulary() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="text-center"
               >
-                {currentWord.isReview && currentWord.correctStreak > 0 && (
-                  <div className="flex justify-center mb-4">
-                    <span className="bg-green-500/20 text-green-200 px-3 py-1.5 rounded-full text-xs flex items-center gap-1">
-                      <span className="font-bold">✓</span>
-                      <span className="mr-1">עניתי נכון</span>
+                {!feedback && (
+                  <div className="flex justify-center gap-2 sm:gap-3 mb-4 flex-wrap">
+                    {currentWord.isReview && currentWord.correctStreak > 0 && (
+                      <span className="bg-green-500/20 text-green-200 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-1">
+                        <span className="font-bold">✓</span>
+                        <span className="mr-1">עניתי נכון</span>
+                      </span>
+                    )}
+                    <span className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2 font-bold ${
+                      currentWord.difficulty === 1 ? 'bg-green-500/20 text-green-200 border-2 border-green-500/40' :
+                      currentWord.difficulty === 2 ? 'bg-orange-500/20 text-orange-200 border-2 border-orange-500/40' :
+                      'bg-red-500/20 text-red-200 border-2 border-red-500/40'
+                    }`}>
+                      {currentWord.difficulty === 1 ? '😊 קל' : currentWord.difficulty === 2 ? '💪 בינוני' : '🔥 קשה'}
+                    </span>
+                    <span className="bg-amber-500/20 text-amber-200 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2">
+                      <Coins className="w-4 h-4" />
+                      {getCoinsForDifficulty(currentWord.difficulty)} סטארטקוין
                     </span>
                   </div>
                 )}
@@ -870,15 +883,10 @@ export default function Vocabulary() {
       </div>
 
       {/* Timer Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8 max-w-2xl mx-auto">
+      <div className="grid grid-cols-1 gap-3 mb-8 max-w-2xl mx-auto">
         <div className="bg-blue-500/20 border-2 border-blue-500/40 rounded-xl p-3">
-          <p className="text-blue-200 text-sm font-bold">
+          <p className="text-blue-200 text-sm font-bold text-center">
             📦 {Math.min(availableVocabWords.length, DAILY_WORDS_COUNT)} / {DAILY_WORDS_COUNT} מילים נותרו להיום
-          </p>
-        </div>
-        <div className="bg-purple-500/20 border-2 border-purple-500/40 rounded-xl p-3">
-          <p className="text-purple-200 text-sm font-bold">
-            ⏰ התחדשות בעוד: {timeUntilReset}
           </p>
         </div>
       </div>
