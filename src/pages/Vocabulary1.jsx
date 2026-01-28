@@ -116,9 +116,12 @@ export default function Vocabulary() {
   const [isLoading, setIsLoading] = useState(true);
   const [feedback, setFeedback] = useState(null);
   const [timeUntilReset, setTimeUntilReset] = useState("");
+  const [masteredPage, setMasteredPage] = useState(1);
   
   const resetInProgressRef = useRef(false);
   const lastResetAttemptRef = useRef(0);
+
+  const MASTERED_PER_PAGE = 9;
 
   useEffect(() => {
     loadData();
