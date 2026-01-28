@@ -512,10 +512,11 @@ export default function Vocabulary() {
           // Calculate new mastered_words count
           const currentMasteredCount = wordProgress.filter(w => w.mastered).length;
           const newMasteredCount = isMastered && !existingWordProg.mastered ? currentMasteredCount + 1 : currentMasteredCount;
+          const newCoinsTotal = (userData.coins || 0) + coinsEarned;
 
           Promise.all([
             base44.auth.updateMe({
-              coins: (userData.coins || 0) + coinsEarned,
+              coins: newCoinsTotal,
               daily_vocabulary_words: updatedDailyWords,
               mastered_words: newMasteredCount
             }),
@@ -530,15 +531,15 @@ export default function Vocabulary() {
           ]).then(() => {
             setUserData(prev => ({ 
               ...prev, 
-              coins: (prev.coins || 0) + coinsEarned,
+              coins: newCoinsTotal,
               daily_vocabulary_words: updatedDailyWords,
               mastered_words: newMasteredCount
             }));
             
-            // Update leaderboard
+            // Update leaderboard with correct values
             import("../components/utils/leaderboardSync").then(({ syncLeaderboardEntry }) => {
               syncLeaderboardEntry(userData.email, {
-                coins: (userData.coins || 0) + coinsEarned,
+                coins: newCoinsTotal,
                 mastered_words: newMasteredCount
               });
             });
@@ -586,22 +587,24 @@ export default function Vocabulary() {
           );
           setAvailableVocabWords(updatedAvailableWords);
 
+          const newCoinsTotal = (userData.coins || 0) + coinsEarned;
+
           Promise.all([
             base44.auth.updateMe({
-              coins: (userData.coins || 0) + coinsEarned,
+              coins: newCoinsTotal,
               daily_vocabulary_words: updatedDailyWords
             })
           ]).then(() => {
             setUserData(prev => ({ 
               ...prev, 
-              coins: (prev.coins || 0) + coinsEarned,
+              coins: newCoinsTotal,
               daily_vocabulary_words: updatedDailyWords
             }));
             
-            // Update leaderboard
+            // Update leaderboard with correct values
             import("../components/utils/leaderboardSync").then(({ syncLeaderboardEntry }) => {
               syncLeaderboardEntry(userData.email, {
-                coins: (userData.coins || 0) + coinsEarned
+                coins: newCoinsTotal
               });
             });
           });
