@@ -681,7 +681,7 @@ export default function Vocabulary() {
 
       {/* Game Area */}
       <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-8">
-        <CardContent className="p-4 sm:p-8 min-h-[500px] flex flex-col justify-center">
+        <CardContent className="p-4 sm:p-8">
           {!currentWord ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🎉</div>
@@ -701,25 +701,14 @@ export default function Vocabulary() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="text-center"
               >
-                <div className="flex justify-center gap-2 sm:gap-3 mb-4 flex-wrap">
-                  {currentWord.isReview && currentWord.correctStreak > 0 && (
-                    <span className="bg-green-500/20 text-green-200 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-1">
+                {currentWord.isReview && currentWord.correctStreak > 0 && (
+                  <div className="flex justify-center mb-4">
+                    <span className="bg-green-500/20 text-green-200 px-3 py-1.5 rounded-full text-xs flex items-center gap-1">
                       <span className="font-bold">✓</span>
                       <span className="mr-1">עניתי נכון</span>
                     </span>
-                  )}
-                  <span className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2 font-bold ${
-                    currentWord.difficulty === 1 ? 'bg-green-500/20 text-green-200 border-2 border-green-500/40' :
-                    currentWord.difficulty === 2 ? 'bg-orange-500/20 text-orange-200 border-2 border-orange-500/40' :
-                    'bg-red-500/20 text-red-200 border-2 border-red-500/40'
-                  }`}>
-                    {currentWord.difficulty === 1 ? '😊 קל' : currentWord.difficulty === 2 ? '💪 בינוני' : '🔥 קשה'}
-                  </span>
-                  <span className="bg-amber-500/20 text-amber-200 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2">
-                    <Coins className="w-4 h-4" />
-                    {getCoinsForDifficulty(currentWord.difficulty)} {currentWord.difficulty === 1 ? "מטבע" : "סטארטקוין"}
-                  </span>
-                </div>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-center gap-4 mb-6 sm:mb-8">
                   <div className="text-3xl sm:text-4xl md:text-5xl font-black text-white break-words px-2" dir="ltr" translate="no" lang="en">
@@ -768,95 +757,76 @@ export default function Vocabulary() {
                     </div>
                   </form>
                 ) : (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="py-8"
-                  >
+                  <div className="py-6">
                     {feedback.isCorrect ? (
                       <div>
-                        <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Check className="w-16 h-16 text-white" />
+                        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Check className="w-10 h-10 text-white" />
                         </div>
-                        <h3 className="text-3xl font-bold text-green-300 mb-2">
+                        <h3 className="text-2xl font-bold text-green-300 mb-2">
                           נכון! 🎉
                         </h3>
-                        <p className="text-white/70 mb-4">
+                        <p className="text-white/70 mb-4 text-base">
                           {currentWord.english} = {feedback.correctAnswer}
                         </p>
                         {feedback.mastered && feedback.coinsEarned > 0 && (
-                          <motion.div
-                            initial={{ scale: 0, rotate: -180 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            transition={{ type: "spring", duration: 0.6 }}
-                            className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white py-4 px-8 rounded-2xl inline-block"
-                          >
-                            <div className="font-black text-2xl mb-2">
+                          <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white py-3 px-6 rounded-xl inline-block">
+                            <div className="font-black text-xl mb-2">
                               🎊 שלטת במילה! 🎊
                             </div>
                             {feedback.bonusBreakdown && feedback.bonusBreakdown.length > 0 && (
-                              <div className="bg-white/20 rounded-lg p-3 text-sm space-y-1">
+                              <div className="bg-white/20 rounded-lg p-2 text-sm space-y-1">
                                 {feedback.bonusBreakdown.map((bonus, idx) => (
                                   <div key={idx} className="flex justify-between items-center">
                                     <span className="text-white/90">{bonus.label}:</span>
                                     <span className="font-bold">+{bonus.amount}</span>
                                   </div>
                                 ))}
-                                <div className="border-t border-white/30 pt-1 mt-2 flex justify-between items-center font-black text-lg">
+                                <div className="border-t border-white/30 pt-1 mt-1 flex justify-between items-center font-black text-base">
                                   <span>סה"כ:</span>
                                   <span>+{feedback.coinsEarned} 🪙</span>
                                 </div>
                               </div>
                             )}
-                          </motion.div>
+                          </div>
                         )}
                       {feedback.coinsEarned > 0 && !feedback.mastered && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: 0.3, type: "spring" }}
-                          className="bg-blue-500/20 text-blue-200 py-3 px-6 rounded-xl inline-block mt-4"
-                        >
-                          <div className="font-bold text-lg flex items-center gap-2">
-                            <Coins className="w-5 h-5" />
+                        <div className="bg-blue-500/20 text-blue-200 py-2 px-4 rounded-lg inline-block mt-3">
+                          <div className="font-bold text-base flex items-center gap-2">
+                            <Coins className="w-4 h-4" />
                             קיבלת +{feedback.coinsEarned} סטארטקוין!
                           </div>
-                        </motion.div>
+                        </div>
                       )}
                       </div>
                       ) : (
                       <div>
-                      <div className={`w-24 h-24 ${feedback.isDontKnow ? 'bg-orange-500' : 'bg-red-500'} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                      <div className={`w-16 h-16 ${feedback.isDontKnow ? 'bg-orange-500' : 'bg-red-500'} rounded-full flex items-center justify-center mx-auto mb-3`}>
                       {feedback.isDontKnow ? (
-                        <span className="text-5xl">💭</span>
+                        <span className="text-4xl">💭</span>
                       ) : (
-                        <X className="w-16 h-16 text-white" />
+                        <X className="w-10 h-10 text-white" />
                       )}
                       </div>
-                      <h3 className={`text-3xl font-bold ${feedback.isDontKnow ? 'text-orange-300' : 'text-red-300'} mb-2`}>
+                      <h3 className={`text-2xl font-bold ${feedback.isDontKnow ? 'text-orange-300' : 'text-red-300'} mb-2`}>
                       {feedback.isDontKnow ? "התשובה הנכונה:" : "לא נכון 😅"}
                       </h3>
-                      <p className="text-white text-xl mb-2 font-bold">
+                      <p className="text-white text-lg mb-2 font-bold">
                       {feedback.correctAnswer.split(',').slice(0, 2).join(', ')}
                       </p>
                       {feedback.isDontKnow && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5 }}
-                        className="mt-6"
-                      >
+                      <div className="mt-4">
                         <Button
                           onClick={handleContinue}
-                          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-6 px-8 text-lg"
+                          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 text-base"
                         >
                           המשך למילה הבאה →
                         </Button>
-                      </motion.div>
+                      </div>
                       )}
                       </div>
                       )}
-                  </motion.div>
+                  </div>
                 )}
               </motion.div>
             </AnimatePresence>
