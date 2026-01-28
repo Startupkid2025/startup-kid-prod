@@ -928,40 +928,6 @@ export default function Vocabulary() {
         );
       })()}
 
-      {/* One Correct Words List */}
-      {wordsWithOneCorrect > 0 && (
-        <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-6">
-          <CardContent className="p-6">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <div className="text-2xl">✓</div>
-              מילים שעניתי נכון פעם אחת ({wordsWithOneCorrect})
-            </h3>
-            <p className="text-white/70 text-sm mb-4">עוד תשובה נכונה אחת ותקבל סטארטקוין! 🎯</p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {wordProgress
-                .filter(w => !w.mastered && w.correct_streak === 1)
-                .map((word) => {
-                  const vocabWord = availableVocabWords.find(v => v.word_english.toLowerCase() === word.word_english.toLowerCase());
-                  const displayHebrew = vocabWord ? vocabWord.word_hebrew : (word.word_hebrew || word.word_english);
-                  
-                  return (
-                    <div
-                      key={word.id}
-                      className="bg-blue-500/10 rounded-lg p-3 border border-blue-500/30 text-center"
-                    >
-                      <div className="flex items-center justify-center gap-1 mb-2 text-blue-300 text-xs">
-                        <span className="font-bold">✓</span>
-                      </div>
-                      <p className="font-bold text-white" dir="ltr" translate="no" lang="en">{word.word_english}</p>
-                      <p className="text-white/60 text-sm">{displayHebrew}</p>
-                    </div>
-                  );
-                })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* In Progress Words List */}
       {wordsInProgress > 0 && (
         <Card className="bg-white/10 backdrop-blur-md border-white/20">
