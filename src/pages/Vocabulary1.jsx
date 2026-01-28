@@ -863,17 +863,21 @@ export default function Vocabulary() {
       </Card>
 
       {/* Mastered Words List */}
-      {masteredWords > 0 && (
-        <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-6">
-          <CardContent className="p-6">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <Trophy className="w-6 h-6 text-yellow-300" />
-              מילים ששלטת בהן ({masteredWords})
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {wordProgress
-                .filter(w => w.mastered)
-                .map((word) => {
+      {masteredWords > 0 && (() => {
+        const masteredWordsList = wordProgress.filter(w => w.mastered);
+        const totalPages = Math.ceil(masteredWordsList.length / MASTERED_PER_PAGE);
+        const startIdx = (masteredPage - 1) * MASTERED_PER_PAGE;
+        const paginatedWords = masteredWordsList.slice(startIdx, startIdx + MASTERED_PER_PAGE);
+
+        return (
+          <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-6">
+            <CardContent className="p-6">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <Trophy className="w-6 h-6 text-yellow-300" />
+                מילים ששלטת בהן ({masteredWords})
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {paginatedWords.map((word) => {
                   const vocabWord = availableVocabWords.find(v => v.word_english.toLowerCase() === word.word_english.toLowerCase());
                   const displayHebrew = vocabWord ? vocabWord.word_hebrew : (word.word_hebrew || word.word_english);
                   
@@ -894,10 +898,35 @@ export default function Vocabulary() {
                     </div>
                   );
                 })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+              </div>
+              
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <Button
+                    onClick={() => setMasteredPage(prev => Math.max(1, prev - 1))}
+                    disabled={masteredPage === 1}
+                    size="sm"
+                    className="bg-white/10 hover:bg-white/20 text-white disabled:opacity-50"
+                  >
+                    ← הקודם
+                  </Button>
+                  <span className="text-white/70 text-sm">
+                    עמוד {masteredPage} מתוך {totalPages}
+                  </span>
+                  <Button
+                    onClick={() => setMasteredPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={masteredPage === totalPages}
+                    size="sm"
+                    className="bg-white/10 hover:bg-white/20 text-white disabled:opacity-50"
+                  >
+                    הבא →
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* One Correct Words List */}
       {wordsWithOneCorrect > 0 && (
