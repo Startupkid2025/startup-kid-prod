@@ -747,14 +747,15 @@ export default function Investments() {
                   {/* Investment Actions */}
                   <div className="space-y-2">
                     <Input
-                      type="number"
-                      placeholder={`השקע ${business.minInvestment}+ 🪙`}
-                      value={investmentAmounts[business.id] || ''}
-                      onChange={(e) => setInvestmentAmounts({
-                        ...investmentAmounts,
-                        [business.id]: parseInt(e.target.value) || 0
-                      })}
-                      className="bg-white/20 border-white/30 text-white placeholder:text-white/50 h-9 text-sm"
+                     type="number"
+                     inputMode="numeric"
+                     placeholder={`השקע ${business.minInvestment}+ 🪙`}
+                     value={investmentAmounts[business.id] || ''}
+                     onChange={(e) => setInvestmentAmounts({
+                       ...investmentAmounts,
+                       [business.id]: parseInt(e.target.value) || 0
+                     })}
+                     className="bg-white/20 border-white/30 text-white placeholder:text-white/50 h-9 text-sm"
                     />
                     <Button
                       onClick={() => handleInvest(business.id)}
@@ -768,6 +769,7 @@ export default function Investments() {
                      <>
                        <Input
                          type="number"
+                         inputMode="numeric"
                          placeholder={`מכור עד ${Math.round(totalValueInBusiness)} 🪙`}
                          value={sellAmounts[business.id] || ''}
                          onChange={(e) => setSellAmounts({
