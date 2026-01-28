@@ -285,13 +285,15 @@ export default function Vocabulary() {
   };
 
   const generateNextWord = async (currentProgress, vocabWords, excludeWord = null) => {
-    // מילים שעדיין לא שלטתי בהן
-    const masteredWords = currentProgress.filter(w => w.mastered).map(w => w.word_english.toLowerCase());
+    // מילים שעדיין לא שלטתי בהן או עניתי נכון פעם אחת
+    const completedWords = currentProgress
+      .filter(w => w.mastered || w.correct_streak >= 1)
+      .map(w => w.word_english.toLowerCase());
 
     // סנן רק מילים תקינות באנגלית (רק תווי a-z, מקף, רווח)
     const validWords = vocabWords.filter(w => {
       const word = w.word_english || '';
-      return /^[a-zA-Z\s-]+$/.test(word) && !masteredWords.includes(word.toLowerCase());
+      return /^[a-zA-Z\s-]+$/.test(word) && !completedWords.includes(word.toLowerCase());
     });
 
     if (validWords.length === 0) {
