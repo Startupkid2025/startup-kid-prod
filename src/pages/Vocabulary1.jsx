@@ -524,6 +524,15 @@ export default function Vocabulary() {
           });
         }
       } else {
+        // New word - award 2 coins if first answer is correct
+        let coinsEarned = 0;
+        let bonusBreakdown = [];
+        
+        if (isCorrect) {
+          coinsEarned = 2;
+          bonusBreakdown.push({ type: 'first', amount: 2, label: 'תשובה נכונה ראשונה' });
+        }
+
         await base44.entities.WordProgress.create({
           student_email: userData.email,
           word_english: currentWord.english,
@@ -533,13 +542,35 @@ export default function Vocabulary() {
           total_attempts: 1,
           last_seen: now,
           mastered: false,
-          coins_earned: 0
+          coins_earned: coinsEarned
         });
+
+        // Update user coins if earned
+        if (coinsEarned > 0) {
+          Promise.all([
+            base44.auth.updateMe({
+              coins: (userData.coins || 0) + coinsEarned
+            })
+          ]).then(() => {
+            setUserData(prev => ({ 
+              ...prev, 
+              coins: (prev.coins || 0) + coinsEarned
+            }));
+            
+            // Update leaderboard
+            import("../components/utils/leaderboardSync").then(({ syncLeaderboardEntry }) => {
+              syncLeaderboardEntry(userData.email, {
+                coins: (userData.coins || 0) + coinsEarned
+              });
+            });
+          });
+        }
 
         setFeedback({
           isCorrect,
           correctAnswer: currentWord.hebrew,
-          coinsEarned: 0,
+          coinsEarned: coinsEarned,
+          bonusBreakdown: bonusBreakdown,
           mastered: false,
           isDontKnow: false
         });
@@ -829,39 +860,52 @@ export default function Vocabulary() {
                             )}
                           </motion.div>
                         )}
+                      {feedback.coinsEarned > 0 && !feedback.mastered && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.3, type: "spring" }}
+                          className="bg-blue-500/20 text-blue-200 py-3 px-6 rounded-xl inline-block mt-4"
+                        >
+                          <div className="font-bold text-lg flex items-center gap-2">
+                            <Coins className="w-5 h-5" />
+                            קיבלת +{feedback.coinsEarned} סטארטקוין!
+                          </div>
+                        </motion.div>
+                      )}
                       </div>
-                    ) : (
+                      ) : (
                       <div>
-                        <div className={`w-24 h-24 ${feedback.isDontKnow ? 'bg-orange-500' : 'bg-red-500'} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                          {feedback.isDontKnow ? (
-                            <span className="text-5xl">💭</span>
-                          ) : (
-                            <X className="w-16 h-16 text-white" />
-                          )}
-                        </div>
-                        <h3 className={`text-3xl font-bold ${feedback.isDontKnow ? 'text-orange-300' : 'text-red-300'} mb-2`}>
-                          {feedback.isDontKnow ? "התשובה הנכונה:" : "לא נכון 😅"}
-                        </h3>
-                        <p className="text-white text-xl mb-2 font-bold">
-                          {feedback.correctAnswer.split(',').slice(0, 2).join(', ')}
-                        </p>
-                        {feedback.isDontKnow && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5 }}
-                            className="mt-6"
-                          >
-                            <Button
-                              onClick={handleContinue}
-                              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-6 px-8 text-lg"
-                            >
-                              המשך למילה הבאה →
-                            </Button>
-                          </motion.div>
-                        )}
+                      <div className={`w-24 h-24 ${feedback.isDontKnow ? 'bg-orange-500' : 'bg-red-500'} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                      {feedback.isDontKnow ? (
+                        <span className="text-5xl">💭</span>
+                      ) : (
+                        <X className="w-16 h-16 text-white" />
+                      )}
                       </div>
-                    )}
+                      <h3 className={`text-3xl font-bold ${feedback.isDontKnow ? 'text-orange-300' : 'text-red-300'} mb-2`}>
+                      {feedback.isDontKnow ? "התשובה הנכונה:" : "לא נכון 😅"}
+                      </h3>
+                      <p className="text-white text-xl mb-2 font-bold">
+                      {feedback.correctAnswer.split(',').slice(0, 2).join(', ')}
+                      </p>
+                      {feedback.isDontKnow && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="mt-6"
+                      >
+                        <Button
+                          onClick={handleContinue}
+                          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-6 px-8 text-lg"
+                        >
+                          המשך למילה הבאה →
+                        </Button>
+                      </motion.div>
+                      )}
+                      </div>
+                      )}
                   </motion.div>
                 )}
               </motion.div>
