@@ -694,41 +694,6 @@ export default function Vocabulary() {
         </div>
       </motion.div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
-          <CardContent className="pt-6 text-center">
-            <BookOpen className="w-8 h-8 text-blue-300 mx-auto mb-2" />
-            <p className="text-2xl font-black text-white">{maxWords}</p>
-            <p className="text-white/70 text-sm">מילים זמינות</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
-          <CardContent className="pt-6 text-center">
-            <Trophy className="w-8 h-8 text-yellow-300 mx-auto mb-2" />
-            <p className="text-2xl font-black text-white">{masteredWords}</p>
-            <p className="text-white/70 text-sm">שלטת בהן</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
-          <CardContent className="pt-6 text-center">
-            <div className="text-3xl font-black text-green-300 mb-2">✓</div>
-            <p className="text-2xl font-black text-white">{wordsWithOneCorrect}</p>
-            <p className="text-white/70 text-sm">נכון פעם אחת</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
-          <CardContent className="pt-6 text-center">
-            <Coins className="w-8 h-8 text-amber-300 mx-auto mb-2" />
-            <p className="text-2xl font-black text-white">{totalCoinsEarned}</p>
-            <p className="text-white/70 text-sm">סטארטקוין צברת</p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Game Area */}
       <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-8">
         <CardContent className="p-4 sm:p-8">
@@ -913,6 +878,41 @@ export default function Vocabulary() {
           )}
         </CardContent>
       </Card>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <Card className="bg-white/10 backdrop-blur-md border-white/20">
+          <CardContent className="pt-6 text-center">
+            <BookOpen className="w-8 h-8 text-blue-300 mx-auto mb-2" />
+            <p className="text-2xl font-black text-white">{maxWords}</p>
+            <p className="text-white/70 text-sm">מילים זמינות</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/10 backdrop-blur-md border-white/20">
+          <CardContent className="pt-6 text-center">
+            <Trophy className="w-8 h-8 text-yellow-300 mx-auto mb-2" />
+            <p className="text-2xl font-black text-white">{masteredWords}</p>
+            <p className="text-white/70 text-sm">שלטת בהן</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/10 backdrop-blur-md border-white/20">
+          <CardContent className="pt-6 text-center">
+            <div className="text-3xl font-black text-green-300 mb-2">✓</div>
+            <p className="text-2xl font-black text-white">{wordsWithOneCorrect}</p>
+            <p className="text-white/70 text-sm">נכון פעם אחת</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/10 backdrop-blur-md border-white/20">
+          <CardContent className="pt-6 text-center">
+            <Coins className="w-8 h-8 text-amber-300 mx-auto mb-2" />
+            <p className="text-2xl font-black text-white">{totalCoinsEarned}</p>
+            <p className="text-white/70 text-sm">סטארטקוין צברת</p>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Mastered Words List */}
       {masteredWords > 0 && (() => {
