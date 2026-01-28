@@ -788,16 +788,16 @@ export default function Vocabulary() {
                     </div>
                   </form>
                 ) : (
-                  <div className="py-6">
+                  <div className="py-4">
                     {feedback.isCorrect ? (
                       <div>
-                        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
                           <Check className="w-10 h-10 text-white" />
                         </div>
-                        <h3 className="text-2xl font-bold text-green-300 mb-2">
+                        <h3 className="text-2xl font-bold text-green-300 mb-1">
                           נכון! 🎉
                         </h3>
-                        <p className="text-white/70 mb-4 text-base">
+                        <p className="text-white/70 mb-3 text-base">
                           {currentWord.english} = {feedback.correctAnswer}
                         </p>
                         {feedback.mastered && feedback.coinsEarned > 0 && (
@@ -859,17 +859,17 @@ export default function Vocabulary() {
                       </div>
                       ) : (
                       <div>
-                      <div className={`w-16 h-16 ${feedback.isDontKnow ? 'bg-orange-500' : 'bg-red-500'} rounded-full flex items-center justify-center mx-auto mb-3`}>
+                      <div className={`w-16 h-16 ${feedback.isDontKnow ? 'bg-orange-500' : 'bg-red-500'} rounded-full flex items-center justify-center mx-auto mb-2`}>
                       {feedback.isDontKnow ? (
                         <span className="text-4xl">💭</span>
                       ) : (
                         <X className="w-10 h-10 text-white" />
                       )}
                       </div>
-                      <h3 className={`text-2xl font-bold ${feedback.isDontKnow ? 'text-orange-300' : 'text-red-300'} mb-2`}>
+                      <h3 className={`text-2xl font-bold ${feedback.isDontKnow ? 'text-orange-300' : 'text-red-300'} mb-1`}>
                       {feedback.isDontKnow ? "התשובה הנכונה:" : "לא נכון 😅"}
                       </h3>
-                      <p className="text-white text-lg mb-2 font-bold">
+                      <p className="text-white text-lg mb-3 font-bold">
                       {feedback.correctAnswer.split(',').slice(0, 2).join(', ')}
                       </p>
                       {feedback.isDontKnow && (
