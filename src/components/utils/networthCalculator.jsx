@@ -80,11 +80,38 @@ export async function calculateNetWorth(userEmail, userData = null) {
  */
 export async function updateNetWorth(userEmail, userData = null) {
   try {
-    const netWorth = await calculateNetWorth(userEmail, userData);
+    // Get user data if not provided
+    let user = userData;
+    if (!user) {
+      user = await base44.auth.me();
+      if (user.email !== userEmail) {
+        return 0;
+      }
+    }
+
+    // Calculate items value
+    const purchasedItems = user.purchased_items || [];
+    const itemsValue = purchasedItems.reduce((sum, itemId) => {
+      return sum + (ITEM_PRICES[itemId] || 0);
+    }, 0);
+
+    // Calculate investments value
+    const investments = await base44.entities.Investment.filter({ 
+      student_email: userEmail 
+    });
+    const investmentsValue = investments.reduce((sum, inv) => {
+      return sum + (inv.current_value || 0);
+    }, 0);
+
+    // Calculate net worth
+    const coins = user.coins || 0;
+    const netWorth = coins + itemsValue + investmentsValue;
     
-    // Update user's total_networth
+    // Update user's total_networth, items_value, and investments_value
     await base44.auth.updateMe({
-      total_networth: netWorth
+      total_networth: netWorth,
+      items_value: itemsValue,
+      investments_value: investmentsValue
     });
 
     return netWorth;
