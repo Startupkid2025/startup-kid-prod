@@ -679,7 +679,7 @@ export default function Vocabulary() {
 
       {/* Game Area */}
       <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-8">
-        <CardContent className="p-4 sm:p-8">
+        <CardContent className="p-4 sm:p-8 min-h-[500px] flex flex-col justify-center">
           {!currentWord ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🎉</div>
