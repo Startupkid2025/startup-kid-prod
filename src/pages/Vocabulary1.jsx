@@ -364,12 +364,31 @@ export default function Vocabulary() {
     }
   }, [currentWord]);
 
-  // Play sound effect when correct answer
+  // Play cheerful sound effect when correct answer
   useEffect(() => {
     if (feedback?.isCorrect) {
-      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUKzk8LJnHgU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHA==');
-      audio.volume = 0.3;
-      audio.play().catch(() => {});
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Cheerful ascending notes (C5 -> E5 -> G5)
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+        oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+        
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+      } catch (e) {
+        console.log('Audio not supported');
+      }
     }
   }, [feedback]);
 
@@ -791,13 +810,13 @@ export default function Vocabulary() {
                   <div className="py-4">
                     {feedback.isCorrect ? (
                       <div>
-                        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-1">
                           <Check className="w-10 h-10 text-white" />
                         </div>
                         <h3 className="text-2xl font-bold text-green-300 mb-1">
                           נכון! 🎉
                         </h3>
-                        <p className="text-white/70 mb-3 text-base">
+                        <p className="text-white/70 mb-2 text-base">
                           {currentWord.english} = {feedback.correctAnswer}
                         </p>
                         {feedback.mastered && feedback.coinsEarned > 0 && (
@@ -826,7 +845,7 @@ export default function Vocabulary() {
                           initial={{ scale: 0, rotate: -180 }}
                           animate={{ scale: 1, rotate: 0 }}
                           transition={{ type: "spring", duration: 0.8, bounce: 0.5 }}
-                          className="mt-3"
+                          className="mt-2"
                         >
                           <motion.div
                             animate={{ 
@@ -859,7 +878,7 @@ export default function Vocabulary() {
                       </div>
                       ) : (
                       <div>
-                      <div className={`w-16 h-16 ${feedback.isDontKnow ? 'bg-orange-500' : 'bg-red-500'} rounded-full flex items-center justify-center mx-auto mb-2`}>
+                      <div className={`w-16 h-16 ${feedback.isDontKnow ? 'bg-orange-500' : 'bg-red-500'} rounded-full flex items-center justify-center mx-auto mb-1`}>
                       {feedback.isDontKnow ? (
                         <span className="text-4xl">💭</span>
                       ) : (
@@ -869,11 +888,11 @@ export default function Vocabulary() {
                       <h3 className={`text-2xl font-bold ${feedback.isDontKnow ? 'text-orange-300' : 'text-red-300'} mb-1`}>
                       {feedback.isDontKnow ? "התשובה הנכונה:" : "לא נכון 😅"}
                       </h3>
-                      <p className="text-white text-lg mb-3 font-bold">
+                      <p className="text-white text-lg mb-2 font-bold">
                       {feedback.correctAnswer.split(',').slice(0, 2).join(', ')}
                       </p>
                       {feedback.isDontKnow && (
-                      <div className="mt-4">
+                      <div className="mt-3">
                         <Button
                           onClick={handleContinue}
                           className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 text-base"
