@@ -469,7 +469,7 @@ export default function Vocabulary() {
         });
 
         // Update data in background (don't wait)
-        if (isMastered && !existingWordProg.mastered && coinsEarned > 0) {
+        if (coinsEarned > 0 && ((isMastered && !existingWordProg.mastered) || isFirstCorrect)) {
           const updatedDailyWords = (userData.daily_vocabulary_words || []).filter(
             w => w.toLowerCase() !== currentWord.english.toLowerCase()
           );
