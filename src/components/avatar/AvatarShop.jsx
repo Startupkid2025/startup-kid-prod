@@ -107,10 +107,16 @@ export default function AvatarShop({
     
     const newPurchasedItems = [...currentPurchasedItems, itemId];
     const newCoins = currentCoins - item.price;
+    
+    // Calculate new items value
+    const newItemsValue = newPurchasedItems.reduce((sum, itemId) => {
+      return sum + (AVATAR_ITEMS[itemId]?.price || 0);
+    }, 0);
 
     await base44.auth.updateMe({
       purchased_items: newPurchasedItems,
-      coins: newCoins
+      coins: newCoins,
+      items_value: newItemsValue
     });
 
     // Update net worth
@@ -119,8 +125,8 @@ export default function AvatarShop({
     // Sync to LeaderboardEntry
     if (userData.user_type !== 'parent' && userData.user_type !== 'demo') {
       await syncLeaderboardEntry(userData.email, {
-        purchased_items: newPurchasedItems,
         coins: newCoins,
+        items_value: newItemsValue,
         total_networth: newNetWorth
       });
     }
