@@ -396,14 +396,22 @@ export default function Vocabulary() {
       if (existingWordProg) {
         const newStreak = isCorrect ? (existingWordProg.correct_streak + 1) : 0;
         const isMastered = newStreak >= 2;
+        const isFirstCorrect = newStreak === 1 && existingWordProg.correct_streak === 0;
 
         let coinsEarned = 0;
         let bonusBreakdown = [];
         
+        // Award 2 coins for first correct answer
+        if (isFirstCorrect && isCorrect) {
+          coinsEarned = 2;
+          bonusBreakdown.push({ type: 'first', amount: 2, label: 'תשובה נכונה ראשונה' });
+        }
+        
+        // Award full coins for mastering
         if (isMastered && !existingWordProg.mastered) {
           const baseCoins = getCoinsForDifficulty(currentWord.difficulty);
           coinsEarned = baseCoins;
-          bonusBreakdown.push({ type: 'base', amount: baseCoins, label: 'בסיס' });
+          bonusBreakdown = [{ type: 'base', amount: baseCoins, label: 'בסיס' }];
           
           // Check for eyes and mouth bonus
           const equippedItems = userData.equipped_items || {};
