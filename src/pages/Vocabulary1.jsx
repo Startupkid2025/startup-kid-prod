@@ -547,16 +547,27 @@ export default function Vocabulary() {
           coins_earned: coinsEarned
         });
 
-        // Update user coins if earned
+        // Update user coins and remove word from daily list if earned coins
         if (coinsEarned > 0) {
+          const updatedDailyWords = (userData.daily_vocabulary_words || []).filter(
+            w => w.toLowerCase() !== currentWord.english.toLowerCase()
+          );
+
+          const updatedAvailableWords = availableVocabWords.filter(
+            w => w.word_english.toLowerCase() !== currentWord.english.toLowerCase()
+          );
+          setAvailableVocabWords(updatedAvailableWords);
+
           Promise.all([
             base44.auth.updateMe({
-              coins: (userData.coins || 0) + coinsEarned
+              coins: (userData.coins || 0) + coinsEarned,
+              daily_vocabulary_words: updatedDailyWords
             })
           ]).then(() => {
             setUserData(prev => ({ 
               ...prev, 
-              coins: (prev.coins || 0) + coinsEarned
+              coins: (prev.coins || 0) + coinsEarned,
+              daily_vocabulary_words: updatedDailyWords
             }));
             
             // Update leaderboard
