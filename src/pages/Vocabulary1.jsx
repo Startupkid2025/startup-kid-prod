@@ -928,39 +928,7 @@ export default function Vocabulary() {
         );
       })()}
 
-      {/* In Progress Words List */}
-      {wordsInProgress > 0 && (
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
-          <CardContent className="p-6">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <div className="text-2xl">📝</div>
-              מילים בתהליך ({wordsInProgress})
-            </h3>
-            <p className="text-white/70 text-sm mb-4">מילים שנסיתי אבל עדיין לא עניתי נכון</p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {wordProgress
-                .filter(w => !w.mastered && w.correct_streak === 0 && w.total_attempts > 0)
-                .map((word) => {
-                  const vocabWord = availableVocabWords.find(v => v.word_english.toLowerCase() === word.word_english.toLowerCase());
-                  const displayHebrew = vocabWord ? vocabWord.word_hebrew : (word.word_hebrew || word.word_english);
-                  
-                  return (
-                    <div
-                      key={word.id}
-                      className="bg-orange-500/10 rounded-lg p-3 border border-orange-500/30 text-center"
-                    >
-                      <div className="text-orange-300 text-xs mb-2">
-                        {word.total_attempts} ניסיונות
-                      </div>
-                      <p className="font-bold text-white" dir="ltr" translate="no" lang="en">{word.word_english}</p>
-                      <p className="text-white/60 text-sm">{displayHebrew}</p>
-                    </div>
-                  );
-                })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
     </div>
   );
 }
