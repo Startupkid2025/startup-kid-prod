@@ -364,6 +364,15 @@ export default function Vocabulary() {
     }
   }, [currentWord]);
 
+  // Play sound effect when correct answer
+  useEffect(() => {
+    if (feedback?.isCorrect) {
+      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUKzk8LJnHgU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHAU7k9nyw3osBS18zPLaizsKE127+O+gUBELTKXh8bllHA==');
+      audio.volume = 0.3;
+      audio.play().catch(() => {});
+    }
+  }, [feedback]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!userAnswer.trim() || isChecking) return;
@@ -712,27 +721,25 @@ export default function Vocabulary() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="text-center"
               >
-                {!feedback && (
-                  <div className="flex justify-center gap-2 sm:gap-3 mb-4 flex-wrap">
-                    {currentWord.isReview && currentWord.correctStreak > 0 && (
-                      <span className="bg-green-500/20 text-green-200 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-1">
-                        <span className="font-bold">✓</span>
-                        <span className="mr-1">עניתי נכון</span>
-                      </span>
-                    )}
-                    <span className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2 font-bold ${
-                      currentWord.difficulty === 1 ? 'bg-green-500/20 text-green-200 border-2 border-green-500/40' :
-                      currentWord.difficulty === 2 ? 'bg-orange-500/20 text-orange-200 border-2 border-orange-500/40' :
-                      'bg-red-500/20 text-red-200 border-2 border-red-500/40'
-                    }`}>
-                      {currentWord.difficulty === 1 ? '😊 קל' : currentWord.difficulty === 2 ? '💪 בינוני' : '🔥 קשה'}
+                <div className="flex justify-center gap-2 sm:gap-3 mb-4 flex-wrap">
+                  {!feedback && currentWord.isReview && currentWord.correctStreak > 0 && (
+                    <span className="bg-green-500/20 text-green-200 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-1">
+                      <span className="font-bold">✓</span>
+                      <span className="mr-1">עניתי נכון</span>
                     </span>
-                    <span className="bg-amber-500/20 text-amber-200 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2">
-                      <Coins className="w-4 h-4" />
-                      {getCoinsForDifficulty(currentWord.difficulty)} סטארטקוין
-                    </span>
-                  </div>
-                )}
+                  )}
+                  <span className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2 font-bold ${
+                    currentWord.difficulty === 1 ? 'bg-green-500/20 text-green-200 border-2 border-green-500/40' :
+                    currentWord.difficulty === 2 ? 'bg-orange-500/20 text-orange-200 border-2 border-orange-500/40' :
+                    'bg-red-500/20 text-red-200 border-2 border-red-500/40'
+                  }`}>
+                    {currentWord.difficulty === 1 ? '😊 קל' : currentWord.difficulty === 2 ? '💪 בינוני' : '🔥 קשה'}
+                  </span>
+                  <span className="bg-amber-500/20 text-amber-200 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2">
+                    <Coins className="w-4 h-4" />
+                    {getCoinsForDifficulty(currentWord.difficulty)} סטארטקוין
+                  </span>
+                </div>
 
                 <div className="flex items-center justify-center gap-4 mb-6 sm:mb-8">
                   <div className="text-3xl sm:text-4xl md:text-5xl font-black text-white break-words px-2" dir="ltr" translate="no" lang="en">
@@ -815,12 +822,39 @@ export default function Vocabulary() {
                           </div>
                         )}
                       {feedback.coinsEarned > 0 && !feedback.mastered && (
-                        <div className="bg-blue-500/20 text-blue-200 py-2 px-4 rounded-lg inline-block mt-3">
-                          <div className="font-bold text-base flex items-center gap-2">
-                            <Coins className="w-4 h-4" />
-                            קיבלת +{feedback.coinsEarned} סטארטקוין!
-                          </div>
-                        </div>
+                        <motion.div
+                          initial={{ scale: 0, rotate: -180 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ type: "spring", duration: 0.8, bounce: 0.5 }}
+                          className="mt-3"
+                        >
+                          <motion.div
+                            animate={{ 
+                              y: [0, -5, 0],
+                              boxShadow: [
+                                '0 0 20px rgba(59, 130, 246, 0.5)',
+                                '0 0 40px rgba(59, 130, 246, 0.8)',
+                                '0 0 20px rgba(59, 130, 246, 0.5)'
+                              ]
+                            }}
+                            transition={{ 
+                              duration: 1.5,
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                            className="bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-500 text-white py-3 px-6 rounded-xl inline-block border-2 border-blue-300"
+                          >
+                            <div className="font-black text-lg flex items-center gap-2">
+                              <motion.div
+                                animate={{ rotate: [0, 360] }}
+                                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                              >
+                                🪙
+                              </motion.div>
+                              קיבלת +{feedback.coinsEarned} סטארטקוין!
+                            </div>
+                          </motion.div>
+                        </motion.div>
                       )}
                       </div>
                       ) : (
