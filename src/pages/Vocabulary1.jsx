@@ -675,18 +675,6 @@ export default function Vocabulary() {
         <p className="text-white/80 text-lg">
           למד מילים חדשות והרווח סטארטקוין!
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 max-w-2xl mx-auto">
-          <div className="bg-blue-500/20 border-2 border-blue-500/40 rounded-xl p-3">
-            <p className="text-blue-200 text-sm font-bold">
-              📦 {Math.min(availableVocabWords.length, DAILY_WORDS_COUNT)} / {DAILY_WORDS_COUNT} מילים נותרו להיום
-            </p>
-          </div>
-          <div className="bg-purple-500/20 border-2 border-purple-500/40 rounded-xl p-3">
-            <p className="text-purple-200 text-sm font-bold">
-              ⏰ התחדשות בעוד: {timeUntilReset}
-            </p>
-          </div>
-        </div>
       </motion.div>
 
       {/* Game Area */}
@@ -907,6 +895,20 @@ export default function Vocabulary() {
             <p className="text-white/70 text-sm">סטארטקוין צברת</p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Timer Info */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8 max-w-2xl mx-auto">
+        <div className="bg-blue-500/20 border-2 border-blue-500/40 rounded-xl p-3">
+          <p className="text-blue-200 text-sm font-bold">
+            📦 {Math.min(availableVocabWords.length, DAILY_WORDS_COUNT)} / {DAILY_WORDS_COUNT} מילים נותרו להיום
+          </p>
+        </div>
+        <div className="bg-purple-500/20 border-2 border-purple-500/40 rounded-xl p-3">
+          <p className="text-purple-200 text-sm font-bold">
+            ⏰ התחדשות בעוד: {timeUntilReset}
+          </p>
+        </div>
       </div>
 
       {/* Mastered Words List */}
