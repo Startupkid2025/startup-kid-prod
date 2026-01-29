@@ -61,6 +61,7 @@ const LeaderboardRow = React.memo(({
                     equippedItems={player.equipped_items || {}} 
                     size="small"
                     showBackground={false}
+                    avatarStage={1}
                     userEmail={player.student_email}
                   />
                 </div>
