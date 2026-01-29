@@ -607,7 +607,7 @@ const generateAvatarVariation = (email) => {
   };
 };
 
-export default function TamagotchiAvatar({ equippedItems = {}, size = "large", showBackground = true, avatarStage = 1, userEmail = "" }) {
+export default function TamagotchiAvatar({ equippedItems = {}, size = "large", showBackground = true, avatarStage = 1, userEmail = "", level = 0 }) {
   const sizeMap = {
     small: 80,
     medium: 120,
@@ -627,6 +627,11 @@ export default function TamagotchiAvatar({ equippedItems = {}, size = "large", s
   }[avatarStage] || 1;
 
   const variation = generateAvatarVariation(userEmail);
+  
+  // Get Startamon image based on level (0-9)
+  const safeLevel = Math.max(0, Math.min(9, Number(level) || 0));
+  const imageNumber = safeLevel + 1; // level 0 = 1.png, level 1 = 2.png, etc.
+  const startamonImageUrl = `/Startamons/Startamon1/${imageNumber}.png`;
   
   const selectedBody = AVATAR_ITEMS[equippedItems.body || "body_blue"];
   const bodyColor = selectedBody?.color || "#60A5FA";
@@ -861,121 +866,31 @@ export default function TamagotchiAvatar({ equippedItems = {}, size = "large", s
         />
       )}
 
-      {/* Main Avatar Body - NO FLOATING ANIMATION */}
-      <div
+      {/* Startamon Image based on Level */}
+      <motion.div
         className="relative"
         style={{ 
           width: avatarSize * 0.85, 
           height: avatarSize * 0.85,
           transform: `scale(${stageScale})`
         }}
+        animate={{
+          y: [0, -8, 0],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
       >
-        {/* Body with unique variation - Pokemon Style */}
-        <div 
-          className="absolute inset-0 rounded-full shadow-2xl"
-          style={{ 
-            background: bodyBackgroundStyle,
-            border: '5px solid rgba(0, 0, 0, 0.15)',
-            transform: `scaleX(${1 + variation.bodyVariant / 100})`,
-            boxShadow: '0 8px 20px rgba(0, 0, 0, 0.3), inset 0 -8px 20px rgba(0, 0, 0, 0.1)'
+        <img 
+          src={startamonImageUrl}
+          alt={`Startamon Level ${safeLevel}`}
+          className="w-full h-full object-contain"
+          style={{
+            filter: 'drop-shadow(0 8px 20px rgba(0, 0, 0, 0.3))'
           }}
         />
-
-        {/* Cheeks - Pokemon Style */}
-        <div className="absolute" style={{ top: '50%', left: '8%', width: '22%', height: '15%', background: '#FCA5A5', borderRadius: '50%', opacity: 0.7, boxShadow: '0 0 8px rgba(252, 165, 165, 0.5)' }} />
-        <div className="absolute" style={{ top: '50%', right: '8%', width: '22%', height: '15%', background: '#FCA5A5', borderRadius: '50%', opacity: 0.7, boxShadow: '0 0 8px rgba(252, 165, 165, 0.5)' }} />
-
-        {/* Eyes with variation */}
-        {renderEyes()}
-
-        {/* Mouth with variation */}
-        {renderMouth()}
-
-        {/* Ears - Pokemon Style (Bigger and rounder) */}
-        <div className="absolute" style={{ 
-          top: '10%', 
-          left: '-10%', 
-          width: `${28 * variation.earSize}%`, 
-          height: `${38 * variation.earSize}%`, 
-          background: bodyColor,
-          borderRadius: '60% 40% 40% 60%',
-          border: '4px solid rgba(0, 0, 0, 0.2)',
-          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
-        }} />
-        <div className="absolute" style={{ 
-          top: '10%', 
-          right: '-10%', 
-          width: `${28 * variation.earSize}%`, 
-          height: `${38 * variation.earSize}%`, 
-          background: bodyColor,
-          borderRadius: '40% 60% 60% 40%',
-          border: '4px solid rgba(0, 0, 0, 0.2)',
-          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
-        }} />
-
-        {/* Inner Ears - Bigger */}
-        <div className="absolute" style={{ 
-          top: '18%', 
-          left: '-4%', 
-          width: '16%', 
-          height: '24%', 
-          background: '#FCA5A5',
-          borderRadius: '50%',
-          opacity: 0.8
-        }} />
-        <div className="absolute" style={{ 
-          top: '18%', 
-          right: '-4%', 
-          width: '16%', 
-          height: '24%', 
-          background: '#FCA5A5',
-          borderRadius: '50%',
-          opacity: 0.8
-        }} />
-
-        {/* Arms/Hands - More visible */}
-        <div className="absolute" style={{ 
-          top: '55%', 
-          left: '-15%', 
-          width: '22%', 
-          height: '18%', 
-          background: bodyColor,
-          borderRadius: '50%',
-          border: '3px solid rgba(255, 255, 255, 0.3)',
-          transform: 'rotate(-20deg)',
-          boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
-        }} />
-        <div className="absolute" style={{ 
-          top: '55%', 
-          right: '-15%', 
-          width: '22%', 
-          height: '18%', 
-          background: bodyColor,
-          borderRadius: '50%',
-          border: '3px solid rgba(255, 255, 255, 0.3)',
-          transform: 'rotate(20deg)',
-          boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
-        }} />
-
-        {/* Feet */}
-        <div className="absolute" style={{ 
-          bottom: '-8%', 
-          left: '20%', 
-          width: '22%', 
-          height: '18%', 
-          background: bodyColor,
-          borderRadius: '50%',
-          border: '3px solid rgba(255, 255, 255, 0.3)'
-        }} />
-        <div className="absolute" style={{ 
-          bottom: '-8%', 
-          right: '20%', 
-          width: '22%', 
-          height: '18%', 
-          background: bodyColor,
-          borderRadius: '50%',
-          border: '3px solid rgba(255, 255, 255, 0.3)'
-        }} />
 
         {/* Hat */}
         {hat && (
@@ -983,7 +898,8 @@ export default function TamagotchiAvatar({ equippedItems = {}, size = "large", s
             top: '-15%', 
             left: '50%', 
             transform: 'translateX(-50%)',
-            fontSize: avatarSize * 0.25 + 'px'
+            fontSize: avatarSize * 0.25 + 'px',
+            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
           }}>
             {hat}
           </div>
@@ -994,12 +910,13 @@ export default function TamagotchiAvatar({ equippedItems = {}, size = "large", s
           <div className="absolute" style={{ 
             bottom: '5%', 
             right: '-15%',
-            fontSize: avatarSize * 0.22 + 'px'
+            fontSize: avatarSize * 0.22 + 'px',
+            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
           }}>
             {accessory}
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }
