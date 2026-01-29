@@ -367,7 +367,7 @@ export default function Admin() {
           successCount++;
           
           if (i < students.length - 1) {
-            await sleep(previewOnly ? 100 : 400);
+            await sleep(previewOnly ? 200 : 600);
           }
         } catch (error) {
           failCount++;
@@ -564,7 +564,7 @@ export default function Admin() {
           });
           successCount++;
           if (i < students.length - 1) {
-            await sleep(400);
+            await sleep(700);
           }
         } catch (error) {
           failCount++;
@@ -626,7 +626,7 @@ export default function Admin() {
           }
           
           if (i < students.length - 1) {
-            await sleep(300);
+            await sleep(700);
           }
         } catch (error) {
           console.error(`Failed for ${user.email}:`, error);
@@ -825,7 +825,7 @@ export default function Admin() {
           
           successCount++;
           if (i < students.length - 1) {
-            await sleep(dryRun ? 50 : 300);
+            await sleep(dryRun ? 200 : 600);
           }
         } catch (error) {
           failCount++;
@@ -1009,7 +1009,7 @@ export default function Admin() {
         
         // Delay between batches
         if (batchIndex < batches.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
       
