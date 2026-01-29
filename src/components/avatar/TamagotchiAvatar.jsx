@@ -628,9 +628,8 @@ export default function TamagotchiAvatar({ equippedItems = {}, size = "large", s
 
   const variation = generateAvatarVariation(userEmail);
   
-  // Get Startamon image based on level (0-9)
-  const safeLevel = Math.max(0, Math.min(9, Number(level) || 0));
-  const imageNumber = safeLevel + 1; // level 0 = 1.png, level 1 = 2.png, etc.
+  // Get Startamon image based on avatarStage (1-6)
+  const imageNumber = Math.max(1, Math.min(6, avatarStage || 1));
   const startamonImageUrl = `/Startamons/Startamon1/${imageNumber}.png`;
   
   const selectedBody = AVATAR_ITEMS[equippedItems.body || "body_blue"];
