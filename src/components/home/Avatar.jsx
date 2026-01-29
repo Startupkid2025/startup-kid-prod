@@ -265,7 +265,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                   value={newAvatarName}
                   onChange={(e) => setNewAvatarName(e.target.value)}
                   className="bg-white/20 border-white/30 text-white placeholder:text-white/50 h-9 text-center font-bold max-w-[200px]"
-                  placeholder="שם האווטאר"
+                  placeholder="שם הסטארטאמון"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleSaveAvatarName();

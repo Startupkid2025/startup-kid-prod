@@ -58,7 +58,7 @@ export default function TamagotchiWardrobe({
       <DialogContent className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 max-w-2xl max-h-[85vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="text-3xl font-black text-center bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            ארון הבגדים שלי 👔
+            ארון הסטארטאמון שלי 👔
           </DialogTitle>
           <p className="text-center text-gray-600 mt-2">
             השלמת {totalLessons} שיעורים • לחץ על פריט כדי ללבוש
