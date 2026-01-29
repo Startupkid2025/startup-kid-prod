@@ -359,6 +359,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                   equippedItems={student.equipped_items || {}} 
                   size="large"
                   showBackground={true}
+                  avatarStage={1}
                   userEmail={student.email || student.student_email}
                 />
               </div>
