@@ -176,6 +176,7 @@ export default function AvatarShop({
               equippedItems={equippedItems} 
               size="medium"
               showBackground={true}
+              avatarStage={1}
               userEmail={userData?.email}
             />
           </div>
