@@ -1129,48 +1129,55 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="students" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6 mb-8 bg-white/5 backdrop-blur-md border border-white/10 p-1 rounded-xl">
+        <TabsList className="grid w-full grid-cols-7 mb-8 bg-white/5 backdrop-blur-md border border-white/10 p-1 rounded-xl">
           <TabsTrigger 
             value="students" 
-            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white"
+            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white text-xs"
           >
-            <Users className="w-4 h-4 ml-2" />
-            תלמידים ושיעורים
+            <Users className="w-4 h-4 ml-1" />
+            תלמידים
           </TabsTrigger>
           <TabsTrigger 
             value="lessons"
-            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white"
+            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white text-xs"
           >
-            <BookOpen className="w-4 h-4 ml-2" />
-            ניהול שיעורים
+            <BookOpen className="w-4 h-4 ml-1" />
+            שיעורים
           </TabsTrigger>
           <TabsTrigger 
             value="groups"
-            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white"
+            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white text-xs"
           >
-            <Users className="w-4 h-4 ml-2" />
-            ניהול קבוצות
+            <Users className="w-4 h-4 ml-1" />
+            קבוצות
           </TabsTrigger>
           <TabsTrigger 
             value="vocabulary"
-            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white"
+            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white text-xs"
           >
-            <Languages className="w-4 h-4 ml-2" />
-            ניהול מילים
+            <Languages className="w-4 h-4 ml-1" />
+            מילים
+          </TabsTrigger>
+          <TabsTrigger 
+            value="vocab-suggestions"
+            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white text-xs"
+          >
+            💡
+            המלצות
           </TabsTrigger>
           <TabsTrigger 
             value="tools"
-            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white"
+            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white text-xs"
           >
-            <Shield className="w-4 h-4 ml-2" />
-            Economy Admin
+            <Shield className="w-4 h-4 ml-1" />
+            Economy
           </TabsTrigger>
           <TabsTrigger 
             value="scheduled"
-            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white"
+            className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white text-xs"
           >
-            <RefreshCw className="w-4 h-4 ml-2" />
-            משימות מתוזמנות
+            <RefreshCw className="w-4 h-4 ml-1" />
+            משימות
           </TabsTrigger>
         </TabsList>
 
