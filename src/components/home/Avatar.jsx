@@ -500,7 +500,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
             transition={{ delay: 0.5 }}
             className="relative"
           >
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 shadow-xl border-2 border-purple-200">
+            <div className="bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-xl rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 shadow-2xl border-2 border-white/30">
               {workStatus && workStatus.isWorking ? (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between mb-2">
@@ -509,26 +509,26 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                         {JOBS.find(j => j.id === workStatus.jobId)?.icon || "💼"}
                       </div>
                       <div>
-                        <h3 className="text-base font-black text-purple-900">
+                        <h3 className="text-base font-black text-white drop-shadow-lg">
                           {workStatus.jobName}
                         </h3>
-                        <p className="text-xs text-purple-600">בעבודה כרגע...</p>
+                        <p className="text-xs text-white/80">בעבודה כרגע...</p>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="bg-white/60 backdrop-blur-sm rounded-lg px-4 py-3 border border-purple-200">
+                  <div className="bg-gradient-to-br from-purple-500/40 to-pink-500/40 backdrop-blur-md rounded-lg px-4 py-3 border border-white/30">
                     <div className="flex items-center justify-center gap-4">
                       <div className="flex items-center gap-2">
-                        <Clock className="w-5 h-5 text-purple-600" />
-                        <span className="text-2xl font-black text-purple-900">
+                        <Clock className="w-5 h-5 text-white" />
+                        <span className="text-2xl font-black text-white drop-shadow-lg">
                           {formatTime(timeLeft)}
                         </span>
                       </div>
-                      <div className="w-px h-8 bg-purple-200"></div>
+                      <div className="w-px h-8 bg-white/30"></div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xl font-bold text-yellow-600">{workStatus.coinsToEarn}</span>
-                        <Coins className="w-5 h-5 text-yellow-500" />
+                        <span className="text-xl font-bold text-yellow-300 drop-shadow-lg">{workStatus.coinsToEarn}</span>
+                        <Coins className="w-5 h-5 text-yellow-300" />
                       </div>
                     </div>
                   </div>
@@ -536,7 +536,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                   {timeLeft === 0 && (
                     <Button
                       onClick={completeWork}
-                      className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-black text-base py-6"
+                      className="w-full bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white font-black text-base py-6 shadow-xl"
                     >
                       🎉 אסוף סטארטקוין!
                     </Button>
@@ -547,7 +547,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                 const availableJobs = JOBS.filter(job => job.minStage <= currentStage);
                 const currentJob = [...availableJobs].reverse()[0];
                 
-                if (!currentJob) return <p className="text-gray-800 font-medium text-center text-sm sm:text-base">{currentMessage}</p>;
+                if (!currentJob) return <p className="text-white font-medium text-center text-sm sm:text-base drop-shadow-lg">{currentMessage}</p>;
 
                 const purchasedItems = user?.purchased_items || [];
                 let hourlyBonus = 0;
@@ -566,25 +566,25 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <div className="text-4xl">
+                        <div className="text-4xl drop-shadow-lg">
                           {currentJob.icon}
                         </div>
                         <div>
-                          <h3 className="text-base font-black text-purple-900">
+                          <h3 className="text-base font-black text-white drop-shadow-lg">
                             {currentJob.name}
                           </h3>
-                          <p className="text-xs text-purple-600">עבודה זמינה</p>
+                          <p className="text-xs text-white/80">עבודה זמינה</p>
                         </div>
                       </div>
                     </div>
 
                     <Button
                       onClick={sendToWork}
-                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-5 text-base"
+                      className="w-full bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-5 text-base shadow-xl"
                     >
                       <Briefcase className="w-5 h-5 ml-2" />
                       שלח לעבודה
-                      <div className="mr-auto bg-white/20 rounded-lg px-3 py-1 flex items-center gap-1">
+                      <div className="mr-auto bg-white/30 rounded-lg px-3 py-1 flex items-center gap-1">
                         <span className="font-black">{totalEarnings}</span>
                         <Coins className="w-4 h-4" />
                         <span className="text-sm">/שעה</span>
@@ -592,10 +592,10 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                     </Button>
 
                     {totalWorkEarnings > 0 && (
-                      <div className="bg-gradient-to-r from-green-400/20 to-emerald-400/20 rounded-lg px-3 py-2 border border-green-300/50">
+                      <div className="bg-gradient-to-r from-emerald-400/30 to-green-400/30 backdrop-blur-md rounded-lg px-3 py-2 border border-white/30">
                         <p className="text-center text-sm">
-                          <span className="text-green-700 font-medium">סה״כ הרווחתי מעבודה:</span>
-                          <span className="text-green-900 font-black text-lg mr-2">{totalWorkEarnings} 🪙</span>
+                          <span className="text-white/90 font-medium">סה״כ הרווחתי:</span>
+                          <span className="text-white font-black text-lg mr-2 drop-shadow-lg">{totalWorkEarnings} 🪙</span>
                         </p>
                       </div>
                     )}
@@ -603,7 +603,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                 );
               })()}
             </div>
-            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-purple-100"></div>
+            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-white/20"></div>
           </motion.div>
         </div>
       </Card>
