@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Check, X, Trophy, Coins, BookOpen, Star } from "lucide-react";
+import { Loader2, Check, X, Trophy, Coins, BookOpen, Star, Send } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
 
@@ -117,6 +118,8 @@ export default function Vocabulary() {
   const [feedback, setFeedback] = useState(null);
   const [timeUntilReset, setTimeUntilReset] = useState("");
   const [masteredPage, setMasteredPage] = useState(1);
+  const [showSuggestionDialog, setShowSuggestionDialog] = useState(false);
+  const [suggestionText, setSuggestionText] = useState("");
   
   const resetInProgressRef = useRef(false);
   const lastResetAttemptRef = useRef(0);
@@ -929,16 +932,24 @@ export default function Vocabulary() {
                       <p className="text-white text-lg mb-2 font-bold">
                       {feedback.correctAnswer.split(',').slice(0, 2).join(', ')}
                       </p>
-                      {feedback.isDontKnow && (
-                      <div className="mt-3">
+                      <div className="mt-3 space-y-2">
                         <Button
-                          onClick={handleContinue}
-                          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 text-base"
+                          onClick={() => setShowSuggestionDialog(true)}
+                          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 text-sm"
                         >
-                          המשך למילה הבאה →
+                          💡 יש לי פירוש נוסף
                         </Button>
+                        {feedback.isDontKnow && (
+                          <div>
+                            <Button
+                              onClick={handleContinue}
+                              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 text-base"
+                            >
+                              המשך למילה הבאה →
+                            </Button>
+                          </div>
+                        )}
                       </div>
-                      )}
                       </div>
                       )}
                   </div>
@@ -1015,6 +1026,70 @@ export default function Vocabulary() {
         );
       })()}
 
+      {/* Suggestion Dialog */}
+      <Dialog open={showSuggestionDialog} onOpenChange={setShowSuggestionDialog}>
+        <DialogContent className="bg-gradient-to-br from-purple-900 to-blue-900 border-2 border-white/20">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-white">
+              💡 הצע פירוש נוסף
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-white/80 mb-2">
+                המילה: <span className="font-bold text-white" dir="ltr" translate="no" lang="en">{currentWord?.english}</span>
+              </p>
+              <p className="text-white/80 mb-4">
+                הפירוש הנוכחי: <span className="font-bold text-white">{currentWord?.hebrew}</span>
+              </p>
+            </div>
+            <div>
+              <label className="text-white font-bold mb-2 block">הפירוש המוצע שלך:</label>
+              <Input
+                value={suggestionText}
+                onChange={(e) => setSuggestionText(e.target.value)}
+                placeholder="הכנס פירוש נוסף בעברית..."
+                className="bg-white/10 border-white/30 text-white placeholder:text-white/50"
+                autoFocus
+              />
+            </div>
+            <Button
+              onClick={async () => {
+                if (!suggestionText.trim()) {
+                  toast.error("נא להזין פירוש");
+                  return;
+                }
+                
+                try {
+                  await base44.entities.VocabularyWordSuggestion.create({
+                    word_english: currentWord.english,
+                    current_hebrew: currentWord.hebrew,
+                    suggested_hebrew: suggestionText.trim(),
+                    suggested_by_email: userData.email,
+                    suggested_by_name: userData.full_name || userData.first_name || userData.email,
+                    status: "pending"
+                  });
+                  
+                  toast.success("תודה על ההמלצה! 🙏");
+                  setSuggestionText("");
+                  setShowSuggestionDialog(false);
+                  setTimeout(() => {
+                    handleContinue();
+                  }, 800);
+                } catch (error) {
+                  console.error("Error submitting suggestion:", error);
+                  toast.error("שגיאה בשליחת ההמלצה");
+                }
+              }}
+              disabled={!suggestionText.trim()}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-3"
+            >
+              <Send className="w-4 h-4 ml-2" />
+              שלח המלצה
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
