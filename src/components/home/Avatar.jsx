@@ -396,7 +396,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
       returnTime: returnTime
     });
 
-    const bonusText = hourlyBonus > 0 ? ` (כולל +${hourlyBonus} מפריטים!)` : '';
+    const bonusText = hourlyBonus > 0 ? ` (+${hourlyBonus} בונוס פריטים)` : '';
     const efficiencyText = workEfficiency < 1 ? ` ⚠️ יעילות ${Math.round(workEfficiency * 100)}% בגלל רעב!` : '';
     toast.success(`${user.avatar_name} יצא לעבוד כ${currentJob.name}! 💼${bonusText}${efficiencyText}`);
   };
