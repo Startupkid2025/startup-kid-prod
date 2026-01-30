@@ -61,7 +61,15 @@ const LeaderboardRow = React.memo(({
                     equippedItems={player.equipped_items || {}} 
                     size="small"
                     showBackground={false}
-                    avatarStage={1}
+                    avatarStage={(() => {
+                      const totalLessons = player.total_lessons || 0;
+                      if (totalLessons < 4) return 1;
+                      if (totalLessons < 10) return 2;
+                      if (totalLessons < 18) return 3;
+                      if (totalLessons < 28) return 4;
+                      if (totalLessons < 40) return 5;
+                      return 6;
+                    })()}
                     userEmail={player.student_email}
                   />
                 </div>
