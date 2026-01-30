@@ -884,7 +884,7 @@ export default function TamagotchiAvatar({ equippedItems = {}, size = "large", s
       >
         <img 
           src={startamonImageUrl}
-          alt={`Startamon Level ${safeLevel}`}
+          alt={`Startamon Stage ${avatarStage}`}
           className="w-full h-full object-contain"
           style={{
             filter: 'drop-shadow(0 8px 20px rgba(0, 0, 0, 0.3))'
