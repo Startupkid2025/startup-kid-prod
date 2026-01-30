@@ -510,7 +510,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                       </div>
                       <div>
                         <h3 className="text-base font-black text-white drop-shadow-lg">
-                          {workStatus.jobName}
+                          רמה {currentLevel}
                         </h3>
                         <p className="text-xs text-white/80">בעבודה כרגע...</p>
                       </div>
