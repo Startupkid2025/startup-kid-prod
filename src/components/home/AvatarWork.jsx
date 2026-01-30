@@ -298,104 +298,72 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     );
   }
 
+  // Get current job based on stage
+  const currentStage = getCurrentStage();
+  const currentJob = [...availableJobs].reverse()[0]; // Get the highest available job
+  
+  if (!currentJob) return null;
+
+  // Calculate total earnings with bonuses
+  const purchasedItems = userData?.purchased_items || [];
+  let hourlyBonus = 0;
+  
+  purchasedItems.forEach(itemId => {
+    const item = AVATAR_ITEMS[itemId];
+    if (item && item.hourlyBonus) {
+      hourlyBonus += item.hourlyBonus;
+    }
+  });
+
+  const totalEarnings = currentJob.coinsPerHour + hourlyBonus;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="mb-6"
     >
-      <Card className="bg-white/10 backdrop-blur-md border-white/20">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Briefcase className="w-5 h-5" />
-            שלח את {userData?.avatar_name} לעבוד
-          </CardTitle>
-          <p className="text-white/70 text-sm mt-2">
-            בחר עבודה ותרוויח סטארטקוין! 💼
-          </p>
-          {totalWorkEarnings > 0 && (
-            <div className="mt-3 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl px-4 py-2 border-2 border-green-300/50 shadow-lg inline-flex items-center gap-2">
-              <Coins className="w-4 h-4 text-white" />
-              <span className="text-white font-black text-base">
-                סה״כ הרווחתי מעבודה: {totalWorkEarnings}
-              </span>
+      <Card className={`bg-gradient-to-br ${currentJob.color} backdrop-blur-md border-2 border-white/30 shadow-2xl`}>
+        <CardContent className="p-5">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="text-6xl">
+              {currentJob.icon}
             </div>
-          )}
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {availableJobs.map((job) => {
-              // Calculate total earnings with bonuses
-              const purchasedItems = userData?.purchased_items || [];
-              let hourlyBonus = 0;
-              
-              purchasedItems.forEach(itemId => {
-                const item = AVATAR_ITEMS[itemId];
-                if (item && item.hourlyBonus) {
-                  hourlyBonus += item.hourlyBonus;
-                }
-              });
-
-              const totalEarnings = job.coinsPerHour + hourlyBonus;
-
-              return (
-                <motion.button
-                  key={job.id}
-                  onClick={() => sendToWork(job)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`bg-gradient-to-br ${job.color} p-4 rounded-xl shadow-lg text-white text-right relative overflow-hidden`}
-                >
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-3xl">{job.icon}</span>
-                      <div>
-                        <p className="font-bold text-lg">{job.name}</p>
-                        <p className="text-xs opacity-90">{job.description}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 mt-2 bg-white/20 rounded-lg px-3 py-1 inline-flex">
-                      <Coins className="w-4 h-4" />
-                      <span className="font-bold">{totalEarnings}</span>
-                      <span className="text-sm">/ שעה</span>
-                      {hourlyBonus > 0 && (
-                        <span className="text-xs bg-green-500/50 px-2 py-0.5 rounded-full mr-1">
-                          +{hourlyBonus} מפריטים
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </motion.button>
-              );
-            })}
+            <div className="flex-1">
+              <h3 className="text-white font-black text-2xl mb-1">
+                {currentJob.name}
+              </h3>
+              <p className="text-white/90 text-sm">
+                {currentJob.description}
+              </p>
+            </div>
           </div>
 
-          {/* Locked Jobs Preview */}
-          {JOBS.filter(job => job.minStage > getCurrentStage()).length > 0 && (
-            <div className="mt-4 pt-4 border-t border-white/10">
-              <p className="text-white/70 text-sm mb-3">🔒 עבודות נעולות:</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {JOBS.filter(job => job.minStage > getCurrentStage()).map((job) => (
-                  <div
-                    key={job.id}
-                    className="bg-white/5 p-4 rounded-xl border-2 border-white/10 opacity-50"
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-2xl">{job.icon}</span>
-                      <div>
-                        <p className="font-bold text-white">{job.name}</p>
-                        <p className="text-xs text-white/70">
-                          נדרש רמה {job.minStage}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 text-yellow-300 text-sm">
-                      <Coins className="w-4 h-4" />
-                      <span className="font-bold">{job.coinsPerHour}/שעה</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <Button
+            onClick={() => sendToWork(currentJob)}
+            className="w-full bg-white/20 hover:bg-white/30 text-white font-black text-xl py-6 shadow-lg backdrop-blur-sm border-2 border-white/40"
+          >
+            <Briefcase className="w-6 h-6 ml-2" />
+            שלח את {userData?.avatar_name} לעבוד
+            <div className="mr-auto flex items-center gap-2 bg-white/20 rounded-lg px-3 py-1">
+              <Coins className="w-5 h-5" />
+              <span className="font-black text-lg">{totalEarnings}/שעה</span>
+              {hourlyBonus > 0 && (
+                <span className="text-xs bg-green-500/50 px-2 py-0.5 rounded-full">
+                  +{hourlyBonus}
+                </span>
+              )}
+            </div>
+          </Button>
+
+          {totalWorkEarnings > 0 && (
+            <div className="mt-3 bg-white/10 rounded-lg px-4 py-2 flex items-center justify-center gap-2">
+              <span className="text-white/80 text-sm">
+                סה״כ הרווחתי מעבודה:
+              </span>
+              <span className="text-white font-black text-lg">
+                {totalWorkEarnings} 🪙
+              </span>
             </div>
           )}
         </CardContent>
