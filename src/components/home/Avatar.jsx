@@ -500,8 +500,8 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
             transition={{ delay: 0.5 }}
             className="relative"
           >
-            <div className="bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-xl rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 shadow-2xl border-2 border-white/30">
-              {workStatus && workStatus.isWorking ? (
+            {workStatus && workStatus.isWorking ? (
+              <div className="space-y-3">
                 <div className="bg-gradient-to-r from-emerald-500/90 to-teal-500/90 backdrop-blur-sm rounded-lg px-4 py-3 border-2 border-white/30 shadow-lg">
                   <div className="flex items-center justify-center gap-4">
                     <div className="flex items-center gap-2">
@@ -518,35 +518,41 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                   </div>
                 </div>
 
-                  {timeLeft === 0 && (
-                    <Button
-                      onClick={completeWork}
-                      className="w-full bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white font-black text-base py-6 shadow-xl mt-3"
-                    >
-                      🎉 אסוף סטארטקוין!
-                    </Button>
-                  )}
-              ) : (() => {
-                const currentStage = getCurrentStage();
-                const availableJobs = JOBS.filter(job => job.minStage <= currentStage);
-                const currentJob = [...availableJobs].reverse()[0];
-                
-                if (!currentJob) return <p className="text-white font-medium text-center text-sm sm:text-base drop-shadow-lg">{currentMessage}</p>;
+                {timeLeft === 0 && (
+                  <Button
+                    onClick={completeWork}
+                    className="w-full bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white font-black text-base py-6 shadow-xl"
+                  >
+                    🎉 אסוף סטארטקוין!
+                  </Button>
+                )}
+              </div>
+            ) : (() => {
+              const currentStage = getCurrentStage();
+              const availableJobs = JOBS.filter(job => job.minStage <= currentStage);
+              const currentJob = [...availableJobs].reverse()[0];
+              
+              if (!currentJob) return (
+                <div className="bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-xl rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 shadow-2xl border-2 border-white/30">
+                  <p className="text-white font-medium text-center text-sm sm:text-base drop-shadow-lg">{currentMessage}</p>
+                </div>
+              );
 
-                const purchasedItems = user?.purchased_items || [];
-                let hourlyBonus = 0;
-                
-                purchasedItems.forEach(itemId => {
-                  const item = AVATAR_ITEMS[itemId];
-                  if (item && item.hourlyBonus) {
-                    hourlyBonus += item.hourlyBonus;
-                  }
-                });
+              const purchasedItems = user?.purchased_items || [];
+              let hourlyBonus = 0;
+              
+              purchasedItems.forEach(itemId => {
+                const item = AVATAR_ITEMS[itemId];
+                if (item && item.hourlyBonus) {
+                  hourlyBonus += item.hourlyBonus;
+                }
+              });
 
-                const totalEarnings = currentJob.coinsPerHour + hourlyBonus;
-                const totalWorkEarnings = user?.total_work_earnings || 0;
+              const totalEarnings = currentJob.coinsPerHour + hourlyBonus;
+              const totalWorkEarnings = user?.total_work_earnings || 0;
 
-                return (
+              return (
+                <div className="bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-xl rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 shadow-2xl border-2 border-white/30">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
@@ -612,10 +618,9 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                       </div>
                     )}
                   </div>
-                );
-              })()}
-            </div>
-            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-white/20"></div>
+                </div>
+              );
+            })()}
           </motion.div>
         </div>
       </Card>
