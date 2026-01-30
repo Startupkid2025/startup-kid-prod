@@ -578,21 +578,52 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                       </div>
                     </div>
 
-                    <Button
-                      onClick={sendToWork}
-                      className="w-full bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-5 text-base shadow-xl"
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      animate={{
+                        boxShadow: [
+                          "0 0 20px rgba(168, 85, 247, 0.4)",
+                          "0 0 40px rgba(236, 72, 153, 0.6)",
+                          "0 0 20px rgba(168, 85, 247, 0.4)"
+                        ]
+                      }}
+                      transition={{
+                        boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                      }}
+                      className="relative rounded-lg overflow-hidden"
                     >
-                      <Briefcase className="w-5 h-5 ml-2" />
-                      שלח לעבודה
-                      <div className="mr-auto bg-white/30 rounded-lg px-3 py-1 flex items-center gap-1">
-                        <span className="font-black">{currentJob.coinsPerHour}</span>
-                        {hourlyBonus > 0 && (
-                          <span className="text-yellow-300 font-black">+{hourlyBonus}</span>
-                        )}
-                        <Coins className="w-4 h-4" />
-                        <span className="text-sm">/שעה</span>
-                      </div>
-                    </Button>
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 animate-pulse opacity-75"></div>
+                      <Button
+                        onClick={sendToWork}
+                        className="w-full relative bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-black py-6 text-lg shadow-2xl border-2 border-white/50"
+                      >
+                        <motion.div
+                          animate={{ rotate: [0, 10, -10, 0] }}
+                          transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
+                        >
+                          <Briefcase className="w-6 h-6 ml-2" />
+                        </motion.div>
+                        שלח לעבודה! 💼
+                        <motion.div 
+                          className="mr-auto bg-gradient-to-br from-yellow-300 to-orange-400 rounded-lg px-3 py-1 flex items-center gap-1 shadow-lg border border-yellow-200"
+                          animate={{ scale: [1, 1.1, 1] }}
+                          transition={{ duration: 1, repeat: Infinity }}
+                        >
+                          <span className="font-black text-white drop-shadow-lg">{currentJob.coinsPerHour}</span>
+                          {hourlyBonus > 0 && (
+                            <motion.span 
+                              className="text-white font-black drop-shadow-lg"
+                              animate={{ y: [0, -2, 0] }}
+                              transition={{ duration: 0.8, repeat: Infinity }}
+                            >
+                              +{hourlyBonus}
+                            </motion.span>
+                          )}
+                          <Coins className="w-5 h-5 text-white" />
+                        </motion.div>
+                      </Button>
+                    </motion.div>
 
                     {totalWorkEarnings > 0 && (
                       <div className="bg-gradient-to-r from-emerald-400/30 to-green-400/30 backdrop-blur-md rounded-lg px-3 py-2 border border-white/30">
