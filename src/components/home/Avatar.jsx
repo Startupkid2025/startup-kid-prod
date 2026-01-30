@@ -493,39 +493,42 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
             </div>
           </div>
 
-          {/* Speech Bubble with Work Button */}
+          {/* Speech Bubble with Work Section */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
             className="relative"
           >
-            <div className="bg-white rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 shadow-xl">
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 shadow-xl border-2 border-purple-200">
               {workStatus && workStatus.isWorking ? (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-black text-purple-900">
-                      עובד כרגע 💼
-                    </h3>
-                    <div className="text-3xl">
-                      {JOBS.find(j => j.id === workStatus.jobId)?.icon || "💼"}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="text-4xl">
+                        {JOBS.find(j => j.id === workStatus.jobId)?.icon || "💼"}
+                      </div>
+                      <div>
+                        <h3 className="text-base font-black text-purple-900">
+                          {workStatus.jobName}
+                        </h3>
+                        <p className="text-xs text-purple-600">בעבודה כרגע...</p>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="bg-purple-100 rounded-lg px-3 py-2">
-                    <p className="text-sm text-purple-900 font-bold text-center mb-1">
-                      {workStatus.jobName}
-                    </p>
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="flex items-center gap-1 text-purple-900">
-                        <Clock className="w-4 h-4" />
-                        <span className="text-xl font-black">
+                  <div className="bg-white/60 backdrop-blur-sm rounded-lg px-4 py-3 border border-purple-200">
+                    <div className="flex items-center justify-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-purple-600" />
+                        <span className="text-2xl font-black text-purple-900">
                           {formatTime(timeLeft)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1 text-yellow-600">
-                        <Coins className="w-4 h-4" />
-                        <span className="font-bold">{workStatus.coinsToEarn}+</span>
+                      <div className="w-px h-8 bg-purple-200"></div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl font-bold text-yellow-600">{workStatus.coinsToEarn}</span>
+                        <Coins className="w-5 h-5 text-yellow-500" />
                       </div>
                     </div>
                   </div>
@@ -533,9 +536,9 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                   {timeLeft === 0 && (
                     <Button
                       onClick={completeWork}
-                      className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold"
+                      className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-black text-base py-6"
                     >
-                      אסוף סטארטקוין! 💰
+                      🎉 אסוף סטארטקוין!
                     </Button>
                   )}
                 </div>
@@ -557,34 +560,50 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                 });
 
                 const totalEarnings = currentJob.coinsPerHour + hourlyBonus;
+                const totalWorkEarnings = user?.total_work_earnings || 0;
 
                 return (
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base sm:text-lg font-black text-purple-900">
-                        {currentJob.name}
-                      </h3>
-                      <div className="text-3xl">
-                        {currentJob.icon}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="text-4xl">
+                          {currentJob.icon}
+                        </div>
+                        <div>
+                          <h3 className="text-base font-black text-purple-900">
+                            {currentJob.name}
+                          </h3>
+                          <p className="text-xs text-purple-600">עבודה זמינה</p>
+                        </div>
                       </div>
                     </div>
 
                     <Button
                       onClick={sendToWork}
-                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold flex items-center justify-center gap-2"
+                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-5 text-base"
                     >
-                      <Briefcase className="w-4 h-4" />
-                      <span>שלח לעבודה</span>
-                      <div className="bg-white/20 rounded-lg px-2 py-0.5 flex items-center gap-1">
-                        <span className="font-bold">{totalEarnings}+</span>
+                      <Briefcase className="w-5 h-5 ml-2" />
+                      שלח לעבודה
+                      <div className="mr-auto bg-white/20 rounded-lg px-3 py-1 flex items-center gap-1">
+                        <span className="font-black">{totalEarnings}</span>
                         <Coins className="w-4 h-4" />
+                        <span className="text-sm">/שעה</span>
                       </div>
                     </Button>
+
+                    {totalWorkEarnings > 0 && (
+                      <div className="bg-gradient-to-r from-green-400/20 to-emerald-400/20 rounded-lg px-3 py-2 border border-green-300/50">
+                        <p className="text-center text-sm">
+                          <span className="text-green-700 font-medium">סה״כ הרווחתי מעבודה:</span>
+                          <span className="text-green-900 font-black text-lg mr-2">{totalWorkEarnings} 🪙</span>
+                        </p>
+                      </div>
+                    )}
                   </div>
                 );
               })()}
             </div>
-            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-white"></div>
+            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-purple-100"></div>
           </motion.div>
         </div>
       </Card>
