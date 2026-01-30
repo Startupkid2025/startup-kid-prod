@@ -245,12 +245,106 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
       setUser(userData);
       setNewAvatarName(userData.avatar_name || "");
       
+      // Check work status
+      const status = userData.work_status || null;
+      if (status && status.isWorking) {
+        setWorkStatus(status);
+        const now = Date.now();
+        setTimeLeft(Math.max(0, status.returnTime - now));
+      } else {
+        setWorkStatus(null);
+      }
+      
       // Generate smart tip
       const tip = await generateSmartTip(userData, equippedItems);
       setCurrentMessage(tip);
     } catch (error) {
       console.error("Error loading user:", error);
     }
+  };
+
+  const getCurrentStage = () => {
+    return calculateLevel(user?.total_lessons || 0);
+  };
+
+  const sendToWork = async () => {
+    const currentStage = getCurrentStage();
+    const availableJobs = JOBS.filter(job => job.minStage <= currentStage);
+    const currentJob = [...availableJobs].reverse()[0];
+    
+    if (!currentJob) return;
+
+    const returnTime = Date.now() + (60 * 60 * 1000); // 1 hour
+
+    const purchasedItems = user.purchased_items || [];
+    let hourlyBonus = 0;
+    
+    purchasedItems.forEach(itemId => {
+      const item = AVATAR_ITEMS[itemId];
+      if (item && item.hourlyBonus) {
+        hourlyBonus += item.hourlyBonus;
+      }
+    });
+
+    const totalCoinsToEarn = currentJob.coinsPerHour + hourlyBonus;
+    const currentWorkHours = user.total_work_hours || 0;
+
+    await base44.auth.updateMe({
+      work_status: {
+        isWorking: true,
+        jobId: currentJob.id,
+        jobName: currentJob.name,
+        coinsToEarn: totalCoinsToEarn,
+        returnTime: returnTime
+      },
+      total_work_hours: currentWorkHours + 1
+    });
+
+    setWorkStatus({
+      isWorking: true,
+      jobId: currentJob.id,
+      jobName: currentJob.name,
+      coinsToEarn: totalCoinsToEarn,
+      returnTime: returnTime
+    });
+
+    const bonusText = hourlyBonus > 0 ? ` (כולל +${hourlyBonus} מפריטים!)` : '';
+    toast.success(`${user.avatar_name} יצא לעבוד כ${currentJob.name}! 💼${bonusText}`);
+  };
+
+  const completeWork = async () => {
+    if (!workStatus) return;
+
+    let coinsToAdd = workStatus.coinsToEarn;
+    
+    const totalWorkEarnings = (user.total_work_earnings || 0) + coinsToAdd;
+    const newCoins = (user.coins || 0) + coinsToAdd;
+    const finalCoins = Math.max(newCoins, -300);
+
+    await base44.auth.updateMe({
+      coins: finalCoins,
+      total_work_earnings: totalWorkEarnings,
+      work_status: null
+    });
+
+    const newNetWorth = await updateNetWorth(user.email);
+
+    await syncLeaderboardEntry(user.email, {
+      coins: finalCoins,
+      total_work_earnings: totalWorkEarnings,
+      total_networth: newNetWorth,
+      total_work_hours: user.total_work_hours || 0
+    });
+
+    toast.success(`${user.avatar_name} חזר מהעבודה! קיבלת ${coinsToAdd} סטארטקוין! 🎉`);
+    setWorkStatus(null);
+    loadUser();
+  };
+
+  const formatTime = (ms) => {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const handleSaveAvatarName = async () => {
