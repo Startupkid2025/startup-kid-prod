@@ -907,7 +907,7 @@ export default function TamagotchiAvatar({ equippedItems = {}, size = "large", s
             {accessory}
           </div>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }
