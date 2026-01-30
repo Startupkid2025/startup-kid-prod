@@ -517,18 +517,18 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                     </div>
                   </div>
                   
-                  <div className="bg-gradient-to-r from-emerald-500/90 to-teal-500/90 backdrop-blur-sm rounded-xl px-6 py-4 border-2 border-white/30 shadow-lg">
-                    <div className="flex items-center justify-center gap-6">
+                  <div className="bg-gradient-to-r from-emerald-500/90 to-teal-500/90 backdrop-blur-sm rounded-lg px-4 py-3 border-2 border-white/30 shadow-lg">
+                    <div className="flex items-center justify-center gap-4">
                       <div className="flex items-center gap-2">
-                        <Clock className="w-6 h-6 text-white" />
-                        <span className="text-3xl font-black text-white">
+                        <Clock className="w-5 h-5 text-white" />
+                        <span className="text-2xl font-black text-white">
                           {formatTime(timeLeft)}
                         </span>
                       </div>
-                      <div className="w-0.5 h-10 bg-white/40 rounded-full"></div>
+                      <div className="w-0.5 h-8 bg-white/40 rounded-full"></div>
                       <div className="flex items-center gap-2">
-                        <span className="text-3xl font-black text-yellow-200">{workStatus.coinsToEarn}</span>
-                        <Coins className="w-6 h-6 text-yellow-200" />
+                        <span className="text-2xl font-black text-yellow-200">{workStatus.coinsToEarn}</span>
+                        <Coins className="w-5 h-5 text-yellow-200" />
                       </div>
                     </div>
                   </div>
