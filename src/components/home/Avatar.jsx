@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Edit2, Check, X, Briefcase, Clock, Coins, Moon, UtensilsCrossed, Zap, Heart } from "lucide-react";
 import TamagotchiAvatar from "../avatar/TamagotchiAvatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { base44 } from "@/api/base44Client";
 import { AVATAR_ITEMS } from "../avatar/TamagotchiAvatar";
 import { toast } from "sonner";
@@ -865,15 +866,31 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                           <Briefcase className="w-6 h-6 ml-2" />
                         </motion.div>
                         שלח לעבודה! 💼
-                        <div className="mr-auto bg-gradient-to-br from-yellow-300 to-orange-400 rounded-lg px-3 py-1 flex items-center gap-1 shadow-lg border border-yellow-200">
-                          <span className="font-black text-white drop-shadow-lg">{currentJob.coinsPerHour}</span>
-                          {hourlyBonus > 0 && (
-                            <span className="text-white font-black drop-shadow-lg">
-                              +{hourlyBonus}
-                            </span>
-                          )}
-                          <Coins className="w-5 h-5 text-white" />
-                        </div>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="mr-auto bg-gradient-to-br from-yellow-300 to-orange-400 rounded-lg px-3 py-1 flex items-center gap-1 shadow-lg border border-yellow-200 cursor-help">
+                                <span className="font-black text-white drop-shadow-lg">{currentJob.coinsPerHour}</span>
+                                {hourlyBonus > 0 && (
+                                  <span className="text-white font-black drop-shadow-lg">
+                                    +{hourlyBonus}
+                                  </span>
+                                )}
+                                <Coins className="w-5 h-5 text-white" />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-purple-900 border-purple-700">
+                              <div className="text-white">
+                                <p className="font-bold mb-1">💰 הרווחים שלך לשעה:</p>
+                                <p className="text-sm">• {currentJob.coinsPerHour} מהעבודה</p>
+                                {hourlyBonus > 0 && (
+                                  <p className="text-sm text-yellow-300">• +{hourlyBonus} מפריטים שקנית! 🎁</p>
+                                )}
+                                <p className="text-xs text-white/70 mt-2">💡 קנה פריטים בחנות כדי להגדיל את ההרווחים!</p>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </Button>
                     </motion.div>
 
