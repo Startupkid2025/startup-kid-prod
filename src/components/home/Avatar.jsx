@@ -605,21 +605,19 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                           <Briefcase className="w-6 h-6 ml-2" />
                         </motion.div>
                         שלח לעבודה! 💼
-                        <div className="mr-auto bg-gradient-to-br from-yellow-300 to-orange-400 rounded-lg px-3 py-1 flex items-center gap-1 shadow-lg border border-yellow-200">
-                          <motion.span 
-                            className="font-black text-white drop-shadow-lg"
-                            animate={{ scale: [1, 1.1, 1] }}
-                            transition={{ duration: 1, repeat: Infinity }}
-                          >
-                            {currentJob.coinsPerHour}
-                          </motion.span>
+                        <motion.div 
+                          className="mr-auto bg-gradient-to-br from-yellow-300 to-orange-400 rounded-lg px-3 py-1 flex items-center gap-1 shadow-lg border border-yellow-200"
+                          animate={{ scale: [1, 1.1, 1] }}
+                          transition={{ duration: 1, repeat: Infinity }}
+                        >
+                          <span className="font-black text-white drop-shadow-lg">{currentJob.coinsPerHour}</span>
                           {hourlyBonus > 0 && (
                             <span className="text-white font-black drop-shadow-lg">
                               +{hourlyBonus}
                             </span>
                           )}
                           <Coins className="w-5 h-5 text-white" />
-                        </div>
+                        </motion.div>
                       </Button>
                     </motion.div>
 
