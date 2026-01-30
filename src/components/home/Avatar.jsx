@@ -585,7 +585,10 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                       <Briefcase className="w-5 h-5 ml-2" />
                       שלח לעבודה
                       <div className="mr-auto bg-white/30 rounded-lg px-3 py-1 flex items-center gap-1">
-                        <span className="font-black">{totalEarnings}</span>
+                        <span className="font-black">{currentJob.coinsPerHour}</span>
+                        {hourlyBonus > 0 && (
+                          <span className="text-yellow-300 font-black">+{hourlyBonus}</span>
+                        )}
                         <Coins className="w-4 h-4" />
                         <span className="text-sm">/שעה</span>
                       </div>
@@ -594,7 +597,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                     {totalWorkEarnings > 0 && (
                       <div className="bg-gradient-to-r from-emerald-400/30 to-green-400/30 backdrop-blur-md rounded-lg px-3 py-2 border border-white/30">
                         <p className="text-center text-sm">
-                          <span className="text-white/90 font-medium">סה״כ הרווחתי:</span>
+                          <span className="text-white/90 font-medium">בסה״כ הרווחתי מעבודה:</span>
                           <span className="text-white font-black text-lg mr-2 drop-shadow-lg">{totalWorkEarnings} 🪙</span>
                         </p>
                       </div>
