@@ -627,10 +627,12 @@ export default function Vocabulary() {
       const latestProgress = await base44.entities.WordProgress.filter({ student_email: userData.email });
       setWordProgress(latestProgress);
 
-      // Auto-continue after delay to let user read feedback
-      setTimeout(() => {
-        handleContinue();
-      }, 1500);
+      // Auto-continue only if correct
+      if (isCorrect) {
+        setTimeout(() => {
+          handleContinue();
+        }, 1500);
+      }
 
     } catch (error) {
       console.error("Error checking answer:", error);
@@ -939,16 +941,14 @@ export default function Vocabulary() {
                         >
                           💡 יש לי פירוש נוסף
                         </Button>
-                        {feedback.isDontKnow && (
-                          <div>
-                            <Button
-                              onClick={handleContinue}
-                              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 text-base"
-                            >
-                              המשך למילה הבאה →
-                            </Button>
-                          </div>
-                        )}
+                        <div>
+                          <Button
+                            onClick={handleContinue}
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 text-base"
+                          >
+                            המשך למילה הבאה →
+                          </Button>
+                        </div>
                       </div>
                       </div>
                       )}
