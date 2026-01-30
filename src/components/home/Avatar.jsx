@@ -582,6 +582,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       animate={{
+                        scale: [1, 1.05, 1],
                         boxShadow: [
                           "0 0 20px rgba(168, 85, 247, 0.4)",
                           "0 0 40px rgba(236, 72, 153, 0.6)",
@@ -589,6 +590,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                         ]
                       }}
                       transition={{
+                        scale: { duration: 1.5, repeat: Infinity, ease: "easeInOut" },
                         boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
                       }}
                       className="relative rounded-lg overflow-hidden"
@@ -605,11 +607,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                           <Briefcase className="w-6 h-6 ml-2" />
                         </motion.div>
                         שלח לעבודה! 💼
-                        <motion.div 
-                          className="mr-auto bg-gradient-to-br from-yellow-300 to-orange-400 rounded-lg px-3 py-1 flex items-center gap-1 shadow-lg border border-yellow-200"
-                          animate={{ scale: [1, 1.1, 1] }}
-                          transition={{ duration: 1, repeat: Infinity }}
-                        >
+                        <div className="mr-auto bg-gradient-to-br from-yellow-300 to-orange-400 rounded-lg px-3 py-1 flex items-center gap-1 shadow-lg border border-yellow-200">
                           <span className="font-black text-white drop-shadow-lg">{currentJob.coinsPerHour}</span>
                           {hourlyBonus > 0 && (
                             <span className="text-white font-black drop-shadow-lg">
@@ -617,7 +615,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                             </span>
                           )}
                           <Coins className="w-5 h-5 text-white" />
-                        </motion.div>
+                        </div>
                       </Button>
                     </motion.div>
 
