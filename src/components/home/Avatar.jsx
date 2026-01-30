@@ -503,20 +503,6 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
             <div className="bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-xl rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 shadow-2xl border-2 border-white/30">
               {workStatus && workStatus.isWorking ? (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="text-4xl">
-                        {JOBS.find(j => j.id === workStatus.jobId)?.icon || "💼"}
-                      </div>
-                      <div>
-                        <h3 className="text-base font-black text-white drop-shadow-lg">
-                          {workStatus.jobName}
-                        </h3>
-                        <p className="text-xs text-white/80">בעבודה כרגע...</p>
-                      </div>
-                    </div>
-                  </div>
-                  
                   <div className="bg-gradient-to-r from-emerald-500/90 to-teal-500/90 backdrop-blur-sm rounded-lg px-4 py-3 border-2 border-white/30 shadow-lg">
                     <div className="flex items-center justify-center gap-4">
                       <div className="flex items-center gap-2">
