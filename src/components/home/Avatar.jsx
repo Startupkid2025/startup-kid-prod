@@ -826,20 +826,15 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
 
               return (
                 <div className="bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-xl rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 shadow-2xl border-2 border-white/30">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="text-4xl drop-shadow-lg">
-                          {currentJob.icon}
-                        </div>
-                        <div>
-                          <h3 className="text-base font-black text-white drop-shadow-lg">
-                            {currentJob.name}
-                          </h3>
-                          <p className="text-xs text-white/80">עבודה זמינה</p>
-                        </div>
-                      </div>
+                <div className="space-y-3">
+                  <div className="flex flex-col items-center mb-2">
+                    <div className="text-4xl drop-shadow-lg mb-2">
+                      {currentJob.icon}
                     </div>
+                    <h3 className="text-base font-black text-white drop-shadow-lg text-center">
+                      {currentJob.name}
+                    </h3>
+                  </div>
 
                     <motion.div
                       whileHover={{ scale: 1.05 }}
