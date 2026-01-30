@@ -262,7 +262,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
       const userData = await base44.auth.me();
       setUser(userData);
       setNewAvatarName(userData.avatar_name || "");
-      
+
       // Check work status
       const status = userData.work_status || null;
       if (status && status.isWorking) {
@@ -272,7 +272,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
       } else {
         setWorkStatus(null);
       }
-      
+
       // Check sleep status
       const sleepStat = userData.sleep_status || null;
       if (sleepStat && sleepStat.isSleeping) {
@@ -282,16 +282,40 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
       } else {
         setSleepStatus(null);
       }
-      
-      // Load energy and hunger
-      setEnergy(userData.energy ?? 100);
-      setHunger(userData.hunger ?? 0);
-      
+
+      // Update hunger based on time passed
+      await updateHungerBasedOnTime(userData);
+
+      // Load energy and hunger after potential update
+      const updatedUser = await base44.auth.me();
+      setEnergy(updatedUser.energy ?? 100);
+      setHunger(updatedUser.hunger ?? 0);
+
       // Generate smart tip
-      const tip = await generateSmartTip(userData, equippedItems);
+      const tip = await generateSmartTip(updatedUser, equippedItems);
       setCurrentMessage(tip);
     } catch (error) {
       console.error("Error loading user:", error);
+    }
+  };
+
+  const updateHungerBasedOnTime = async (userData) => {
+    try {
+      const now = Date.now();
+      const lastHungerUpdate = userData.last_hunger_update || now;
+      const hoursPassed = Math.floor((now - lastHungerUpdate) / (60 * 60 * 1000));
+
+      if (hoursPassed >= 1) {
+        const hungerIncrease = hoursPassed * 10;
+        const newHunger = Math.min(100, (userData.hunger || 0) + hungerIncrease);
+
+        await base44.auth.updateMe({
+          hunger: newHunger,
+          last_hunger_update: now
+        });
+      }
+    } catch (error) {
+      console.error("Error updating hunger:", error);
     }
   };
 
