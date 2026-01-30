@@ -23,6 +23,7 @@ import GroupManagement from "../components/admin/GroupManagement";
 import TeacherManagement from "../components/admin/TeacherManagement";
 import QuizQuestionsManager from "../components/admin/QuizQuestionsManager";
 import VocabularyManager from "../components/admin/VocabularyManager";
+import VocabSuggestionsManager from "../components/admin/VocabSuggestionsManager";
 import EconomyAdminPanel from "../components/admin/EconomyAdminPanel";
 import InvestmentsManager from "../components/admin/InvestmentsManager";
 import ScheduledTasksPanel from "../components/admin/ScheduledTasksPanel";
@@ -2038,6 +2039,10 @@ export default function Admin() {
 
         <TabsContent value="vocabulary">
           <VocabularyManager />
+        </TabsContent>
+
+        <TabsContent value="vocab-suggestions">
+          <VocabSuggestionsManager />
         </TabsContent>
 
         <TabsContent value="tools">
