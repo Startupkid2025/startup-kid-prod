@@ -726,7 +726,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
               >
                 <div className="flex flex-col items-center gap-1">
                   <Moon className="w-5 h-5" />
-                  <span className="text-xs">שינה 8 שעות</span>
+                  <span className="text-xs">לך לישון (8 שעות)</span>
                 </div>
               </Button>
             </motion.div>
@@ -738,7 +738,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
               >
                 <div className="flex flex-col items-center gap-1">
                   <UtensilsCrossed className="w-5 h-5" />
-                  <span className="text-xs">האכל 10 🪙</span>
+                  <span className="text-xs">אוכל (10 🪙)</span>
                 </div>
               </Button>
             </motion.div>
