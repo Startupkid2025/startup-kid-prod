@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Edit2, Check, X, Briefcase, Clock, Coins, Moon, Coffee } from "lucide-react";
+import { Edit2, Check, X, Briefcase, Clock, Coins, Moon, UtensilsCrossed, Zap, Heart } from "lucide-react";
 import TamagotchiAvatar from "../avatar/TamagotchiAvatar";
 import { base44 } from "@/api/base44Client";
 import { AVATAR_ITEMS } from "../avatar/TamagotchiAvatar";
@@ -604,13 +604,30 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
           </div>
           
           {/* Energy and Hunger Bars */}
-          <div className="space-y-2 mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-white/80 text-xs font-bold w-12">אנרגיה</span>
-              <div className="flex-1 bg-white/20 rounded-full h-3 overflow-hidden">
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <motion.div 
+              className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20"
+              whileHover={{ scale: 1.02 }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`p-1.5 rounded-lg ${
+                  energy > 60 ? 'bg-emerald-500/30' :
+                  energy > 30 ? 'bg-yellow-500/30' :
+                  'bg-red-500/30'
+                }`}>
+                  <Zap className={`w-4 h-4 ${
+                    energy > 60 ? 'text-emerald-300' :
+                    energy > 30 ? 'text-yellow-300' :
+                    'text-red-300'
+                  }`} />
+                </div>
+                <span className="text-white/90 text-xs font-bold flex-1">אנרגיה</span>
+                <span className="text-white font-black text-sm">{energy}%</span>
+              </div>
+              <div className="bg-white/20 rounded-full h-2 overflow-hidden">
                 <motion.div
                   className={`h-full ${
-                    energy > 60 ? 'bg-gradient-to-r from-green-400 to-emerald-500' :
+                    energy > 60 ? 'bg-gradient-to-r from-emerald-400 to-green-500' :
                     energy > 30 ? 'bg-gradient-to-r from-yellow-400 to-orange-400' :
                     'bg-gradient-to-r from-red-400 to-red-600'
                   }`}
@@ -619,45 +636,68 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                   transition={{ duration: 0.5 }}
                 />
               </div>
-              <span className="text-white font-bold text-xs w-8">{energy}%</span>
-            </div>
+            </motion.div>
             
-            <div className="flex items-center gap-2">
-              <span className="text-white/80 text-xs font-bold w-12">רעב</span>
-              <div className="flex-1 bg-white/20 rounded-full h-3 overflow-hidden">
+            <motion.div 
+              className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20"
+              whileHover={{ scale: 1.02 }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`p-1.5 rounded-lg ${
+                  hunger < 30 ? 'bg-emerald-500/30' :
+                  hunger < 70 ? 'bg-orange-500/30' :
+                  'bg-red-500/30'
+                }`}>
+                  <Heart className={`w-4 h-4 ${
+                    hunger < 30 ? 'text-emerald-300' :
+                    hunger < 70 ? 'text-orange-300' :
+                    'text-red-300'
+                  }`} />
+                </div>
+                <span className="text-white/90 text-xs font-bold flex-1">שובע</span>
+                <span className="text-white font-black text-sm">{100 - hunger}%</span>
+              </div>
+              <div className="bg-white/20 rounded-full h-2 overflow-hidden">
                 <motion.div
                   className={`h-full ${
-                    hunger < 30 ? 'bg-gradient-to-r from-green-400 to-emerald-500' :
-                    hunger < 70 ? 'bg-gradient-to-r from-yellow-400 to-orange-400' :
+                    hunger < 30 ? 'bg-gradient-to-r from-emerald-400 to-green-500' :
+                    hunger < 70 ? 'bg-gradient-to-r from-orange-400 to-yellow-400' :
                     'bg-gradient-to-r from-red-400 to-red-600'
                   }`}
                   initial={{ width: 0 }}
-                  animate={{ width: `${hunger}%` }}
+                  animate={{ width: `${100 - hunger}%` }}
                   transition={{ duration: 0.5 }}
                 />
               </div>
-              <span className="text-white font-bold text-xs w-8">{hunger}%</span>
-            </div>
+            </motion.div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-2 mb-4">
-            <Button
-              onClick={sendToSleep}
-              disabled={sleepStatus?.isSleeping || workStatus?.isWorking || energy > 80}
-              className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-bold py-3 disabled:opacity-50"
-            >
-              <Moon className="w-4 h-4 ml-1" />
-              שינה (8 שעות)
-            </Button>
-            <Button
-              onClick={feedAvatar}
-              disabled={sleepStatus?.isSleeping || workStatus?.isWorking || hunger < 30}
-              className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 disabled:opacity-50"
-            >
-              <Coffee className="w-4 h-4 ml-1" />
-              האכל (10 🪙)
-            </Button>
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                onClick={sendToSleep}
+                disabled={sleepStatus?.isSleeping || workStatus?.isWorking || energy > 80}
+                className="w-full bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-4 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <Moon className="w-5 h-5" />
+                  <span className="text-xs">שינה 8 שעות</span>
+                </div>
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                onClick={feedAvatar}
+                disabled={sleepStatus?.isSleeping || workStatus?.isWorking || hunger < 30}
+                className="w-full bg-gradient-to-br from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold py-4 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <UtensilsCrossed className="w-5 h-5" />
+                  <span className="text-xs">האכל 10 🪙</span>
+                </div>
+              </Button>
+            </motion.div>
           </div>
 
           {/* Speech Bubble with Work Section */}
