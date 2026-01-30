@@ -489,6 +489,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                 showBackground={true}
                 avatarStage={currentLevel}
                 userEmail={user?.email}
+                isWorking={workStatus?.isWorking || false}
               />
             </div>
           </div>

@@ -607,7 +607,7 @@ const generateAvatarVariation = (email) => {
   };
 };
 
-export default function TamagotchiAvatar({ equippedItems = {}, size = "large", showBackground = true, avatarStage = 1, userEmail = "", level = 0 }) {
+export default function TamagotchiAvatar({ equippedItems = {}, size = "large", showBackground = true, avatarStage = 1, userEmail = "", level = 0, isWorking = false }) {
   const sizeMap = {
     small: 80,
     medium: 120,
@@ -879,7 +879,9 @@ export default function TamagotchiAvatar({ equippedItems = {}, size = "large", s
           alt={`Startamon Stage ${avatarStage}`}
           className="w-full h-full object-contain"
           style={{
-            filter: 'drop-shadow(0 8px 20px rgba(0, 0, 0, 0.3))'
+            filter: isWorking 
+              ? 'grayscale(100%) drop-shadow(0 8px 20px rgba(0, 0, 0, 0.3))' 
+              : 'drop-shadow(0 8px 20px rgba(0, 0, 0, 0.3))'
           }}
         />
 
