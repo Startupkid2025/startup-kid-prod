@@ -382,9 +382,10 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
       energy: newEnergy,
       hunger: Math.min(100, hunger + 15)
     });
-    
+
     setEnergy(newEnergy);
     setHunger(Math.min(100, hunger + 15));
+    setTimeLeft(60 * 60 * 1000); // Set initial time left
 
     setWorkStatus({
       isWorking: true,
