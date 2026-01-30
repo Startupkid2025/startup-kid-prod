@@ -493,7 +493,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
             </div>
           </div>
 
-          {/* Speech Bubble with Smart Tips */}
+          {/* Speech Bubble with Work Button */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -501,7 +501,88 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
             className="relative"
           >
             <div className="bg-white rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 shadow-xl">
-              <p className="text-gray-800 font-medium text-center text-sm sm:text-base">{currentMessage}</p>
+              {workStatus && workStatus.isWorking ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-black text-purple-900">
+                      עובד כרגע 💼
+                    </h3>
+                    <div className="text-3xl">
+                      {JOBS.find(j => j.id === workStatus.jobId)?.icon || "💼"}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-purple-100 rounded-lg px-3 py-2">
+                    <p className="text-sm text-purple-900 font-bold text-center mb-1">
+                      {workStatus.jobName}
+                    </p>
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="flex items-center gap-1 text-purple-900">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-xl font-black">
+                          {formatTime(timeLeft)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 text-yellow-600">
+                        <Coins className="w-4 h-4" />
+                        <span className="font-bold">{workStatus.coinsToEarn}+</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {timeLeft === 0 && (
+                    <Button
+                      onClick={completeWork}
+                      className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold"
+                    >
+                      אסוף סטארטקוין! 💰
+                    </Button>
+                  )}
+                </div>
+              ) : (() => {
+                const currentStage = getCurrentStage();
+                const availableJobs = JOBS.filter(job => job.minStage <= currentStage);
+                const currentJob = [...availableJobs].reverse()[0];
+                
+                if (!currentJob) return <p className="text-gray-800 font-medium text-center text-sm sm:text-base">{currentMessage}</p>;
+
+                const purchasedItems = user?.purchased_items || [];
+                let hourlyBonus = 0;
+                
+                purchasedItems.forEach(itemId => {
+                  const item = AVATAR_ITEMS[itemId];
+                  if (item && item.hourlyBonus) {
+                    hourlyBonus += item.hourlyBonus;
+                  }
+                });
+
+                const totalEarnings = currentJob.coinsPerHour + hourlyBonus;
+
+                return (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base sm:text-lg font-black text-purple-900">
+                        {currentJob.name}
+                      </h3>
+                      <div className="text-3xl">
+                        {currentJob.icon}
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={sendToWork}
+                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold flex items-center justify-center gap-2"
+                    >
+                      <Briefcase className="w-4 h-4" />
+                      <span>שלח לעבודה</span>
+                      <div className="bg-white/20 rounded-lg px-2 py-0.5 flex items-center gap-1">
+                        <span className="font-bold">{totalEarnings}+</span>
+                        <Coins className="w-4 h-4" />
+                      </div>
+                    </Button>
+                  </div>
+                );
+              })()}
             </div>
             <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-white"></div>
           </motion.div>
