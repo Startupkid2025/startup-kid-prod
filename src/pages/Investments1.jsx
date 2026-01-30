@@ -522,7 +522,13 @@ export default function Investments() {
   const totalProfitPercent = totalInvested > 0 ? Math.round((unrealizedProfit / totalInvested) * 100) : 0;
   
   // Calculate total daily profit across all investments using today's market performance
+  // Only count investments that existed before today (last_updated_date_key < today)
+  const todayKey = getDateKeyJerusalem(0);
   const totalDailyProfit = investments.reduce((sum, inv) => {
+    // Skip investments created today - they shouldn't benefit from today's performance
+    if (inv.last_updated_date_key === todayKey) {
+      return sum;
+    }
     const todayChange = todayPerformance[inv.business_type] || 0;
     const todayEarnings = Math.round(inv.current_value * (todayChange / 100));
     return sum + todayEarnings;
@@ -713,7 +719,12 @@ export default function Investments() {
               const profitPercent = totalInvestedInBusiness > 0 ? ((profitInBusiness / totalInvestedInBusiness) * 100).toFixed(1) : 0;
               
               // Calculate today's profit using today's market performance
+              // Only count investments that existed before today
               const todayProfit = hasInvestments ? businessInvestments.reduce((sum, inv) => {
+                // Skip investments created today - they shouldn't benefit from today's performance
+                if (inv.last_updated_date_key === todayKey) {
+                  return sum;
+                }
                 const todayChange = todayPerformance[business.id] || 0;
                 const todayEarnings = Math.round(inv.current_value * (todayChange / 100));
                 return sum + todayEarnings;
