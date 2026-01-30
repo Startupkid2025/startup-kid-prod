@@ -324,9 +324,22 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
       }
     });
 
-    const totalCoinsToEarn = currentJob.coinsPerHour + hourlyBonus;
+    const baseCoins = currentJob.coinsPerHour + hourlyBonus;
+
+    // Apply hunger penalty to work efficiency
+    let workEfficiency = 1.0;
+    if (hunger >= 80) {
+      workEfficiency = 0.25; // 25% efficiency when very hungry
+    } else if (hunger >= 60) {
+      workEfficiency = 0.5; // 50% efficiency when hungry
+    } else if (hunger >= 30) {
+      workEfficiency = 0.75; // 75% efficiency when somewhat hungry
+    }
+    // else 100% efficiency when well-fed (hunger < 30)
+
+    const totalCoinsToEarn = Math.round(baseCoins * workEfficiency);
     const currentWorkHours = user.total_work_hours || 0;
-    
+
     // Reduce energy when going to work
     const newEnergy = Math.max(0, energy - 20);
 
@@ -336,6 +349,8 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
         jobId: currentJob.id,
         jobName: currentJob.name,
         coinsToEarn: totalCoinsToEarn,
+        baseCoins: baseCoins,
+        workEfficiency: workEfficiency,
         returnTime: returnTime
       },
       total_work_hours: currentWorkHours + 1,
@@ -351,11 +366,14 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
       jobId: currentJob.id,
       jobName: currentJob.name,
       coinsToEarn: totalCoinsToEarn,
+      baseCoins: baseCoins,
+      workEfficiency: workEfficiency,
       returnTime: returnTime
     });
 
     const bonusText = hourlyBonus > 0 ? ` (כולל +${hourlyBonus} מפריטים!)` : '';
-    toast.success(`${user.avatar_name} יצא לעבוד כ${currentJob.name}! 💼${bonusText}`);
+    const efficiencyText = workEfficiency < 1 ? ` ⚠️ יעילות ${Math.round(workEfficiency * 100)}% בגלל רעב!` : '';
+    toast.success(`${user.avatar_name} יצא לעבוד כ${currentJob.name}! 💼${bonusText}${efficiencyText}`);
   };
 
   const completeWork = async () => {
