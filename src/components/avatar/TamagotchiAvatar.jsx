@@ -866,20 +866,12 @@ export default function TamagotchiAvatar({ equippedItems = {}, size = "large", s
       )}
 
       {/* Startamon Image based on Level */}
-      <motion.div
+      <div
         className="relative"
         style={{ 
-          width: avatarSize * 0.85, 
-          height: avatarSize * 0.85,
+          width: avatarSize, 
+          height: avatarSize,
           transform: `scale(${stageScale})`
-        }}
-        animate={{
-          y: [0, -8, 0],
-        }}
-        transition={{
-          duration: 3,
-          repeat: Infinity,
-          ease: "easeInOut"
         }}
       >
         <img 
