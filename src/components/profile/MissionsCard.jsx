@@ -66,7 +66,7 @@ export default function MissionsCard({ userData, onCompleteTask, onStartEditing 
       reward: 50,
       completed: userData?.completed_discord_join,
       action: () => {
-        window.open("https://discord.gg/UknsPbhT", "_blank");
+        window.open("https://discord.gg/2QKxeq6nQQ", "_blank");
         onCompleteTask("discord");
       },
       actionText: "הצטרף עכשיו",
@@ -159,16 +159,15 @@ export default function MissionsCard({ userData, onCompleteTask, onStartEditing 
                   </div>
                 </div>
               </div>
-              {!mission.completed && (
-                <Button
-                  onClick={mission.action}
-                  size="sm"
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold whitespace-nowrap"
-                >
-                  {mission.actionText}
-                  <ExternalLink className="w-3 h-3 mr-1" />
-                </Button>
-              )}
+              <Button
+                onClick={mission.action}
+                disabled={mission.completed}
+                size="sm"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {mission.actionText}
+                <ExternalLink className="w-3 h-3 mr-1" />
+              </Button>
             </div>
           </motion.div>
         ))}
