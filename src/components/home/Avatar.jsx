@@ -3,11 +3,22 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Edit2, Check, X } from "lucide-react";
+import { Edit2, Check, X, Briefcase, Clock, Coins } from "lucide-react";
 import TamagotchiAvatar from "../avatar/TamagotchiAvatar";
 import { base44 } from "@/api/base44Client";
 import { AVATAR_ITEMS } from "../avatar/TamagotchiAvatar";
 import { toast } from "sonner";
+import { updateNetWorth } from "../utils/networthCalculator";
+import { syncLeaderboardEntry } from "../utils/leaderboardSync";
+
+const JOBS = [
+  { id: "lemonade", name: "דוכן לימונדה", icon: "🍋", minStage: 0, coinsPerHour: 10 },
+  { id: "newspaper", name: "משלוח עיתונים", icon: "📰", minStage: 2, coinsPerHour: 20 },
+  { id: "tutor", name: "מורה פרטי", icon: "📚", minStage: 3, coinsPerHour: 35 },
+  { id: "digital_freelancer", name: "פרילנסר דיגיטלי", icon: "💼", minStage: 4, coinsPerHour: 45 },
+  { id: "app_developer", name: "מפתח אפליקציות", icon: "💻", minStage: 5, coinsPerHour: 60 },
+  { id: "startup_founder", name: "מייסד סטארטאפ", icon: "🚀", minStage: 6, coinsPerHour: 100 }
+];
 
 // Calculate level based on PROGRESSIVE lesson requirements
 const calculateLevel = (totalLessons) => {
