@@ -215,10 +215,29 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
   const [user, setUser] = React.useState(null);
   const [isEditingName, setIsEditingName] = React.useState(false);
   const [newAvatarName, setNewAvatarName] = React.useState("");
+  const [workStatus, setWorkStatus] = React.useState(null);
+  const [timeLeft, setTimeLeft] = React.useState(0);
 
   React.useEffect(() => {
     loadUser();
   }, []);
+
+  React.useEffect(() => {
+    if (workStatus && workStatus.isWorking) {
+      const timer = setInterval(() => {
+        const now = Date.now();
+        const remaining = Math.max(0, workStatus.returnTime - now);
+        setTimeLeft(remaining);
+
+        if (remaining === 0) {
+          completeWork();
+          clearInterval(timer);
+        }
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [workStatus]);
 
   const loadUser = async () => {
     try {
