@@ -574,7 +574,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
             ) : (
               <div className="flex items-center justify-center gap-2 mb-1">
                 <h2 className="text-xl sm:text-2xl font-black text-white">
-                  {user?.avatar_name || "טוען..."}
+                  סטארטאמון: {user?.avatar_name || "טוען..."}
                 </h2>
                 <Button
                   onClick={() => setIsEditingName(true)}
