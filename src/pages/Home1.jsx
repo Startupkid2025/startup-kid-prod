@@ -13,7 +13,7 @@ import AvatarShop from "../components/avatar/AvatarShop";
 import Avatar from "../components/home/Avatar";
 import SkillBar from "../components/home/SkillBar";
 import CommunityFeed from "../components/home/CommunityFeed";
-import AvatarWork from "../components/home/AvatarWork";
+
 import GroupSelectionDialog from "../components/home/GroupSelectionDialog";
 import { toast } from "sonner";
 
@@ -973,21 +973,7 @@ export default function Home() {
         </motion.div>
       </div>
 
-      {/* Avatar Work Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <AvatarWork
-          isOpen={showWork}
-          onClose={() => {
-            setShowWork(false);
-            loadData();
-          }}
-          userData={userData}
-        />
-      </motion.div>
+
 
       {/* Community Feed */}
       <motion.div
