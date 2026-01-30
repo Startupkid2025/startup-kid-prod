@@ -445,7 +445,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
             ) : (
               <>
                 <p className="text-white/80 text-sm">
-                  רמה {currentLevel} • {progress.current}/{progress.needed} שיעורים
+                  רמה {currentLevel}{workStatus?.isWorking && ` • ${workStatus.jobName}`} • {progress.current}/{progress.needed} שיעורים
                 </p>
                 <p className="text-white/60 text-xs mt-1">
                   סה״כ {totalLessons} שיעורים
@@ -510,7 +510,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                       </div>
                       <div>
                         <h3 className="text-base font-black text-white drop-shadow-lg">
-                          רמה {currentLevel}
+                          {workStatus.jobName}
                         </h3>
                         <p className="text-xs text-white/80">בעבודה כרגע...</p>
                       </div>
