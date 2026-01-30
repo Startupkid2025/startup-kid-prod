@@ -517,44 +517,21 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                     </div>
                   </div>
                   
-                  <motion.div 
-                    className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-xl px-6 py-4 border-2 border-white/40 shadow-2xl relative overflow-hidden"
-                    animate={{
-                      boxShadow: [
-                        "0 0 20px rgba(16, 185, 129, 0.5)",
-                        "0 0 40px rgba(20, 184, 166, 0.7)",
-                        "0 0 20px rgba(16, 185, 129, 0.5)"
-                      ]
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
-                    <div className="relative flex items-center justify-center gap-6">
-                      <motion.div 
-                        className="flex items-center gap-2"
-                        animate={{ scale: [1, 1.05, 1] }}
-                        transition={{ duration: 1, repeat: Infinity }}
-                      >
-                        <Clock className="w-6 h-6 text-white drop-shadow-lg" />
-                        <span className="text-3xl font-black text-white drop-shadow-2xl">
+                  <div className="bg-gradient-to-r from-emerald-500/90 to-teal-500/90 backdrop-blur-sm rounded-xl px-6 py-4 border-2 border-white/30 shadow-lg">
+                    <div className="flex items-center justify-center gap-6">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-6 h-6 text-white" />
+                        <span className="text-3xl font-black text-white">
                           {formatTime(timeLeft)}
                         </span>
-                      </motion.div>
-                      <div className="w-0.5 h-10 bg-white/50 rounded-full"></div>
-                      <motion.div 
-                        className="flex items-center gap-2"
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ duration: 1.2, repeat: Infinity }}
-                      >
-                        <span className="text-3xl font-black text-yellow-300 drop-shadow-2xl">{workStatus.coinsToEarn}</span>
-                        <Coins className="w-6 h-6 text-yellow-300 drop-shadow-lg" />
-                      </motion.div>
+                      </div>
+                      <div className="w-0.5 h-10 bg-white/40 rounded-full"></div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-3xl font-black text-yellow-200">{workStatus.coinsToEarn}</span>
+                        <Coins className="w-6 h-6 text-yellow-200" />
+                      </div>
                     </div>
-                  </motion.div>
+                  </div>
 
                   {timeLeft === 0 && (
                     <Button
