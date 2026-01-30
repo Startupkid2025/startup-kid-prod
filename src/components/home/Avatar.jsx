@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Edit2, Check, X, Briefcase, Clock, Coins } from "lucide-react";
+import { Edit2, Check, X, Briefcase, Clock, Coins, Moon, Coffee } from "lucide-react";
 import TamagotchiAvatar from "../avatar/TamagotchiAvatar";
 import { base44 } from "@/api/base44Client";
 import { AVATAR_ITEMS } from "../avatar/TamagotchiAvatar";
@@ -216,7 +216,10 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
   const [isEditingName, setIsEditingName] = React.useState(false);
   const [newAvatarName, setNewAvatarName] = React.useState("");
   const [workStatus, setWorkStatus] = React.useState(null);
+  const [sleepStatus, setSleepStatus] = React.useState(null);
   const [timeLeft, setTimeLeft] = React.useState(0);
+  const [energy, setEnergy] = React.useState(100);
+  const [hunger, setHunger] = React.useState(0);
 
   React.useEffect(() => {
     loadUser();
@@ -237,7 +240,22 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
 
       return () => clearInterval(timer);
     }
-  }, [workStatus]);
+    
+    if (sleepStatus && sleepStatus.isSleeping) {
+      const timer = setInterval(() => {
+        const now = Date.now();
+        const remaining = Math.max(0, sleepStatus.returnTime - now);
+        setTimeLeft(remaining);
+
+        if (remaining === 0) {
+          wakeUp();
+          clearInterval(timer);
+        }
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [workStatus, sleepStatus]);
 
   const loadUser = async () => {
     try {
@@ -255,6 +273,20 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
         setWorkStatus(null);
       }
       
+      // Check sleep status
+      const sleepStat = userData.sleep_status || null;
+      if (sleepStat && sleepStat.isSleeping) {
+        setSleepStatus(sleepStat);
+        const now = Date.now();
+        setTimeLeft(Math.max(0, sleepStat.returnTime - now));
+      } else {
+        setSleepStatus(null);
+      }
+      
+      // Load energy and hunger
+      setEnergy(userData.energy ?? 100);
+      setHunger(userData.hunger ?? 0);
+      
       // Generate smart tip
       const tip = await generateSmartTip(userData, equippedItems);
       setCurrentMessage(tip);
@@ -268,6 +300,12 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
   };
 
   const sendToWork = async () => {
+    // Check if tired
+    if (energy < 30) {
+      toast.error(`${user.avatar_name} עייף מדי! שלח אותו לישון קודם 😴`);
+      return;
+    }
+    
     const currentStage = getCurrentStage();
     const availableJobs = JOBS.filter(job => job.minStage <= currentStage);
     const currentJob = [...availableJobs].reverse()[0];
@@ -288,6 +326,9 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
 
     const totalCoinsToEarn = currentJob.coinsPerHour + hourlyBonus;
     const currentWorkHours = user.total_work_hours || 0;
+    
+    // Reduce energy when going to work
+    const newEnergy = Math.max(0, energy - 20);
 
     await base44.auth.updateMe({
       work_status: {
@@ -297,8 +338,13 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
         coinsToEarn: totalCoinsToEarn,
         returnTime: returnTime
       },
-      total_work_hours: currentWorkHours + 1
+      total_work_hours: currentWorkHours + 1,
+      energy: newEnergy,
+      hunger: Math.min(100, hunger + 15)
     });
+    
+    setEnergy(newEnergy);
+    setHunger(Math.min(100, hunger + 15));
 
     setWorkStatus({
       isWorking: true,
@@ -338,6 +384,69 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
 
     toast.success(`${user.avatar_name} חזר מהעבודה! קיבלת ${coinsToAdd} סטארטקוין! 🎉`);
     setWorkStatus(null);
+    loadUser();
+  };
+  
+  const sendToSleep = async () => {
+    const returnTime = Date.now() + (8 * 60 * 60 * 1000); // 8 hours
+
+    await base44.auth.updateMe({
+      sleep_status: {
+        isSleeping: true,
+        returnTime: returnTime
+      }
+    });
+
+    setSleepStatus({
+      isSleeping: true,
+      returnTime: returnTime
+    });
+
+    toast.success(`${user.avatar_name} הלך לישון! לילה טוב 🌙`);
+  };
+  
+  const wakeUp = async () => {
+    if (!sleepStatus) return;
+
+    await base44.auth.updateMe({
+      energy: 100,
+      sleep_status: null
+    });
+
+    setEnergy(100);
+    setSleepStatus(null);
+    toast.success(`${user.avatar_name} התעורר רענן ומלא אנרגיה! 🌅`);
+    loadUser();
+  };
+  
+  const feedAvatar = async () => {
+    if (hunger < 30) {
+      toast.error("הוא לא רעב עכשיו!");
+      return;
+    }
+    
+    const foodCost = 10;
+    if ((user.coins || 0) < foodCost) {
+      toast.error("אין מספיק מטבעות לקנות אוכל!");
+      return;
+    }
+
+    const newCoins = (user.coins || 0) - foodCost;
+    const newHunger = Math.max(0, hunger - 50);
+
+    await base44.auth.updateMe({
+      coins: newCoins,
+      hunger: newHunger
+    });
+
+    const newNetWorth = await updateNetWorth(user.email);
+    await syncLeaderboardEntry(user.email, {
+      coins: newCoins,
+      total_networth: newNetWorth
+    });
+
+    setHunger(newHunger);
+    toast.success(`${user.avatar_name} אכל והרעב ירד! 🍎 (-10 מטבעות)`);
     loadUser();
   };
 
@@ -489,9 +598,66 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
                 showBackground={true}
                 avatarStage={currentLevel}
                 userEmail={user?.email}
-                isWorking={workStatus?.isWorking || false}
+                isWorking={workStatus?.isWorking || sleepStatus?.isSleeping || false}
               />
             </div>
+          </div>
+          
+          {/* Energy and Hunger Bars */}
+          <div className="space-y-2 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-white/80 text-xs font-bold w-12">אנרגיה</span>
+              <div className="flex-1 bg-white/20 rounded-full h-3 overflow-hidden">
+                <motion.div
+                  className={`h-full ${
+                    energy > 60 ? 'bg-gradient-to-r from-green-400 to-emerald-500' :
+                    energy > 30 ? 'bg-gradient-to-r from-yellow-400 to-orange-400' :
+                    'bg-gradient-to-r from-red-400 to-red-600'
+                  }`}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${energy}%` }}
+                  transition={{ duration: 0.5 }}
+                />
+              </div>
+              <span className="text-white font-bold text-xs w-8">{energy}%</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-white/80 text-xs font-bold w-12">רעב</span>
+              <div className="flex-1 bg-white/20 rounded-full h-3 overflow-hidden">
+                <motion.div
+                  className={`h-full ${
+                    hunger < 30 ? 'bg-gradient-to-r from-green-400 to-emerald-500' :
+                    hunger < 70 ? 'bg-gradient-to-r from-yellow-400 to-orange-400' :
+                    'bg-gradient-to-r from-red-400 to-red-600'
+                  }`}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${hunger}%` }}
+                  transition={{ duration: 0.5 }}
+                />
+              </div>
+              <span className="text-white font-bold text-xs w-8">{hunger}%</span>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 mb-4">
+            <Button
+              onClick={sendToSleep}
+              disabled={sleepStatus?.isSleeping || workStatus?.isWorking || energy > 80}
+              className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-bold py-3 disabled:opacity-50"
+            >
+              <Moon className="w-4 h-4 ml-1" />
+              שינה (8 שעות)
+            </Button>
+            <Button
+              onClick={feedAvatar}
+              disabled={sleepStatus?.isSleeping || workStatus?.isWorking || hunger < 30}
+              className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 disabled:opacity-50"
+            >
+              <Coffee className="w-4 h-4 ml-1" />
+              האכל (10 🪙)
+            </Button>
           </div>
 
           {/* Speech Bubble with Work Section */}
@@ -501,7 +667,31 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
             transition={{ delay: 0.5 }}
             className="relative"
           >
-            {workStatus && workStatus.isWorking ? (
+            {sleepStatus && sleepStatus.isSleeping ? (
+              <div className="space-y-3">
+                <div className="bg-gradient-to-r from-indigo-500/90 to-purple-500/90 backdrop-blur-sm rounded-lg px-4 py-3 border-2 border-white/30 shadow-lg">
+                  <div className="flex items-center justify-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Moon className="w-5 h-5 text-white" />
+                      <span className="text-2xl font-black text-white">
+                        {formatTime(timeLeft)}
+                      </span>
+                    </div>
+                    <div className="w-0.5 h-8 bg-white/40 rounded-full"></div>
+                    <span className="text-xl font-black text-white">😴 ישן</span>
+                  </div>
+                </div>
+
+                {timeLeft === 0 && (
+                  <Button
+                    onClick={wakeUp}
+                    className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white font-black text-base py-6 shadow-xl"
+                  >
+                    ☀️ העיר אותו!
+                  </Button>
+                )}
+              </div>
+            ) : workStatus && workStatus.isWorking ? (
               <div className="space-y-3">
                 <div className="bg-gradient-to-r from-emerald-500/90 to-teal-500/90 backdrop-blur-sm rounded-lg px-4 py-3 border-2 border-white/30 shadow-lg">
                   <div className="flex items-center justify-center gap-4">
