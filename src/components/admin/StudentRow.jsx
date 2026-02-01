@@ -37,6 +37,8 @@ export default function StudentRow({
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showEditStudentDialog, setShowEditStudentDialog] = useState(false);
   const [showAddCoinsDialog, setShowAddCoinsDialog] = useState(false);
+  const [showEditStreakDialog, setShowEditStreakDialog] = useState(false);
+  const [editedStreak, setEditedStreak] = useState(student.login_streak || 0);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [editingParticipation, setEditingParticipation] = useState(null);
   const [coinsToAdd, setCoinsToAdd] = useState("");
@@ -190,6 +192,44 @@ export default function StudentRow({
     } catch (error) {
       console.error("Error adding coins:", error);
       toast.error("שגיאה בהוספת סטארטקוין");
+    }
+  };
+
+  // Handle editing login streak
+  const handleSaveStreak = async () => {
+    const newStreak = Number(editedStreak);
+    if (isNaN(newStreak) || newStreak < 0) {
+      toast.error("הזן מספר תקין");
+      return;
+    }
+    
+    try {
+      // Use Jerusalem timezone for today's date
+      const DATE_TZ = "Asia/Jerusalem";
+      const fmtIL = new Intl.DateTimeFormat("en-CA", {
+        timeZone: DATE_TZ,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+      const today = fmtIL.format(new Date());
+      
+      await base44.entities.User.update(student.id, {
+        login_streak: newStreak,
+        last_login_date: today
+      });
+      
+      await syncLeaderboardEntry(student.email, {
+        login_streak: newStreak,
+        last_login_date: today
+      });
+      
+      toast.success(`רצף הכניסות של ${student.full_name} עודכן ל-${newStreak} ימים! 🔥`);
+      setShowEditStreakDialog(false);
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error("Error updating streak:", error);
+      toast.error("שגיאה בעדכון רצף");
     }
   };
 
@@ -444,6 +484,21 @@ export default function StudentRow({
                 <p className="text-white/60 text-[10px] sm:text-xs whitespace-nowrap">השתתפויות</p>
               </div>
               
+              {/* Edit Streak Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-orange-300 hover:text-orange-200 w-9 h-9 hover:bg-gradient-to-br hover:from-orange-500/30 hover:to-red-500/30 transition-all duration-300 hover:shadow-lg border border-transparent hover:border-orange-400/50 rounded-xl"
+                title={`רצף כניסות: ${student.login_streak || 0} ימים`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditedStreak(student.login_streak || 0);
+                  setShowEditStreakDialog(true);
+                }}
+              >
+                🔥
+              </Button>
+
               {/* Add Coins Button */}
               <Button
                 variant="ghost"
@@ -1065,6 +1120,67 @@ export default function StudentRow({
                 disabled={!coinsToAdd || isNaN(coinsToAdd) || Number(coinsToAdd) === 0}
               >
                 אישור
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Streak Dialog */}
+      <Dialog open={showEditStreakDialog} onOpenChange={setShowEditStreakDialog}>
+        <DialogContent className="bg-white/95 backdrop-blur-xl border-2 border-orange-300">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-orange-600">
+              ערוך רצף כניסות 🔥
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-orange-50 rounded-lg p-3 mb-4">
+              <p className="text-sm font-medium text-orange-900">
+                {student.full_name}
+              </p>
+              <p className="text-xs text-orange-600 mt-1">
+                רצף נוכחי: {student.login_streak || 0} ימים
+              </p>
+              <p className="text-xs text-orange-600 mt-1">
+                כניסה אחרונה: {student.last_login_date || "לא ידוע"}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-gray-700 font-medium">
+                רצף חדש (ימים)
+              </Label>
+              <Input
+                type="number"
+                min="0"
+                value={editedStreak}
+                onChange={(e) => setEditedStreak(e.target.value)}
+                className="border-2 border-orange-200"
+                placeholder="הזן מספר ימים"
+              />
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-800">
+                💡 זה יעדכן את הרצף ואת תאריך הכניסה האחרונה להיום
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowEditStreakDialog(false)}
+                variant="outline"
+                className="flex-1"
+              >
+                ביטול
+              </Button>
+              <Button
+                onClick={handleSaveStreak}
+                className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                disabled={isNaN(editedStreak) || Number(editedStreak) < 0}
+              >
+                שמור רצף
               </Button>
             </div>
           </div>
