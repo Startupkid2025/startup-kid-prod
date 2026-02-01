@@ -93,6 +93,7 @@ export default function Investments() {
   const [investmentAmounts, setInvestmentAmounts] = useState({});
   const [sellAmounts, setSellAmounts] = useState({});
   const [confirmSellDialog, setConfirmSellDialog] = useState({ isOpen: false, businessId: null, amount: 0, tax: 0, netAmount: 0 });
+  const [confirmInvestDialog, setConfirmInvestDialog] = useState({ isOpen: false, businessId: null, amount: 0 });
   const [todayPerformance, setTodayPerformance] = useState({});
   const [yesterdayPerformance, setYesterdayPerformance] = useState({});
   const [isInvesting, setIsInvesting] = useState({});
@@ -239,12 +240,7 @@ export default function Investments() {
     }
   };
 
-  const handleInvest = async (businessId) => {
-    // Prevent multiple clicks
-    if (isInvesting[businessId]) {
-      return;
-    }
-
+  const openInvestDialog = (businessId) => {
     const business = BUSINESSES.find(b => b.id === businessId);
     const amount = investmentAmounts[businessId] || 0;
 
@@ -260,9 +256,27 @@ export default function Investments() {
       return;
     }
 
+    setConfirmInvestDialog({
+      isOpen: true,
+      businessId,
+      amount
+    });
+  };
+
+  const handleInvest = async () => {
+    const { businessId, amount } = confirmInvestDialog;
+    
+    // Prevent multiple clicks
+    if (isInvesting[businessId]) {
+      return;
+    }
+
+    setConfirmInvestDialog({ ...confirmInvestDialog, isOpen: false });
     setIsInvesting({ ...isInvesting, [businessId]: true });
 
     try {
+      const business = BUSINESSES.find(b => b.id === businessId);
+      
       const createdInvestment = await base44.entities.Investment.create({
         student_email: userData.email,
         business_type: businessId,
@@ -769,7 +783,7 @@ export default function Investments() {
                      className="bg-white/20 border-white/30 text-white placeholder:text-white/50 h-9 text-sm"
                     />
                     <Button
-                      onClick={() => handleInvest(business.id)}
+                      onClick={() => openInvestDialog(business.id)}
                       disabled={!investmentAmounts[business.id] || investmentAmounts[business.id] < business.minInvestment || isInvesting[business.id]}
                       className="bg-white/20 hover:bg-white/30 text-white font-bold text-sm h-9 w-full disabled:opacity-50 transition-all"
                     >
@@ -832,7 +846,73 @@ export default function Investments() {
 
 
 
-      {/* Confirmation Dialog */}
+      {/* Invest Confirmation Dialog */}
+      <AlertDialog open={confirmInvestDialog.isOpen} onOpenChange={(open) => !open && setConfirmInvestDialog({ ...confirmInvestDialog, isOpen: false })}>
+        <AlertDialogContent className="bg-gradient-to-br from-green-500/95 to-emerald-600/95 backdrop-blur-xl border-2 border-white/30" dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white text-2xl font-black flex items-center gap-2 justify-end">
+              💰 אישור השקעה
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-white/90 space-y-3 text-base text-right">
+              {(() => {
+                const business = BUSINESSES.find(b => b.id === confirmInvestDialog.businessId);
+                if (!business) return null;
+                
+                return (
+                  <>
+                    <div className="flex items-center gap-3 justify-end bg-white/10 rounded-lg p-3">
+                      <div className="text-right">
+                        <p className="font-bold text-white text-lg">{business.name}</p>
+                        <p className="text-white/70 text-sm">{business.description}</p>
+                      </div>
+                      <div className="text-3xl">{business.icon}</div>
+                    </div>
+
+                    <div className="bg-white/10 rounded-lg p-3 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-xl">{confirmInvestDialog.amount} 🪙</span>
+                        <span>סכום להשקעה:</span>
+                      </div>
+                      <div className="flex justify-between items-center text-red-300">
+                        <span className="font-bold">-{TRANSACTION_FEE} 🪙</span>
+                        <span>עמלת קנייה:</span>
+                      </div>
+                      <div className="border-t border-white/20 pt-2 flex justify-between items-center text-yellow-300">
+                        <span className="font-black text-2xl">{confirmInvestDialog.amount + TRANSACTION_FEE} 🪙</span>
+                        <span className="font-bold">סה״כ לתשלום:</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-yellow-500/20 border border-yellow-400/50 rounded-lg p-3">
+                      <p className="text-yellow-100 text-sm text-center font-bold">
+                        {business.riskLevel === 0 && "🛡️ השקעה בטוחה - תנודות קטנות"}
+                        {business.riskLevel === 1 && "⚠️ סיכון נמוך - עלייה ירידה קטנה"}
+                        {business.riskLevel === 2 && "⚠️ סיכון בינוני-נמוך"}
+                        {business.riskLevel === 3 && "⚠️⚠️ סיכון בינוני - אפשר רווח או הפסד"}
+                        {business.riskLevel === 4 && "⚠️⚠️⚠️ סיכון גבוה - תנודות חזקות!"}
+                        {business.riskLevel === 5 && "⚠️⚠️⚠️⚠️ סיכון מאוד גבוה! רווח גדול או הפסד גדול!"}
+                      </p>
+                    </div>
+                  </>
+                );
+              })()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogAction 
+              onClick={handleInvest}
+              className="bg-white hover:bg-white/90 text-green-600 font-black"
+            >
+              ✅ אישור השקעה
+            </AlertDialogAction>
+            <AlertDialogCancel className="bg-white/20 hover:bg-white/30 text-white border-white/30">
+              ביטול
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Sell Confirmation Dialog */}
       <AlertDialog open={confirmSellDialog.isOpen} onOpenChange={(open) => !open && setConfirmSellDialog({ ...confirmSellDialog, isOpen: false })}>
         <AlertDialogContent className="bg-gradient-to-br from-orange-500/95 to-red-500/95 backdrop-blur-xl border-2 border-white/30" dir="rtl">
           <AlertDialogHeader>
