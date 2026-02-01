@@ -608,6 +608,8 @@ const generateAvatarVariation = (email) => {
 };
 
 export default function TamagotchiAvatar({ equippedItems = {}, size = "large", showBackground = true, avatarStage = 1, userEmail = "", level = 0, isWorking = false }) {
+  const [imageError, setImageError] = React.useState(false);
+  
   const sizeMap = {
     small: 80,
     medium: 120,
@@ -874,16 +876,23 @@ export default function TamagotchiAvatar({ equippedItems = {}, size = "large", s
           transform: `scale(${stageScale})`
         }}
       >
-        <img 
-          src={startamonImageUrl}
-          alt={`Startamon Stage ${avatarStage}`}
-          className="w-full h-full object-contain"
-          style={{
-            filter: isWorking 
-              ? 'grayscale(100%) drop-shadow(0 8px 20px rgba(0, 0, 0, 0.3))' 
-              : 'drop-shadow(0 8px 20px rgba(0, 0, 0, 0.3))'
-          }}
-        />
+        {!imageError ? (
+          <img 
+            src={startamonImageUrl}
+            alt={`Startamon Stage ${avatarStage}`}
+            className="w-full h-full object-contain"
+            onError={() => setImageError(true)}
+            style={{
+              filter: isWorking 
+                ? 'grayscale(100%) drop-shadow(0 8px 20px rgba(0, 0, 0, 0.3))' 
+                : 'drop-shadow(0 8px 20px rgba(0, 0, 0, 0.3))'
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-6xl">
+            🐣
+          </div>
+        )}
 
         {/* Hat */}
         {hat && (
