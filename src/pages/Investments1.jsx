@@ -771,9 +771,21 @@ export default function Investments() {
                     <Button
                       onClick={() => handleInvest(business.id)}
                       disabled={!investmentAmounts[business.id] || investmentAmounts[business.id] < business.minInvestment || isInvesting[business.id]}
-                      className="bg-white/20 hover:bg-white/30 text-white font-bold text-sm h-9 w-full disabled:opacity-50"
+                      className="bg-white/20 hover:bg-white/30 text-white font-bold text-sm h-9 w-full disabled:opacity-50 transition-all"
                     >
-                      {isInvesting[business.id] ? '⏳ משקיע...' : '📈 השקע'}
+                      {isInvesting[business.id] ? (
+                        <span className="flex items-center gap-2 justify-center">
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          >
+                            ⏳
+                          </motion.div>
+                          משקיע...
+                        </span>
+                      ) : (
+                        '📈 השקע'
+                      )}
                     </Button>
 
                      {hasInvestments && (
@@ -792,9 +804,21 @@ export default function Investments() {
                          <Button
                            onClick={() => openConfirmDialog(business.id, sellAmounts[business.id] || totalValueInBusiness)}
                            disabled={isSelling[business.id]}
-                           className="bg-red-500/30 hover:bg-red-500/40 text-white font-bold text-sm h-9 w-full disabled:opacity-50"
+                           className="bg-red-500/30 hover:bg-red-500/40 text-white font-bold text-sm h-9 w-full disabled:opacity-50 transition-all"
                          >
-                           {isSelling[business.id] ? '⏳ מוכר...' : '💰 מכור'}
+                           {isSelling[business.id] ? (
+                             <span className="flex items-center gap-2 justify-center">
+                               <motion.div
+                                 animate={{ rotate: 360 }}
+                                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                               >
+                                 ⏳
+                               </motion.div>
+                               מוכר...
+                             </span>
+                           ) : (
+                             '💰 מכור'
+                           )}
                          </Button>
                          </>
                          )}
