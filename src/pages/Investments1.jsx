@@ -77,7 +77,7 @@ const BUSINESSES = [
     name: "סטארטאפ טכנולוגי",
     icon: "🚀",
     description: "חברת טכנולוגיה צעירה - מסוכן מאוד!",
-    minInvestment: 100,
+    minInvestment: 50,
     volatility: "extreme",
     riskLevel: 5,
     color: "from-blue-500 to-cyan-500"
