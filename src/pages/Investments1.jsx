@@ -886,6 +886,17 @@ export default function Investments() {
                       </div>
                     </div>
 
+                    <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-3 space-y-1">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="font-bold">{userData?.coins || 0} 🪙</span>
+                        <span>יתרה נוכחית:</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="font-bold">{(userData?.coins || 0) - confirmInvestDialog.amount} 🪙</span>
+                        <span>יתרה לאחר ההשקעה:</span>
+                      </div>
+                    </div>
+
                     <div className="bg-yellow-500/20 border border-yellow-400/50 rounded-lg p-3">
                       <p className="text-yellow-100 text-sm text-center font-bold">
                         {business.riskLevel === 0 && "🛡️ השקעה בטוחה - תנודות קטנות"}
