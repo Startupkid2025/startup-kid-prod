@@ -523,6 +523,13 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
   const currentLevel = calculateLevel(totalLessons);
   const progress = getCurrentLevelProgress(totalLessons);
   const isMaxLevel = currentLevel >= 6;
+  
+  // Force re-render when totalLessons changes
+  React.useEffect(() => {
+    if (user) {
+      loadUser();
+    }
+  }, [totalLessons]);
 
   return (
     <motion.div
