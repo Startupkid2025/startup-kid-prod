@@ -30,6 +30,11 @@ export default function Layout({ children }) {
     updateLoginStreak();
   }, []);
 
+  // Re-check login streak on every navigation (route change)
+  React.useEffect(() => {
+    updateLoginStreak();
+  }, [location.pathname]);
+
   const checkMaintenanceMode = async () => {
     try {
       const modes = await base44.entities.MaintenanceMode.list();
