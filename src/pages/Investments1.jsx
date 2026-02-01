@@ -244,15 +244,16 @@ export default function Investments() {
     const business = BUSINESSES.find(b => b.id === businessId);
     const amount = investmentAmounts[businessId] || 0;
 
-    if (amount < business.minInvestment) {
-      toast.error(`השקעה מינימלית: ${business.minInvestment} סטארטקוין`);
+    // Total cost is what user entered (includes fee)
+    if (amount > userData.coins) {
+      toast.error(`אין לך מספיק סטארטקוין!`);
       return;
     }
 
-    const totalCost = amount + TRANSACTION_FEE;
-
-    if (totalCost > userData.coins) {
-      toast.error(`אין לך מספיק סטארטקוין! (${amount} + עמלה ${TRANSACTION_FEE} = ${totalCost})`);
+    // Check minimum AFTER fee deduction
+    const actualInvestment = amount - TRANSACTION_FEE;
+    if (actualInvestment < business.minInvestment) {
+      toast.error(`השקעה מינימלית: ${business.minInvestment} + עמלה ${TRANSACTION_FEE} = ${business.minInvestment + TRANSACTION_FEE} סטארטקוין`);
       return;
     }
 
@@ -277,17 +278,20 @@ export default function Investments() {
     try {
       const business = BUSINESSES.find(b => b.id === businessId);
       
+      // Deduct fee from amount - actual investment is amount - fee
+      const actualInvestment = amount - TRANSACTION_FEE;
+      
       const createdInvestment = await base44.entities.Investment.create({
         student_email: userData.email,
         business_type: businessId,
-        invested_amount: Math.round(amount),
-        current_value: Math.round(amount),
+        invested_amount: Math.round(actualInvestment),
+        current_value: Math.round(actualInvestment),
         daily_change_percent: 0,
         last_updated: new Date().toISOString(),
         last_updated_date_key: getDateKeyJerusalem(0)
       });
 
-      const newCoinsBalance = userData.coins - totalCost;
+      const newCoinsBalance = userData.coins - amount;
       
       // Calculate investments_value from local state (avoid extra API call)
       const newInvestments = [...investments, createdInvestment];
@@ -310,7 +314,7 @@ export default function Investments() {
         total_networth: newNetWorth
       });
 
-      toast.success(`השקעת ${amount} סטארטקוין ב${business.name}! (עמלה: ${TRANSACTION_FEE}) 🎉`);
+      toast.success(`השקעת ${actualInvestment} סטארטקוין ב${business.name}! (עמלה: ${TRANSACTION_FEE}) 🎉`);
       setInvestmentAmounts({ ...investmentAmounts, [businessId]: 0 });
       
       // Update local state with created investment (includes id)
@@ -724,7 +728,6 @@ export default function Investments() {
               const businessInvestments = investmentsByBusiness[business.id] || [];
               const yesterdayChange = yesterdayPerformance[business.id] || 0;
               const inputAmount = investmentAmounts[business.id] || 0;
-              const totalCost = inputAmount > 0 ? inputAmount + TRANSACTION_FEE : 0;
 
               const hasInvestments = businessInvestments.length > 0;
               const totalInvestedInBusiness = hasInvestments ? businessInvestments.reduce((sum, inv) => sum + inv.invested_amount, 0) : 0;
@@ -784,7 +787,7 @@ export default function Investments() {
                     />
                     <Button
                       onClick={() => openInvestDialog(business.id)}
-                      disabled={!investmentAmounts[business.id] || investmentAmounts[business.id] < business.minInvestment || isInvesting[business.id]}
+                      disabled={!investmentAmounts[business.id] || investmentAmounts[business.id] < (business.minInvestment + TRANSACTION_FEE) || isInvesting[business.id]}
                       className="bg-white/20 hover:bg-white/30 text-white font-bold text-sm h-9 w-full disabled:opacity-50 transition-all"
                     >
                       {isInvesting[business.id] ? (
@@ -871,15 +874,15 @@ export default function Investments() {
                     <div className="bg-white/10 rounded-lg p-3 space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-xl">{confirmInvestDialog.amount} 🪙</span>
-                        <span>סכום להשקעה:</span>
+                        <span>סה״כ לתשלום:</span>
                       </div>
                       <div className="flex justify-between items-center text-red-300">
                         <span className="font-bold">-{TRANSACTION_FEE} 🪙</span>
                         <span>עמלת קנייה:</span>
                       </div>
-                      <div className="border-t border-white/20 pt-2 flex justify-between items-center text-yellow-300">
-                        <span className="font-black text-2xl">{confirmInvestDialog.amount + TRANSACTION_FEE} 🪙</span>
-                        <span className="font-bold">סה״כ לתשלום:</span>
+                      <div className="border-t border-white/20 pt-2 flex justify-between items-center text-green-300">
+                        <span className="font-black text-2xl">{confirmInvestDialog.amount - TRANSACTION_FEE} 🪙</span>
+                        <span className="font-bold">סכום בפועל להשקעה:</span>
                       </div>
                     </div>
 
