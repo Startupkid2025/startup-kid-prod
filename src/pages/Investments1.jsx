@@ -86,6 +86,38 @@ const BUSINESSES = [
 
 const TRANSACTION_FEE = 2;
 
+// Play ka-ching sound effect
+const playKachingSound = () => {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Create oscillator for the "ka" part
+    const oscillator1 = audioContext.createOscillator();
+    const gainNode1 = audioContext.createGain();
+    oscillator1.connect(gainNode1);
+    gainNode1.connect(audioContext.destination);
+    oscillator1.frequency.value = 800;
+    gainNode1.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode1.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+    oscillator1.start(audioContext.currentTime);
+    oscillator1.stop(audioContext.currentTime + 0.1);
+    
+    // Create oscillator for the "ching" part
+    const oscillator2 = audioContext.createOscillator();
+    const gainNode2 = audioContext.createGain();
+    oscillator2.connect(gainNode2);
+    gainNode2.connect(audioContext.destination);
+    oscillator2.frequency.value = 1200;
+    gainNode2.gain.setValueAtTime(0, audioContext.currentTime + 0.1);
+    gainNode2.gain.setValueAtTime(0.4, audioContext.currentTime + 0.12);
+    gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.35);
+    oscillator2.start(audioContext.currentTime + 0.1);
+    oscillator2.stop(audioContext.currentTime + 0.35);
+  } catch (error) {
+    console.log("Audio not supported");
+  }
+};
+
 export default function Investments() {
   const [userData, setUserData] = useState(null);
   const [investments, setInvestments] = useState([]);
@@ -314,6 +346,7 @@ export default function Investments() {
         total_networth: newNetWorth
       });
 
+      playKachingSound();
       toast.success(`השקעת ${actualInvestment} סטארטקוין ב${business.name}! (עמלה: ${TRANSACTION_FEE}) 🎉`);
       setInvestmentAmounts({ ...investmentAmounts, [businessId]: 0 });
       
@@ -500,6 +533,7 @@ export default function Investments() {
       const netProfit = netAmount - TRANSACTION_FEE;
 
       if (grossProfit > 0) {
+        playKachingSound();
         toast.success(`מכרת! רווח נטו: ${Math.round(netProfit)} סטארטקוין (עמלה: ${TRANSACTION_FEE}, מס: ${Math.round(capitalGainsTax)}) 💰`);
       } else {
         toast.error(`מכרת בהפסד של ${Math.round(Math.abs(grossProfit))} סטארטקוין (כולל עמלה ${TRANSACTION_FEE}) 😢`);
