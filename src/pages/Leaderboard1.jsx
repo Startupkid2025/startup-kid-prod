@@ -408,8 +408,22 @@ export default function Leaderboard() {
       const user = await base44.auth.me();
       setCurrentUser(user);
 
-      // Fetch ALL LeaderboardEntry records with pagination and sort by total_networth
-      const allEntries = await listAll(base44.entities.LeaderboardEntry, "-total_networth", 100);
+      // Use cache for leaderboard data
+      const cacheKey = 'leaderboard_all_entries';
+      const cacheTimeout = 30000; // 30 seconds
+      const cachedData = sessionStorage.getItem(cacheKey);
+      const cachedTime = sessionStorage.getItem(cacheKey + '_time');
+      
+      let allEntries = [];
+      
+      if (cachedData && cachedTime && (Date.now() - parseInt(cachedTime)) < cacheTimeout) {
+        allEntries = JSON.parse(cachedData);
+      } else {
+        // Fetch ALL LeaderboardEntry records with pagination and sort by total_networth
+        allEntries = await listAll(base44.entities.LeaderboardEntry, "-total_networth", 100);
+        sessionStorage.setItem(cacheKey, JSON.stringify(allEntries));
+        sessionStorage.setItem(cacheKey + '_time', Date.now().toString());
+      }
       
       // Fetch all groups to map students to their groups
       const allGroups = await base44.entities.Group.list();

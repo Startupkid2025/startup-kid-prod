@@ -30,19 +30,34 @@ export default function CommunityFeed({ userData, onRefresh }) {
     try {
       const allPosts = await base44.entities.Post.list("-created_date", 50);
       
-      // Try to fetch user data for avatars, but don't fail if not allowed
+      // Use LeaderboardEntry instead of User entity (better RLS support)
       let usersMap = {};
       try {
-        const allUsers = await base44.entities.User.list();
-        allUsers.forEach(u => {
-          usersMap[u.email] = {
+        // Check cache first
+        const cacheKey = 'community_feed_users';
+        const cacheTimeout = 30000; // 30 seconds
+        const cachedData = sessionStorage.getItem(cacheKey);
+        const cachedTime = sessionStorage.getItem(cacheKey + '_time');
+        
+        let allLeaderboardEntries = [];
+        
+        if (cachedData && cachedTime && (Date.now() - parseInt(cachedTime)) < cacheTimeout) {
+          allLeaderboardEntries = JSON.parse(cachedData);
+        } else {
+          allLeaderboardEntries = await base44.entities.LeaderboardEntry.list('-total_networth', 100);
+          sessionStorage.setItem(cacheKey, JSON.stringify(allLeaderboardEntries));
+          sessionStorage.setItem(cacheKey + '_time', Date.now().toString());
+        }
+        
+        allLeaderboardEntries.forEach(u => {
+          usersMap[u.student_email] = {
             equipped_items: u.equipped_items || {},
             first_name: u.first_name,
             last_name: u.last_name
           };
         });
       } catch (userError) {
-        console.log("Could not load user data (normal for non-admin users)");
+        console.log("Could not load leaderboard data:", userError);
         // For current user, use their own data
         if (userData) {
           usersMap[userData.email] = {
