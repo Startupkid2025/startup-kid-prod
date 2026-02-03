@@ -122,13 +122,36 @@ Deno.serve(async (req) => {
           // Items value calculation would need AVATAR_ITEMS import
           
           const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
-          const investmentsValue = Math.round(userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0));
+          const oldInvestmentsValue = user.investments_value || 0;
+          const newInvestmentsValue = Math.round(userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0));
+          const investmentChange = newInvestmentsValue - oldInvestmentsValue;
           
-          const totalNetworth = Math.round(currentCoins + itemsValue + investmentsValue);
+          // Log investment value change if there is one
+          if (investmentChange !== 0) {
+            try {
+              await base44.asServiceRole.entities.CoinLog.create({
+                student_email: user.email,
+                amount: investmentChange,
+                reason: "עדכון שווי השקעות יומי",
+                previous_balance: oldInvestmentsValue,
+                new_balance: newInvestmentsValue,
+                metadata: {
+                  timestamp: new Date().toISOString(),
+                  source: 'Daily Investments Update',
+                  date: dateKey,
+                  type: 'investment_value_change'
+                }
+              });
+            } catch (logError) {
+              console.error(`Error logging investment change for ${user.email}:`, logError);
+            }
+          }
+          
+          const totalNetworth = Math.round(currentCoins + itemsValue + newInvestmentsValue);
           
           await base44.asServiceRole.entities.User.update(user.id, {
             total_networth: totalNetworth,
-            investments_value: investmentsValue
+            investments_value: newInvestmentsValue
           });
 
           // Upsert to LeaderboardEntry
@@ -138,7 +161,7 @@ Deno.serve(async (req) => {
 
           const leaderboardData = {
             total_networth: totalNetworth,
-            investments_value: investmentsValue,
+            investments_value: newInvestmentsValue,
             coins: currentCoins,
             last_updated: new Date().toISOString()
           };
