@@ -610,8 +610,6 @@ export default function Leaderboard() {
 
   const handleStudentClick = async (student) => {
     try {
-      // For regular users, we can't access other users' full data
-      // So we'll just use the student object we already have
       setSelectedStudent(student);
       setShowProfileDialog(true);
     } catch (error) {
@@ -620,23 +618,21 @@ export default function Leaderboard() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <motion.div
-          className="text-4xl"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        >
-          🏆
-        </motion.div>
-      </div>
-    );
-  }
-
   return (
     <TooltipProvider>
       <div className="px-4 py-8 max-w-4xl mx-auto">
+        {isLoading ? (
+          <div className="flex items-center justify-center min-h-screen">
+            <motion.div
+              className="text-4xl"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            >
+              🏆
+            </motion.div>
+          </div>
+        ) : (
+          <>
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -916,6 +912,8 @@ export default function Leaderboard() {
         onClose={() => setShowProfileDialog(false)}
         student={selectedStudent}
       />
+      </>
+        )}
       </div>
     </TooltipProvider>
   );
