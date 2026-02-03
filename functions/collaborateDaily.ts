@@ -100,25 +100,49 @@ Deno.serve(async (req) => {
     );
 
     // Calculate new values for meUser
-    const meCoins = (meUser.coins || 0) + reward;
+    const meOldCoins = meUser.coins || 0;
+    const meCoins = meOldCoins + reward;
     const meTotalCollabCoins = (meUser.total_collaboration_coins || 0) + reward;
-    let meNetWorth = 0;
-    if (typeof meUser.total_networth === 'number') {
-      meNetWorth = meUser.total_networth + reward;
-    } else {
-      const meBase = (meUser.coins || 0) + (meUser.investments_value || 0) + (meUser.items_value || 0);
-      meNetWorth = meBase + reward;
-    }
+    const meNetWorth = meCoins + (meUser.investments_value || 0) + (meUser.items_value || 0);
 
     // Calculate new values for targetUser
-    const targetCoins = (targetUser.coins || 0) + reward;
+    const targetOldCoins = targetUser.coins || 0;
+    const targetCoins = targetOldCoins + reward;
     const targetTotalCollabCoins = (targetUser.total_collaboration_coins || 0) + reward;
-    let targetNetWorth = 0;
-    if (typeof targetUser.total_networth === 'number') {
-      targetNetWorth = targetUser.total_networth + reward;
-    } else {
-      const targetBase = (targetUser.coins || 0) + (targetUser.investments_value || 0) + (targetUser.items_value || 0);
-      targetNetWorth = targetBase + reward;
+    const targetNetWorth = targetCoins + (targetUser.investments_value || 0) + (targetUser.items_value || 0);
+
+    // Log coin changes for both users
+    try {
+      await Promise.all([
+        base44.asServiceRole.entities.CoinLog.create({
+          student_email: me.email,
+          amount: reward,
+          reason: "שיתוף פעולה יומי",
+          previous_balance: meOldCoins,
+          new_balance: meCoins,
+          metadata: {
+            timestamp: new Date().toISOString(),
+            source: 'collaborateDaily',
+            target_email: targetEmail,
+            target_name: targetUser.full_name
+          }
+        }),
+        base44.asServiceRole.entities.CoinLog.create({
+          student_email: targetEmail,
+          amount: reward,
+          reason: "שיתוף פעולה יומי",
+          previous_balance: targetOldCoins,
+          new_balance: targetCoins,
+          metadata: {
+            timestamp: new Date().toISOString(),
+            source: 'collaborateDaily',
+            initiator_email: me.email,
+            initiator_name: meUser.full_name
+          }
+        })
+      ]);
+    } catch (logError) {
+      console.error("Error logging collaboration coins:", logError);
     }
 
     // Update both users in User entity
