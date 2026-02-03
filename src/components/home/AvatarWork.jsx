@@ -206,10 +206,23 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     }
     
     const totalWorkEarnings = (userData.total_work_earnings || 0) + coinsToAdd;
-    const newCoins = (userData.coins || 0) + coinsToAdd;
+    const oldCoins = userData.coins || 0;
+    const newCoins = oldCoins + coinsToAdd;
     
     // Limit debt to -300
     const finalCoins = Math.max(newCoins, -300);
+
+    // Log coin change
+    try {
+      const { logCoinChange } = await import("../utils/coinLogger");
+      await logCoinChange(userData.email, oldCoins, finalCoins, "השלמת עבודה", {
+        source: 'AvatarWork',
+        job: workStatus.jobName,
+        coinsEarned: coinsToAdd
+      });
+    } catch (logError) {
+      console.error("Error logging work coins:", logError);
+    }
 
     await base44.auth.updateMe({
       coins: finalCoins,

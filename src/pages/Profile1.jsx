@@ -70,8 +70,23 @@ export default function Profile() {
       coinsToAdd += 20;
     }
     
-    const newCoins = (userData.coins || 0) + coinsToAdd;
+    const oldCoins = userData.coins || 0;
+    const newCoins = oldCoins + coinsToAdd;
     const newProfileCompletionCoins = (userData.profile_completion_coins || 0) + coinsToAdd;
+    
+    // Log coin change if earned
+    if (coinsToAdd > 0) {
+      try {
+        const { logCoinChange } = await import("../components/utils/coinLogger");
+        await logCoinChange(userData.email, oldCoins, newCoins, "השלמת פרטי פרופיל", {
+          source: 'Profile',
+          details: Object.keys(editData).filter(k => editData[k] && editData[k] !== oldUserData[k]).join(', '),
+          coinsEarned: coinsToAdd
+        });
+      } catch (logError) {
+        console.error("Error logging profile completion coins:", logError);
+      }
+    }
     
     // Update user data with new coins
     await base44.auth.updateMe({
@@ -119,7 +134,27 @@ export default function Profile() {
     }
 
     if (coinsToAdd > 0) {
-      updates.coins = (userData.coins || 0) + coinsToAdd;
+      const oldCoins = userData.coins || 0;
+      updates.coins = oldCoins + coinsToAdd;
+      
+      // Log coin change
+      try {
+        const { logCoinChange } = await import("../components/utils/coinLogger");
+        const taskNames = {
+          instagram: "עקיבה באינסטגרם",
+          youtube: "הרשמה ליוטיוב",
+          facebook: "עקיבה בפייסבוק",
+          discord: "הצטרפות לדיסקורד",
+          share: "שיתוף"
+        };
+        await logCoinChange(userData.email, oldCoins, updates.coins, taskNames[taskId] || "משימת פרופיל", {
+          source: 'Profile - Missions',
+          task: taskId
+        });
+      } catch (logError) {
+        console.error("Error logging mission coins:", logError);
+      }
+      
       await base44.auth.updateMe(updates);
       
       // Sync to LeaderboardEntry for public visibility

@@ -229,6 +229,19 @@ export default function Lessons() {
       // Give 70 coins for completing survey
       const currentCoins = currentUser.coins || 0;
       const surveyReward = 70;
+      
+      // Log coin change
+      try {
+        const { logCoinChange } = await import("../components/utils/coinLogger");
+        await logCoinChange(currentUser.email, currentCoins, currentCoins + surveyReward, "מילוי סקר שיעור", {
+          source: 'Lessons',
+          lesson_id: surveyLesson.id,
+          lesson_name: surveyLesson.lesson_name
+        });
+      } catch (logError) {
+        console.error("Error logging survey coins:", logError);
+      }
+      
       await base44.auth.updateMe({
         coins: currentCoins + surveyReward
       });

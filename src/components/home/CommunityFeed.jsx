@@ -127,7 +127,19 @@ export default function CommunityFeed({ userData, onRefresh }) {
 
       // Award 3 coins for liking (only when adding a like, not removing)
       if (!hasLiked) {
-        const newCoins = (currentUser.coins || 0) + 3;
+        const oldCoins = currentUser.coins || 0;
+        const newCoins = oldCoins + 3;
+        
+        // Log coin change
+        try {
+          const { logCoinChange } = await import("../utils/coinLogger");
+          await logCoinChange(currentUser.email, oldCoins, newCoins, "לייק לפוסט", {
+            source: 'CommunityFeed'
+          });
+        } catch (logError) {
+          console.error("Error logging like coins:", logError);
+        }
+        
         await base44.auth.updateMe({
           coins: newCoins
         });
@@ -177,7 +189,19 @@ export default function CommunityFeed({ userData, onRefresh }) {
       });
 
       // Award 3 coins for commenting
-      const newCoins = (currentUser.coins || 0) + 3;
+      const oldCoins = currentUser.coins || 0;
+      const newCoins = oldCoins + 3;
+      
+      // Log coin change
+      try {
+        const { logCoinChange } = await import("../utils/coinLogger");
+        await logCoinChange(currentUser.email, oldCoins, newCoins, "תגובה לפוסט", {
+          source: 'CommunityFeed'
+        });
+      } catch (logError) {
+        console.error("Error logging comment coins:", logError);
+      }
+      
       await base44.auth.updateMe({
         coins: newCoins
       });

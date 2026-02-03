@@ -515,7 +515,18 @@ export default function Vocabulary() {
           // Calculate new mastered_words count
           const currentMasteredCount = wordProgress.filter(w => w.mastered).length;
           const newMasteredCount = isMastered && !existingWordProg.mastered ? currentMasteredCount + 1 : currentMasteredCount;
-          const newCoinsTotal = (userData.coins || 0) + coinsEarned;
+          const oldCoins = userData.coins || 0;
+          const newCoinsTotal = oldCoins + coinsEarned;
+
+          // Log coin change
+          import("../components/utils/coinLogger").then(({ logCoinChange }) => {
+            logCoinChange(userData.email, oldCoins, newCoinsTotal, "שליטה במילה באנגלית", {
+              source: 'Vocabulary',
+              word: currentWord.english,
+              coinsEarned: coinsEarned,
+              mastered: isMastered
+            });
+          }).catch(err => console.error("Error logging vocab coins:", err));
 
           Promise.all([
             base44.auth.updateMe({
@@ -590,7 +601,17 @@ export default function Vocabulary() {
           );
           setAvailableVocabWords(updatedAvailableWords);
 
-          const newCoinsTotal = (userData.coins || 0) + coinsEarned;
+          const oldCoins = userData.coins || 0;
+          const newCoinsTotal = oldCoins + coinsEarned;
+
+          // Log coin change
+          import("../components/utils/coinLogger").then(({ logCoinChange }) => {
+            logCoinChange(userData.email, oldCoins, newCoinsTotal, "תשובה נכונה באנגלית", {
+              source: 'Vocabulary - First Correct',
+              word: currentWord.english,
+              coinsEarned: coinsEarned
+            });
+          }).catch(err => console.error("Error logging vocab coins:", err));
 
           Promise.all([
             base44.auth.updateMe({

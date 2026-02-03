@@ -106,12 +106,25 @@ export default function AvatarShop({
     }
     
     const newPurchasedItems = [...currentPurchasedItems, itemId];
+    const oldCoins = currentCoins;
     const newCoins = currentCoins - item.price;
     
     // Calculate new items value
     const newItemsValue = newPurchasedItems.reduce((sum, itemId) => {
       return sum + (AVATAR_ITEMS[itemId]?.price || 0);
     }, 0);
+
+    // Log coin change
+    try {
+      const { logCoinChange } = await import("../utils/coinLogger");
+      await logCoinChange(userData.email, oldCoins, newCoins, "רכישת פריט", {
+        source: 'AvatarShop',
+        item: item.name,
+        price: item.price
+      });
+    } catch (logError) {
+      console.error("Error logging purchase:", logError);
+    }
 
     await base44.auth.updateMe({
       purchased_items: newPurchasedItems,
