@@ -121,20 +121,23 @@ export default function CoinLogsPanel({ students = [] }) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-white/10 border-b border-white/10">
-                <tr>
-                  <th className="text-right p-3 text-white/90 font-bold">תאריך ושעה</th>
-                  <th className="text-right p-3 text-white/90 font-bold">תלמיד</th>
-                  <th className="text-right p-3 text-white/90 font-bold">סיבה</th>
-                  <th className="text-right p-3 text-white/90 font-bold">מקור</th>
-                  <th className="text-right p-3 text-white/90 font-bold">שינוי</th>
-                  <th className="text-right p-3 text-white/90 font-bold">יתרה לפני</th>
-                  <th className="text-right p-3 text-white/90 font-bold">יתרה אחרי</th>
-                </tr>
+               <tr>
+                 <th className="text-right p-3 text-white/90 font-bold">תאריך ושעה</th>
+                 <th className="text-right p-3 text-white/90 font-bold">תלמיד</th>
+                 <th className="text-right p-3 text-white/90 font-bold">סיבה</th>
+                 <th className="text-right p-3 text-white/90 font-bold">מקור</th>
+                 <th className="text-right p-3 text-white/90 font-bold">שינוי</th>
+                 <th className="text-right p-3 text-white/90 font-bold">יתרה לפני</th>
+                 <th className="text-right p-3 text-white/90 font-bold">יתרה אחרי</th>
+                 <th className="text-right p-3 text-white/90 font-bold">השקעות</th>
+                 <th className="text-right p-3 text-white/90 font-bold">שווי נטו</th>
+                 <th className="text-right p-3 text-white/90 font-bold">שווי לידרבורד</th>
+               </tr>
               </thead>
               <tbody>
                 {paginatedLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center p-8 text-white/50">
+                    <td colSpan={10} className="text-center p-8 text-white/50">
                       אין רשומות להצגה
                     </td>
                   </tr>
@@ -171,6 +174,15 @@ export default function CoinLogsPanel({ students = [] }) {
                       </td>
                       <td className="p-3 text-white/80 font-bold">
                         {log.new_balance?.toLocaleString() || 0}
+                      </td>
+                      <td className="p-3 text-white/60 text-xs">
+                        {log.metadata?.investments_value !== undefined ? log.metadata.investments_value.toLocaleString() : '-'}
+                      </td>
+                      <td className="p-3 text-white/60 text-xs">
+                        {log.metadata?.user_networth !== undefined ? log.metadata.user_networth.toLocaleString() : '-'}
+                      </td>
+                      <td className="p-3 text-white/60 text-xs">
+                        {log.metadata?.leaderboard_networth !== undefined ? log.metadata.leaderboard_networth.toLocaleString() : '-'}
                       </td>
                     </tr>
                   ))
