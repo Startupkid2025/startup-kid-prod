@@ -35,6 +35,10 @@ export default function Admin() {
   const [students, setStudents] = useState([]);
   const [lessons, setLessons] = useState([]);
   const [participations, setParticipations] = useState([]);
+  const [wordProgress, setWordProgress] = useState([]);
+  const [mathProgress, setMathProgress] = useState([]);
+  const [quizProgress, setQuizProgress] = useState([]);
+  const [investments, setInvestments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("students");
   const [loadedTabs, setLoadedTabs] = useState({});
@@ -101,12 +105,16 @@ export default function Admin() {
       
       if (tab === "students") {
         // Load all data in parallel - no sleep delays
-        const [allUsers, allLessons, allParticipations, allGroups, allScheduledLessons] = await Promise.all([
+        const [allUsers, allLessons, allParticipations, allGroups, allScheduledLessons, allWordProgress, allMathProgress, allQuizProgress, allInvestments] = await Promise.all([
           retryWithBackoff(() => base44.entities.User.list()),
           retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date")),
           retryWithBackoff(() => base44.entities.LessonParticipation.list()),
           retryWithBackoff(() => base44.entities.Group.list()),
-          retryWithBackoff(() => base44.entities.ScheduledLesson.list())
+          retryWithBackoff(() => base44.entities.ScheduledLesson.list()),
+          retryWithBackoff(() => base44.entities.WordProgress.list()),
+          retryWithBackoff(() => base44.entities.MathProgress.list()),
+          retryWithBackoff(() => base44.entities.QuizProgress.list()),
+          retryWithBackoff(() => base44.entities.Investment.list())
         ]);
         
         setStudents(allUsers);
@@ -114,6 +122,10 @@ export default function Admin() {
         setParticipations(allParticipations);
         setGroups(allGroups);
         setScheduledLessons(allScheduledLessons);
+        setWordProgress(allWordProgress);
+        setMathProgress(allMathProgress);
+        setQuizProgress(allQuizProgress);
+        setInvestments(allInvestments);
       } else if (tab === "lessons") {
         const [allLessons, allParticipations, allUsers] = await Promise.all([
           retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date")),
@@ -1671,6 +1683,10 @@ export default function Admin() {
                               participations={participations}
                               groups={groups}
                               scheduledLessons={scheduledLessons}
+                              wordProgress={wordProgress}
+                              mathProgress={mathProgress}
+                              quizProgress={quizProgress}
+                              investments={investments}
                               onToggleParticipation={async (student, lesson, lessonDate, participationId, wasAttended) => {
                                 try {
                                   if (participationId) {

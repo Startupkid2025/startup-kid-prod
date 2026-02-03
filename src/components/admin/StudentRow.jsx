@@ -28,6 +28,10 @@ export default function StudentRow({
   participations,
   groups = [],
   scheduledLessons = [],
+  wordProgress = [],
+  mathProgress = [],
+  quizProgress = [],
+  investments = [],
   onToggleParticipation,
   onUpdateParticipation,
   onRefresh
@@ -248,8 +252,8 @@ export default function StudentRow({
 
       // Delete user's word progress
       try {
-        const wordProgress = await base44.entities.WordProgress.filter({ student_email: student.email });
-        for (const progress of wordProgress) {
+        const studentWordProgress = wordProgress.filter(w => w.student_email === student.email);
+        for (const progress of studentWordProgress) {
           await base44.entities.WordProgress.delete(progress.id);
         }
       } catch (error) {
@@ -258,8 +262,8 @@ export default function StudentRow({
 
       // Delete user's math progress
       try {
-        const mathProgress = await base44.entities.MathProgress.filter({ student_email: student.email });
-        for (const progress of mathProgress) {
+        const studentMathProgress = mathProgress.filter(m => m.student_email === student.email);
+        for (const progress of studentMathProgress) {
           await base44.entities.MathProgress.delete(progress.id);
         }
       } catch (error) {
@@ -268,8 +272,8 @@ export default function StudentRow({
 
       // Delete user's quiz progress
       try {
-        const quizProgress = await base44.entities.QuizProgress.filter({ student_email: student.email });
-        for (const progress of quizProgress) {
+        const studentQuizProgress = quizProgress.filter(q => q.student_email === student.email);
+        for (const progress of studentQuizProgress) {
           await base44.entities.QuizProgress.delete(progress.id);
         }
       } catch (error) {
@@ -278,8 +282,8 @@ export default function StudentRow({
 
       // Delete user's investments
       try {
-        const investments = await base44.entities.Investment.filter({ student_email: student.email });
-        for (const investment of investments) {
+        const studentInvestments = investments.filter(inv => inv.student_email === student.email);
+        for (const investment of studentInvestments) {
           await base44.entities.Investment.delete(investment.id);
         }
       } catch (error) {
