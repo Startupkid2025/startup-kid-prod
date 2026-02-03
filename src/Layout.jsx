@@ -28,12 +28,7 @@ export default function Layout({ children }) {
     checkMaintenanceMode();
     loadUser();
     updateLoginStreak();
-  }, []);
-
-  // Re-check login streak on every navigation (route change)
-  React.useEffect(() => {
-    updateLoginStreak();
-  }, [location.pathname]);
+  }, []); // Only run once on mount
 
   const checkMaintenanceMode = async () => {
     try {
