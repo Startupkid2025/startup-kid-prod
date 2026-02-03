@@ -205,28 +205,53 @@ export default function AvatarWork({ userData, onWorkComplete }) {
       console.error("Error checking work king:", error);
     }
     
-    const totalWorkEarnings = (userData.total_work_earnings || 0) + coinsToAdd;
-    const oldCoins = userData.coins || 0;
-    const newCoins = oldCoins + coinsToAdd;
+    // Apply income tax (10% on work earnings)
+    const incomeTax = Math.floor(coinsToAdd * 0.10);
+    const coinsAfterTax = coinsToAdd - incomeTax;
     
-    // Limit debt to -300
-    const finalCoins = Math.max(newCoins, -300);
-
-    // Log coin change
+    const totalWorkEarnings = (userData.total_work_earnings || 0) + coinsAfterTax;
+    const oldCoins = userData.coins || 0;
+    let currentCoins = oldCoins;
+    
+    // Log work earnings
     try {
       const { logCoinChange } = await import("../utils/coinLogger");
-      await logCoinChange(userData.email, oldCoins, finalCoins, "השלמת עבודה", {
+      await logCoinChange(userData.email, oldCoins, oldCoins + coinsAfterTax, "השלמת עבודה", {
         source: 'AvatarWork',
         job: workStatus.jobName,
-        coinsEarned: coinsToAdd
+        coinsEarned: coinsAfterTax,
+        coinsBeforeTax: coinsToAdd
       });
     } catch (logError) {
       console.error("Error logging work coins:", logError);
     }
+    
+    currentCoins = oldCoins + coinsAfterTax;
+    
+    // Log income tax
+    if (incomeTax > 0) {
+      try {
+        const { logCoinChange } = await import("../utils/coinLogger");
+        await logCoinChange(userData.email, currentCoins, currentCoins - incomeTax, "מס הכנסה", {
+          source: 'AvatarWork',
+          job: workStatus.jobName,
+          taxRate: "10%",
+          taxAmount: incomeTax
+        });
+      } catch (logError) {
+        console.error("Error logging income tax:", logError);
+      }
+    }
+    
+    const newCoins = currentCoins - incomeTax;
+    
+    // Limit debt to -300
+    const finalCoins = Math.max(newCoins, -300);
 
     await base44.auth.updateMe({
       coins: finalCoins,
       total_work_earnings: totalWorkEarnings,
+      total_income_tax: (userData.total_income_tax || 0) + incomeTax,
       work_status: null
     });
 
@@ -237,11 +262,12 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     await syncLeaderboardEntry(userData.email, {
       coins: finalCoins,
       total_work_earnings: totalWorkEarnings,
+      total_income_tax: (userData.total_income_tax || 0) + incomeTax,
       total_networth: newNetWorth,
       total_work_hours: userData.total_work_hours || 0
     });
 
-    toast.success(`${userData.avatar_name} חזר מהעבודה! קיבלת ${coinsToAdd} סטארטקוין! 🎉`);
+    toast.success(`${userData.avatar_name} חזר מהעבודה! קיבלת ${coinsAfterTax} סטארטקוין (לאחר מס הכנסה 10%) 🎉`);
     setWorkStatus(null);
     if (onWorkComplete) onWorkComplete();
   };
