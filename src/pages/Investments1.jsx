@@ -276,9 +276,15 @@ export default function Investments() {
     const business = BUSINESSES.find(b => b.id === businessId);
     const amount = investmentAmounts[businessId] || 0;
 
+    // Validate amount entered
+    if (!amount || amount <= 0) {
+      toast.error(`אנא הזן סכום להשקעה`);
+      return;
+    }
+
     // Total cost is what user entered (includes fee)
     if (amount > userData.coins) {
-      toast.error(`אין לך מספיק סטארטקוין!`);
+      toast.error(`❌ אין לך מספיק סטארטקוין!\n\nיש לך: ${userData.coins} 🪙\nצריך: ${amount} 🪙\nחסר: ${amount - userData.coins} 🪙`);
       return;
     }
 
@@ -378,12 +384,21 @@ export default function Investments() {
 
   const openConfirmDialog = (businessId, sellAmount) => {
     const businessInvestments = investmentsByBusiness[businessId] || [];
-    if (businessInvestments.length === 0) return;
+    if (businessInvestments.length === 0) {
+      toast.error("אין לך השקעות במוצר זה");
+      return;
+    }
 
     const totalValue = businessInvestments.reduce((sum, inv) => sum + inv.current_value, 0);
     
+    // Validate amount entered
+    if (!sellAmount || sellAmount <= 0) {
+      toast.error("אנא הזן סכום למכירה");
+      return;
+    }
+    
     if (sellAmount > totalValue) {
-      toast.error("אין לך מספיק להשקעות למכירה");
+      toast.error(`❌ אין לך מספיק למכירה!\n\nיש לך: ${Math.round(totalValue)} 🪙\nמנסה למכור: ${sellAmount} 🪙\nעודף: ${sellAmount - Math.round(totalValue)} 🪙`);
       return;
     }
 
