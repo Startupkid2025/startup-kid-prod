@@ -1,6 +1,68 @@
 import { base44 } from "@/api/base44Client";
 
 /**
+ * Logs coin changes to CoinLog entity
+ */
+async function logCoinChange(studentEmail, oldCoins, newCoins, patch) {
+  try {
+    const amount = newCoins - oldCoins;
+    
+    // Determine reason from patch
+    let reason = "עדכון ידני";
+    
+    if (patch.total_work_earnings !== undefined) {
+      reason = "עבודה";
+    } else if (patch.total_login_streak_coins !== undefined) {
+      reason = "בונוס כניסה יומית";
+    } else if (patch.total_collaboration_coins !== undefined) {
+      reason = "שיתוף פעולה";
+    } else if (patch.total_passive_income !== undefined) {
+      reason = "הכנסה פסיבית";
+    } else if (patch.total_inflation_lost !== undefined) {
+      reason = "אינפלציה";
+    } else if (patch.total_income_tax !== undefined) {
+      reason = "מס הכנסה";
+    } else if (patch.total_credit_interest !== undefined) {
+      reason = "ריבית אשראי";
+    } else if (patch.total_investment_fees !== undefined) {
+      reason = "עמלות השקעות";
+    } else if (patch.total_realized_investment_profit !== undefined) {
+      reason = "רווחי השקעות";
+    } else if (patch.total_math_earnings !== undefined) {
+      reason = "תרגילי חשבון";
+    } else if (patch.investments_value !== undefined) {
+      reason = "רכישה/מכירה של השקעה";
+    } else if (patch.items_value !== undefined) {
+      reason = "רכישה/מכירה של פריט";
+    } else if (amount === 100) {
+      reason = "השתתפות בשיעור";
+    } else if (amount === 20) {
+      reason = "סקר שיעור";
+    } else if (amount === 3) {
+      reason = "לייק/תגובה";
+    } else if (amount === 500) {
+      reason = "תלמיד חדש - מתנת קבלה";
+    }
+
+    await base44.entities.CoinLog.create({
+      student_email: studentEmail,
+      amount: amount,
+      reason: reason,
+      previous_balance: oldCoins,
+      new_balance: newCoins,
+      metadata: {
+        timestamp: new Date().toISOString(),
+        source: 'leaderboardSync'
+      }
+    });
+    
+    console.log(`📝 Logged coin change: ${studentEmail} ${amount > 0 ? '+' : ''}${amount} (${reason})`);
+  } catch (error) {
+    console.error("Error logging coin change:", error);
+  }
+}
+
+/**
  * Normalizes daily_collaborations array to ensure all objects have required fields
  * Adds completed:false if missing, filters out invalid entries
  */
@@ -69,6 +131,11 @@ export async function syncLeaderboardEntry(studentEmail, patch) {
 
     if (entries && entries.length > 0) {
       const entry = entries[0];
+      
+      // Log coin changes
+      if ('coins' in cleanPatch && cleanPatch.coins !== entry.coins) {
+        await logCoinChange(studentEmail, entry.coins, cleanPatch.coins, patch);
+      }
       
       // Always recalculate total_networth when any financial field changes
       if ('coins' in cleanPatch || 'investments_value' in cleanPatch || 'items_value' in cleanPatch) {
