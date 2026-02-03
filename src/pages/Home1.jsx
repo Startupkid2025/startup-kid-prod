@@ -35,7 +35,11 @@ export default function Home() {
   const [netWorth, setNetWorth] = useState(0);
   const [investmentsValue, setInvestmentsValue] = useState(null);
 
+  const loadingRef = React.useRef(false);
+
   useEffect(() => {
+    // Prevent multiple simultaneous loads
+    if (loadingRef.current) return;
     loadData();
   }, []);
 
@@ -145,6 +149,13 @@ export default function Home() {
   };
 
   const loadData = async () => {
+    if (loadingRef.current) {
+      console.log("⏸️ Load already in progress, skipping...");
+      return;
+    }
+    
+    loadingRef.current = true;
+    
     try {
       const user = await base44.auth.me();
       
@@ -238,6 +249,8 @@ export default function Home() {
         await base44.auth.redirectToLogin();
       }
       setIsLoading(false);
+    } finally {
+      loadingRef.current = false;
     }
   };
 
@@ -245,6 +258,17 @@ export default function Home() {
 
   const calculateLessonCounts = async (user) => {
     try {
+      // Use cache - only recalculate every 5 minutes
+      const cacheKey = `lesson_counts_${user.email}`;
+      const cacheTimeKey = `${cacheKey}_time`;
+      const cached = sessionStorage.getItem(cacheKey);
+      const cachedTime = sessionStorage.getItem(cacheTimeKey);
+      
+      if (cached && cachedTime && (Date.now() - parseInt(cachedTime)) < 300000) {
+        console.log("📦 Using cached lesson counts");
+        return JSON.parse(cached);
+      }
+      
       const allParticipations = await base44.entities.LessonParticipation.filter({ student_email: user.email });
       const allLessons = await base44.entities.Lesson.list();
 
@@ -273,30 +297,18 @@ export default function Home() {
 
       // Calculate total_lessons - real count of attended lessons
       const total_lessons = counts.ai_tech_lessons + counts.social_skills_lessons + counts.money_business_lessons;
+      const result = { ...counts, total_lessons };
       
-      // Update User entity if there's a mismatch
+      // Cache the results
+      sessionStorage.setItem(cacheKey, JSON.stringify(result));
+      sessionStorage.setItem(cacheTimeKey, Date.now().toString());
+      
+      // Update User entity if there's a mismatch (do this in background)
       if (user.total_lessons !== total_lessons) {
-        await base44.auth.updateMe({ total_lessons });
-        
-        // Sync to LeaderboardEntry
-        try {
-          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
-            student_email: user.email 
-          });
-          if (leaderboardEntries.length > 0) {
-            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-              total_lessons,
-              ai_tech_lessons: counts.ai_tech_lessons,
-              social_skills_lessons: counts.social_skills_lessons,
-              money_business_lessons: counts.money_business_lessons
-            });
-          }
-        } catch (error) {
-          console.error("Error syncing to leaderboard:", error);
-        }
+        base44.auth.updateMe({ total_lessons }).catch(err => console.error("Error updating total_lessons:", err));
       }
 
-      return { ...counts, total_lessons };
+      return result;
     } catch (error) {
       console.error("Error calculating lesson counts:", error);
       return {
@@ -436,16 +448,28 @@ export default function Home() {
 
   const fetchInvestmentsValue = async (userEmail) => {
     try {
-      const myInvestments = await safeRequest(
-        () => base44.entities.Investment.filter({ student_email: userEmail }),
-        { key: `INV:${userEmail}`, ttlMs: 15000, retries: 1 }
-      );
+      // Use cache - only recalculate every 30 seconds
+      const cacheKey = `investments_${userEmail}`;
+      const cacheTimeKey = `${cacheKey}_time`;
+      const cached = sessionStorage.getItem(cacheKey);
+      const cachedTime = sessionStorage.getItem(cacheTimeKey);
+      
+      if (cached && cachedTime && (Date.now() - parseInt(cachedTime)) < 30000) {
+        console.log("📦 Using cached investments value");
+        return parseInt(cached);
+      }
+      
+      const myInvestments = await base44.entities.Investment.filter({ student_email: userEmail });
       const investmentsValue = myInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      
+      // Cache the result
+      sessionStorage.setItem(cacheKey, investmentsValue.toString());
+      sessionStorage.setItem(cacheTimeKey, Date.now().toString());
+      
       console.log(`✅ Fetched investments value for ${userEmail}: ${investmentsValue}`);
       return investmentsValue;
     } catch (error) {
       console.error("Error fetching investments value:", error);
-      // Return null on error to distinguish from 0 investments
       return null;
     }
   };
