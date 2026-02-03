@@ -27,6 +27,7 @@ import VocabSuggestionsManager from "../components/admin/VocabSuggestionsManager
 import EconomyAdminPanel from "../components/admin/EconomyAdminPanel";
 import InvestmentsManager from "../components/admin/InvestmentsManager";
 import ScheduledTasksPanel from "../components/admin/ScheduledTasksPanel";
+import CoinLogsPanel from "../components/admin/CoinLogsPanel";
 import { AVATAR_ITEMS } from '../components/avatar/TamagotchiAvatar';
 
 export default function Admin() {
@@ -1180,6 +1181,13 @@ export default function Admin() {
               <RefreshCw className="w-4 h-4 ml-1" />
               <span className="hidden sm:inline">משימות</span>
             </TabsTrigger>
+            <TabsTrigger 
+              value="coin-logs"
+              className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white whitespace-nowrap px-3 py-2"
+            >
+              <span className="text-lg">🪙</span>
+              <span className="hidden sm:inline mr-1">לוגים</span>
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -2059,6 +2067,10 @@ export default function Admin() {
             <InvestmentsManager />
             <EconomyAdminPanel />
           </div>
+        </TabsContent>
+
+        <TabsContent value="coin-logs">
+          <CoinLogsPanel students={students} />
         </TabsContent>
 
         <TabsContent value="scheduled">
