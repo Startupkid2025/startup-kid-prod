@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -337,31 +338,35 @@ const formatLastLoginDM = (value) => {
 };
 
 export default function Leaderboard() {
-  const [users, setUsers] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isInitializing, setIsInitializing] = useState(false);
-  const [totalUsers, setTotalUsers] = useState(0);
   const USERS_PER_PAGE = 20;
 
+  // Load current user once
   useEffect(() => {
-    loadData();
-  }, []); // Load once on mount
+    base44.auth.me().then(setCurrentUser).catch(console.error);
+  }, []);
 
-  // Reload data when page or search changes
-  useEffect(() => {
-    if (!isLoading) {
-      loadData();
-    }
-  }, [currentPage, searchTerm]);
+  // Fetch leaderboard entries with react-query
+  const { data: leaderboardEntries = [], isLoading } = useQuery({
+    queryKey: ['leaderboardEntries'],
+    queryFn: () => base44.entities.LeaderboardEntry.list("-total_networth", 200),
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+  });
 
+  // Fetch groups with react-query
+  const { data: allGroups = [] } = useQuery({
+    queryKey: ['groups'],
+    queryFn: () => base44.entities.Group.list(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Countdown timer effect
   useEffect(() => {
-    // Calculate time until season end (31.03.2026)
     const calculateTimeLeft = () => {
       const seasonEnd = new Date('2026-03-31T23:59:59');
       const now = new Date();
@@ -379,21 +384,121 @@ export default function Leaderboard() {
 
     calculateTimeLeft();
     const timer = setInterval(calculateTimeLeft, 1000);
-
     return () => clearInterval(timer);
   }, []);
 
-  // Check for pending collaboration requests
+  // Filter out demo/parent users
+  const filteredEntries = useMemo(() => {
+    return leaderboardEntries.filter(entry => 
+      entry.user_type !== 'demo' && entry.user_type !== 'parent'
+    );
+  }, [leaderboardEntries]);
+
+  // Apply search filter
+  const searchedEntries = useMemo(() => {
+    if (!searchTerm) return filteredEntries;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return filteredEntries.filter(entry => {
+      const fullName = entry.full_name?.toLowerCase() || '';
+      const firstName = entry.first_name?.toLowerCase() || '';
+      const lastName = entry.last_name?.toLowerCase() || '';
+      return fullName.includes(searchLower) || firstName.includes(searchLower) || lastName.includes(searchLower);
+    });
+  }, [filteredEntries, searchTerm]);
+
+  // Calculate kings from ALL students (memoized)
+  const kings = useMemo(() => {
+    const allStudents = filteredEntries
+      .filter(u => u.user_type === 'student')
+      .map(entry => ({
+        student_email: entry.student_email,
+        masteredWords: entry.mastered_words || 0,
+        masteredMathQuestions: entry.total_correct_math_answers || 0,
+        currentInvestmentValue: entry.investments_value || 0,
+        loginStreak: entry.login_streak || 0,
+        workHours: entry.total_work_hours || 0
+      }));
+
+    return {
+      math: [...allStudents].sort((a, b) => b.masteredMathQuestions - a.masteredMathQuestions)[0],
+      vocab: [...allStudents].sort((a, b) => b.masteredWords - a.masteredWords)[0],
+      investment: [...allStudents].sort((a, b) => b.currentInvestmentValue - a.currentInvestmentValue)[0],
+      loginStreak: [...allStudents].sort((a, b) => b.loginStreak - a.loginStreak)[0],
+      work: [...allStudents].sort((a, b) => b.workHours - a.workHours)[0]
+    };
+  }, [filteredEntries]);
+
+  // Paginate and map to UI model (memoized)
+  const users = useMemo(() => {
+    const start = (currentPage - 1) * USERS_PER_PAGE;
+    const pageSlice = searchedEntries.slice(start, start + USERS_PER_PAGE);
+
+    return pageSlice.map(entry => {
+      const collaborationCount = (entry.daily_collaborations || []).filter(c => c && c.completed).length;
+      const studentGroup = allGroups.find(g => g.student_emails?.includes(entry.student_email));
+
+      const crowns = [];
+      if (kings.math && entry.student_email === kings.math.student_email && kings.math.masteredMathQuestions > 0) {
+        crowns.push({ type: 'math', name: '🔢 מלך החשבון', bonus: '+5 סטארטקוין לתרגיל' });
+      }
+      if (kings.vocab && entry.student_email === kings.vocab.student_email && kings.vocab.masteredWords > 0) {
+        crowns.push({ type: 'vocab', name: '📚 מלך האנגלית', bonus: '+5 סטארטקוין למילה' });
+      }
+      if (kings.investment && entry.student_email === kings.investment.student_email && kings.investment.currentInvestmentValue > 0) {
+        crowns.push({ type: 'investment', name: '💼 מלך ההשקעות', bonus: '+0.1% תשואה יומית' });
+      }
+      if (kings.loginStreak && entry.student_email === kings.loginStreak.student_email && kings.loginStreak.loginStreak > 0) {
+        crowns.push({ type: 'login', name: '🔥 מלך הרצף', bonus: 'פי 2 על בונוס הרצף' });
+      }
+      if (kings.work && entry.student_email === kings.work.student_email && kings.work.workHours > 0) {
+        crowns.push({ type: 'work', name: '💪 מלך העבודה', bonus: '+5 סטארטקוין לשעה' });
+      }
+
+      return {
+        id: entry.id,
+        student_email: entry.student_email,
+        full_name: entry.full_name,
+        first_name: entry.first_name,
+        last_name: entry.last_name,
+        user_type: entry.user_type || 'student',
+        coins: entry.coins || 0,
+        ai_tech_level: entry.ai_tech_level || 1,
+        personal_skills_level: entry.personal_skills_level || 1,
+        money_business_level: entry.money_business_level || 1,
+        total_lessons: entry.total_lessons || 0,
+        login_streak: entry.login_streak || 0,
+        purchased_items: entry.purchased_items || [],
+        equipped_items: entry.equipped_items || {},
+        totalValue: entry.total_networth || 0,
+        masteredWords: entry.mastered_words || 0,
+        masteredMathQuestions: entry.total_correct_math_answers || 1,
+        loginStreak: entry.login_streak || 0,
+        collaborationCount: collaborationCount,
+        workHours: entry.total_work_hours || 0,
+        workEarnings: entry.total_work_earnings || 0,
+        last_login_date: entry.last_login_date,
+        daily_collaborations: entry.daily_collaborations || [],
+        currentInvestmentValue: entry.investments_value || 0,
+        crowns,
+        groupName: studentGroup?.group_name || null
+      };
+    });
+  }, [searchedEntries, currentPage, allGroups, kings]);
+
+  const totalUsers = searchedEntries.length;
+
+  // Check for pending collaboration requests (memoized)
   useEffect(() => {
-    if (!currentUser || !users.length) return;
+    if (!currentUser || !leaderboardEntries.length) return;
     
     const today = new Date().toISOString().split('T')[0];
     let pendingCount = 0;
     
-    users.forEach(user => {
-      if (user.student_email === currentUser.email) return;
+    leaderboardEntries.forEach(entry => {
+      if (entry.student_email === currentUser.email) return;
       
-      const userCollaborations = user.daily_collaborations || [];
+      const userCollaborations = entry.daily_collaborations || [];
       const hasPendingRequest = userCollaborations.some(
         c => c && c.email === currentUser.email && c.date === today && !c.completed
       );
@@ -408,162 +513,7 @@ export default function Leaderboard() {
         duration: 8000
       });
     }
-  }, [currentUser, users]);
-
-  const loadData = async () => {
-    try {
-      const user = await base44.auth.me();
-      setCurrentUser(user);
-
-      // Use cache for leaderboard data with longer timeout
-      const cacheKey = 'leaderboard_all_entries';
-      const cacheTimeout = 60000; // 60 seconds
-      const cachedData = sessionStorage.getItem(cacheKey);
-      const cachedTime = sessionStorage.getItem(cacheKey + '_time');
-      
-      let allEntries = [];
-      
-      if (cachedData && cachedTime && (Date.now() - parseInt(cachedTime)) < cacheTimeout) {
-        allEntries = JSON.parse(cachedData);
-        console.log("📦 Using cached leaderboard data");
-      } else {
-        // Fetch with limit instead of pagination - much faster and less requests
-        allEntries = await base44.entities.LeaderboardEntry.list("-total_networth", 200);
-        sessionStorage.setItem(cacheKey, JSON.stringify(allEntries));
-        sessionStorage.setItem(cacheKey + '_time', Date.now().toString());
-        console.log("🔄 Fetched fresh leaderboard data");
-      }
-      
-      // Use cache for groups too
-      const groupsCacheKey = 'leaderboard_groups';
-      const cachedGroups = sessionStorage.getItem(groupsCacheKey);
-      const cachedGroupsTime = sessionStorage.getItem(groupsCacheKey + '_time');
-      
-      let allGroups = [];
-      
-      if (cachedGroups && cachedGroupsTime && (Date.now() - parseInt(cachedGroupsTime)) < cacheTimeout) {
-        allGroups = JSON.parse(cachedGroups);
-        console.log("📦 Using cached groups data");
-      } else {
-        allGroups = await base44.entities.Group.list();
-        sessionStorage.setItem(groupsCacheKey, JSON.stringify(allGroups));
-        sessionStorage.setItem(groupsCacheKey + '_time', Date.now().toString());
-      }
-
-      // Filter out DEMO and PARENT users
-      const filteredEntries = allEntries.filter(entry => 
-        entry.user_type !== 'demo' && entry.user_type !== 'parent'
-      );
-
-      // Filter by search term
-      let sortedEntries = filteredEntries;
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        const searchFiltered = filteredEntries.filter(entry => {
-          const fullName = entry.full_name?.toLowerCase() || '';
-          const firstName = entry.first_name?.toLowerCase() || '';
-          const lastName = entry.last_name?.toLowerCase() || '';
-          return fullName.includes(searchLower) || firstName.includes(searchLower) || lastName.includes(searchLower);
-        });
-        // Re-sort after filtering
-        sortedEntries = [...searchFiltered].sort((a, b) => (b.total_networth || 0) - (a.total_networth || 0));
-      }
-
-      setTotalUsers(sortedEntries.length);
-      
-      // Client-side pagination - AFTER setting total users
-      const start = (currentPage - 1) * USERS_PER_PAGE;
-      const pageSlice = sortedEntries.slice(start, start + USERS_PER_PAGE);
-
-      // Debug logging
-      const withNetWorth = sortedEntries.filter(e => (e.total_networth || 0) > 0).length;
-      const withoutNetWorth = sortedEntries.filter(e => !(e.total_networth || 0)).slice(0, 5);
-      console.log(`📊 Leaderboard Debug: ${withNetWorth}/${sortedEntries.length} entries have net worth > 0`);
-      if (withoutNetWorth.length > 0) {
-        console.log(`⚠️ Entries with 0 net worth:`, withoutNetWorth.map(e => e.student_email));
-      }
-
-      // Map LeaderboardEntry to UI model
-      const studentsWithStats = pageSlice.map(entry => {
-        const collaborationCount = (entry.daily_collaborations || []).filter(c => c && c.completed).length;
-        
-        // Find the student's group
-        const studentGroup = allGroups.find(g => g.student_emails?.includes(entry.student_email));
-
-        return {
-          id: entry.id,
-          student_email: entry.student_email,
-          full_name: entry.full_name,
-          first_name: entry.first_name,
-          last_name: entry.last_name,
-          user_type: entry.user_type || 'student',
-          coins: entry.coins || 0,
-          ai_tech_level: entry.ai_tech_level || 1,
-          personal_skills_level: entry.personal_skills_level || 1,
-          money_business_level: entry.money_business_level || 1,
-          total_lessons: entry.total_lessons || 0,
-          login_streak: entry.login_streak || 0,
-          purchased_items: entry.purchased_items || [],
-          equipped_items: entry.equipped_items || {},
-          totalValue: entry.total_networth || 0,
-          masteredWords: entry.mastered_words || 0,
-          masteredMathQuestions: entry.total_correct_math_answers || 1,
-          loginStreak: entry.login_streak || 0,
-          collaborationCount: collaborationCount,
-          workHours: entry.total_work_hours || 0,
-          workEarnings: entry.total_work_earnings || 0,
-          last_login_date: entry.last_login_date,
-          daily_collaborations: entry.daily_collaborations || [],
-          currentInvestmentValue: entry.investments_value || 0,
-          crowns: [],
-          groupName: studentGroup?.group_name || null
-        };
-      });
-
-      // Find kings - ONLY from real students in FULL list (not just current page)
-      const allStudents = sortedEntries.filter(u => u.user_type === 'student').map(entry => ({
-        student_email: entry.student_email,
-        masteredWords: entry.mastered_words || 0,
-        masteredMathQuestions: entry.total_correct_math_answers || 0,
-        currentInvestmentValue: entry.investments_value || 0,
-        loginStreak: entry.login_streak || 0,
-        workHours: entry.total_work_hours || 0
-      }));
-
-      const mathKing = [...allStudents].sort((a, b) => b.masteredMathQuestions - a.masteredMathQuestions)[0];
-      const vocabKing = [...allStudents].sort((a, b) => b.masteredWords - a.masteredWords)[0];
-      const investmentKing = [...allStudents].sort((a, b) => b.currentInvestmentValue - a.currentInvestmentValue)[0];
-      const loginStreakKing = [...allStudents].sort((a, b) => b.loginStreak - a.loginStreak)[0];
-      const workKing = [...allStudents].sort((a, b) => b.workHours - a.workHours)[0];
-
-      // Add crowns
-      studentsWithStats.forEach(u => {
-        u.crowns = [];
-        if (mathKing && u.student_email === mathKing.student_email && mathKing.masteredMathQuestions > 0) {
-          u.crowns.push({ type: 'math', name: '🔢 מלך החשבון', bonus: '+5 סטארטקוין לתרגיל' });
-        }
-        if (vocabKing && u.student_email === vocabKing.student_email && vocabKing.masteredWords > 0) {
-          u.crowns.push({ type: 'vocab', name: '📚 מלך האנגלית', bonus: '+5 סטארטקוין למילה' });
-        }
-        if (investmentKing && u.student_email === investmentKing.student_email && investmentKing.currentInvestmentValue > 0) {
-          u.crowns.push({ type: 'investment', name: '💼 מלך ההשקעות', bonus: '+0.1% תשואה יומית' });
-        }
-        if (loginStreakKing && u.student_email === loginStreakKing.student_email && loginStreakKing.loginStreak > 0) {
-          u.crowns.push({ type: 'login', name: '🔥 מלך הרצף', bonus: 'פי 2 על בונוס הרצף' });
-        }
-        if (workKing && u.student_email === workKing.student_email && workKing.workHours > 0) {
-          u.crowns.push({ type: 'work', name: '💪 מלך העבודה', bonus: '+5 סטארטקוין לשעה' });
-        }
-      });
-
-      setUsers(studentsWithStats);
-    } catch (error) {
-      console.error("Error loading leaderboard:", error);
-      toast.error("שגיאה בטעינת טבלת השיאים");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [currentUser, leaderboardEntries]);
 
   const handleCollaborate = async (targetUser, e) => {
     e.stopPropagation();
@@ -573,14 +523,12 @@ export default function Leaderboard() {
       return;
     }
 
-    // Prevent collaboration with yourself
     if (targetUser.student_email === currentUser.email) {
       toast.error("לא ניתן לשתף פעולה עם עצמך! 😅");
       return;
     }
 
     try {
-      // Call server function to handle collaboration
       const response = await base44.functions.invoke('collaborateDaily', { 
         targetEmail: targetUser.student_email 
       });
@@ -592,7 +540,6 @@ export default function Leaderboard() {
         return;
       }
 
-      // Show appropriate message based on status
       if (result.status === 'already_sent') {
         toast.error(`כבר שלחת בקשה ל-${targetUser.full_name} היום! 🤝`);
       } else if (result.status === 'request_sent') {
@@ -601,10 +548,9 @@ export default function Leaderboard() {
         toast.success(`🎉 שיתוף פעולה הדדי! ${targetUser.full_name} ואתה קיבלתם 25 סטארטקוין כל אחד! 💰✨`);
       }
 
-      // Clear cache and reload data to reflect changes
-      sessionStorage.removeItem('leaderboard_all_entries');
-      sessionStorage.removeItem('leaderboard_all_entries_time');
-      loadData();
+      // Reload current user to get updated collaborations
+      const updatedUser = await base44.auth.me();
+      setCurrentUser(updatedUser);
     } catch (error) {
       console.error("Error collaborating:", error);
       const errorMessage = error?.message || error?.response?.data?.message || "שגיאה לא צפויה";
@@ -860,7 +806,7 @@ export default function Leaderboard() {
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
-              setCurrentPage(1); // Reset to first page on search
+              setCurrentPage(1);
             }}
             className="w-full bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 py-6 text-lg"
           />
