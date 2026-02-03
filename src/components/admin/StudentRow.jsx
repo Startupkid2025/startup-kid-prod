@@ -171,17 +171,30 @@ export default function StudentRow({
     }
     
     const amount = Number(coinsToAdd);
+    const oldCoins = student.coins || 0;
+    const newCoins = oldCoins + amount;
     
     try {
+      // Log the coin change
+      try {
+        const { logCoinChange } = await import("../utils/coinLogger");
+        await logCoinChange(student.email, oldCoins, newCoins, coinsReason || "עדכון ידני", {
+          source: 'Admin - Manual Adjustment',
+          admin_reason: coinsReason
+        });
+      } catch (logError) {
+        console.error("Error logging admin coin change:", logError);
+      }
+
       // Update User entity
       await base44.entities.User.update(student.id, {
-        coins: (student.coins || 0) + amount,
+        coins: newCoins,
         total_admin_coins: (student.total_admin_coins || 0) + amount
       });
       
       // Sync to LeaderboardEntry
       await syncLeaderboardEntry(student.email, {
-        coins: (student.coins || 0) + amount,
+        coins: newCoins,
         total_admin_coins: (student.total_admin_coins || 0) + amount
       });
       
