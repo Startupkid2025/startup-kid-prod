@@ -125,6 +125,7 @@ export default function CoinLogsPanel({ students = [] }) {
                   <th className="text-right p-3 text-white/90 font-bold">תאריך ושעה</th>
                   <th className="text-right p-3 text-white/90 font-bold">תלמיד</th>
                   <th className="text-right p-3 text-white/90 font-bold">סיבה</th>
+                  <th className="text-right p-3 text-white/90 font-bold">מקור</th>
                   <th className="text-right p-3 text-white/90 font-bold">שינוי</th>
                   <th className="text-right p-3 text-white/90 font-bold">יתרה לפני</th>
                   <th className="text-right p-3 text-white/90 font-bold">יתרה אחרי</th>
@@ -133,7 +134,7 @@ export default function CoinLogsPanel({ students = [] }) {
               <tbody>
                 {paginatedLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center p-8 text-white/50">
+                    <td colSpan={7} className="text-center p-8 text-white/50">
                       אין רשומות להצגה
                     </td>
                   </tr>
@@ -153,6 +154,9 @@ export default function CoinLogsPanel({ students = [] }) {
                       </td>
                       <td className="p-3 text-white/80">
                         {log.reason}
+                      </td>
+                      <td className="p-3 text-white/60 text-xs">
+                        {log.metadata?.source || '-'}
                       </td>
                       <td className="p-3">
                         <div className={`flex items-center gap-1 font-bold ${
