@@ -81,7 +81,7 @@ export async function syncLeaderboardEntry(studentEmail, patch) {
       
       await base44.entities.LeaderboardEntry.update(entries[0].id, cleanPatch);
       console.log(`✅ Synced LeaderboardEntry for ${studentEmail}`);
-      return;
+      return entries[0];
     }
 
     // No entry found - create one automatically
@@ -116,21 +116,29 @@ export async function syncLeaderboardEntry(studentEmail, patch) {
       if (user.phone_number) profileCompletionCoins += 20;
     }
 
+    // Calculate total_networth for new entry
+    const coins = cleanPatch.coins ?? user.coins ?? 0;
+    const investments_value = cleanPatch.investments_value ?? user.investments_value ?? 0;
+    const items_value = cleanPatch.items_value ?? user.items_value ?? 0;
+    const total_networth = coins + investments_value + items_value;
+
     const created = await base44.entities.LeaderboardEntry.create({
       student_email: studentEmail,
       full_name: fullName,
       first_name: user.first_name || "",
       last_name: user.last_name || "",
       user_type: user.user_type || "student",
-      coins: cleanPatch.coins ?? user.coins ?? 0,
+      coins: coins,
+      investments_value: investments_value,
+      items_value: items_value,
+      total_networth: total_networth,
       login_streak: cleanPatch.login_streak ?? user.login_streak ?? 0,
       last_login_date: cleanPatch.last_login_date ?? user.last_login_date ?? null,
-      total_networth: cleanPatch.total_networth ?? user.total_networth ?? 0,
       profile_completion_coins: profileCompletionCoins,
       ...cleanPatch
     });
 
-    console.log(`🆕 Created LeaderboardEntry for ${studentEmail}`);
+    console.log(`🆕 Created LeaderboardEntry for ${studentEmail} with total_networth: ${total_networth}`);
     return created;
   } catch (error) {
     console.error("Error syncing LeaderboardEntry:", error);

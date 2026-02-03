@@ -171,6 +171,19 @@ export default function Layout({ children }) {
       
       setCurrentUser(user);
       
+      // Ensure LeaderboardEntry exists for this user
+      try {
+        await syncLeaderboardEntry(user.email, {
+          coins: user.coins || 0,
+          investments_value: user.investments_value || 0,
+          items_value: user.items_value || 0,
+          login_streak: user.login_streak || 0,
+          last_login_date: user.last_login_date || null
+        });
+      } catch (syncError) {
+        console.error("Error syncing leaderboard on load:", syncError);
+      }
+      
       // Apply daily economy updates for current user only (inflation + credit interest)
       applyDailyEconomyForCurrentUser(user).catch(error => {
         console.error("Error applying daily economy:", error);
