@@ -209,24 +209,23 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     const incomeTax = Math.floor(coinsToAdd * 0.10);
     const coinsAfterTax = coinsToAdd - incomeTax;
     
-    const totalWorkEarnings = (userData.total_work_earnings || 0) + coinsAfterTax;
+    const totalWorkEarnings = (userData.total_work_earnings || 0) + coinsToAdd;
     const oldCoins = userData.coins || 0;
     let currentCoins = oldCoins;
     
     // Log work earnings
     try {
       const { logCoinChange } = await import("../utils/coinLogger");
-      await logCoinChange(userData.email, oldCoins, oldCoins + coinsAfterTax, "השלמת עבודה", {
+      await logCoinChange(userData.email, oldCoins, oldCoins + coinsToAdd, "השלמת עבודה", {
         source: 'AvatarWork',
         job: workStatus.jobName,
-        coinsEarned: coinsAfterTax,
-        coinsBeforeTax: coinsToAdd
+        coinsEarned: coinsToAdd
       });
     } catch (logError) {
       console.error("Error logging work coins:", logError);
     }
     
-    currentCoins = oldCoins + coinsAfterTax;
+    currentCoins = oldCoins + coinsToAdd;
     
     // Log income tax
     if (incomeTax > 0) {
