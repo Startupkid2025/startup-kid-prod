@@ -17,6 +17,7 @@ Deno.serve(async (req) => {
         }
 
         const amount = newCoins - oldCoins;
+        const studentEmail = data.student_email;
 
         // Try to determine reason from context
         let reason = "עדכון ידני";
@@ -28,8 +29,6 @@ Deno.serve(async (req) => {
             reason = "בונוס כניסה יומית";
         } else if (data.total_collaboration_coins !== old_data?.total_collaboration_coins) {
             reason = "שיתוף פעולה";
-        } else if (data.purchased_items?.length > (old_data?.purchased_items?.length || 0)) {
-            reason = "קנייה בחנות";
         } else if (data.total_passive_income !== old_data?.total_passive_income) {
             reason = "הכנסה פסיבית";
         } else if (data.total_inflation_lost !== old_data?.total_inflation_lost) {
@@ -38,13 +37,23 @@ Deno.serve(async (req) => {
             reason = "מס הכנסה";
         } else if (data.total_credit_interest !== old_data?.total_credit_interest) {
             reason = "ריבית אשראי";
-        } else if (amount > 0 && amount % 100 === 0) {
+        } else if (data.total_investment_fees !== old_data?.total_investment_fees) {
+            reason = "עמלות השקעות";
+        } else if (data.total_realized_investment_profit !== old_data?.total_realized_investment_profit) {
+            reason = "רווחי השקעות";
+        } else if (amount === 100) {
             reason = "השתתפות בשיעור";
+        } else if (amount === 20) {
+            reason = "סקר שיעור";
+        } else if (amount === 3) {
+            reason = "לייק/תגובה";
+        } else if (amount > 0 && amount <= 15) {
+            reason = "אנגלית/חשבון";
         }
 
-        // Create log entry
+        // Create log entry using service role to avoid RLS
         await base44.asServiceRole.entities.CoinLog.create({
-            student_email: data.email,
+            student_email: studentEmail,
             amount: amount,
             reason: reason,
             previous_balance: oldCoins,
@@ -57,7 +66,7 @@ Deno.serve(async (req) => {
         return Response.json({ 
             success: true,
             logged: {
-                email: data.email,
+                email: studentEmail,
                 amount,
                 reason,
                 oldCoins,
