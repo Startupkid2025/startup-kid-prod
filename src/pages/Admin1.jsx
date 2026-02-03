@@ -104,32 +104,28 @@ export default function Admin() {
       console.log(`Loading ${tab} data...`);
       
       if (tab === "students") {
-        // Load data sequentially to avoid rate limiting
-        const allUsers = await retryWithBackoff(() => base44.entities.User.list());
-        await sleep(150);
-        
-        const allLessons = await retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date"));
-        await sleep(150);
-        
-        const allParticipations = await retryWithBackoff(() => base44.entities.LessonParticipation.list());
-        await sleep(150);
-        
-        const allGroups = await retryWithBackoff(() => base44.entities.Group.list());
-        await sleep(150);
-        
-        const allScheduledLessons = await retryWithBackoff(() => base44.entities.ScheduledLesson.list());
-        await sleep(150);
-        
-        const allWordProgress = await retryWithBackoff(() => base44.entities.WordProgress.list());
-        await sleep(150);
-        
-        const allMathProgress = await retryWithBackoff(() => base44.entities.MathProgress.list());
-        await sleep(150);
-        
-        const allQuizProgress = await retryWithBackoff(() => base44.entities.QuizProgress.list());
-        await sleep(150);
-        
-        const allInvestments = await retryWithBackoff(() => base44.entities.Investment.list());
+        // Load all data in parallel for faster loading
+        const [
+          allUsers,
+          allLessons,
+          allParticipations,
+          allGroups,
+          allScheduledLessons,
+          allWordProgress,
+          allMathProgress,
+          allQuizProgress,
+          allInvestments
+        ] = await Promise.all([
+          retryWithBackoff(() => base44.entities.User.list()),
+          retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date")),
+          retryWithBackoff(() => base44.entities.LessonParticipation.list()),
+          retryWithBackoff(() => base44.entities.Group.list()),
+          retryWithBackoff(() => base44.entities.ScheduledLesson.list()),
+          retryWithBackoff(() => base44.entities.WordProgress.list()),
+          retryWithBackoff(() => base44.entities.MathProgress.list()),
+          retryWithBackoff(() => base44.entities.QuizProgress.list()),
+          retryWithBackoff(() => base44.entities.Investment.list())
+        ]);
         
         setStudents(allUsers);
         setLessons(allLessons);
@@ -141,11 +137,11 @@ export default function Admin() {
         setQuizProgress(allQuizProgress);
         setInvestments(allInvestments);
       } else if (tab === "lessons") {
-        const allLessons = await retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date"));
-        await sleep(150);
-        const allParticipations = await retryWithBackoff(() => base44.entities.LessonParticipation.list());
-        await sleep(150);
-        const allUsers = await retryWithBackoff(() => base44.entities.User.list());
+        const [allLessons, allParticipations, allUsers] = await Promise.all([
+          retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date")),
+          retryWithBackoff(() => base44.entities.LessonParticipation.list()),
+          retryWithBackoff(() => base44.entities.User.list())
+        ]);
         
         setLessons(allLessons);
         setParticipations(allParticipations);
@@ -181,15 +177,11 @@ export default function Admin() {
   const retryWithBackoff = async (fn, maxRetries = 5) => {
     for (let i = 0; i < maxRetries; i++) {
       try {
-        // Add small delay between all requests to prevent rate limiting
-        if (i > 0) {
-          await sleep(300);
-        }
         return await fn();
       } catch (error) {
         if (error?.response?.status === 429 || error?.message?.includes('429') || error?.message?.includes('Rate limit')) {
           const retryAfter = error?.response?.headers?.['retry-after'];
-          const delay = retryAfter ? parseInt(retryAfter) * 1000 : Math.min(2000 * Math.pow(2, i), 10000);
+          const delay = retryAfter ? parseInt(retryAfter) * 1000 : Math.min(1000 * Math.pow(2, i), 8000);
           if (i < maxRetries - 1) {
             console.log(`Rate limit hit, waiting ${delay}ms before retry ${i + 1}/${maxRetries}`);
             await sleep(delay);
@@ -1588,7 +1580,7 @@ export default function Admin() {
               </div>
             </CardHeader>
             <CardContent className="p-6">
-              {(() => {
+              {React.useMemo(() => {
                 const filteredAndSorted = students
                    .filter(student => {
                      // Filter by user type
@@ -1782,7 +1774,7 @@ export default function Admin() {
                     )}
                   </div>
                 );
-              })()}
+              }, [students, filterUserType, filterGroup, searchTerm, filterRecommendation, filterDuplicates, studentSortBy, currentPage, selectedStudents, participations, lessons, groups, scheduledLessons, wordProgress, mathProgress, quizProgress, investments])}
             </CardContent>
                       </Card>
                       </TabsContent>
