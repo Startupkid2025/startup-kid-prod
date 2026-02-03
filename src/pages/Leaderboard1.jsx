@@ -353,6 +353,13 @@ export default function Leaderboard() {
     loadData();
   }, []); // Load once on mount
 
+  // Reload data when page or search changes
+  useEffect(() => {
+    if (!isLoading) {
+      loadData();
+    }
+  }, [currentPage, searchTerm]);
+
   useEffect(() => {
     // Calculate time until season end (31.03.2026)
     const calculateTimeLeft = () => {
@@ -462,10 +469,11 @@ export default function Leaderboard() {
         sortedEntries = [...searchFiltered].sort((a, b) => (b.total_networth || 0) - (a.total_networth || 0));
       }
 
-      // Client-side pagination
+      setTotalUsers(sortedEntries.length);
+      
+      // Client-side pagination - AFTER setting total users
       const start = (currentPage - 1) * USERS_PER_PAGE;
       const pageSlice = sortedEntries.slice(start, start + USERS_PER_PAGE);
-      setTotalUsers(sortedEntries.length);
 
       // Debug logging
       const withNetWorth = sortedEntries.filter(e => (e.total_networth || 0) > 0).length;
