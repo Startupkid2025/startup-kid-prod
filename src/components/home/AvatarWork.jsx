@@ -213,13 +213,31 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     const oldCoins = userData.coins || 0;
     let currentCoins = oldCoins;
     
+    // Get common values for all logs
+    const investmentsValue = userData.investments_value || 0;
+    const userNetworth = userData.total_networth || 0;
+    
+    // Get leaderboard networth
+    let leaderboardNetworth = 0;
+    try {
+      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+      if (leaderboardEntries.length > 0) {
+        leaderboardNetworth = leaderboardEntries[0].total_networth || 0;
+      }
+    } catch (err) {
+      console.error("Error fetching leaderboard:", err);
+    }
+    
     // Log work earnings
     try {
       const { logCoinChange } = await import("../utils/coinLogger");
       await logCoinChange(userData.email, oldCoins, oldCoins + coinsToAdd, "השלמת עבודה", {
         source: 'AvatarWork',
         job: workStatus.jobName,
-        coinsEarned: coinsToAdd
+        coinsEarned: coinsToAdd,
+        investments_value: investmentsValue,
+        user_networth: userNetworth,
+        leaderboard_networth: leaderboardNetworth
       });
     } catch (logError) {
       console.error("Error logging work coins:", logError);
@@ -235,7 +253,10 @@ export default function AvatarWork({ userData, onWorkComplete }) {
           source: 'AvatarWork',
           job: workStatus.jobName,
           taxRate: "10%",
-          taxAmount: incomeTax
+          taxAmount: incomeTax,
+          investments_value: investmentsValue,
+          user_networth: userNetworth,
+          leaderboard_networth: leaderboardNetworth
         });
       } catch (logError) {
         console.error("Error logging income tax:", logError);

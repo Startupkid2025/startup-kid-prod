@@ -339,12 +339,27 @@ export default function Investments() {
       // Log coin change
       try {
         const { logCoinChange } = await import("../components/utils/coinLogger");
+        
+        // Get leaderboard networth
+        let leaderboardNetworth = 0;
+        try {
+          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+          if (leaderboardEntries.length > 0) {
+            leaderboardNetworth = leaderboardEntries[0].total_networth || 0;
+          }
+        } catch (err) {
+          console.error("Error fetching leaderboard:", err);
+        }
+        
         await logCoinChange(userData.email, oldCoins, newCoinsBalance, "רכישת השקעה", {
           source: 'Investments',
           business: business.name,
           invested_amount: actualInvestment,
           fee: TRANSACTION_FEE,
-          total_cost: amount
+          total_cost: amount,
+          investments_value: investmentsValue,
+          user_networth: newNetWorth,
+          leaderboard_networth: leaderboardNetworth
         });
       } catch (logError) {
         console.error("Error logging investment purchase:", logError);
@@ -533,6 +548,18 @@ export default function Investments() {
       try {
         const { logCoinChange } = await import("../components/utils/coinLogger");
         const business = BUSINESSES.find(b => b.id === businessId);
+        
+        // Get leaderboard networth
+        let leaderboardNetworth = 0;
+        try {
+          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+          if (leaderboardEntries.length > 0) {
+            leaderboardNetworth = leaderboardEntries[0].total_networth || 0;
+          }
+        } catch (err) {
+          console.error("Error fetching leaderboard:", err);
+        }
+        
         await logCoinChange(userData.email, oldCoins, newCoins, "מכירת השקעה", {
           source: 'Investments',
           business: business?.name,
@@ -541,7 +568,10 @@ export default function Investments() {
           taxes: Math.round(capitalGainsTax),
           fee: TRANSACTION_FEE,
           king_bonus: kingBonus,
-          net_cash: Math.round(netAmount)
+          net_cash: Math.round(netAmount),
+          investments_value: investmentsValue,
+          user_networth: newNetWorth,
+          leaderboard_networth: leaderboardNetworth
         });
       } catch (logError) {
         console.error("Error logging investment sale:", logError);

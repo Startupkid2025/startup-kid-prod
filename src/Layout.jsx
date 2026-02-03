@@ -105,10 +105,29 @@ export default function Layout({ children }) {
       // Log the coin change
       try {
         const { logCoinChange } = await import("./components/utils/coinLogger");
+        
+        // Get investments_value and networth
+        const investmentsValue = user.investments_value || 0;
+        const userNetworth = user.total_networth || 0;
+        
+        // Get leaderboard networth
+        let leaderboardNetworth = 0;
+        try {
+          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: user.email });
+          if (leaderboardEntries.length > 0) {
+            leaderboardNetworth = leaderboardEntries[0].total_networth || 0;
+          }
+        } catch (err) {
+          console.error("Error fetching leaderboard:", err);
+        }
+        
         await logCoinChange(user.email, oldCoins, newCoins, "בונוס כניסה יומית", {
           source: 'Layout - Login Streak',
           streak: newStreak,
-          reward: reward
+          reward: reward,
+          investments_value: investmentsValue,
+          user_networth: userNetworth,
+          leaderboard_networth: leaderboardNetworth
         });
       } catch (logError) {
         console.error("Error logging login streak coins:", logError);
@@ -248,11 +267,29 @@ export default function Layout({ children }) {
       try {
         const { logCoinChange } = await import("./components/utils/coinLogger");
         
+        // Get common values for all logs
+        const investmentsValue = user.investments_value || 0;
+        const userNetworth = user.total_networth || 0;
+        
+        // Get leaderboard networth
+        let leaderboardNetworth = 0;
+        try {
+          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: user.email });
+          if (leaderboardEntries.length > 0) {
+            leaderboardNetworth = leaderboardEntries[0].total_networth || 0;
+          }
+        } catch (err) {
+          console.error("Error fetching leaderboard:", err);
+        }
+        
         if (totalPassiveIncome > 0) {
           await logCoinChange(user.email, oldCoins, oldCoins + totalPassiveIncome, "הכנסה פסיבית", {
             source: 'Layout - Daily Economy',
             days: daysPassed,
-            amount: totalPassiveIncome
+            amount: totalPassiveIncome,
+            investments_value: investmentsValue,
+            user_networth: userNetworth,
+            leaderboard_networth: leaderboardNetworth
           });
         }
         
@@ -260,7 +297,10 @@ export default function Layout({ children }) {
           await logCoinChange(user.email, oldCoins + totalPassiveIncome, oldCoins + totalPassiveIncome - totalInflationLoss, "אינפלציה", {
             source: 'Layout - Daily Economy',
             days: daysPassed,
-            amount: -totalInflationLoss
+            amount: -totalInflationLoss,
+            investments_value: investmentsValue,
+            user_networth: userNetworth,
+            leaderboard_networth: leaderboardNetworth
           });
         }
         
@@ -268,7 +308,10 @@ export default function Layout({ children }) {
           await logCoinChange(user.email, newCoins + totalCreditInterest, newCoins, "ריבית אשראי", {
             source: 'Layout - Daily Economy',
             days: daysPassed,
-            amount: -totalCreditInterest
+            amount: -totalCreditInterest,
+            investments_value: investmentsValue,
+            user_networth: userNetworth,
+            leaderboard_networth: leaderboardNetworth
           });
         }
       } catch (logError) {
