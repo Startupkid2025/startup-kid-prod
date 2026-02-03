@@ -125,38 +125,6 @@ export default function CommunityFeed({ userData, onRefresh }) {
         likes: updatedLikes
       });
 
-      // Award 3 coins for liking (only when adding a like, not removing)
-      if (!hasLiked) {
-        const oldCoins = currentUser.coins || 0;
-        const newCoins = oldCoins + 3;
-        
-        // Log coin change
-        try {
-          const { logCoinChange } = await import("../utils/coinLogger");
-          await logCoinChange(currentUser.email, oldCoins, newCoins, "לייק לפוסט", {
-            source: 'CommunityFeed'
-          });
-        } catch (logError) {
-          console.error("Error logging like coins:", logError);
-        }
-        
-        await base44.auth.updateMe({
-          coins: newCoins
-        });
-
-        // Update leaderboard
-        try {
-          const { syncLeaderboardEntry } = await import("../utils/leaderboardSync");
-          await syncLeaderboardEntry(currentUser.email, {
-            coins: newCoins
-          });
-        } catch (leaderboardError) {
-          console.error("Error updating leaderboard:", leaderboardError);
-        }
-
-        toast.success("לייק! +3 סטארטקוין 💙");
-      }
-
       await loadPosts();
     } catch (error) {
       console.error("Error liking post:", error);
@@ -188,36 +156,8 @@ export default function CommunityFeed({ userData, onRefresh }) {
         comments: [...comments, newComment]
       });
 
-      // Award 3 coins for commenting
-      const oldCoins = currentUser.coins || 0;
-      const newCoins = oldCoins + 3;
-      
-      // Log coin change
-      try {
-        const { logCoinChange } = await import("../utils/coinLogger");
-        await logCoinChange(currentUser.email, oldCoins, newCoins, "תגובה לפוסט", {
-          source: 'CommunityFeed'
-        });
-      } catch (logError) {
-        console.error("Error logging comment coins:", logError);
-      }
-      
-      await base44.auth.updateMe({
-        coins: newCoins
-      });
-
-      // Update leaderboard
-      try {
-        const { syncLeaderboardEntry } = await import("../utils/leaderboardSync");
-        await syncLeaderboardEntry(currentUser.email, {
-          coins: newCoins
-        });
-      } catch (leaderboardError) {
-        console.error("Error updating leaderboard:", leaderboardError);
-      }
-
       setCommentTexts({ ...commentTexts, [post.id]: "" });
-      toast.success("תגובה נוספה! +3 סטארטקוין 💬");
+      toast.success("תגובה נוספה! 💬");
       await loadPosts();
     } catch (error) {
       console.error("Error commenting:", error);

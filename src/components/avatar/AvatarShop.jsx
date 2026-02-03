@@ -39,6 +39,7 @@ export default function AvatarShop({
   const [selectedCategory, setSelectedCategory] = useState("body");
   const [activeTab, setActiveTab] = useState("shop");
   const [tooltipOpen, setTooltipOpen] = useState(null);
+  const [isPurchasing, setIsPurchasing] = useState(false);
 
   const currentCoins = userData?.coins || 0;
   const currentPurchasedItems = userData?.purchased_items || [];
@@ -93,6 +94,8 @@ export default function AvatarShop({
   };
 
   const handlePurchase = async (itemId) => {
+    if (isPurchasing) return;
+    
     const item = AVATAR_ITEMS[itemId];
     
     if (!checkUnlocked(item)) {
@@ -105,52 +108,61 @@ export default function AvatarShop({
       return;
     }
     
-    const newPurchasedItems = [...currentPurchasedItems, itemId];
-    const oldCoins = currentCoins;
-    const newCoins = currentCoins - item.price;
+    setIsPurchasing(true);
     
-    // Calculate new items value
-    const newItemsValue = newPurchasedItems.reduce((sum, itemId) => {
-      return sum + (AVATAR_ITEMS[itemId]?.price || 0);
-    }, 0);
-
-    // Log coin change
     try {
-      const { logCoinChange } = await import("../utils/coinLogger");
-      await logCoinChange(userData.email, oldCoins, newCoins, "רכישת פריט", {
-        source: 'AvatarShop',
-        item: item.name,
-        price: item.price
-      });
-    } catch (logError) {
-      console.error("Error logging purchase:", logError);
-    }
+      const newPurchasedItems = [...currentPurchasedItems, itemId];
+      const oldCoins = currentCoins;
+      const newCoins = currentCoins - item.price;
+      
+      // Calculate new items value
+      const newItemsValue = newPurchasedItems.reduce((sum, itemId) => {
+        return sum + (AVATAR_ITEMS[itemId]?.price || 0);
+      }, 0);
 
-    await base44.auth.updateMe({
-      purchased_items: newPurchasedItems,
-      coins: newCoins,
-      items_value: newItemsValue
-    });
+      // Log coin change
+      try {
+        const { logCoinChange } = await import("../utils/coinLogger");
+        await logCoinChange(userData.email, oldCoins, newCoins, "רכישת פריט", {
+          source: 'AvatarShop',
+          item: item.name,
+          price: item.price
+        });
+      } catch (logError) {
+        console.error("Error logging purchase:", logError);
+      }
 
-    // Update net worth
-    const newNetWorth = await updateNetWorth(userData.email);
-
-    // Sync to LeaderboardEntry
-    if (userData.user_type !== 'parent' && userData.user_type !== 'demo') {
-      await syncLeaderboardEntry(userData.email, {
+      await base44.auth.updateMe({
+        purchased_items: newPurchasedItems,
         coins: newCoins,
-        items_value: newItemsValue,
-        total_networth: newNetWorth
+        items_value: newItemsValue
       });
-    }
 
-    toast.success(`רכשת את ${item.name}! 🎉`);
-    
-    if (onPurchase && typeof onPurchase === 'function') {
-      await onPurchase();
+      // Update net worth
+      const newNetWorth = await updateNetWorth(userData.email);
+
+      // Sync to LeaderboardEntry
+      if (userData.user_type !== 'parent' && userData.user_type !== 'demo') {
+        await syncLeaderboardEntry(userData.email, {
+          coins: newCoins,
+          items_value: newItemsValue,
+          total_networth: newNetWorth
+        });
+      }
+
+      toast.success(`רכשת את ${item.name}! 🎉`);
+      
+      if (onPurchase && typeof onPurchase === 'function') {
+        await onPurchase();
+      }
+      
+      onClose();
+    } catch (error) {
+      console.error("Error purchasing item:", error);
+      toast.error("שגיאה ברכישה");
+    } finally {
+      setIsPurchasing(false);
     }
-    
-    onClose();
   };
 
   const handleEquip = (category, itemId) => {
@@ -354,15 +366,21 @@ export default function AvatarShop({
                         ) : (
                           <Button
                             onClick={() => handlePurchase(item.id)}
-                            disabled={!item.canAfford}
+                            disabled={!item.canAfford || isPurchasing}
                             className={`w-full text-xs sm:text-sm py-1.5 sm:py-2 h-auto ${
-                              item.canAfford
+                              item.canAfford && !isPurchasing
                                 ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
                                 : 'bg-gray-600 cursor-not-allowed opacity-50'
                             } text-white font-bold`}
                           >
-                            <Coins className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                            {item.price}
+                            {isPurchasing ? (
+                              "רוכש..."
+                            ) : (
+                              <>
+                                <Coins className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                                {item.price}
+                              </>
+                            )}
                           </Button>
                         )}
                             </div>

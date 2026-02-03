@@ -11,6 +11,7 @@ import { Star, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function LessonSurveyDialog({ isOpen, onClose, lesson, onSubmit }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [ratings, setRatings] = useState({
     interest: 0,
     fun: 0,
@@ -30,9 +31,15 @@ export default function LessonSurveyDialog({ isOpen, onClose, lesson, onSubmit }
     setRatings({ ...ratings, [key]: value });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
     if (ratings.interest && ratings.fun && ratings.learned && ratings.difficulty && ratings.comments.trim()) {
-      onSubmit(ratings);
+      setIsSubmitting(true);
+      try {
+        await onSubmit(ratings);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -108,10 +115,10 @@ export default function LessonSurveyDialog({ isOpen, onClose, lesson, onSubmit }
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={!isComplete}
+              disabled={!isComplete || isSubmitting}
               className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold"
             >
-              שלח סקר וקבל 70 מטבעות! ⭐
+              {isSubmitting ? "שולח..." : "שלח סקר וקבל 70 מטבעות! ⭐"}
             </Button>
           </div>
         </div>
