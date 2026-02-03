@@ -369,9 +369,7 @@ export default function MathGames() {
     setCurrentQuestion(null);
     
     try {
-      const freshProgress = await base44.entities.MathProgress.filter({ student_email: userData.email });
-      setMathProgress(freshProgress);
-
+      // No need to reload progress here - we already have it in state
       const level = Math.floor(Math.random() * 3) + 1;
       
       // Random category - all mixed together
@@ -522,9 +520,9 @@ ${question} = ${correctAnswer}
       const isCorrect = compareFractions(answer, correctAnswer);
 
       const now = new Date().toISOString();
-      const freshProgress = await base44.entities.MathProgress.filter({ student_email: userData.email });
 
-      const existingProgress = freshProgress.find(p =>
+      // Use existing mathProgress from state instead of fetching again
+      const existingProgress = mathProgress.find(p =>
         p.question === currentQuestion.question &&
         p.category === currentQuestion.category
       );
@@ -620,10 +618,23 @@ ${question} = ${correctAnswer}
         });
       }
 
+      // Reload user data and progress after update
       const latestUserData = await base44.auth.me();
       setUserData(latestUserData);
-      const latestProgress = await base44.entities.MathProgress.filter({ student_email: userData.email });
-      setMathProgress(latestProgress);
+      
+      // Only reload progress if we created/updated it
+      if (existingProgress) {
+        // Update the existing progress in state
+        setMathProgress(prev => prev.map(p => 
+          p.id === existingProgress.id 
+            ? { ...p, correct_streak: isCorrect ? p.correct_streak + 1 : 0, total_attempts: p.total_attempts + 1, coins_earned: (p.coins_earned || 0) + coinsEarned }
+            : p
+        ));
+      } else {
+        // Add the new progress to state
+        const latestProgress = await base44.entities.MathProgress.filter({ student_email: userData.email });
+        setMathProgress(latestProgress);
+      }
 
       // Auto-continue only for correct answers
       if (isCorrect) {
