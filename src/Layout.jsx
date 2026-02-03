@@ -104,7 +104,21 @@ export default function Layout({ children }) {
       const reward = rewardStreak * 10;
 
       // Update user
-      const newCoins = (user.coins || 0) + reward;
+      const oldCoins = user.coins || 0;
+      const newCoins = oldCoins + reward;
+
+      // Log the coin change
+      try {
+        const { logCoinChange } = await import("./components/utils/coinLogger");
+        await logCoinChange(user.email, oldCoins, newCoins, "בונוס כניסה יומית", {
+          source: 'Layout - Login Streak',
+          streak: newStreak,
+          reward: reward
+        });
+      } catch (logError) {
+        console.error("Error logging login streak coins:", logError);
+      }
+
       await base44.auth.updateMe({
         login_streak: newStreak,
         last_login_date: today,
@@ -185,7 +199,8 @@ export default function Layout({ children }) {
         daysPassed = Math.min(daysPassed, 30); // Cap at 30 days
       }
 
-      let newCoins = user.coins || 0;
+      const oldCoins = user.coins || 0;
+      let newCoins = oldCoins;
       let totalInflationLoss = 0;
       let totalCreditInterest = 0;
       let totalPassiveIncome = 0;
@@ -219,6 +234,37 @@ export default function Layout({ children }) {
             newCoins -= creditInterest;
           }
         }
+      }
+      
+      // Log all daily economy changes
+      try {
+        const { logCoinChange } = await import("./components/utils/coinLogger");
+        
+        if (totalPassiveIncome > 0) {
+          await logCoinChange(user.email, oldCoins, oldCoins + totalPassiveIncome, "הכנסה פסיבית", {
+            source: 'Layout - Daily Economy',
+            days: daysPassed,
+            amount: totalPassiveIncome
+          });
+        }
+        
+        if (totalInflationLoss > 0) {
+          await logCoinChange(user.email, oldCoins + totalPassiveIncome, oldCoins + totalPassiveIncome - totalInflationLoss, "אינפלציה", {
+            source: 'Layout - Daily Economy',
+            days: daysPassed,
+            amount: -totalInflationLoss
+          });
+        }
+        
+        if (totalCreditInterest > 0) {
+          await logCoinChange(user.email, newCoins + totalCreditInterest, newCoins, "ריבית אשראי", {
+            source: 'Layout - Daily Economy',
+            days: daysPassed,
+            amount: -totalCreditInterest
+          });
+        }
+      } catch (logError) {
+        console.error("Error logging daily economy:", logError);
       }
 
       // Calculate new net worth

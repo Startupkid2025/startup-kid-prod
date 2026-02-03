@@ -1,65 +1,51 @@
 import { base44 } from "@/api/base44Client";
+import { logCoinChange as logCoinChangeUtil } from "./coinLogger";
 
 /**
- * Logs coin changes to CoinLog entity
+ * Internal helper to determine reason from patch and log
  */
 async function logCoinChange(studentEmail, oldCoins, newCoins, patch) {
-  try {
-    const amount = newCoins - oldCoins;
-    
-    // Determine reason from patch
-    let reason = "עדכון ידני";
-    
-    if (patch.total_work_earnings !== undefined) {
-      reason = "עבודה";
-    } else if (patch.total_login_streak_coins !== undefined) {
-      reason = "בונוס כניסה יומית";
-    } else if (patch.total_collaboration_coins !== undefined) {
-      reason = "שיתוף פעולה";
-    } else if (patch.total_passive_income !== undefined) {
-      reason = "הכנסה פסיבית";
-    } else if (patch.total_inflation_lost !== undefined) {
-      reason = "אינפלציה";
-    } else if (patch.total_income_tax !== undefined) {
-      reason = "מס הכנסה";
-    } else if (patch.total_credit_interest !== undefined) {
-      reason = "ריבית אשראי";
-    } else if (patch.total_investment_fees !== undefined) {
-      reason = "עמלות השקעות";
-    } else if (patch.total_realized_investment_profit !== undefined) {
-      reason = "רווחי השקעות";
-    } else if (patch.total_math_earnings !== undefined) {
-      reason = "תרגילי חשבון";
-    } else if (patch.investments_value !== undefined) {
-      reason = "רכישה/מכירה של השקעה";
-    } else if (patch.items_value !== undefined) {
-      reason = "רכישה/מכירה של פריט";
-    } else if (amount === 100) {
-      reason = "השתתפות בשיעור";
-    } else if (amount === 20) {
-      reason = "סקר שיעור";
-    } else if (amount === 3) {
-      reason = "לייק/תגובה";
-    } else if (amount === 500) {
-      reason = "תלמיד חדש - מתנת קבלה";
-    }
-
-    await base44.entities.CoinLog.create({
-      student_email: studentEmail,
-      amount: amount,
-      reason: reason,
-      previous_balance: oldCoins,
-      new_balance: newCoins,
-      metadata: {
-        timestamp: new Date().toISOString(),
-        source: 'leaderboardSync'
-      }
-    });
-    
-    console.log(`📝 Logged coin change: ${studentEmail} ${amount > 0 ? '+' : ''}${amount} (${reason})`);
-  } catch (error) {
-    console.error("Error logging coin change:", error);
+  // Determine reason from patch
+  let reason = "עדכון מ-LeaderboardEntry";
+  
+  if (patch.total_work_earnings !== undefined) {
+    reason = "עבודה";
+  } else if (patch.total_login_streak_coins !== undefined) {
+    reason = "בונוס כניסה יומית";
+  } else if (patch.total_collaboration_coins !== undefined) {
+    reason = "שיתוף פעולה";
+  } else if (patch.total_passive_income !== undefined) {
+    reason = "הכנסה פסיבית";
+  } else if (patch.total_inflation_lost !== undefined) {
+    reason = "אינפלציה";
+  } else if (patch.total_income_tax !== undefined) {
+    reason = "מס הכנסה";
+  } else if (patch.total_credit_interest !== undefined) {
+    reason = "ריבית אשראי";
+  } else if (patch.total_investment_fees !== undefined) {
+    reason = "עמלות השקעות";
+  } else if (patch.total_realized_investment_profit !== undefined) {
+    reason = "רווחי השקעות";
+  } else if (patch.total_math_earnings !== undefined) {
+    reason = "תרגילי חשבון";
+  } else if (patch.investments_value !== undefined) {
+    reason = "רכישה/מכירה של השקעה";
+  } else if (patch.items_value !== undefined) {
+    reason = "רכישה/מכירה של פריט";
+  } else if ((newCoins - oldCoins) === 100) {
+    reason = "השתתפות בשיעור";
+  } else if ((newCoins - oldCoins) === 20) {
+    reason = "סקר שיעור";
+  } else if ((newCoins - oldCoins) === 3) {
+    reason = "לייק/תגובה";
+  } else if ((newCoins - oldCoins) === 500) {
+    reason = "תלמיד חדש - מתנת קבלה";
   }
+
+  await logCoinChangeUtil(studentEmail, oldCoins, newCoins, reason, {
+    source: 'leaderboardSync',
+    patch: Object.keys(patch).join(', ')
+  });
 }
 
 /**

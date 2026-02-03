@@ -555,7 +555,21 @@ ${question} = ${correctAnswer}
         // Math king bonus is already included in the daily calculation in Layout
         // No need to add it again here
         
-        const newCoins = (userData.coins || 0) + coinsEarned;
+        const oldCoins = userData.coins || 0;
+        const newCoins = oldCoins + coinsEarned;
+        
+        // Log the coin change
+        try {
+          const { logCoinChange } = await import('../components/utils/coinLogger');
+          await logCoinChange(userData.email, oldCoins, newCoins, "תרגיל חשבון נכון", {
+            source: 'MathGames',
+            question: currentQuestion.question,
+            coinsEarned: coinsEarned
+          });
+        } catch (logError) {
+          console.error("Error logging math coins:", logError);
+        }
+        
         await base44.auth.updateMe({
           coins: newCoins,
           daily_math_count: (userData.daily_math_count || 0) + 1,
