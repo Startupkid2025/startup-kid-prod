@@ -351,7 +351,7 @@ export default function Leaderboard() {
 
   useEffect(() => {
     loadData();
-  }, [currentPage, searchTerm]); // Reload when page or search changes
+  }, []); // Load once on mount
 
   useEffect(() => {
     // Calculate time until season end (31.03.2026)
@@ -408,9 +408,9 @@ export default function Leaderboard() {
       const user = await base44.auth.me();
       setCurrentUser(user);
 
-      // Use cache for leaderboard data
+      // Use cache for leaderboard data with longer timeout
       const cacheKey = 'leaderboard_all_entries';
-      const cacheTimeout = 30000; // 30 seconds
+      const cacheTimeout = 60000; // 60 seconds
       const cachedData = sessionStorage.getItem(cacheKey);
       const cachedTime = sessionStorage.getItem(cacheKey + '_time');
       
@@ -418,15 +418,30 @@ export default function Leaderboard() {
       
       if (cachedData && cachedTime && (Date.now() - parseInt(cachedTime)) < cacheTimeout) {
         allEntries = JSON.parse(cachedData);
+        console.log("📦 Using cached leaderboard data");
       } else {
-        // Fetch ALL LeaderboardEntry records with pagination and sort by total_networth
-        allEntries = await listAll(base44.entities.LeaderboardEntry, "-total_networth", 100);
+        // Fetch with limit instead of pagination - much faster and less requests
+        allEntries = await base44.entities.LeaderboardEntry.list("-total_networth", 200);
         sessionStorage.setItem(cacheKey, JSON.stringify(allEntries));
         sessionStorage.setItem(cacheKey + '_time', Date.now().toString());
+        console.log("🔄 Fetched fresh leaderboard data");
       }
       
-      // Fetch all groups to map students to their groups
-      const allGroups = await base44.entities.Group.list();
+      // Use cache for groups too
+      const groupsCacheKey = 'leaderboard_groups';
+      const cachedGroups = sessionStorage.getItem(groupsCacheKey);
+      const cachedGroupsTime = sessionStorage.getItem(groupsCacheKey + '_time');
+      
+      let allGroups = [];
+      
+      if (cachedGroups && cachedGroupsTime && (Date.now() - parseInt(cachedGroupsTime)) < cacheTimeout) {
+        allGroups = JSON.parse(cachedGroups);
+        console.log("📦 Using cached groups data");
+      } else {
+        allGroups = await base44.entities.Group.list();
+        sessionStorage.setItem(groupsCacheKey, JSON.stringify(allGroups));
+        sessionStorage.setItem(groupsCacheKey + '_time', Date.now().toString());
+      }
 
       // Filter out DEMO and PARENT users
       const filteredEntries = allEntries.filter(entry => 
@@ -578,7 +593,9 @@ export default function Leaderboard() {
         toast.success(`🎉 שיתוף פעולה הדדי! ${targetUser.full_name} ואתה קיבלתם 25 סטארטקוין כל אחד! 💰✨`);
       }
 
-      // Reload data to reflect changes
+      // Clear cache and reload data to reflect changes
+      sessionStorage.removeItem('leaderboard_all_entries');
+      sessionStorage.removeItem('leaderboard_all_entries_time');
       loadData();
     } catch (error) {
       console.error("Error collaborating:", error);
