@@ -323,11 +323,26 @@ export default function Investments() {
         last_updated_date_key: getDateKeyJerusalem(0)
       });
 
-      const newCoinsBalance = userData.coins - amount;
+      const oldCoins = userData.coins;
+      const newCoinsBalance = oldCoins - amount;
       
       // Calculate investments_value from local state (avoid extra API call)
       const newInvestments = [...investments, createdInvestment];
       const investmentsValue = newInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+
+      // Log coin change
+      try {
+        const { logCoinChange } = await import("../components/utils/coinLogger");
+        await logCoinChange(userData.email, oldCoins, newCoinsBalance, "רכישת השקעה", {
+          source: 'Investments',
+          business: business.name,
+          invested_amount: actualInvestment,
+          fee: TRANSACTION_FEE,
+          total_cost: amount
+        });
+      } catch (logError) {
+        console.error("Error logging investment purchase:", logError);
+      }
 
       await base44.auth.updateMe({
         coins: newCoinsBalance,
@@ -496,7 +511,26 @@ export default function Investments() {
       }
 
       const netAmount = amountAfterFee - capitalGainsTax + kingBonus;
-      const newCoins = userData.coins + Math.round(netAmount);
+      const oldCoins = userData.coins;
+      const newCoins = oldCoins + Math.round(netAmount);
+      
+      // Log coin change
+      try {
+        const { logCoinChange } = await import("../components/utils/coinLogger");
+        const business = BUSINESSES.find(b => b.id === businessId);
+        await logCoinChange(userData.email, oldCoins, newCoins, "מכירת השקעה", {
+          source: 'Investments',
+          business: business?.name,
+          sold_for: sellAmount,
+          profit: investmentProfit,
+          taxes: Math.round(capitalGainsTax),
+          fee: TRANSACTION_FEE,
+          king_bonus: kingBonus,
+          net_cash: Math.round(netAmount)
+        });
+      } catch (logError) {
+        console.error("Error logging investment sale:", logError);
+      }
       const newCapitalGainsTax = (userData.total_capital_gains_tax || 0) + Math.round(capitalGainsTax);
       const newRealizedProfit = (userData.total_realized_investment_profit || 0) + Math.round(investmentProfit);
       const newTotalFees = (userData.total_investment_fees || 0) + TRANSACTION_FEE;
