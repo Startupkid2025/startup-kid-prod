@@ -79,6 +79,28 @@ export default function Layout({ children }) {
         // Already logged in today
         return;
       }
+      
+      // First time login - initialize without showing dialog
+      if (!lastLogin) {
+        await base44.auth.updateMe({
+          login_streak: 1,
+          last_login_date: today,
+          total_login_streak_coins: 10
+        });
+        
+        // Sync to LeaderboardEntry
+        try {
+          const { syncLeaderboardEntry } = await import("./components/utils/leaderboardSync");
+          await syncLeaderboardEntry(user.email, {
+            login_streak: 1,
+            last_login_date: today,
+            total_login_streak_coins: 10
+          });
+        } catch (syncError) {
+          console.error("Error syncing first login:", syncError);
+        }
+        return;
+      }
 
       // Calculate yesterday in Jerusalem timezone
       const todayParts = today.split("-").map(Number);
