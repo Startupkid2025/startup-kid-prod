@@ -53,17 +53,21 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
     }
 
     try {
+      console.log("Starting handleConfirmDetails...");
       const user = await base44.auth.me();
+      console.log("Got user:", user.email);
       
       // Add user to group's student_emails
       const currentStudents = selectedGroup.student_emails || [];
       if (!currentStudents.includes(user.email)) {
+        console.log("Adding user to group...");
         await base44.entities.Group.update(selectedGroup.id, {
           student_emails: [...currentStudents, user.email]
         });
       }
 
       // Mark that user has selected a group and save name
+      console.log("Updating user profile...");
       await base44.auth.updateMe({
         has_selected_group: true,
         user_type: "student",
@@ -72,13 +76,15 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
         full_name: `${firstName.trim()} ${lastName.trim()}`
       });
 
+      console.log("Profile updated, showing success...");
       toast.success(`הצטרפת לקבוצה ${selectedGroup.group_name}! 🎉`);
       
       // Show egg hatching animation
+      console.log("Showing egg hatching...");
       setShowEggHatching(true);
     } catch (error) {
       console.error("Error joining group:", error);
-      toast.error("שגיאה בהצטרפות לקבוצה");
+      toast.error(`שגיאה בהצטרפות לקבוצה: ${error.message}`);
     }
   };
 
@@ -94,6 +100,7 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
     }
 
     try {
+      console.log("Starting handleConfirmDemoDetails...");
       await base44.auth.updateMe({
         has_selected_group: true,
         user_type: "demo",
@@ -102,13 +109,15 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
         full_name: `${firstName.trim()} ${lastName.trim()}`
       });
 
+      console.log("Demo profile updated, showing success...");
       toast.info("נרשמת כמשתמש דמו - תוכל לשחק באופן חופשי! 🎮");
       
       // Show egg hatching animation
+      console.log("Showing egg hatching...");
       setShowEggHatching(true);
     } catch (error) {
       console.error("Error setting demo mode:", error);
-      toast.error("שגיאה בהגדרת מצב דמו");
+      toast.error(`שגיאה בהגדרת מצב דמו: ${error.message}`);
     }
   };
 
