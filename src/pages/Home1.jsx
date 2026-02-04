@@ -541,6 +541,8 @@ export default function Home() {
     return inflationLoss + incomeTax + creditInterest;
   };
 
+  const expectedDailyLoss = userData ? calculateExpectedDailyLoss() : 0;
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -554,8 +556,6 @@ export default function Home() {
       </div>
     );
   }
-
-  const expectedDailyLoss = calculateExpectedDailyLoss();
 
   return (
     <div className="px-4 py-8 pb-24 max-w-6xl mx-auto space-y-8">
