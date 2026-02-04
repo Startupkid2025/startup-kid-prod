@@ -54,6 +54,15 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
 
     try {
       console.log("Starting handleConfirmDetails...");
+      
+      // Check if user is authenticated
+      const isAuth = await base44.auth.isAuthenticated();
+      if (!isAuth) {
+        toast.error("יש להתחבר תחילה");
+        await base44.auth.redirectToLogin();
+        return;
+      }
+      
       const user = await base44.auth.me();
       console.log("Got user:", user.email);
       
@@ -101,6 +110,15 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
 
     try {
       console.log("Starting handleConfirmDemoDetails...");
+      
+      // Check if user is authenticated
+      const isAuth = await base44.auth.isAuthenticated();
+      if (!isAuth) {
+        toast.error("יש להתחבר תחילה");
+        await base44.auth.redirectToLogin();
+        return;
+      }
+      
       await base44.auth.updateMe({
         has_selected_group: true,
         user_type: "demo",
