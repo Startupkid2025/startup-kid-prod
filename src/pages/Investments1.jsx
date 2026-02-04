@@ -336,6 +336,9 @@ export default function Investments() {
       const newInvestments = [...investments, createdInvestment];
       const investmentsValue = newInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
 
+      // Update net worth BEFORE logging
+      const newNetWorth = await updateNetWorth(userData.email);
+      
       // Log coin change
       try {
         const { logCoinChange } = await import("../components/utils/coinLogger");
@@ -370,9 +373,6 @@ export default function Investments() {
         total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE,
         investments_value: investmentsValue
       });
-
-      // Update net worth
-      const newNetWorth = await updateNetWorth(userData.email);
 
       // Sync to LeaderboardEntry for public visibility
       await syncLeaderboardEntry(userData.email, {
@@ -544,6 +544,9 @@ export default function Investments() {
       const oldCoins = userData.coins;
       const newCoins = oldCoins + Math.round(netAmount);
       
+      // Update net worth BEFORE logging
+      const newNetWorth = await updateNetWorth(userData.email);
+      
       // Log coin change
       try {
         const { logCoinChange } = await import("../components/utils/coinLogger");
@@ -594,9 +597,6 @@ export default function Investments() {
         total_realized_investment_profit: newRealizedProfit,
         investments_value: investmentsValue
       });
-
-      // Update net worth
-      const newNetWorth = await updateNetWorth(userData.email);
 
       // Sync to LeaderboardEntry for public visibility
       await syncLeaderboardEntry(userData.email, {

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Check, X, Trophy, Coins, Calculator, Star, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
 
 const MAX_DAILY_EXERCISES = 30;
 const MATH_COINS_PER_CORRECT_ANSWER = 5; // Coins per correct answer
@@ -561,10 +562,36 @@ ${question} = ${correctAnswer}
         // Log the coin change
         try {
           const { logCoinChange } = await import('../components/utils/coinLogger');
+          
+          const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
+          const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+          
+          const purchasedItems = userData.purchased_items || [];
+          let itemsValue = 0;
+          purchasedItems.forEach(itemId => {
+            const item = AVATAR_ITEMS[itemId];
+            if (item) itemsValue += item.price || 0;
+          });
+          
+          const userNetworth = newCoins + itemsValue + investmentsValue;
+          
+          let leaderboardNetworth = 0;
+          try {
+            const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+            if (leaderboardEntries.length > 0) {
+              leaderboardNetworth = leaderboardEntries[0].total_networth || 0;
+            }
+          } catch (err) {
+            console.error("Error fetching leaderboard:", err);
+          }
+          
           await logCoinChange(userData.email, oldCoins, newCoins, "תרגיל חשבון נכון", {
             source: 'MathGames',
             question: currentQuestion.question,
-            coinsEarned: coinsEarned
+            coinsEarned: coinsEarned,
+            investments_value: investmentsValue,
+            user_networth: userNetworth,
+            leaderboard_networth: leaderboardNetworth
           });
         } catch (logError) {
           console.error("Error logging math coins:", logError);
