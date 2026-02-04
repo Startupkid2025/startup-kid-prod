@@ -6,9 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Edit2, Save, LogOut, Coins } from "lucide-react";
+import { Edit2, Save, LogOut, Coins, Trash2 } from "lucide-react";
 import MissionsCard from "../components/profile/MissionsCard";
 import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export default function Profile() {
   const [userData, setUserData] = useState(null);
@@ -20,6 +28,9 @@ export default function Profile() {
     phone_number: ""
   });
   const [actualLessonsCount, setActualLessonsCount] = useState(0);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -110,6 +121,74 @@ export default function Profile() {
 
   const handleLogout = async () => {
     await base44.auth.logout();
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "STARTUPKID") {
+      toast.error("יש לכתוב STARTUPKID בדיוק כדי לאשר מחיקה");
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const userEmail = userData.email;
+
+      // Delete all user-related data
+      const entitiesToDelete = [
+        'CoinLog',
+        'WordProgress',
+        'MathProgress',
+        'LessonParticipation',
+        'QuizProgress',
+        'Investment',
+        'Post',
+        'LeaderboardEntry'
+      ];
+
+      for (const entityName of entitiesToDelete) {
+        try {
+          const records = await base44.entities[entityName].filter({ student_email: userEmail });
+          for (const record of records) {
+            await base44.entities[entityName].delete(record.id);
+          }
+        } catch (err) {
+          console.error(`Error deleting ${entityName}:`, err);
+        }
+      }
+
+      // Delete posts by author_email
+      try {
+        const posts = await base44.entities.Post.filter({ author_email: userEmail });
+        for (const post of posts) {
+          await base44.entities.Post.delete(post.id);
+        }
+      } catch (err) {
+        console.error("Error deleting posts:", err);
+      }
+
+      // Remove from groups
+      try {
+        const groups = await base44.entities.Group.list();
+        for (const group of groups) {
+          if (group.student_emails && group.student_emails.includes(userEmail)) {
+            await base44.entities.Group.update(group.id, {
+              student_emails: group.student_emails.filter(email => email !== userEmail)
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Error removing from groups:", err);
+      }
+
+      toast.success("החשבון נמחק בהצלחה");
+      
+      // Logout and redirect
+      await base44.auth.logout();
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast.error("שגיאה במחיקת החשבון");
+      setIsDeleting(false);
+    }
   };
 
   const handleCompleteTask = async (taskId) => {
@@ -354,12 +433,84 @@ export default function Profile() {
         <Button
           onClick={handleLogout}
           variant="outline"
-          className="w-full bg-white/10 hover:bg-white/20 border-white/20 text-white"
+          className="w-full bg-white/10 hover:bg-white/20 border-white/20 text-white mb-4"
         >
           <LogOut className="w-5 h-5 ml-2" />
           התנתק
         </Button>
+
+        {/* Delete Account Button */}
+        <Button
+          onClick={() => setShowDeleteDialog(true)}
+          variant="outline"
+          className="w-full bg-red-500/20 hover:bg-red-500/30 border-red-500/50 text-red-200"
+        >
+          <Trash2 className="w-5 h-5 ml-2" />
+          מחק חשבון לצמיתות
+        </Button>
       </motion.div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="bg-gradient-to-br from-red-900 to-red-950 border-2 border-red-500/50">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-white text-center">
+              ⚠️ אזהרה - מחיקת חשבון
+            </DialogTitle>
+            <DialogDescription className="text-red-200 text-center text-base">
+              פעולה זו תמחק את כל הנתונים שלך לצמיתות ולא ניתן לשחזרם!
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            <div className="bg-red-950/50 rounded-lg p-4 space-y-2 text-red-200">
+              <p className="font-bold">מה יימחק:</p>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>כל המטבעות וההשקעות שלך</li>
+                <li>כל התקדמות הלמידה (אנגלית, חשבון)</li>
+                <li>ההיסטוריה של השיעורים</li>
+                <li>הפוסטים והתגובות שלך</li>
+                <li>הסטארטאמון והאביזרים שלך</li>
+                <li>כל הנתונים האישיים</li>
+              </ul>
+            </div>
+
+            <div>
+              <Label className="text-white font-bold mb-2 block">
+                כתוב <span className="text-yellow-300">STARTUPKID</span> כדי לאשר:
+              </Label>
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="STARTUPKID"
+                className="bg-white/10 border-red-500/50 text-white placeholder:text-white/50"
+                disabled={isDeleting}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => {
+                  setShowDeleteDialog(false);
+                  setDeleteConfirmText("");
+                }}
+                variant="outline"
+                className="flex-1 bg-white/10 hover:bg-white/20 border-white/30 text-white"
+                disabled={isDeleting}
+              >
+                ביטול
+              </Button>
+              <Button
+                onClick={handleDeleteAccount}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                disabled={deleteConfirmText !== "STARTUPKID" || isDeleting}
+              >
+                {isDeleting ? "מוחק..." : "מחק את החשבון שלי"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
