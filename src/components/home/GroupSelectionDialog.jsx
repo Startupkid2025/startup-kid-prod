@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -166,9 +167,9 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
             <DialogTitle className="text-3xl font-black text-white text-center mb-2">
               בוא נכיר! 👋
             </DialogTitle>
-            <p className="text-white/90 text-center text-lg">
+            <DialogDescription className="text-white/90 text-center text-lg">
               איך קוראים לך?
-            </p>
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-6">
@@ -231,9 +232,9 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
             <DialogTitle className="text-3xl font-black text-white text-center mb-2">
               ברוך הבא לסטארטאפ קיד! 🚀
             </DialogTitle>
-            <p className="text-white/90 text-center text-lg">
+            <DialogDescription className="text-white/90 text-center text-lg">
               באיזו קבוצה אתה לומד?
-            </p>
+            </DialogDescription>
           </DialogHeader>
 
         <div className="space-y-4 py-6">
