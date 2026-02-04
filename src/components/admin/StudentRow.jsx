@@ -71,6 +71,7 @@ export default function StudentRow({
     total_work_hours: student.total_work_hours || 0
   });
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const getParticipationForLesson = (lessonId) => {
     return participations.find(
@@ -252,6 +253,7 @@ export default function StudentRow({
 
   // Handle deleting user
   const handleDeleteUser = async () => {
+    setIsDeleting(true);
     try {
       // Delete all user's participations
       const userParticipations = participations.filter(p => p.student_email === student.email);
@@ -335,6 +337,8 @@ export default function StudentRow({
     } catch (error) {
       console.error("Error deleting user:", error);
       toast.error("שגיאה במחיקת המשתמש");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -1236,15 +1240,17 @@ export default function StudentRow({
               onClick={() => setShowDeleteDialog(false)}
               variant="outline"
               className="bg-white/20 border-white/30 hover:bg-white/30 text-white"
+              disabled={isDeleting}
             >
               ביטול
             </Button>
             <Button
               onClick={handleDeleteUser}
               className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={isDeleting}
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              מחק לצמיתות
+              {isDeleting ? "מוחק..." : "מחק לצמיתות"}
             </Button>
           </div>
         </DialogContent>
