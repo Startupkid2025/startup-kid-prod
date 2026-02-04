@@ -608,16 +608,6 @@ export default function Leaderboard() {
     return Math.round((value / firstPlaceValue) * 100);
   };
 
-  const handleStudentClick = async (student) => {
-    try {
-      setSelectedStudent(student);
-      setShowProfileDialog(true);
-    } catch (error) {
-      console.error("Error fetching student details:", error);
-      toast.error("שגיאה בטעינת פרטי התלמיד");
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -631,6 +621,16 @@ export default function Leaderboard() {
       </div>
     );
   }
+
+  const handleStudentClick = async (student) => {
+    try {
+      setSelectedStudent(student);
+      setShowProfileDialog(true);
+    } catch (error) {
+      console.error("Error fetching student details:", error);
+      toast.error("שגיאה בטעינת פרטי התלמיד");
+    }
+  };
 
   return (
     <TooltipProvider>
