@@ -568,6 +568,9 @@ export default function Home() {
         <h1 className="text-3xl font-black text-white">
           שלום {userData?.first_name || userData?.full_name?.split(' ')[0] || 'חבר'}! 👋
         </h1>
+        <p className="text-xl font-bold text-white/90 mt-2">
+          ברוכים הבאים לסטארטאפ קיד! 🚀
+        </p>
       </motion.div>
 
       {/* First Row - Coins and Net Worth */}
