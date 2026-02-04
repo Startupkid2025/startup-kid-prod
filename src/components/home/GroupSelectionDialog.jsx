@@ -144,6 +144,10 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
     return (
       <Dialog open={isOpen} onOpenChange={() => {}}>
         <DialogContent className="bg-gradient-to-br from-purple-600 to-pink-600 border-2 border-white/20 max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="sr-only">טוען</DialogTitle>
+            <DialogDescription className="sr-only">טוען קבוצות...</DialogDescription>
+          </DialogHeader>
           <div className="text-center py-8">
             <motion.div
               className="text-4xl mb-4"
