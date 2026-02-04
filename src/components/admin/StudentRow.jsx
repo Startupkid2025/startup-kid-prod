@@ -178,7 +178,6 @@ export default function StudentRow({
     try {
       // Log the coin change
       try {
-        const { logCoinChange } = await import("../utils/coinLogger");
         await logCoinChange(student.email, oldCoins, newCoins, coinsReason || "עדכון ידני", {
           source: 'Admin - Manual Adjustment',
           admin_reason: coinsReason
