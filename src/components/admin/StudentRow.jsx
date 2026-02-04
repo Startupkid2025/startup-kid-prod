@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { syncLeaderboardEntry } from "../utils/leaderboardSync";
+import { logCoinChange } from "../utils/coinLogger";
 
 export default function StudentRow({ 
   student, 
