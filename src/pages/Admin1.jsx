@@ -1254,6 +1254,20 @@ export default function Admin() {
     );
   }, [students, filterUserType, filterGroup, searchTerm, filterRecommendation, filterDuplicates, studentSortBy, currentPage, selectedStudents, participations, lessons, groups, scheduledLessons, wordProgress, mathProgress, quizProgress, investments]);
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <motion.div
+          className="text-4xl"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        >
+          ⚙️
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="px-4 py-8 max-w-6xl mx-auto">
       <motion.div
