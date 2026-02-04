@@ -233,6 +233,14 @@ export default function Layout({ children }) {
     try {
       const today = new Date().toISOString().split('T')[0];
       const lastTaxDate = user.last_tax_date;
+      
+      // First time - initialize without applying economy
+      if (!lastTaxDate) {
+        await base44.auth.updateMe({
+          last_tax_date: today
+        });
+        return;
+      }
 
       // If already processed today, skip
       if (lastTaxDate === today) {
