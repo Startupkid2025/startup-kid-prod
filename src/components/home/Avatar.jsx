@@ -477,16 +477,19 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
 
     const newCoins = (user.coins || 0) - foodCost;
     const newHunger = Math.max(0, hunger - 50);
+    const totalFoodExpense = (user.total_food_expense || 0) + foodCost;
 
     await base44.auth.updateMe({
       coins: newCoins,
-      hunger: newHunger
+      hunger: newHunger,
+      total_food_expense: totalFoodExpense
     });
 
     const newNetWorth = await updateNetWorth(user.email);
     await syncLeaderboardEntry(user.email, {
       coins: newCoins,
-      total_networth: newNetWorth
+      total_networth: newNetWorth,
+      total_food_expense: totalFoodExpense
     });
 
     setHunger(newHunger);
