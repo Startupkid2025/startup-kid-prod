@@ -381,17 +381,17 @@ export default function Layout({ children }) {
 
 
   const navItems = [
-    { name: "בית", path: createPageUrl("Home1"), icon: Home, roles: ["user", "admin"] },
+    { name: "בית", path: createPageUrl("Home1"), icon: Home, roles: ["user", "admin", "parent", "demo"] },
     { name: "שיעורים", path: createPageUrl("Lessons1"), icon: BookOpen, roles: ["user", "admin"] },
     { name: "אנגלית", path: createPageUrl("Vocabulary1"), icon: () => (
       <div className="font-bold text-base">ABC</div>
-    ), roles: ["user", "admin"] },
+    ), roles: ["user", "admin", "demo"] },
     { name: "חשבון", path: createPageUrl("MathGames1"), icon: () => (
       <div className="font-bold text-base">123</div>
-    ), roles: ["user", "admin"] },
-    { name: "השקעות", path: createPageUrl("Investments1"), icon: TrendingUp, roles: ["user", "admin"] },
-    { name: "שיאים", path: createPageUrl("Leaderboard1"), icon: Trophy, roles: ["user", "admin", "parent"] },
-    { name: "פרופיל", path: createPageUrl("Profile1"), icon: User, roles: ["user", "admin", "parent"] },
+    ), roles: ["user", "admin", "demo"] },
+    { name: "השקעות", path: createPageUrl("Investments1"), icon: TrendingUp, roles: ["user", "admin", "demo"] },
+    { name: "שיאים", path: createPageUrl("Leaderboard1"), icon: Trophy, roles: ["user", "admin", "parent", "demo"] },
+    { name: "פרופיל", path: createPageUrl("Profile1"), icon: User, roles: ["user", "admin", "parent", "demo"] },
     { name: "ניהול", path: createPageUrl("Admin1"), icon: Shield, roles: ["admin"] }
   ];
 
