@@ -1055,20 +1055,6 @@ export default function Admin() {
 
 
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <motion.div
-          className="text-4xl"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        >
-          ⚙️
-        </motion.div>
-      </div>
-    );
-  }
-
   const totalParticipations = participations.length;
 
   // Memoized student list calculation (MUST be top-level)
