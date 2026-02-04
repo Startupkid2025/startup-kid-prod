@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar, Clock } from "lucide-react"; // Removed Users import as it's no longer used
 import { toast } from "sonner";
+import EggHatchingIntro from "./EggHatchingIntro";
 
 export default function GroupSelectionDialog({ isOpen, onComplete }) {
   const [groups, setGroups] = useState([]);
@@ -19,6 +20,7 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
   const [showNameInput, setShowNameInput] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [showEggHatching, setShowEggHatching] = useState(false);
 
   const dayNames = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
@@ -71,7 +73,9 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
       });
 
       toast.success(`הצטרפת לקבוצה ${selectedGroup.group_name}! 🎉`);
-      onComplete();
+      
+      // Show egg hatching animation
+      setShowEggHatching(true);
     } catch (error) {
       console.error("Error joining group:", error);
       toast.error("שגיאה בהצטרפות לקבוצה");
@@ -99,7 +103,9 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
       });
 
       toast.info("נרשמת כמשתמש דמו - תוכל לשחק באופן חופשי! 🎮");
-      onComplete();
+      
+      // Show egg hatching animation
+      setShowEggHatching(true);
     } catch (error) {
       console.error("Error setting demo mode:", error);
       toast.error("שגיאה בהגדרת מצב דמו");
@@ -186,16 +192,22 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="bg-gradient-to-br from-purple-600 to-pink-600 border-2 border-white/20 max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-3xl font-black text-white text-center mb-2">
-            ברוך הבא לסטארטאפ קיד! 🚀
-          </DialogTitle>
-          <p className="text-white/90 text-center text-lg">
-            באיזו קבוצה אתה לומד?
-          </p>
-        </DialogHeader>
+    <>
+      <EggHatchingIntro 
+        isOpen={showEggHatching} 
+        onComplete={onComplete}
+      />
+      
+      <Dialog open={isOpen && !showEggHatching} onOpenChange={() => {}}>
+        <DialogContent className="bg-gradient-to-br from-purple-600 to-pink-600 border-2 border-white/20 max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-3xl font-black text-white text-center mb-2">
+              ברוך הבא לסטארטאפ קיד! 🚀
+            </DialogTitle>
+            <p className="text-white/90 text-center text-lg">
+              באיזו קבוצה אתה לומד?
+            </p>
+          </DialogHeader>
 
         <div className="space-y-4 py-6">
           {groups.map((group) => (
@@ -256,5 +268,6 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
