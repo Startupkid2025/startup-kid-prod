@@ -180,6 +180,16 @@ export default function Profile() {
         console.error("Error removing from groups:", err);
       }
 
+      // Delete the User entity itself
+      try {
+        const users = await base44.entities.User.filter({ email: userEmail });
+        if (users.length > 0) {
+          await base44.entities.User.delete(users[0].id);
+        }
+      } catch (err) {
+        console.error("Error deleting user:", err);
+      }
+
       toast.success("החשבון נמחק בהצלחה");
       
       // Logout and redirect
