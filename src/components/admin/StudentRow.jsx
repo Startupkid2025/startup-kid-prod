@@ -329,7 +329,14 @@ export default function StudentRow({
       }
 
       // Finally, delete the user
-      await base44.entities.User.delete(student.id);
+      try {
+        await base44.entities.User.delete(student.id);
+      } catch (deleteErr) {
+        // Ignore 404 - user already deleted
+        if (deleteErr.message && !deleteErr.message.includes('not found') && !deleteErr.message.includes('404')) {
+          throw deleteErr;
+        }
+      }
 
       toast.success(`${student.full_name} נמחק בהצלחה`);
       setShowDeleteDialog(false);
