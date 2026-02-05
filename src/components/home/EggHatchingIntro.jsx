@@ -10,11 +10,18 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
 export default function EggHatchingIntro({ isOpen, onComplete }) {
-  const [stage, setStage] = useState("nameSelection"); // Skip video for now
+  const [stage, setStage] = useState("video");
   const [avatarName, setAvatarName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   const handleVideoEnd = () => {
+    console.log("Video ended, moving to name selection");
+    setStage("nameSelection");
+  };
+
+  const handleVideoError = (e) => {
+    console.error("Video error:", e);
+    console.log("Skipping to name selection due to video error");
     setStage("nameSelection");
   };
 
@@ -55,8 +62,12 @@ export default function EggHatchingIntro({ isOpen, onComplete }) {
               <video
                 src="/Startamons/Startamon1/egg.mp4"
                 autoPlay
+                muted
                 playsInline
                 onEnded={handleVideoEnd}
+                onError={handleVideoError}
+                onLoadStart={() => console.log("Video loading started")}
+                onLoadedData={() => console.log("Video data loaded")}
                 className="w-full h-auto"
                 style={{ maxHeight: "80vh" }}
               />
