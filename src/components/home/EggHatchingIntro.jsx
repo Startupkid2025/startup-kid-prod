@@ -14,6 +14,18 @@ export default function EggHatchingIntro({ isOpen, onComplete }) {
   const [avatarName, setAvatarName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    
+    // Fallback: if video doesn't start in 2 seconds, skip to name selection
+    const timer = setTimeout(() => {
+      console.log("Video timeout - skipping to name selection");
+      setStage("nameSelection");
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [isOpen]);
+
   const handleVideoEnd = () => {
     console.log("Video ended, moving to name selection");
     setStage("nameSelection");
