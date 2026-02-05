@@ -25,173 +25,38 @@ export default function Layout({ children }) {
   const [loginRewardData, setLoginRewardData] = React.useState(null);
 
   React.useEffect(() => {
-    checkMaintenanceMode();
-    loadUser();
-    updateLoginStreak();
+    initializeApp();
   }, []); // Only run once on mount
 
-  const checkMaintenanceMode = async () => {
+  const initializeApp = async () => {
     try {
-      const modes = await base44.entities.MaintenanceMode.list();
-      if (modes.length > 0) {
-        setMaintenanceMode(modes[0]);
-      } else {
-        // Create default entry
-        const newMode = await base44.entities.MaintenanceMode.create({
-          is_active: false,
-          message: "האפליקציה במצב תחזוקה. נחזור בקרוב!"
-        });
-        setMaintenanceMode(newMode);
+      // Step 1: Check maintenance mode
+      try {
+        const modes = await base44.entities.MaintenanceMode.list();
+        if (modes.length > 0) {
+          setMaintenanceMode(modes[0]);
+        } else {
+          const newMode = await base44.entities.MaintenanceMode.create({
+            is_active: false,
+            message: "האפליקציה במצב תחזוקה. נחזור בקרוב!"
+          });
+          setMaintenanceMode(newMode);
+        }
+      } catch (error) {
+        console.error("Error loading maintenance mode:", error);
+      } finally {
+        setIsLoadingMaintenance(false);
       }
+
+      // Step 2: Load user and update login streak in one go
+      await loadUserAndUpdateStreak();
     } catch (error) {
-      console.error("Error loading maintenance mode:", error);
-    } finally {
+      console.error("Error initializing app:", error);
       setIsLoadingMaintenance(false);
     }
   };
 
-  const updateLoginStreak = async () => {
-    try {
-      let user = await base44.auth.me();
-      if (!user) return;
-
-      // Initialize new user with starting coins FIRST
-      if (user.coins === undefined || user.coins === null) {
-        await base44.auth.updateMe({
-          coins: 500
-        });
-        user = await base44.auth.me();
-      }
-
-      // Use Jerusalem timezone for date calculations
-      const DATE_TZ = "Asia/Jerusalem";
-      const fmtIL = new Intl.DateTimeFormat("en-CA", {
-        timeZone: DATE_TZ,
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      });
-
-      const today = fmtIL.format(new Date());
-      const lastLogin = user.last_login_date;
-
-      if (lastLogin === today) {
-        // Already logged in today
-        return;
-      }
-      
-      // First time login - initialize without showing dialog
-      if (!lastLogin) {
-        await base44.auth.updateMe({
-          login_streak: 1,
-          last_login_date: today,
-          total_login_streak_coins: 10
-        });
-        
-        // Sync to LeaderboardEntry
-        try {
-          const { syncLeaderboardEntry } = await import("./components/utils/leaderboardSync");
-          await syncLeaderboardEntry(user.email, {
-            login_streak: 1,
-            last_login_date: today,
-            total_login_streak_coins: 10
-          });
-        } catch (syncError) {
-          console.error("Error syncing first login:", syncError);
-        }
-        return;
-      }
-
-      // Calculate yesterday in Jerusalem timezone
-      const todayParts = today.split("-").map(Number);
-      const yesterdayDate = new Date(Date.UTC(todayParts[0], todayParts[1] - 1, todayParts[2] - 1));
-      const yesterdayStr = fmtIL.format(yesterdayDate);
-
-      let newStreak = 1;
-      let isNewStreak = true;
-
-      if (lastLogin === yesterdayStr) {
-        // Continuing streak
-        newStreak = (user.login_streak || 0) + 1;
-        isNewStreak = false;
-      }
-
-      // Calculate reward (capped at 10 days)
-      const rewardStreak = Math.min(newStreak, 10);
-      const reward = rewardStreak * 10;
-
-      // Update user
-      const oldCoins = user.coins || 0;
-      const newCoins = oldCoins + reward;
-
-      // Log the coin change
-      try {
-        const { logCoinChange } = await import("./components/utils/coinLogger");
-        
-        // Get investments_value and networth
-        const investmentsValue = user.investments_value || 0;
-        const userNetworth = user.total_networth || 0;
-        
-        // Get leaderboard networth
-        let leaderboardNetworth = 0;
-        try {
-          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: user.email });
-          if (leaderboardEntries.length > 0) {
-            leaderboardNetworth = leaderboardEntries[0].total_networth || 0;
-          }
-        } catch (err) {
-          console.error("Error fetching leaderboard:", err);
-        }
-        
-        await logCoinChange(user.email, oldCoins, newCoins, "בונוס כניסה יומית", {
-          source: 'Layout - Login Streak',
-          streak: newStreak,
-          reward: reward,
-          investments_value: investmentsValue,
-          user_networth: userNetworth,
-          leaderboard_networth: leaderboardNetworth
-        });
-      } catch (logError) {
-        console.error("Error logging login streak coins:", logError);
-      }
-
-      await base44.auth.updateMe({
-        login_streak: newStreak,
-        last_login_date: today,
-        coins: newCoins,
-        total_login_streak_coins: (user.total_login_streak_coins || 0) + reward
-      });
-
-      // Sync to LeaderboardEntry
-      try {
-        const { syncLeaderboardEntry } = await import("./components/utils/leaderboardSync");
-        await syncLeaderboardEntry(user.email, {
-          login_streak: newStreak,
-          last_login_date: today,
-          coins: newCoins,
-          total_login_streak_coins: (user.total_login_streak_coins || 0) + reward
-        });
-      } catch (syncError) {
-        console.error("Error syncing login streak:", syncError);
-      }
-
-      // Show welcome dialog
-      if (reward > 0) {
-        setLoginRewardData({
-          streak: newStreak,
-          reward: reward,
-          isNewStreak: isNewStreak
-        });
-        setShowLoginReward(true);
-      }
-    } catch (error) {
-      console.error("Error updating login streak:", error);
-    }
-  };
-
-
-
-  const loadUser = async () => {
+  const loadUserAndUpdateStreak = async () => {
     try {
       let user = await base44.auth.me();
       
