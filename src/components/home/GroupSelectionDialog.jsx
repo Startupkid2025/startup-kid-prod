@@ -163,6 +163,15 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
     );
   }
 
+  if (showEggHatching) {
+    return (
+      <EggHatchingIntro 
+        isOpen={true} 
+        onComplete={onComplete}
+      />
+    );
+  }
+
   if (showNameInput) {
     return (
       <Dialog open={isOpen} onOpenChange={() => {}}>
@@ -224,13 +233,7 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
   }
 
   return (
-    <>
-      <EggHatchingIntro 
-        isOpen={showEggHatching} 
-        onComplete={onComplete}
-      />
-      
-      <Dialog open={isOpen && !showEggHatching} onOpenChange={() => {}}>
+      <Dialog open={isOpen} onOpenChange={() => {}}>
         <DialogContent className="bg-gradient-to-br from-purple-600 to-pink-600 border-2 border-white/20 max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-3xl font-black text-white text-center mb-2">
@@ -300,6 +303,5 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
         </div>
       </DialogContent>
     </Dialog>
-    </>
   );
 }
