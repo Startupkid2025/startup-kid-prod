@@ -60,7 +60,7 @@ export default function EggHatchingIntro({ isOpen, onComplete }) {
               className="relative"
             >
               <video
-                src="/Startamons/Startamon1/egg.mp4"
+                src="/Startamons/Startamon1/Egg.mp4"
                 autoPlay
                 muted
                 playsInline
