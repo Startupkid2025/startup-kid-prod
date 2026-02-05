@@ -113,8 +113,7 @@ export default function Admin() {
           allScheduledLessons,
           allWordProgress,
           allMathProgress,
-          allQuizProgress,
-          allInvestments
+          allQuizProgress
         ] = await Promise.all([
           retryWithBackoff(() => base44.entities.User.list()),
           retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date")),
@@ -123,8 +122,7 @@ export default function Admin() {
           retryWithBackoff(() => base44.entities.ScheduledLesson.list()),
           retryWithBackoff(() => base44.entities.WordProgress.list()),
           retryWithBackoff(() => base44.entities.MathProgress.list()),
-          retryWithBackoff(() => base44.entities.QuizProgress.list()),
-          retryWithBackoff(() => base44.entities.Investment.list())
+          retryWithBackoff(() => base44.entities.QuizProgress.list())
         ]);
         
         setStudents(allUsers);
@@ -135,7 +133,7 @@ export default function Admin() {
         setWordProgress(allWordProgress);
         setMathProgress(allMathProgress);
         setQuizProgress(allQuizProgress);
-        setInvestments(allInvestments);
+        setInvestments([]);
       } else if (tab === "lessons") {
         const [allLessons, allParticipations, allUsers] = await Promise.all([
           retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date")),
@@ -204,15 +202,13 @@ export default function Admin() {
         allWordProgress,
         allMathProgress,
         allParticipations,
-        allQuizProgress,
-        allInvestments
+        allQuizProgress
       ] = await Promise.all([
         base44.entities.User.list(),
         base44.entities.WordProgress.list(),
         base44.entities.MathProgress.list(),
         base44.entities.LessonParticipation.list(),
-        base44.entities.QuizProgress.list(),
-        base44.entities.Investment.list()
+        base44.entities.QuizProgress.list()
       ]);
 
       const students = allUsers.filter(u => u.user_type === 'student');
@@ -222,7 +218,6 @@ export default function Admin() {
       const mathProgressMap = new Map();
       const participationsMap = new Map();
       const quizProgressMap = new Map();
-      const investmentsMap = new Map();
       
       allWordProgress.forEach(w => {
         if (!wordProgressMap.has(w.student_email)) wordProgressMap.set(w.student_email, []);
@@ -242,11 +237,6 @@ export default function Admin() {
       allQuizProgress.forEach(q => {
         if (!quizProgressMap.has(q.student_email)) quizProgressMap.set(q.student_email, []);
         quizProgressMap.get(q.student_email).push(q);
-      });
-      
-      allInvestments.forEach(inv => {
-        if (!investmentsMap.has(inv.student_email)) investmentsMap.set(inv.student_email, []);
-        investmentsMap.get(inv.student_email).push(inv);
       });
       
       let successCount = 0;
@@ -290,12 +280,9 @@ export default function Admin() {
           const passiveIncomeCoins = user.total_passive_income || 0;
           const adminCoins = user.total_admin_coins || 0;
 
-          const userInvestments = investmentsMap.get(user.email) || [];
-          const totalInvested = userInvestments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
-          const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-          const unrealizedProfit = investmentsValue - totalInvested;
+          // Use pre-calculated investments_value instead of fetching
+          const investmentsValue = user.investments_value || 0;
           const realizedProfit = user.total_realized_investment_profit || 0;
-          const totalInvestmentProfit = unrealizedProfit + realizedProfit;
 
           // Only count REALIZED investment profit, not unrealized (unrealized is in current_value)
           const totalIncome = baseCoins + lessonsCoins + wordCoins + mathCoins + 
@@ -432,15 +419,13 @@ export default function Admin() {
         allWordProgress,
         allMathProgress,
         allParticipations,
-        allQuizProgress,
-        allInvestments
+        allQuizProgress
       ] = await Promise.all([
         base44.entities.User.list(),
         base44.entities.WordProgress.list(),
         base44.entities.MathProgress.list(),
         base44.entities.LessonParticipation.list(),
-        base44.entities.QuizProgress.list(),
-        base44.entities.Investment.list()
+        base44.entities.QuizProgress.list()
       ]);
 
       const students = allUsers.filter(u => u.user_type === 'student');
@@ -678,15 +663,13 @@ export default function Admin() {
         allWordProgress,
         allMathProgress,
         allParticipations,
-        allQuizProgress,
-        allInvestments
+        allQuizProgress
       ] = await Promise.all([
         base44.entities.User.list(),
         base44.entities.WordProgress.list(),
         base44.entities.MathProgress.list(),
         base44.entities.LessonParticipation.list(),
-        base44.entities.QuizProgress.list(),
-        base44.entities.Investment.list()
+        base44.entities.QuizProgress.list()
       ]);
 
       const students = allUsers.filter(u => u.user_type === 'student');
