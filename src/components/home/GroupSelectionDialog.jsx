@@ -22,6 +22,12 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [showEggHatching, setShowEggHatching] = useState(false);
+  
+  const handleEggHatchingComplete = React.useCallback(() => {
+    console.log("Egg hatching completed, calling onComplete");
+    setShowEggHatching(false);
+    onComplete();
+  }, [onComplete]);
 
   const dayNames = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
@@ -167,7 +173,7 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
     return (
       <EggHatchingIntro 
         isOpen={true} 
-        onComplete={onComplete}
+        onComplete={handleEggHatchingComplete}
       />
     );
   }
