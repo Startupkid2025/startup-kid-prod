@@ -59,38 +59,111 @@ export default function Layout({ children }) {
   const loadUserAndUpdateStreak = async () => {
     try {
       let user = await base44.auth.me();
+      if (!user) return;
       
-      // Initialize new user with starting coins BEFORE any other operations
+      // Initialize new user with starting coins FIRST
       if (user.coins === undefined || user.coins === null) {
         await base44.auth.updateMe({
           coins: 500
         });
-        
-        // Reload user data with updated coins
         user = await base44.auth.me();
       }
       
       setCurrentUser(user);
       
-      // Ensure LeaderboardEntry exists for this user
-      try {
-        await syncLeaderboardEntry(user.email, {
-          coins: user.coins || 0,
-          investments_value: user.investments_value || 0,
-          items_value: user.items_value || 0,
-          login_streak: user.login_streak || 0,
-          last_login_date: user.last_login_date || null
-        });
-      } catch (syncError) {
-        console.error("Error syncing leaderboard on load:", syncError);
+      // Use Jerusalem timezone
+      const DATE_TZ = "Asia/Jerusalem";
+      const fmtIL = new Intl.DateTimeFormat("en-CA", {
+        timeZone: DATE_TZ,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+      
+      const today = fmtIL.format(new Date());
+      const lastLogin = user.last_login_date;
+      
+      let needsSync = false;
+      let syncData = {
+        coins: user.coins || 0,
+        investments_value: user.investments_value || 0,
+        items_value: user.items_value || 0,
+        login_streak: user.login_streak || 0,
+        last_login_date: user.last_login_date || null
+      };
+      
+      // Handle login streak if not already done today
+      if (lastLogin !== today) {
+        needsSync = true;
+        
+        if (!lastLogin) {
+          // First time - just initialize
+          await base44.auth.updateMe({
+            login_streak: 1,
+            last_login_date: today,
+            total_login_streak_coins: 10
+          });
+          
+          syncData.login_streak = 1;
+          syncData.last_login_date = today;
+          syncData.total_login_streak_coins = 10;
+        } else {
+          // Calculate streak
+          const todayParts = today.split("-").map(Number);
+          const yesterdayDate = new Date(Date.UTC(todayParts[0], todayParts[1] - 1, todayParts[2] - 1));
+          const yesterdayStr = fmtIL.format(yesterdayDate);
+          
+          let newStreak = 1;
+          let isNewStreak = true;
+          
+          if (lastLogin === yesterdayStr) {
+            newStreak = (user.login_streak || 0) + 1;
+            isNewStreak = false;
+          }
+          
+          const rewardStreak = Math.min(newStreak, 10);
+          const reward = rewardStreak * 10;
+          const oldCoins = user.coins || 0;
+          const newCoins = oldCoins + reward;
+          
+          await base44.auth.updateMe({
+            login_streak: newStreak,
+            last_login_date: today,
+            coins: newCoins,
+            total_login_streak_coins: (user.total_login_streak_coins || 0) + reward
+          });
+          
+          syncData.login_streak = newStreak;
+          syncData.last_login_date = today;
+          syncData.coins = newCoins;
+          syncData.total_login_streak_coins = (user.total_login_streak_coins || 0) + reward;
+          
+          if (reward > 0) {
+            setLoginRewardData({
+              streak: newStreak,
+              reward: reward,
+              isNewStreak: isNewStreak
+            });
+            setShowLoginReward(true);
+          }
+        }
       }
       
-      // Apply daily economy updates for current user only (inflation + credit interest)
+      // Sync once if needed
+      if (needsSync) {
+        try {
+          await syncLeaderboardEntry(user.email, syncData);
+        } catch (syncError) {
+          console.error("Error syncing leaderboard:", syncError);
+        }
+      }
+      
+      // Apply daily economy in background
       applyDailyEconomyForCurrentUser(user).catch(error => {
         console.error("Error applying daily economy:", error);
       });
     } catch (error) {
-      console.error("Error loading user:", error);
+      console.error("Error in loadUserAndUpdateStreak:", error);
     }
   };
 
