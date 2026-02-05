@@ -179,43 +179,35 @@ export default function Home() {
         })()
       ]);
 
-      // Fetch investments value in parallel with group/lesson data
-      let invValue = user.investments_value;
-      const [groupData] = await Promise.all([
-        (async () => {
-          try {
-            const allGroups = await base44.entities.Group.list();
-            const myGroup = allGroups.find(g => g.student_emails?.includes(user.email));
-            
-            if (myGroup) {
-              setUserGroup(myGroup);
-              if (myGroup.next_lesson_id) {
-                try {
-                  const lesson = await base44.entities.Lesson.get(myGroup.next_lesson_id);
-                  setNextLesson(lesson);
-                } catch {
-                  setNextLesson(null);
-                }
-              } else {
-                setNextLesson(null);
-              }
-            } else {
-              setUserGroup(null);
+      // Load group info
+      try {
+        const allGroups = await base44.entities.Group.list();
+        const myGroup = allGroups.find(g => g.student_emails?.includes(user.email));
+        
+        if (myGroup) {
+          setUserGroup(myGroup);
+          if (myGroup.next_lesson_id) {
+            try {
+              const lesson = await base44.entities.Lesson.get(myGroup.next_lesson_id);
+              setNextLesson(lesson);
+            } catch {
               setNextLesson(null);
             }
-          } catch (error) {
-            console.error("Error loading group info:", error);
-            setUserGroup(null);
+          } else {
             setNextLesson(null);
           }
-        })(),
-        invValue === undefined || invValue === null ? fetchInvestmentsValue(user.email) : Promise.resolve(invValue)
-      ]);
-
-      // Update invValue from parallel call
-      if (invValue === undefined || invValue === null) {
-        invValue = groupData;
+        } else {
+          setUserGroup(null);
+          setNextLesson(null);
+        }
+      } catch (error) {
+        console.error("Error loading group info:", error);
+        setUserGroup(null);
+        setNextLesson(null);
       }
+
+      // Use investments_value from user (already calculated)
+      const invValue = user.investments_value || 0;
 
       const purchasedItems = user.purchased_items || [];
       let itemsValue = 0;
@@ -225,22 +217,10 @@ export default function Home() {
       });
 
       setUserData({ ...user, ...lessonCounts });
-      setInvestmentsValue(invValue ?? 0);
+      setInvestmentsValue(invValue);
 
-      const worth = (user.coins || 0) + itemsValue + (invValue ?? 0);
+      const worth = (user.coins || 0) + itemsValue + invValue;
       setNetWorth(worth);
-
-      // Save calculated values if they changed
-      const needsUpdate = 
-        user.investments_value !== invValue || 
-        user.total_networth !== worth;
-      
-      if (needsUpdate) {
-        await base44.auth.updateMe({ 
-          investments_value: invValue ?? 0, 
-          total_networth: worth 
-        });
-      }
 
       setIsLoading(false);
     } catch (error) {
@@ -444,41 +424,6 @@ export default function Home() {
     }
 
     toast.success(`מכרת את ${item.name} ב-${salePrice} סטארטקוין (50% מהמחיר המקורי)`);
-  };
-
-  const fetchInvestmentsValue = async (userEmail) => {
-    try {
-      // First try to get from LeaderboardEntry (pre-calculated)
-      const cacheKey = `leaderboard_inv_${userEmail}`;
-      const cacheTimeKey = `${cacheKey}_time`;
-      const cached = sessionStorage.getItem(cacheKey);
-      const cachedTime = sessionStorage.getItem(cacheTimeKey);
-      
-      if (cached && cachedTime && (Date.now() - parseInt(cachedTime)) < 60000) {
-        return parseInt(cached);
-      }
-      
-      // Try leaderboard first (pre-calculated)
-      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userEmail });
-      if (leaderboardEntries.length > 0 && leaderboardEntries[0].investments_value !== undefined) {
-        const value = leaderboardEntries[0].investments_value || 0;
-        sessionStorage.setItem(cacheKey, value.toString());
-        sessionStorage.setItem(cacheTimeKey, Date.now().toString());
-        return value;
-      }
-      
-      // Fallback to calculating from Investment records
-      const myInvestments = await base44.entities.Investment.filter({ student_email: userEmail });
-      const investmentsValue = myInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-      
-      sessionStorage.setItem(cacheKey, investmentsValue.toString());
-      sessionStorage.setItem(cacheTimeKey, Date.now().toString());
-      
-      return investmentsValue;
-    } catch (error) {
-      console.error("Error fetching investments value:", error);
-      return 0;
-    }
   };
 
   const calculateNetWorth = async (user = userData, cachedInvestmentsValue = null) => {
