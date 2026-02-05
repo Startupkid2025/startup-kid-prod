@@ -448,29 +448,36 @@ export default function Home() {
 
   const fetchInvestmentsValue = async (userEmail) => {
     try {
-      // Use cache - only recalculate every 30 seconds
-      const cacheKey = `investments_${userEmail}`;
+      // First try to get from LeaderboardEntry (pre-calculated)
+      const cacheKey = `leaderboard_inv_${userEmail}`;
       const cacheTimeKey = `${cacheKey}_time`;
       const cached = sessionStorage.getItem(cacheKey);
       const cachedTime = sessionStorage.getItem(cacheTimeKey);
       
-      if (cached && cachedTime && (Date.now() - parseInt(cachedTime)) < 30000) {
-        console.log("📦 Using cached investments value");
+      if (cached && cachedTime && (Date.now() - parseInt(cachedTime)) < 60000) {
         return parseInt(cached);
       }
       
+      // Try leaderboard first (pre-calculated)
+      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userEmail });
+      if (leaderboardEntries.length > 0 && leaderboardEntries[0].investments_value !== undefined) {
+        const value = leaderboardEntries[0].investments_value || 0;
+        sessionStorage.setItem(cacheKey, value.toString());
+        sessionStorage.setItem(cacheTimeKey, Date.now().toString());
+        return value;
+      }
+      
+      // Fallback to calculating from Investment records
       const myInvestments = await base44.entities.Investment.filter({ student_email: userEmail });
       const investmentsValue = myInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
       
-      // Cache the result
       sessionStorage.setItem(cacheKey, investmentsValue.toString());
       sessionStorage.setItem(cacheTimeKey, Date.now().toString());
       
-      console.log(`✅ Fetched investments value for ${userEmail}: ${investmentsValue}`);
       return investmentsValue;
     } catch (error) {
       console.error("Error fetching investments value:", error);
-      return null;
+      return 0;
     }
   };
 
