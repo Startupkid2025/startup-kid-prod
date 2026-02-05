@@ -10,7 +10,7 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
 export default function EggHatchingIntro({ isOpen, onComplete }) {
-  const [stage, setStage] = useState("video"); // video -> nameSelection
+  const [stage, setStage] = useState("nameSelection"); // Skip video for now
   const [avatarName, setAvatarName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
