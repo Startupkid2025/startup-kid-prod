@@ -297,7 +297,7 @@ export default function StudentRow({
 
       // Delete user's investments
       try {
-        const studentInvestments = investments.filter(inv => inv.student_email === student.email);
+        const studentInvestments = await base44.entities.Investment.filter({ student_email: student.email });
         for (const investment of studentInvestments) {
           await base44.entities.Investment.delete(investment.id);
         }
