@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +65,10 @@ export default function EggHatchingIntro({ isOpen, onComplete }) {
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 border-4 border-white/30 max-w-3xl p-0 overflow-hidden">
+        <DialogHeader>
+          <DialogTitle className="sr-only">בקיעת ביצה וקריאת שם</DialogTitle>
+          <DialogDescription className="sr-only">הסטארטמון שלך בוקע - בחר לו שם</DialogDescription>
+        </DialogHeader>
         <AnimatePresence mode="wait">
           {stage === "video" && (
             <motion.div
