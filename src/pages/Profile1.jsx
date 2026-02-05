@@ -149,10 +149,17 @@ export default function Profile() {
         try {
           const records = await base44.entities[entityName].filter({ student_email: userEmail });
           for (const record of records) {
-            await base44.entities[entityName].delete(record.id);
+            try {
+              await base44.entities[entityName].delete(record.id);
+            } catch (deleteErr) {
+              // Ignore 404 errors (already deleted)
+              if (deleteErr.message && !deleteErr.message.includes('not found')) {
+                console.error(`Error deleting ${entityName} record:`, deleteErr);
+              }
+            }
           }
         } catch (err) {
-          console.error(`Error deleting ${entityName}:`, err);
+          console.error(`Error fetching ${entityName}:`, err);
         }
       }
 
@@ -160,10 +167,16 @@ export default function Profile() {
       try {
         const posts = await base44.entities.Post.filter({ author_email: userEmail });
         for (const post of posts) {
-          await base44.entities.Post.delete(post.id);
+          try {
+            await base44.entities.Post.delete(post.id);
+          } catch (deleteErr) {
+            if (deleteErr.message && !deleteErr.message.includes('not found')) {
+              console.error("Error deleting post:", deleteErr);
+            }
+          }
         }
       } catch (err) {
-        console.error("Error deleting posts:", err);
+        console.error("Error fetching posts:", err);
       }
 
       // Remove from groups
@@ -184,10 +197,16 @@ export default function Profile() {
       try {
         const users = await base44.entities.User.filter({ email: userEmail });
         if (users.length > 0) {
-          await base44.entities.User.delete(users[0].id);
+          try {
+            await base44.entities.User.delete(users[0].id);
+          } catch (deleteErr) {
+            if (deleteErr.message && !deleteErr.message.includes('not found')) {
+              console.error("Error deleting user record:", deleteErr);
+            }
+          }
         }
       } catch (err) {
-        console.error("Error deleting user:", err);
+        console.error("Error fetching user:", err);
       }
 
       toast.success("החשבון נמחק בהצלחה");
