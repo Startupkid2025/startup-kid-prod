@@ -48,16 +48,23 @@ export default function EggHatchingIntro({ isOpen, onComplete }) {
 
     setIsSaving(true);
     try {
+      console.log("Saving avatar name:", avatarName.trim());
       await base44.auth.updateMe({
         avatar_name: avatarName.trim(),
         has_seen_egg_hatching: true
       });
+      console.log("Avatar name saved successfully");
 
       toast.success(`פגוש את ${avatarName.trim()}! 🎉`);
-      onComplete();
+      
+      // Small delay to show the success message
+      setTimeout(() => {
+        console.log("Calling onComplete...");
+        onComplete();
+      }, 500);
     } catch (error) {
       console.error("Error saving avatar name:", error);
-      toast.error("שגיאה בשמירת השם");
+      toast.error(`שגיאה בשמירת השם: ${error.message}`);
       setIsSaving(false);
     }
   };
