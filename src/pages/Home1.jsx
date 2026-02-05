@@ -447,8 +447,8 @@ export default function Home() {
       }
     });
 
-    // Use cached investments value if provided, otherwise fetch
-    const investmentsValue = cachedInvestmentsValue !== null ? cachedInvestmentsValue : await fetchInvestmentsValue(user.email);
+    // Use cached investments value if provided, otherwise use from user
+    const investmentsValue = cachedInvestmentsValue !== null ? cachedInvestmentsValue : (user.investments_value || 0);
     const netWorth = currentCoins + itemsValue + investmentsValue;
     
     console.log(`\n💎 HOME1 - Net Worth Calculation (fallback) for ${user.email}:`);
