@@ -547,7 +547,7 @@ export default function Investments() {
       // Update net worth BEFORE logging
       const newNetWorth = await updateNetWorth(userData.email);
       
-      // Log coin change
+      // Log 3 separate transactions: sale proceeds, fee, and tax
       try {
         const { logCoinChange } = await import("../components/utils/coinLogger");
         const business = BUSINESSES.find(b => b.id === businessId);
@@ -563,19 +563,38 @@ export default function Investments() {
           console.error("Error fetching leaderboard:", err);
         }
         
-        await logCoinChange(userData.email, oldCoins, newCoins, "מכירת השקעה", {
+        // 1. Log the sale proceeds (adding coins from selling)
+        await logCoinChange(userData.email, oldCoins, oldCoins + sellAmount, "מכירת השקעות", {
           source: 'Investments',
           business: business?.name,
           sold_for: sellAmount,
-          profit: investmentProfit,
-          taxes: Math.round(capitalGainsTax),
-          fee: TRANSACTION_FEE,
-          king_bonus: kingBonus,
-          net_cash: Math.round(netAmount),
           investments_value: investmentsValue,
           user_networth: newNetWorth,
           leaderboard_networth: leaderboardNetworth
         });
+        
+        // 2. Log the transaction fee (deducting)
+        await logCoinChange(userData.email, oldCoins + sellAmount, oldCoins + sellAmount - TRANSACTION_FEE, "עמלות השקעות", {
+          source: 'Investments',
+          business: business?.name,
+          fee: TRANSACTION_FEE,
+          investments_value: investmentsValue,
+          user_networth: newNetWorth,
+          leaderboard_networth: leaderboardNetworth
+        });
+        
+        // 3. Log capital gains tax if applicable (deducting)
+        if (capitalGainsTax > 0) {
+          await logCoinChange(userData.email, oldCoins + sellAmount - TRANSACTION_FEE, oldCoins + sellAmount - TRANSACTION_FEE - capitalGainsTax, "מס רווח הון", {
+            source: 'Investments',
+            business: business?.name,
+            profit: investmentProfit,
+            tax: Math.round(capitalGainsTax),
+            investments_value: investmentsValue,
+            user_networth: newNetWorth,
+            leaderboard_networth: leaderboardNetworth
+          });
+        }
       } catch (logError) {
         console.error("Error logging investment sale:", logError);
       }
