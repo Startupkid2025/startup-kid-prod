@@ -98,15 +98,32 @@ export default function Layout({ children }) {
         
         if (!lastLogin) {
           // First time - just initialize
+          const oldCoins = user.coins || 0;
+          const newCoins = oldCoins + 10;
+          
           await base44.auth.updateMe({
             login_streak: 1,
             last_login_date: today,
+            coins: newCoins,
             total_login_streak_coins: 10
           });
           
           syncData.login_streak = 1;
           syncData.last_login_date = today;
+          syncData.coins = newCoins;
           syncData.total_login_streak_coins = 10;
+          
+          // Log the first login bonus
+          try {
+            const { logCoinChange } = await import("./components/utils/coinLogger");
+            await logCoinChange(user.email, oldCoins, newCoins, "בונוס כניסה ראשונה", {
+              source: 'Layout - Login Streak',
+              streak: 1,
+              reward: 10
+            });
+          } catch (logError) {
+            console.error("Error logging first login bonus:", logError);
+          }
         } else {
           // Calculate streak
           const todayParts = today.split("-").map(Number);
@@ -138,7 +155,20 @@ export default function Layout({ children }) {
           syncData.coins = newCoins;
           syncData.total_login_streak_coins = (user.total_login_streak_coins || 0) + reward;
           
+          // Log the login streak bonus
           if (reward > 0) {
+            try {
+              const { logCoinChange } = await import("./components/utils/coinLogger");
+              await logCoinChange(user.email, oldCoins, newCoins, isNewStreak ? "רצף כניסות - רצף חדש" : "רצף כניסות", {
+                source: 'Layout - Login Streak',
+                streak: newStreak,
+                reward: reward,
+                isNewStreak: isNewStreak
+              });
+            } catch (logError) {
+              console.error("Error logging login streak bonus:", logError);
+            }
+            
             setLoginRewardData({
               streak: newStreak,
               reward: reward,
