@@ -230,6 +230,9 @@ export default function Layout({ children }) {
       let totalCreditInterest = 0;
       let totalPassiveIncome = 0;
 
+      // Track balance changes step by step
+      let currentBalance = oldCoins;
+      
       // Apply for all missed days
       for (let i = 0; i < daysPassed; i++) {
         // Passive income from backgrounds
@@ -261,7 +264,7 @@ export default function Layout({ children }) {
         }
       }
       
-      // Log all daily economy changes
+      // Log all daily economy changes with correct balance progression
       try {
         const { logCoinChange } = await import("./components/utils/coinLogger");
         
@@ -280,8 +283,9 @@ export default function Layout({ children }) {
           console.error("Error fetching leaderboard:", err);
         }
         
+        // Log passive income (increases balance)
         if (totalPassiveIncome > 0) {
-          await logCoinChange(user.email, oldCoins, oldCoins + totalPassiveIncome, "הכנסה פסיבית", {
+          await logCoinChange(user.email, currentBalance, currentBalance + totalPassiveIncome, "הכנסה פסיבית", {
             source: 'Layout - Daily Economy',
             days: daysPassed,
             amount: totalPassiveIncome,
@@ -289,10 +293,12 @@ export default function Layout({ children }) {
             user_networth: userNetworth,
             leaderboard_networth: leaderboardNetworth
           });
+          currentBalance += totalPassiveIncome;
         }
         
+        // Log inflation (decreases balance)
         if (totalInflationLoss > 0) {
-          await logCoinChange(user.email, oldCoins + totalPassiveIncome, oldCoins + totalPassiveIncome - totalInflationLoss, "אינפלציה", {
+          await logCoinChange(user.email, currentBalance, currentBalance - totalInflationLoss, "אינפלציה", {
             source: 'Layout - Daily Economy',
             days: daysPassed,
             amount: -totalInflationLoss,
@@ -300,10 +306,12 @@ export default function Layout({ children }) {
             user_networth: userNetworth,
             leaderboard_networth: leaderboardNetworth
           });
+          currentBalance -= totalInflationLoss;
         }
         
+        // Log credit interest (decreases balance further into negative)
         if (totalCreditInterest > 0) {
-          await logCoinChange(user.email, newCoins + totalCreditInterest, newCoins, "ריבית אשראי", {
+          await logCoinChange(user.email, currentBalance, currentBalance - totalCreditInterest, "ריבית אשראי", {
             source: 'Layout - Daily Economy',
             days: daysPassed,
             amount: -totalCreditInterest,
