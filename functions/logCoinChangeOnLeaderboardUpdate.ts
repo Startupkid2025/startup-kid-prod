@@ -61,7 +61,10 @@ Deno.serve(async (req) => {
             previous_balance: oldCoins,
             new_balance: newCoins,
             metadata: {
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                investments_value: data.investments_value || 0,
+                user_networth: data.total_networth || 0,
+                leaderboard_networth: data.total_networth || 0
             }
         });
 
