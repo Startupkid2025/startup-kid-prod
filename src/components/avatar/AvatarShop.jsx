@@ -120,18 +120,6 @@ export default function AvatarShop({
         return sum + (AVATAR_ITEMS[itemId]?.price || 0);
       }, 0);
 
-      // Log coin change
-      try {
-        const { logCoinChange } = await import("../utils/coinLogger");
-        await logCoinChange(userData.email, oldCoins, newCoins, "רכישת פריט", {
-          source: 'AvatarShop',
-          item: item.name,
-          price: item.price
-        });
-      } catch (logError) {
-        console.error("Error logging purchase:", logError);
-      }
-
       await base44.auth.updateMe({
         purchased_items: newPurchasedItems,
         coins: newCoins,
@@ -140,6 +128,19 @@ export default function AvatarShop({
 
       // Update net worth
       const newNetWorth = await updateNetWorth(userData.email);
+      
+      // Log coin change after net worth calculation
+      try {
+        const { logCoinChange } = await import("../utils/coinLogger");
+        await logCoinChange(userData.email, oldCoins, newCoins, "רכישת פריט", {
+          source: 'AvatarShop',
+          item: item.name,
+          price: item.price,
+          items_value: newItemsValue
+        });
+      } catch (logError) {
+        console.error("Error logging purchase:", logError);
+      }
 
       // Sync to LeaderboardEntry
       if (userData.user_type !== 'parent' && userData.user_type !== 'demo') {
