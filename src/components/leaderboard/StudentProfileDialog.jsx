@@ -554,22 +554,28 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
               ) : hasInvestments ? (
                 <>
                   {/* Summary */}
-                  <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className="grid grid-cols-2 gap-2 mb-3">
                     <div className="bg-white/10 rounded-lg p-2 text-center">
-                      <p className="text-white/70 text-[10px]">הושקע</p>
-                      <p className="text-white font-bold text-sm">{Math.round(totalInvested)}</p>
-                    </div>
-                    <div className="bg-white/10 rounded-lg p-2 text-center">
-                      <p className="text-white/70 text-[10px]">שווי</p>
+                      <p className="text-white/70 text-[10px]">שווי נוכחי</p>
                       <p className="text-white font-bold text-sm">{Math.round(totalValue)}</p>
                     </div>
                     <div className={`bg-white/10 rounded-lg p-2 text-center ${totalProfit >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
-                      <p className="text-white/70 text-[10px]">רווח</p>
+                      <p className="text-white/70 text-[10px]">רווח לא ממומש</p>
                       <p className={`font-bold text-sm ${totalProfit >= 0 ? 'text-green-300' : 'text-red-300'}`}>
                         {totalProfit >= 0 ? '+' : ''}{Math.round(totalProfit)}
                       </p>
                     </div>
                   </div>
+                  
+                  {/* Realized Profit */}
+                  {financeReport && (
+                    <div className="bg-blue-500/20 rounded-lg p-2 text-center mb-3">
+                      <p className="text-white/70 text-[10px]">רווח ממומש (מכירות)</p>
+                      <p className={`font-bold text-sm ${(financeReport.income.investmentProfits - totalProfit) >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                        {(financeReport.income.investmentProfits - totalProfit) >= 0 ? '+' : ''}{Math.round(financeReport.income.investmentProfits - totalProfit)}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Investments by Business */}
                   <div className="space-y-2">
