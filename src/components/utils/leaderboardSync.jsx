@@ -70,20 +70,20 @@ export async function syncLeaderboardEntry(studentEmail, patch) {
     if (entries && entries.length > 0) {
       const entry = entries[0];
       
+      // Calculate old and new leaderboard values for logging
+      const oldCoins = entry.coins ?? 0;
+      const newCoins = 'coins' in cleanPatch ? cleanPatch.coins : oldCoins;
+      const oldInvestmentsValue = entry.investments_value ?? 0;
+      const newInvestmentsValue = 'investments_value' in cleanPatch ? cleanPatch.investments_value : oldInvestmentsValue;
+      const oldItemsValue = entry.items_value ?? 0;
+      const newItemsValue = 'items_value' in cleanPatch ? cleanPatch.items_value : oldItemsValue;
+      
+      const oldLeaderboardValue = oldCoins + oldInvestmentsValue + oldItemsValue;
+      const newLeaderboardValue = cleanPatch.total_networth ?? (newCoins + newInvestmentsValue + newItemsValue);
+      
       // Log coin change if coins are changing
       if ('coins' in cleanPatch && cleanPatch.coins !== entry.coins) {
-        const oldCoins = entry.coins ?? 0;
-        const newCoins = cleanPatch.coins;
         const amount = newCoins - oldCoins;
-        
-        // Calculate old and new leaderboard values (networth)
-        const oldInvestmentsValue = entry.investments_value ?? 0;
-        const newInvestmentsValue = cleanPatch.investments_value ?? oldInvestmentsValue;
-        const oldItemsValue = entry.items_value ?? 0;
-        const newItemsValue = cleanPatch.items_value ?? oldItemsValue;
-        
-        const oldLeaderboardValue = oldCoins + oldInvestmentsValue + oldItemsValue;
-        const newLeaderboardValue = newCoins + newInvestmentsValue + newItemsValue;
         
         // Determine reason based on metadata or common patterns
         let reason = "עדכון מטבעות";
@@ -105,7 +105,7 @@ export async function syncLeaderboardEntry(studentEmail, patch) {
           await logCoinChange(studentEmail, oldCoins, newCoins, reason, {
             source: 'LeaderboardSync',
             investments_value: newInvestmentsValue,
-            user_networth: cleanPatch.total_networth ?? newLeaderboardValue,
+            items_value: newItemsValue,
             old_leaderboard_value: oldLeaderboardValue,
             new_leaderboard_value: newLeaderboardValue,
             leaderboard_change: newLeaderboardValue - oldLeaderboardValue,
