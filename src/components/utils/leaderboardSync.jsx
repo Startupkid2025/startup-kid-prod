@@ -70,6 +70,41 @@ export async function syncLeaderboardEntry(studentEmail, patch) {
     if (entries && entries.length > 0) {
       const entry = entries[0];
       
+      // Log coin change if coins are changing
+      if ('coins' in cleanPatch && cleanPatch.coins !== entry.coins) {
+        const oldCoins = entry.coins ?? 0;
+        const newCoins = cleanPatch.coins;
+        const amount = newCoins - oldCoins;
+        
+        // Determine reason based on metadata or common patterns
+        let reason = "עדכון מטבעות";
+        const metadata = cleanPatch.metadata || {};
+        
+        if (cleanPatch.investments_value !== undefined && cleanPatch.investments_value !== entry.investments_value) {
+          reason = "עדכון השקעות";
+        } else if (amount === 10 && cleanPatch.login_streak !== undefined) {
+          reason = "בונוס כניסה יומי";
+        } else if (amount > 0 && amount <= 50) {
+          reason = "בונוס";
+        } else if (amount < 0 && Math.abs(amount) % 10 === 0) {
+          reason = "הוצאה";
+        }
+        
+        // Import and call logCoinChange
+        try {
+          const { logCoinChange } = await import("./coinLogger");
+          await logCoinChange(studentEmail, oldCoins, newCoins, reason, {
+            source: 'LeaderboardSync',
+            investments_value: cleanPatch.investments_value ?? entry.investments_value ?? 0,
+            user_networth: cleanPatch.total_networth ?? 0,
+            leaderboard_value: cleanPatch.total_networth ?? 0,
+            ...metadata
+          });
+        } catch (logError) {
+          console.error("Error logging coin change:", logError);
+        }
+      }
+      
       // Always recalculate total_networth when any financial field changes
       if ('coins' in cleanPatch || 'investments_value' in cleanPatch || 'items_value' in cleanPatch) {
         const coins = 'coins' in cleanPatch ? cleanPatch.coins : (entry.coins ?? 0);
