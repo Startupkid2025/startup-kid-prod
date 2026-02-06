@@ -121,6 +121,59 @@ export default function VocabSuggestionsManager() {
     }
   };
 
+  const approveSingle = async (suggestion) => {
+    setIsProcessing(true);
+    try {
+      // Find the vocabulary word
+      const vocabWords = await base44.entities.VocabularyWord.filter({
+        word_english: suggestion.word_english
+      });
+      
+      if (vocabWords.length > 0) {
+        const vocabWord = vocabWords[0];
+        // Append the new translation
+        const currentHebrew = vocabWord.word_hebrew || "";
+        const newHebrew = currentHebrew.includes(suggestion.suggested_hebrew)
+          ? currentHebrew
+          : `${currentHebrew}, ${suggestion.suggested_hebrew}`;
+        
+        await base44.entities.VocabularyWord.update(vocabWord.id, {
+          word_hebrew: newHebrew
+        });
+      }
+      
+      // Mark suggestion as approved
+      await base44.entities.VocabularyWordSuggestion.update(suggestion.id, {
+        status: "approved"
+      });
+      
+      toast.success("✅ ההמלצה אושרה!");
+      loadSuggestions();
+    } catch (error) {
+      console.error("Error approving suggestion:", error);
+      toast.error("שגיאה באישור ההמלצה");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const rejectSingle = async (suggestionId) => {
+    setIsProcessing(true);
+    try {
+      await base44.entities.VocabularyWordSuggestion.update(suggestionId, {
+        status: "rejected"
+      });
+      
+      toast.success("❌ ההמלצה נדחתה");
+      loadSuggestions();
+    } catch (error) {
+      console.error("Error rejecting suggestion:", error);
+      toast.error("שגיאה בדחיית ההמלצה");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
