@@ -19,38 +19,38 @@ Deno.serve(async (req) => {
         const amount = newCoins - oldCoins;
         const studentEmail = data.student_email;
 
-        // Try to determine reason from context
-        let reason = "סיבה לא ידועה";
+        // Try to determine reason from context - add [סינכרון לידרבורד] prefix
+        let reason = "[סינכרון לידרבורד] סיבה לא ידועה";
         
         // Check common fields to guess reason
         if (data.total_work_earnings !== old_data?.total_work_earnings) {
-            reason = "עבודה";
+            reason = "[סינכרון לידרבורד] עבודה";
         } else if (data.total_login_streak_coins !== old_data?.total_login_streak_coins) {
-            reason = "בונוס כניסה יומית";
+            reason = "[סינכרון לידרבורד] בונוס כניסה יומית";
         } else if (data.total_collaboration_coins !== old_data?.total_collaboration_coins) {
-            reason = "שיתוף פעולה";
+            reason = "[סינכרון לידרבורד] שיתוף פעולה";
         } else if (data.total_passive_income !== old_data?.total_passive_income) {
-            reason = "הכנסה פסיבית";
+            reason = "[סינכרון לידרבורד] הכנסה פסיבית";
         } else if (data.total_inflation_lost !== old_data?.total_inflation_lost) {
-            reason = "אינפלציה";
+            reason = "[סינכרון לידרבורד] אינפלציה";
         } else if (data.total_income_tax !== old_data?.total_income_tax) {
-            reason = "מס הכנסה";
+            reason = "[סינכרון לידרבורד] מס הכנסה";
         } else if (data.total_credit_interest !== old_data?.total_credit_interest) {
-            reason = "ריבית אשראי";
+            reason = "[סינכרון לידרבורד] ריבית אשראי";
         } else if (data.total_investment_fees !== old_data?.total_investment_fees) {
-            reason = "עמלות השקעות";
+            reason = "[סינכרון לידרבורד] עמלות השקעות";
         } else if (data.total_realized_investment_profit !== old_data?.total_realized_investment_profit) {
-            reason = "רווחי השקעות";
+            reason = "[סינכרון לידרבורד] רווחי השקעות";
         } else if (data.total_admin_coins !== old_data?.total_admin_coins) {
-            reason = "עדכון ידני";
+            reason = "[סינכרון לידרבורד] עדכון ידני";
         } else if (amount === 100) {
-            reason = "השתתפות בשיעור";
+            reason = "[סינכרון לידרבורד] השתתפות בשיעור";
         } else if (amount === 20) {
-            reason = "סקר שיעור";
+            reason = "[סינכרון לידרבורד] סקר שיעור";
         } else if (amount === 3) {
-            reason = "לייק/תגובה";
+            reason = "[סינכרון לידרבורד] לייק/תגובה";
         } else if (amount > 0 && amount <= 15) {
-            reason = "אנגלית/חשבון";
+            reason = "[סינכרון לידרבורד] אנגלית/חשבון";
         }
 
         // Create log entry using service role to avoid RLS
