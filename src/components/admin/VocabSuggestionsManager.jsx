@@ -255,11 +255,34 @@ export default function VocabSuggestionsManager() {
                       <p className="text-white font-bold">{suggestion.suggested_hebrew}</p>
                     </div>
                     
-                    <div className="flex items-center gap-2 text-white/60 text-sm">
-                      <User className="w-4 h-4" />
-                      <span>{suggestion.suggested_by_name}</span>
-                      <span>•</span>
-                      <span>{new Date(suggestion.created_date).toLocaleDateString("he-IL")}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-white/60 text-sm">
+                        <User className="w-4 h-4" />
+                        <span>{suggestion.suggested_by_name}</span>
+                        <span>•</span>
+                        <span>{new Date(suggestion.created_date).toLocaleDateString("he-IL")}</span>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => approveSingle(suggestion)}
+                          disabled={isProcessing}
+                          size="sm"
+                          className="bg-green-500 hover:bg-green-600 text-white"
+                        >
+                          <Check className="w-4 h-4 ml-1" />
+                          אשר
+                        </Button>
+                        <Button
+                          onClick={() => rejectSingle(suggestion.id)}
+                          disabled={isProcessing}
+                          size="sm"
+                          className="bg-red-500 hover:bg-red-600 text-white"
+                        >
+                          <X className="w-4 h-4 ml-1" />
+                          דחה
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
