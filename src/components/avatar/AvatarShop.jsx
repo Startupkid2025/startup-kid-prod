@@ -129,6 +129,10 @@ export default function AvatarShop({
       // Update net worth
       const newNetWorth = await updateNetWorth(userData.email);
       
+      // Get investments value for logging
+      const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
+      const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      
       // Log coin change after net worth calculation
       try {
         const { logCoinChange } = await import("../utils/coinLogger");
@@ -136,7 +140,8 @@ export default function AvatarShop({
           source: 'AvatarShop',
           item: item.name,
           price: item.price,
-          items_value: newItemsValue
+          items_value: newItemsValue,
+          investments_value: investmentsValue
         });
       } catch (logError) {
         console.error("Error logging purchase:", logError);

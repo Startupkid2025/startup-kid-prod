@@ -116,14 +116,12 @@ export async function syncLeaderboardEntry(studentEmail, patch) {
         }
       }
       
-      // Always recalculate total_networth when any financial field changes
-      if ('coins' in cleanPatch || 'investments_value' in cleanPatch || 'items_value' in cleanPatch) {
-        const coins = 'coins' in cleanPatch ? cleanPatch.coins : (entry.coins ?? 0);
-        const investments_value = 'investments_value' in cleanPatch ? cleanPatch.investments_value : (entry.investments_value ?? 0);
-        const items_value = 'items_value' in cleanPatch ? cleanPatch.items_value : (entry.items_value ?? 0);
-        cleanPatch.total_networth = coins + investments_value + items_value;
-        console.log(`💰 Updating total_networth for ${studentEmail}: ${coins} + ${investments_value} + ${items_value} = ${cleanPatch.total_networth}`);
-      }
+      // Always recalculate and update total_networth when syncing
+      const coins = 'coins' in cleanPatch ? cleanPatch.coins : (entry.coins ?? 0);
+      const investments_value = 'investments_value' in cleanPatch ? cleanPatch.investments_value : (entry.investments_value ?? 0);
+      const items_value = 'items_value' in cleanPatch ? cleanPatch.items_value : (entry.items_value ?? 0);
+      cleanPatch.total_networth = coins + investments_value + items_value;
+      console.log(`💰 Updating total_networth for ${studentEmail}: ${coins} + ${investments_value} + ${items_value} = ${cleanPatch.total_networth}`);
       
       await base44.entities.LeaderboardEntry.update(entries[0].id, cleanPatch);
       console.log(`✅ Synced LeaderboardEntry for ${studentEmail}`);
