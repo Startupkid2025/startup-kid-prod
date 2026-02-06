@@ -76,6 +76,15 @@ export async function syncLeaderboardEntry(studentEmail, patch) {
         const newCoins = cleanPatch.coins;
         const amount = newCoins - oldCoins;
         
+        // Calculate old and new leaderboard values (networth)
+        const oldInvestmentsValue = entry.investments_value ?? 0;
+        const newInvestmentsValue = cleanPatch.investments_value ?? oldInvestmentsValue;
+        const oldItemsValue = entry.items_value ?? 0;
+        const newItemsValue = cleanPatch.items_value ?? oldItemsValue;
+        
+        const oldLeaderboardValue = oldCoins + oldInvestmentsValue + oldItemsValue;
+        const newLeaderboardValue = newCoins + newInvestmentsValue + newItemsValue;
+        
         // Determine reason based on metadata or common patterns
         let reason = "עדכון מטבעות";
         const metadata = cleanPatch.metadata || {};
@@ -95,9 +104,11 @@ export async function syncLeaderboardEntry(studentEmail, patch) {
           const { logCoinChange } = await import("./coinLogger");
           await logCoinChange(studentEmail, oldCoins, newCoins, reason, {
             source: 'LeaderboardSync',
-            investments_value: cleanPatch.investments_value ?? entry.investments_value ?? 0,
-            user_networth: cleanPatch.total_networth ?? 0,
-            leaderboard_value: cleanPatch.total_networth ?? 0,
+            investments_value: newInvestmentsValue,
+            user_networth: cleanPatch.total_networth ?? newLeaderboardValue,
+            old_leaderboard_value: oldLeaderboardValue,
+            new_leaderboard_value: newLeaderboardValue,
+            leaderboard_change: newLeaderboardValue - oldLeaderboardValue,
             ...metadata
           });
         } catch (logError) {

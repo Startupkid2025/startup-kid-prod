@@ -547,30 +547,25 @@ export default function Investments() {
       // Update net worth BEFORE logging
       const newNetWorth = await updateNetWorth(userData.email);
       
+      // Update investments_value after calculating all fees and taxes
+      // (This will be used for logging)
+      const allUserInvestmentsAfterSale = await safeRequest(
+        () => base44.entities.Investment.filter({ student_email: userData.email }),
+        { key: `INV:${userData.email}`, ttlMs: 5000, retries: 1 }
+      );
+      const investmentsValueAfterSale = allUserInvestmentsAfterSale.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      
       // Log 3 separate transactions: sale proceeds, fee, and tax
       try {
         const { logCoinChange } = await import("../components/utils/coinLogger");
         const business = BUSINESSES.find(b => b.id === businessId);
-        
-        // Get leaderboard networth
-        let leaderboardNetworth = 0;
-        try {
-          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
-          if (leaderboardEntries.length > 0) {
-            leaderboardNetworth = leaderboardEntries[0].total_networth || 0;
-          }
-        } catch (err) {
-          console.error("Error fetching leaderboard:", err);
-        }
         
         // 1. Log the sale proceeds (adding coins from selling)
         await logCoinChange(userData.email, oldCoins, oldCoins + sellAmount, "מכירת השקעות", {
           source: 'Investments',
           business: business?.name,
           sold_for: sellAmount,
-          investments_value: investmentsValue,
-          user_networth: newNetWorth,
-          leaderboard_networth: leaderboardNetworth
+          investments_value: investmentsValueAfterSale
         });
         
         // 2. Log the transaction fee (deducting)
@@ -578,9 +573,7 @@ export default function Investments() {
           source: 'Investments',
           business: business?.name,
           fee: TRANSACTION_FEE,
-          investments_value: investmentsValue,
-          user_networth: newNetWorth,
-          leaderboard_networth: leaderboardNetworth
+          investments_value: investmentsValueAfterSale
         });
         
         // 3. Log capital gains tax if applicable (deducting)
@@ -590,9 +583,7 @@ export default function Investments() {
             business: business?.name,
             profit: investmentProfit,
             tax: Math.round(capitalGainsTax),
-            investments_value: investmentsValue,
-            user_networth: newNetWorth,
-            leaderboard_networth: leaderboardNetworth
+            investments_value: investmentsValueAfterSale
           });
         }
       } catch (logError) {
@@ -602,19 +593,12 @@ export default function Investments() {
       const newRealizedProfit = (userData.total_realized_investment_profit || 0) + Math.round(investmentProfit);
       const newTotalFees = (userData.total_investment_fees || 0) + TRANSACTION_FEE;
 
-      // Calculate investments_value after sale (will be refetched below)
-      const allUserInvestmentsAfterSale = await safeRequest(
-        () => base44.entities.Investment.filter({ student_email: userData.email }),
-        { key: `INV:${userData.email}`, ttlMs: 5000, retries: 1 }
-      );
-      const investmentsValue = allUserInvestmentsAfterSale.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-
       await base44.auth.updateMe({ 
         coins: newCoins,
         total_investment_fees: newTotalFees,
         total_capital_gains_tax: newCapitalGainsTax,
         total_realized_investment_profit: newRealizedProfit,
-        investments_value: investmentsValue
+        investments_value: investmentsValueAfterSale
       });
 
       // Sync to LeaderboardEntry for public visibility
@@ -623,7 +607,7 @@ export default function Investments() {
         total_investment_fees: newTotalFees,
         total_capital_gains_tax: newCapitalGainsTax,
         total_realized_investment_profit: newRealizedProfit,
-        investments_value: investmentsValue,
+        investments_value: investmentsValueAfterSale,
         total_networth: newNetWorth
       });
 
@@ -639,9 +623,8 @@ export default function Investments() {
 
       setSellAmounts({ ...sellAmounts, [businessId]: 0 });
       
-      // Update local state (use the same data from allUserInvestmentsAfterSale)
-      setInvestments(allUserInvestmentsAfterSale);
-      setUserData({ ...userData, coins: newCoins });
+      // Reload fresh data
+      await loadData();
     } catch (error) {
       console.error("Error selling:", error);
       toast.error("שגיאה במכירה");
