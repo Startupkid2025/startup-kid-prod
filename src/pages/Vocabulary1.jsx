@@ -580,10 +580,25 @@ export default function Vocabulary() {
             }));
             
             // Update leaderboard with correct values
-            import("../components/utils/leaderboardSync").then(({ syncLeaderboardEntry }) => {
+            import("../components/utils/leaderboardSync").then(async ({ syncLeaderboardEntry }) => {
+              const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
+              const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+              
+              const purchasedItems = userData.purchased_items || [];
+              let itemsValue = 0;
+              purchasedItems.forEach(itemId => {
+                const item = AVATAR_ITEMS[itemId];
+                if (item) itemsValue += item.price || 0;
+              });
+              
+              const total_networth = newCoinsTotal + itemsValue + investmentsValue;
+              
               syncLeaderboardEntry(userData.email, {
                 coins: newCoinsTotal,
-                mastered_words: newMasteredCount
+                mastered_words: newMasteredCount,
+                items_value: itemsValue,
+                investments_value: investmentsValue,
+                total_networth: total_networth
               });
             });
           });
@@ -684,9 +699,24 @@ export default function Vocabulary() {
             }));
             
             // Update leaderboard with correct values
-            import("../components/utils/leaderboardSync").then(({ syncLeaderboardEntry }) => {
+            import("../components/utils/leaderboardSync").then(async ({ syncLeaderboardEntry }) => {
+              const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
+              const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+              
+              const purchasedItems = userData.purchased_items || [];
+              let itemsValue = 0;
+              purchasedItems.forEach(itemId => {
+                const item = AVATAR_ITEMS[itemId];
+                if (item) itemsValue += item.price || 0;
+              });
+              
+              const total_networth = newCoinsTotal + itemsValue + investmentsValue;
+              
               syncLeaderboardEntry(userData.email, {
-                coins: newCoinsTotal
+                coins: newCoinsTotal,
+                items_value: itemsValue,
+                investments_value: investmentsValue,
+                total_networth: total_networth
               });
             });
           });
