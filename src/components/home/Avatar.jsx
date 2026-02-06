@@ -476,7 +476,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
     }
 
     const newCoins = (user.coins || 0) - foodCost;
-    const newHunger = Math.max(0, hunger - 50);
+    const newHunger = Math.max(0, hunger - 10);
     const totalFoodExpense = (user.total_food_expense || 0) + foodCost;
 
     await base44.auth.updateMe({
