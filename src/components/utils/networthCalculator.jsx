@@ -47,9 +47,9 @@ export async function calculateNetWorth(userEmail, userData = null) {
       }
     }
 
-    // Calculate items value
-    const purchasedItems = user.purchased_items || [];
-    const itemsValue = purchasedItems.reduce((sum, itemId) => {
+    // Calculate items value - only equipped items count
+    const equippedItems = user.equipped_items || {};
+    const itemsValue = Object.values(equippedItems).reduce((sum, itemId) => {
       return sum + (ITEM_PRICES[itemId] || 0);
     }, 0);
 
@@ -89,9 +89,9 @@ export async function updateNetWorth(userEmail, userData = null) {
       }
     }
 
-    // Calculate items value
-    const purchasedItems = user.purchased_items || [];
-    const itemsValue = purchasedItems.reduce((sum, itemId) => {
+    // Calculate items value - only equipped items count
+    const equippedItems = user.equipped_items || {};
+    const itemsValue = Object.values(equippedItems).reduce((sum, itemId) => {
       return sum + (ITEM_PRICES[itemId] || 0);
     }, 0);
 
