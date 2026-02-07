@@ -701,8 +701,8 @@ export default function Vocabulary() {
               const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
               const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
               
-              const purchasedItems = userData.purchased_items || [];
-              const itemsValue = purchasedItems.reduce((sum, itemId) => {
+              const equippedItems = userData.equipped_items || {};
+              const itemsValue = Object.values(equippedItems).reduce((sum, itemId) => {
                 const item = AVATAR_ITEMS[itemId];
                 return sum + (item?.price || 0);
               }, 0);
