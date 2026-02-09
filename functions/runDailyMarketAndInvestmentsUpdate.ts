@@ -86,27 +86,38 @@ Deno.serve(async (req) => {
     console.log(`📈 Found ${investmentsNeedingUpdate.length} investments to update`);
     
     let updatedCount = 0;
-    for (const investment of investmentsNeedingUpdate) {
-      const changePercent = businessTypeToChangeMap[investment.business_type] || 0;
-      const prevValue = investment.current_value;
-      const newValue = Math.round(prevValue * (1 + changePercent / 100));
-      const delta = newValue - prevValue;
+    
+    // Process in batches of 50 to avoid rate limits
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < investmentsNeedingUpdate.length; i += BATCH_SIZE) {
+      const batch = investmentsNeedingUpdate.slice(i, i + BATCH_SIZE);
       
-      // Calculate unrealized profit
-      const unrealizedProfit = newValue - (investment.invested_amount || 0);
+      // Update batch in parallel
+      await Promise.all(batch.map(async (investment) => {
+        const changePercent = businessTypeToChangeMap[investment.business_type] || 0;
+        const prevValue = investment.current_value;
+        const newValue = Math.round(prevValue * (1 + changePercent / 100));
+        const unrealizedProfit = newValue - (investment.invested_amount || 0);
+        
+        await base44.asServiceRole.entities.Investment.update(investment.id, {
+          current_value: newValue,
+          daily_change_percent: changePercent,
+          last_updated: new Date().toISOString(),
+          last_updated_date_key: dateKey,
+          unrealized_profit: unrealizedProfit
+        });
+      }));
       
-      await base44.asServiceRole.entities.Investment.update(investment.id, {
-        current_value: newValue,
-        daily_change_percent: changePercent,
-        last_updated: new Date().toISOString(),
-        last_updated_date_key: dateKey,
-        unrealized_profit: unrealizedProfit
-      });
+      updatedCount += batch.length;
+      console.log(`✅ Updated batch ${Math.floor(i / BATCH_SIZE) + 1}: ${updatedCount}/${investmentsNeedingUpdate.length} investments`);
       
-      updatedCount++;
+      // Small delay between batches to avoid rate limits
+      if (i + BATCH_SIZE < investmentsNeedingUpdate.length) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
     }
     
-    console.log(`✅ Updated ${updatedCount} investments`);
+    console.log(`✅ Completed updating ${updatedCount} investments`);
     
     // ========== STEP 3: Update Net Worth for All Users ==========
     const allUsers = await base44.asServiceRole.entities.User.list();
