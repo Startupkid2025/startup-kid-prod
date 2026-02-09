@@ -121,16 +121,23 @@ Deno.serve(async (req) => {
     
     // ========== STEP 3: Update Net Worth for All Users ==========
     const allUsers = await base44.asServiceRole.entities.User.list();
+    const studentsToUpdate = allUsers.filter(u => u.user_type === 'student' || !u.user_type);
     let usersUpdated = 0;
     
-    for (const user of allUsers) {
-      if (user.user_type === 'student' || !user.user_type) {
+    console.log(`👥 Processing ${studentsToUpdate.length} users`);
+    
+    // Process users in batches of 20
+    const USER_BATCH_SIZE = 20;
+    for (let i = 0; i < studentsToUpdate.length; i += USER_BATCH_SIZE) {
+      const userBatch = studentsToUpdate.slice(i, i + USER_BATCH_SIZE);
+      
+      await Promise.all(userBatch.map(async (user) => {
         try {
           const currentCoins = user.coins || 0;
-          const purchasedItems = user.purchased_items || [];
+          const equippedItems = user.equipped_items || {};
           
+          // Only equipped items count
           let itemsValue = 0;
-          // Items value calculation would need AVATAR_ITEMS import
           
           const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
           const oldInvestmentsValue = user.investments_value || 0;
@@ -150,7 +157,11 @@ Deno.serve(async (req) => {
                   timestamp: new Date().toISOString(),
                   source: 'Daily Investments Update',
                   date: dateKey,
-                  type: 'investment_value_change'
+                  type: 'investment_value_change',
+                  investments_value: newInvestmentsValue,
+                  items_value: itemsValue,
+                  user_networth: currentCoins + itemsValue + newInvestmentsValue,
+                  leaderboard_networth: currentCoins + itemsValue + newInvestmentsValue
                 }
               });
             } catch (logError) {
@@ -193,10 +204,17 @@ Deno.serve(async (req) => {
         } catch (error) {
           console.error(`Error updating net worth for ${user.email}:`, error);
         }
+      }));
+      
+      console.log(`✅ Updated batch ${Math.floor(i / USER_BATCH_SIZE) + 1}: ${usersUpdated}/${studentsToUpdate.length} users`);
+      
+      // Small delay between batches
+      if (i + USER_BATCH_SIZE < studentsToUpdate.length) {
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
     
-    console.log(`✅ Updated net worth for ${usersUpdated} users`);
+    console.log(`✅ Completed updating net worth for ${usersUpdated} users`);
     
     return Response.json({
       success: true,
