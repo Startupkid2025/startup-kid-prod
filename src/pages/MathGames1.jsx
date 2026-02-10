@@ -597,6 +597,7 @@ ${question} = ${correctAnswer}
           console.error("Error logging math coins:", logError);
         }
         
+        // Update User
         await base44.auth.updateMe({
           coins: newCoins,
           daily_math_count: (userData.daily_math_count || 0) + 1,
@@ -605,13 +606,16 @@ ${question} = ${correctAnswer}
         });
         setDailyCount(prev => prev + 1);
         
-        // Update LeaderboardEntry with all math earnings
+        // Update LeaderboardEntry directly
         try {
-          const { syncLeaderboardEntry } = await import('../components/utils/leaderboardSync');
-          await syncLeaderboardEntry(userData.email, {
-            coins: newCoins,
-            total_math_earnings: (userData.total_math_earnings || 0) + coinsEarned
-          });
+          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+          
+          if (leaderboardEntries.length > 0) {
+            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+              coins: newCoins,
+              total_correct_math_answers: (userData.total_correct_math_answers || 0) + 1
+            });
+          }
         } catch (leaderboardError) {
           console.error("Error updating leaderboard:", leaderboardError);
         }
