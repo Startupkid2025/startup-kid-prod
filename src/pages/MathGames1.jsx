@@ -611,13 +611,23 @@ ${question} = ${correctAnswer}
           const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
           
           if (leaderboardEntries.length > 0) {
+            console.log("📊 Updating LeaderboardEntry:", {
+              email: userData.email,
+              newCoins: newCoins,
+              total_correct_math_answers: (userData.total_correct_math_answers || 0) + 1
+            });
+            
             await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
               coins: newCoins,
               total_correct_math_answers: (userData.total_correct_math_answers || 0) + 1
             });
+            
+            console.log("✅ LeaderboardEntry updated successfully");
+          } else {
+            console.warn("⚠️ No LeaderboardEntry found for:", userData.email);
           }
         } catch (leaderboardError) {
-          console.error("Error updating leaderboard:", leaderboardError);
+          console.error("❌ Error updating leaderboard:", leaderboardError);
         }
       }
 
