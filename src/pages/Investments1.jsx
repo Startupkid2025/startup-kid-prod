@@ -288,12 +288,13 @@ export default function Investments() {
       return;
     }
 
-    // Allow any amount as long as it covers the fee (actualInvestment can be less than minInvestment)
-    const actualInvestment = amount - TRANSACTION_FEE;
-    if (actualInvestment <= 0) {
-      toast.error(`הסכום חייב לכסות את העמלה של ${TRANSACTION_FEE} סטארטקוין`);
+    // Minimum amount is 50 (will invest amount - fee)
+    if (amount < business.minInvestment) {
+      toast.error(`השקעה מינימלית: ${business.minInvestment} סטארטקוין (בפועל יושקעו ${business.minInvestment - TRANSACTION_FEE} אחרי עמלה)`);
       return;
     }
+    
+    const actualInvestment = amount - TRANSACTION_FEE;
 
     setConfirmInvestDialog({
       isOpen: true,
@@ -902,7 +903,7 @@ export default function Investments() {
                     />
                     <Button
                       onClick={() => openInvestDialog(business.id)}
-                      disabled={!investmentAmounts[business.id] || investmentAmounts[business.id] <= TRANSACTION_FEE || isInvesting[business.id]}
+                      disabled={!investmentAmounts[business.id] || investmentAmounts[business.id] < business.minInvestment || isInvesting[business.id]}
                       className="bg-white/20 hover:bg-white/30 text-white font-bold text-sm h-9 w-full disabled:opacity-50 transition-all"
                     >
                       {isInvesting[business.id] ? (
