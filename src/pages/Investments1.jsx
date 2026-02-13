@@ -288,10 +288,10 @@ export default function Investments() {
       return;
     }
 
-    // Check minimum AFTER fee deduction
+    // Allow any amount as long as it covers the fee (actualInvestment can be less than minInvestment)
     const actualInvestment = amount - TRANSACTION_FEE;
-    if (actualInvestment < business.minInvestment) {
-      toast.error(`השקעה מינימלית: ${business.minInvestment} + עמלה ${TRANSACTION_FEE} = ${business.minInvestment + TRANSACTION_FEE} סטארטקוין`);
+    if (actualInvestment <= 0) {
+      toast.error(`הסכום חייב לכסות את העמלה של ${TRANSACTION_FEE} סטארטקוין`);
       return;
     }
 
