@@ -902,7 +902,7 @@ export default function Investments() {
                     />
                     <Button
                       onClick={() => openInvestDialog(business.id)}
-                      disabled={!investmentAmounts[business.id] || investmentAmounts[business.id] < (business.minInvestment + TRANSACTION_FEE) || isInvesting[business.id]}
+                      disabled={!investmentAmounts[business.id] || investmentAmounts[business.id] <= TRANSACTION_FEE || isInvesting[business.id]}
                       className="bg-white/20 hover:bg-white/30 text-white font-bold text-sm h-9 w-full disabled:opacity-50 transition-all"
                     >
                       {isInvesting[business.id] ? (
