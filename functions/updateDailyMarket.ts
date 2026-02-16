@@ -10,7 +10,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    // Get date key for Asia/Jerusalem timezone
+    const getDateKeyJerusalem = () => {
+      const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Jerusalem',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+      return formatter.format(new Date());
+    };
+    
+    const today = getDateKeyJerusalem();
     
     // Check if already updated today
     const existingRecords = await base44.asServiceRole.entities.DailyMarketPerformance.filter({ date: today });
@@ -59,6 +70,7 @@ Deno.serve(async (req) => {
         current_value: newValue,
         daily_change_percent: changePercent,
         last_updated: new Date().toISOString(),
+        last_updated_date_key: today,
         unrealized_profit: (investment.unrealized_profit || 0) + delta
       });
       
