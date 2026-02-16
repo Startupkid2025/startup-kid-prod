@@ -87,8 +87,8 @@ Deno.serve(async (req) => {
     
     let updatedCount = 0;
     
-    // Process in batches of 50 to avoid rate limits
-    const BATCH_SIZE = 50;
+    // Process in batches to avoid rate limits
+    const BATCH_SIZE = 30;
     for (let i = 0; i < investmentsNeedingUpdate.length; i += BATCH_SIZE) {
       const batch = investmentsNeedingUpdate.slice(i, i + BATCH_SIZE);
       
@@ -111,9 +111,9 @@ Deno.serve(async (req) => {
       updatedCount += batch.length;
       console.log(`✅ Updated batch ${Math.floor(i / BATCH_SIZE) + 1}: ${updatedCount}/${investmentsNeedingUpdate.length} investments`);
       
-      // Small delay between batches to avoid rate limits
+      // Delay between batches to avoid rate limits
       if (i + BATCH_SIZE < investmentsNeedingUpdate.length) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
     
@@ -126,8 +126,8 @@ Deno.serve(async (req) => {
     
     console.log(`👥 Processing ${studentsToUpdate.length} users`);
     
-    // Process users in batches of 20
-    const USER_BATCH_SIZE = 20;
+    // Process users in batches
+    const USER_BATCH_SIZE = 15;
     for (let i = 0; i < studentsToUpdate.length; i += USER_BATCH_SIZE) {
       const userBatch = studentsToUpdate.slice(i, i + USER_BATCH_SIZE);
       
@@ -208,9 +208,9 @@ Deno.serve(async (req) => {
       
       console.log(`✅ Updated batch ${Math.floor(i / USER_BATCH_SIZE) + 1}: ${usersUpdated}/${studentsToUpdate.length} users`);
       
-      // Small delay between batches
+      // Delay between batches
       if (i + USER_BATCH_SIZE < studentsToUpdate.length) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
     
