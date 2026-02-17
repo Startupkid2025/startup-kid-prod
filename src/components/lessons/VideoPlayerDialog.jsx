@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import { syncLeaderboardEntry } from "../utils/leaderboardSync";
 
 export default function VideoPlayerDialog({ isOpen, onClose, lesson }) {
   const [hasMarkedAsWatched, setHasMarkedAsWatched] = useState(false);
@@ -30,12 +31,32 @@ export default function VideoPlayerDialog({ isOpen, onClose, lesson }) {
             
             // Check if user didn't attend and hasn't watched yet
             const shouldGiveXP = participation.attended === false && !participation.watched_recording;
+            const shouldUpdateLessonCounters = !participation.attended; // Need to increment counters
             
             // Mark as watched
             await base44.entities.LessonParticipation.update(participation.id, {
-              watched_recording: true
+              watched_recording: true,
+              attended: true // Mark as attended when watching
             });
             setHasMarkedAsWatched(true);
+            
+            // Update lesson counters if needed
+            if (shouldUpdateLessonCounters && lesson.category) {
+              const updates = { total_lessons: (user.total_lessons || 0) + 1 };
+              
+              if (lesson.category === 'ai_tech') {
+                updates.ai_tech_lessons = (user.ai_tech_lessons || 0) + 1;
+              } else if (lesson.category === 'money_business') {
+                updates.money_business_lessons = (user.money_business_lessons || 0) + 1;
+              } else if (lesson.category === 'personal_skills' || lesson.category === 'social_skills') {
+                updates.social_skills_lessons = (user.social_skills_lessons || 0) + 1;
+              }
+              
+              await base44.auth.updateMe(updates);
+              
+              // Sync total_lessons to leaderboard
+              await syncLeaderboardEntry({...user, ...updates}, { total_lessons: updates.total_lessons });
+            }
             
             // Give XP if they missed the lesson
             if (shouldGiveXP && !hasGivenXP) {

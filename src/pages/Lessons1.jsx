@@ -236,6 +236,9 @@ export default function Lessons() {
         console.error("Error syncing leaderboard:", error);
       }
 
+      // Update current user state
+      setCurrentUser({...currentUser, coins: newCoins, total_networth: totalNetworth});
+
       setSurveyLesson(null);
       setSurveyParticipation(null);
       toast.success("תודה על המשוב! קיבלת 70 סטארטקוין! 🎉");
