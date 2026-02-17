@@ -277,6 +277,7 @@ export default function Investments() {
   const loadData = async () => {
     // Prevent multiple simultaneous loads
     if (loadInFlightRef.current) {
+      console.log('⏸️ loadData already in-flight, skipping');
       return;
     }
     loadInFlightRef.current = true;
@@ -286,18 +287,18 @@ export default function Investments() {
       const user = await base44.auth.me();
       setUserData(user);
 
-      // READ ONLY: Load market data sequentially to reduce burst
-      const todayMarket = await getTodayMarket();
-      const yesterdayMarket = await getYesterdayMarket();
+      // READ ONLY: Load market data and investments in parallel (each wrapped in safeRequest)
+      const [todayMarket, yesterdayMarket, myInvestments] = await Promise.all([
+        getTodayMarket(),
+        getYesterdayMarket(),
+        safeRequest(
+          () => base44.entities.Investment.filter({ student_email: user.email }),
+          { key: `INV:${user.email}`, ttlMs: 30 * 1000, retries: 1 }
+        )
+      ]);
       
       setTodayPerformance(todayMarket);
       setYesterdayPerformance(yesterdayMarket);
-
-      // READ ONLY: Load user's investments with safeRequest
-      const myInvestments = await safeRequest(
-        () => base44.entities.Investment.filter({ student_email: user.email }),
-        { key: `INV:${user.email}`, ttlMs: 30 * 1000, retries: 1 }
-      );
       setInvestments(myInvestments);
       
       // Cache data in session storage for quick remounts
@@ -311,7 +312,7 @@ export default function Investments() {
       }
     } catch (error) {
       console.error("Error loading investments:", error);
-      toast.error("שגיאה בטעינת נתונים. אנא נסה שוב מאוחר יותר.");
+      toast.error("שגיאה בטעינת נתונים. אנא רענן את הדף.");
     } finally {
       loadInFlightRef.current = false;
       setIsLoading(false);
