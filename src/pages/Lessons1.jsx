@@ -92,7 +92,7 @@ export default function Lessons() {
       setCurrentUser(user);
 
       // Use cache for all API calls to reduce rate limit hits
-      const [myParticipations, myQuizProgress, allQuizQuestions, allGroups] = await Promise.all([
+      const [myParticipations, myQuizProgress, allGroups] = await Promise.all([
         safeRequest(
           () => base44.entities.LessonParticipation.filter({ student_email: user.email }, "-lesson_date"),
           { key: `LP:${user.email}`, ttlMs: 30000, retries: 1 }
@@ -104,17 +104,13 @@ export default function Lessons() {
         ).catch(() => []),
         
         safeRequest(
-          () => base44.entities.QuizQuestion.list(),
-          { key: 'QQ:all', ttlMs: 60000, retries: 1 }
-        ).catch(() => []),
-        
-        safeRequest(
           () => base44.entities.Group.list(),
           { key: 'Groups:all', ttlMs: 60000, retries: 1 }
         ).catch(() => [])
       ]);
 
       let myLessons = [];
+      let allQuizQuestions = [];
       
       // Only load lessons if user has participations
       if (myParticipations.length > 0) {
@@ -140,6 +136,17 @@ export default function Lessons() {
           
           return new Date(participationB.lesson_date) - new Date(participationA.lesson_date);
         });
+
+        // Load quiz questions only for participated lessons
+        const quizPromises = participatedLessonIds.map(lessonId =>
+          safeRequest(
+            () => base44.entities.QuizQuestion.filter({ lesson_id: lessonId }),
+            { key: `QQ:${lessonId}`, ttlMs: 120000, retries: 1 }
+          ).catch(() => [])
+        );
+        
+        const quizResults = await Promise.all(quizPromises);
+        allQuizQuestions = quizResults.flat();
       }
 
       setLessons(myLessons);
