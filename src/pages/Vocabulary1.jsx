@@ -531,33 +531,7 @@ export default function Vocabulary() {
           
           const totalNetworth = newCoinsTotal + itemsValue + investmentsValue;
 
-          // Log coin change
-          import("../components/utils/coinLogger").then(async ({ logCoinChange }) => {
-            try {
-              let leaderboardNetworth = 0;
-              try {
-                const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
-                if (leaderboardEntries.length > 0) {
-                  leaderboardNetworth = leaderboardEntries[0].total_networth || 0;
-                }
-              } catch (err) {
-                console.error("Error fetching leaderboard:", err);
-              }
-              
-              await logCoinChange(userData.email, oldCoins, newCoinsTotal, "שליטה במילה באנגלית", {
-                source: 'Vocabulary',
-                word: currentWord.english,
-                coinsEarned: coinsEarned,
-                mastered: isMastered,
-                investments_value: investmentsValue,
-                user_networth: totalNetworth,
-                leaderboard_networth: leaderboardNetworth
-              });
-            } catch (err) {
-              console.error("Error logging vocab coins:", err);
-            }
-          }).catch(err => console.error("Error loading coinLogger:", err));
-
+          // Update in background
           Promise.all([
             base44.auth.updateMe({
               coins: newCoinsTotal,
@@ -582,22 +556,40 @@ export default function Vocabulary() {
               mastered_words: newMasteredCount
             }));
             
-            // Update leaderboard directly
+            // Update leaderboard and get actual value
+            let actualLeaderboardNetworth = null;
             try {
-              const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
-              if (leaderboardEntries.length > 0) {
-                await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-                  coins: newCoinsTotal,
-                  total_networth: totalNetworth,
-                  investments_value: investmentsValue,
-                  items_value: itemsValue,
-                  mastered_words: newMasteredCount
-                });
-              }
+              const { syncLeaderboardEntry } = await import("../components/utils/leaderboardSync");
+              const freshUser = await base44.auth.me();
+              actualLeaderboardNetworth = await syncLeaderboardEntry(freshUser, {
+                coins: newCoinsTotal,
+                total_networth: totalNetworth,
+                investments_value: investmentsValue,
+                items_value: itemsValue,
+                mastered_words: newMasteredCount
+              });
             } catch (err) {
               console.error("Error updating leaderboard:", err);
             }
+            
+            // Log coin change with actual leaderboard value
+            try {
+              const { logCoinChange } = await import("../components/utils/coinLogger");
+              await logCoinChange(userData.email, oldCoins, newCoinsTotal, "שליטה במילה באנגלית", {
+                source: 'Vocabulary',
+                word: currentWord.english,
+                coinsEarned: coinsEarned,
+                mastered: isMastered,
+                investments_value: investmentsValue,
+                user_networth: totalNetworth,
+                actualLeaderboardNetworth: actualLeaderboardNetworth
+              });
+            } catch (err) {
+              console.error("Error logging vocab coins:", err);
+            }
           });
+
+
         } else {
           await base44.entities.WordProgress.update(existingWordProg.id, {
             correct_streak: newStreak,
@@ -657,32 +649,7 @@ export default function Vocabulary() {
           
           const totalNetworth = newCoinsTotal + itemsValue + investmentsValue;
 
-          // Log coin change
-          import("../components/utils/coinLogger").then(async ({ logCoinChange }) => {
-            try {
-              let leaderboardNetworth = 0;
-              try {
-                const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
-                if (leaderboardEntries.length > 0) {
-                  leaderboardNetworth = leaderboardEntries[0].total_networth || 0;
-                }
-              } catch (err) {
-                console.error("Error fetching leaderboard:", err);
-              }
-              
-              await logCoinChange(userData.email, oldCoins, newCoinsTotal, "תשובה נכונה באנגלית", {
-                source: 'Vocabulary - First Correct',
-                word: currentWord.english,
-                coinsEarned: coinsEarned,
-                investments_value: investmentsValue,
-                user_networth: totalNetworth,
-                leaderboard_networth: leaderboardNetworth
-              });
-            } catch (err) {
-              console.error("Error logging vocab coins:", err);
-            }
-          }).catch(err => console.error("Error loading coinLogger:", err));
-
+          // Update in background
           Promise.all([
             base44.auth.updateMe({
               coins: newCoinsTotal,
@@ -697,21 +664,38 @@ export default function Vocabulary() {
               daily_vocabulary_words: updatedDailyWords
             }));
             
-            // Update leaderboard directly
+            // Update leaderboard and get actual value
+            let actualLeaderboardNetworth = null;
             try {
-              const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
-              if (leaderboardEntries.length > 0) {
-                await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-                  coins: newCoinsTotal,
-                  total_networth: totalNetworth,
-                  investments_value: investmentsValue,
-                  items_value: itemsValue
-                });
-              }
+              const { syncLeaderboardEntry } = await import("../components/utils/leaderboardSync");
+              const freshUser = await base44.auth.me();
+              actualLeaderboardNetworth = await syncLeaderboardEntry(freshUser, {
+                coins: newCoinsTotal,
+                total_networth: totalNetworth,
+                investments_value: investmentsValue,
+                items_value: itemsValue
+              });
             } catch (err) {
               console.error("Error updating leaderboard:", err);
             }
+            
+            // Log coin change with actual leaderboard value
+            try {
+              const { logCoinChange } = await import("../components/utils/coinLogger");
+              await logCoinChange(userData.email, oldCoins, newCoinsTotal, "תשובה נכונה באנגלית", {
+                source: 'Vocabulary - First Correct',
+                word: currentWord.english,
+                coinsEarned: coinsEarned,
+                investments_value: investmentsValue,
+                user_networth: totalNetworth,
+                actualLeaderboardNetworth: actualLeaderboardNetworth
+              });
+            } catch (err) {
+              console.error("Error logging vocab coins:", err);
+            }
           });
+
+
         }
 
         setFeedback({
