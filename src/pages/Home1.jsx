@@ -111,9 +111,8 @@ export default function Home() {
       const newCoins = (user.coins || 0) + amount;
       const newTotalPassiveIncome = (user.total_passive_income || 0) + amount;
       
-      // Calculate net worth using already declared purchasedItems
-      const userInvestments = await base44.entities.Investment.filter({ student_email: user.email });
-      const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      // Calculate net worth using pre-calculated investments value
+      const investmentsValue = user.investments_value || 0;
       
       let itemsValue = 0;
       purchasedItems.forEach(itemId => {
@@ -360,9 +359,8 @@ export default function Home() {
     const newPurchasedItems = [...purchasedItems, itemId];
     const newCoins = (userData.coins || 0) - itemPrice;
 
-    // Calculate net worth
-    const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
-    const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+    // Calculate net worth using cached investments value
+    const investmentsValue = userData.investments_value || 0;
     
     const newItemsValue = newPurchasedItems.reduce((sum, itemId) => {
       return sum + (AVATAR_ITEMS[itemId]?.price || 0);
@@ -425,9 +423,8 @@ export default function Home() {
       delete newEquippedItems[item.category];
     }
 
-    // Calculate net worth
-    const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
-    const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+    // Calculate net worth using cached investments value
+    const investmentsValue = userData.investments_value || 0;
     
     const newItemsValue = newPurchasedItems.reduce((sum, itemId) => {
       return sum + (AVATAR_ITEMS[itemId]?.price || 0);
