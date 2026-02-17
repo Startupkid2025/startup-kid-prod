@@ -411,20 +411,42 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
     const newCoins = (user.coins || 0) + coinsToAdd;
     const finalCoins = Math.max(newCoins, -300);
 
+    // Calculate net worth
+    const userInvestments = await base44.entities.Investment.filter({ student_email: user.email });
+    const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+    
+    const purchasedItems = user.purchased_items || [];
+    let itemsValue = 0;
+    purchasedItems.forEach(itemId => {
+      const item = AVATAR_ITEMS[itemId];
+      if (item) itemsValue += item.price || 0;
+    });
+    
+    const totalNetworth = finalCoins + itemsValue + investmentsValue;
+
     await base44.auth.updateMe({
       coins: finalCoins,
+      total_networth: totalNetworth,
       total_work_earnings: totalWorkEarnings,
       work_status: null
     });
 
-    const newNetWorth = await updateNetWorth(user.email);
-
-    await syncLeaderboardEntry(user.email, {
-      coins: finalCoins,
-      total_work_earnings: totalWorkEarnings,
-      total_networth: newNetWorth,
-      total_work_hours: user.total_work_hours || 0
-    });
+    // Update leaderboard directly
+    try {
+      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: user.email });
+      if (leaderboardEntries.length > 0) {
+        await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+          coins: finalCoins,
+          total_networth: totalNetworth,
+          investments_value: investmentsValue,
+          items_value: itemsValue,
+          total_work_earnings: totalWorkEarnings,
+          total_work_hours: user.total_work_hours || 0
+        });
+      }
+    } catch (error) {
+      console.error("Error updating leaderboard:", error);
+    }
 
     toast.success(`${user.avatar_name} חזר מהעבודה! קיבלת ${coinsToAdd} סטארטקוין! 🎉`);
     setWorkStatus(null);
@@ -479,18 +501,41 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
     const newHunger = Math.max(0, hunger - 10);
     const totalFoodExpense = (user.total_food_expense || 0) + foodCost;
 
+    // Calculate net worth
+    const userInvestments = await base44.entities.Investment.filter({ student_email: user.email });
+    const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+    
+    const purchasedItems = user.purchased_items || [];
+    let itemsValue = 0;
+    purchasedItems.forEach(itemId => {
+      const item = AVATAR_ITEMS[itemId];
+      if (item) itemsValue += item.price || 0;
+    });
+    
+    const totalNetworth = newCoins + itemsValue + investmentsValue;
+
     await base44.auth.updateMe({
       coins: newCoins,
+      total_networth: totalNetworth,
       hunger: newHunger,
       total_food_expense: totalFoodExpense
     });
 
-    const newNetWorth = await updateNetWorth(user.email);
-    await syncLeaderboardEntry(user.email, {
-      coins: newCoins,
-      total_networth: newNetWorth,
-      total_food_expense: totalFoodExpense
-    });
+    // Update leaderboard directly
+    try {
+      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: user.email });
+      if (leaderboardEntries.length > 0) {
+        await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+          coins: newCoins,
+          total_networth: totalNetworth,
+          investments_value: investmentsValue,
+          items_value: itemsValue,
+          total_food_expense: totalFoodExpense
+        });
+      }
+    } catch (error) {
+      console.error("Error updating leaderboard:", error);
+    }
 
     setHunger(newHunger);
     toast.success(`${user.avatar_name} אכל והרעב ירד! 🍎 (-10 מטבעות)`);

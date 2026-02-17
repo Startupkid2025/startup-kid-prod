@@ -111,13 +111,27 @@ export default function Home() {
       const newCoins = (user.coins || 0) + amount;
       const newTotalPassiveIncome = (user.total_passive_income || 0) + amount;
       
+      // Calculate net worth
+      const userInvestments = await base44.entities.Investment.filter({ student_email: user.email });
+      const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      
+      const purchasedItems = user.purchased_items || [];
+      let itemsValue = 0;
+      purchasedItems.forEach(itemId => {
+        const item = AVATAR_ITEMS[itemId];
+        if (item) itemsValue += item.price || 0;
+      });
+      
+      const totalNetworth = newCoins + itemsValue + investmentsValue;
+      
       await base44.auth.updateMe({
         coins: newCoins,
+        total_networth: totalNetworth,
         total_passive_income: newTotalPassiveIncome,
         last_passive_income_date: todayKey
       });
       
-      // Sync to LeaderboardEntry
+      // Update LeaderboardEntry directly
       try {
         const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
           student_email: user.email 
@@ -125,11 +139,14 @@ export default function Home() {
         if (leaderboardEntries.length > 0) {
           await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
             coins: newCoins,
+            total_networth: totalNetworth,
+            investments_value: investmentsValue,
+            items_value: itemsValue,
             total_passive_income: newTotalPassiveIncome
           });
         }
       } catch (error) {
-        console.error("Error syncing passive income to leaderboard:", error);
+        console.error("Error updating leaderboard:", error);
       }
       
       // Show toast notification
@@ -344,15 +361,27 @@ export default function Home() {
     const newPurchasedItems = [...purchasedItems, itemId];
     const newCoins = (userData.coins || 0) - itemPrice;
 
+    // Calculate net worth
+    const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
+    const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+    
+    const newItemsValue = newPurchasedItems.reduce((sum, itemId) => {
+      return sum + (AVATAR_ITEMS[itemId]?.price || 0);
+    }, 0);
+    
+    const totalNetworth = newCoins + newItemsValue + investmentsValue;
+
     await base44.auth.updateMe({
       purchased_items: newPurchasedItems,
-      coins: newCoins
+      coins: newCoins,
+      total_networth: totalNetworth
     });
 
     setUserData({
       ...userData,
       purchased_items: newPurchasedItems,
-      coins: newCoins
+      coins: newCoins,
+      total_networth: totalNetworth
     });
 
     try {
@@ -360,7 +389,10 @@ export default function Home() {
       if (leaderboardEntries.length > 0) {
         await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
           purchased_items: newPurchasedItems,
-          coins: newCoins
+          coins: newCoins,
+          total_networth: totalNetworth,
+          investments_value: investmentsValue,
+          items_value: newItemsValue
         });
       }
     } catch (error) {
@@ -394,10 +426,21 @@ export default function Home() {
       delete newEquippedItems[item.category];
     }
 
+    // Calculate net worth
+    const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
+    const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+    
+    const newItemsValue = newPurchasedItems.reduce((sum, itemId) => {
+      return sum + (AVATAR_ITEMS[itemId]?.price || 0);
+    }, 0);
+    
+    const totalNetworth = newCoins + newItemsValue + investmentsValue;
+
     await base44.auth.updateMe({
       purchased_items: newPurchasedItems,
       coins: newCoins,
       equipped_items: newEquippedItems,
+      total_networth: totalNetworth,
       total_item_sale_losses: (userData.total_item_sale_losses || 0) + lossDueToSale
     });
 
@@ -406,6 +449,7 @@ export default function Home() {
       purchased_items: newPurchasedItems,
       coins: newCoins,
       equipped_items: newEquippedItems,
+      total_networth: totalNetworth,
       total_item_sale_losses: (userData.total_item_sale_losses || 0) + lossDueToSale
     });
 
@@ -416,6 +460,9 @@ export default function Home() {
           purchased_items: newPurchasedItems,
           coins: newCoins,
           equipped_items: newEquippedItems,
+          total_networth: totalNetworth,
+          investments_value: investmentsValue,
+          items_value: newItemsValue,
           total_item_sale_losses: (userData.total_item_sale_losses || 0) + lossDueToSale
         });
       }

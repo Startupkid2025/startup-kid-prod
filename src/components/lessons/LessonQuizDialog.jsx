@@ -136,16 +136,38 @@ export default function LessonQuizDialog({ isOpen, onClose, lesson, onComplete }
 
       // Give coins to user ONLY on first attempt
       if (coinsToAdd > 0) {
-        await base44.auth.updateMe({
-          coins: (user.coins || 0) + coinsToAdd
+        const newCoins = (user.coins || 0) + coinsToAdd;
+        
+        // Calculate net worth
+        const userInvestments = await base44.entities.Investment.filter({ student_email: user.email });
+        const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+        
+        const { AVATAR_ITEMS } = await import("../avatar/TamagotchiAvatar");
+        const purchasedItems = user.purchased_items || [];
+        let itemsValue = 0;
+        purchasedItems.forEach(itemId => {
+          const item = AVATAR_ITEMS[itemId];
+          if (item) itemsValue += item.price || 0;
         });
         
-        // Update leaderboard
+        const totalNetworth = newCoins + itemsValue + investmentsValue;
+        
+        await base44.auth.updateMe({
+          coins: newCoins,
+          total_networth: totalNetworth
+        });
+        
+        // Update leaderboard directly
         try {
-          const { syncLeaderboardEntry } = await import("../utils/leaderboardSync");
-          await syncLeaderboardEntry(user.email, {
-            coins: (user.coins || 0) + coinsToAdd
-          });
+          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: user.email });
+          if (leaderboardEntries.length > 0) {
+            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+              coins: newCoins,
+              total_networth: totalNetworth,
+              investments_value: investmentsValue,
+              items_value: itemsValue
+            });
+          }
         } catch (error) {
           console.error("Error updating leaderboard:", error);
         }

@@ -229,11 +229,26 @@ export default function Lessons() {
       // Give 70 coins for completing survey
       const currentCoins = currentUser.coins || 0;
       const surveyReward = 70;
+      const newCoins = currentCoins + surveyReward;
+      
+      // Calculate net worth
+      const userInvestments = await base44.entities.Investment.filter({ student_email: currentUser.email });
+      const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      
+      const { AVATAR_ITEMS } = await import("../components/avatar/TamagotchiAvatar");
+      const purchasedItems = currentUser.purchased_items || [];
+      let itemsValue = 0;
+      purchasedItems.forEach(itemId => {
+        const item = AVATAR_ITEMS[itemId];
+        if (item) itemsValue += item.price || 0;
+      });
+      
+      const totalNetworth = newCoins + itemsValue + investmentsValue;
       
       // Log coin change
       try {
         const { logCoinChange } = await import("../components/utils/coinLogger");
-        await logCoinChange(currentUser.email, currentCoins, currentCoins + surveyReward, "מילוי סקר שיעור", {
+        await logCoinChange(currentUser.email, currentCoins, newCoins, "מילוי סקר שיעור", {
           source: 'Lessons',
           lesson_id: surveyLesson.id,
           lesson_name: surveyLesson.lesson_name
@@ -243,15 +258,21 @@ export default function Lessons() {
       }
       
       await base44.auth.updateMe({
-        coins: currentCoins + surveyReward
+        coins: newCoins,
+        total_networth: totalNetworth
       });
 
-      // Update LeaderboardEntry
+      // Update LeaderboardEntry directly
       try {
-        const { syncLeaderboardEntry } = await import("../components/utils/leaderboardSync");
-        await syncLeaderboardEntry(currentUser.email, {
-          coins: currentCoins + surveyReward
-        });
+        const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: currentUser.email });
+        if (leaderboardEntries.length > 0) {
+          await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+            coins: newCoins,
+            total_networth: totalNetworth,
+            investments_value: investmentsValue,
+            items_value: itemsValue
+          });
+        }
       } catch (error) {
         console.error("Error updating leaderboard:", error);
       }

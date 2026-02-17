@@ -120,20 +120,20 @@ export default function AvatarShop({
         return sum + (AVATAR_ITEMS[itemId]?.price || 0);
       }, 0);
 
-      await base44.auth.updateMe({
-        purchased_items: newPurchasedItems,
-        coins: newCoins,
-        items_value: newItemsValue
-      });
-
-      // Update net worth
-      const newNetWorth = await updateNetWorth(userData.email);
-      
-      // Get investments value for logging
+      // Get investments value
       const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
       const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
       
-      // Log coin change after net worth calculation
+      const totalNetworth = newCoins + newItemsValue + investmentsValue;
+
+      await base44.auth.updateMe({
+        purchased_items: newPurchasedItems,
+        coins: newCoins,
+        items_value: newItemsValue,
+        total_networth: totalNetworth
+      });
+      
+      // Log coin change
       try {
         const { logCoinChange } = await import("../utils/coinLogger");
         await logCoinChange(userData.email, oldCoins, newCoins, "רכישת פריט", {
@@ -147,13 +147,21 @@ export default function AvatarShop({
         console.error("Error logging purchase:", logError);
       }
 
-      // Sync to LeaderboardEntry
+      // Update LeaderboardEntry directly
       if (userData.user_type !== 'parent' && userData.user_type !== 'demo') {
-        await syncLeaderboardEntry(userData.email, {
-          coins: newCoins,
-          items_value: newItemsValue,
-          total_networth: newNetWorth
-        });
+        try {
+          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+          if (leaderboardEntries.length > 0) {
+            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+              coins: newCoins,
+              total_networth: totalNetworth,
+              investments_value: investmentsValue,
+              items_value: newItemsValue
+            });
+          }
+        } catch (error) {
+          console.error("Error updating leaderboard:", error);
+        }
       }
 
       toast.success(`רכשת את ${item.name}! 🎉`);
