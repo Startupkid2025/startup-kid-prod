@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
 import { updateNetWorth } from "../components/utils/networthCalculator";
 import { safeRequest } from "../components/utils/base44SafeRequest";
+import { ensureSnapshotDefaults } from "../components/utils/portfolioSnapshot";
 
 const BUSINESSES = [
   {
@@ -120,7 +121,7 @@ const playKachingSound = () => {
 
 export default function Investments() {
   const [userData, setUserData] = useState(null);
-  const [investments, setInvestments] = useState([]);
+  const [portfolioSnapshot, setPortfolioSnapshot] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [investmentAmounts, setInvestmentAmounts] = useState({});
   const [sellAmounts, setSellAmounts] = useState({});
@@ -147,14 +148,14 @@ export default function Investments() {
         console.log('⏸️ Skipping load - recent session lock');
         // Try to restore from cache instead
         const cachedUser = sessionStorage.getItem('investments_user_cache');
-        const cachedInvestments = sessionStorage.getItem('investments_cache');
+        const cachedSnapshot = sessionStorage.getItem('investments_snapshot_cache');
         const cachedToday = sessionStorage.getItem('investments_today_cache');
         const cachedYesterday = sessionStorage.getItem('investments_yesterday_cache');
         
-        if (cachedUser && cachedInvestments && cachedToday && cachedYesterday) {
+        if (cachedUser && cachedSnapshot && cachedToday && cachedYesterday) {
           try {
             setUserData(JSON.parse(cachedUser));
-            setInvestments(JSON.parse(cachedInvestments));
+            setPortfolioSnapshot(JSON.parse(cachedSnapshot));
             setTodayPerformance(JSON.parse(cachedToday));
             setYesterdayPerformance(JSON.parse(cachedYesterday));
           } catch (e) {
@@ -283,28 +284,31 @@ export default function Investments() {
     loadInFlightRef.current = true;
     
     try {
-      // READ ONLY: Load user data
+      // READ ONLY: Load user data ONCE
       const user = await base44.auth.me();
       setUserData(user);
 
-      // READ ONLY: Load market data and investments in parallel (each wrapped in safeRequest)
-      const [todayMarket, yesterdayMarket, myInvestments] = await Promise.all([
+      // Extract portfolio snapshot from user (NO Investment.filter call)
+      const snapshot = ensureSnapshotDefaults(user);
+      snapshot.investments_value = user.investments_value || 0;
+      snapshot.total_invested_amount = user.total_invested_amount || 0;
+      snapshot.investment_count_total = user.investment_count_total || 0;
+      
+      setPortfolioSnapshot(snapshot);
+
+      // READ ONLY: Load market data in parallel (cached)
+      const [todayMarket, yesterdayMarket] = await Promise.all([
         getTodayMarket(),
-        getYesterdayMarket(),
-        safeRequest(
-          () => base44.entities.Investment.filter({ student_email: user.email }),
-          { key: `INV:${user.email}`, ttlMs: 30 * 1000, retries: 1 }
-        )
+        getYesterdayMarket()
       ]);
       
       setTodayPerformance(todayMarket);
       setYesterdayPerformance(yesterdayMarket);
-      setInvestments(myInvestments);
       
       // Cache data in session storage for quick remounts
       try {
         sessionStorage.setItem('investments_user_cache', JSON.stringify(user));
-        sessionStorage.setItem('investments_cache', JSON.stringify(myInvestments));
+        sessionStorage.setItem('investments_snapshot_cache', JSON.stringify(snapshot));
         sessionStorage.setItem('investments_today_cache', JSON.stringify(todayMarket));
         sessionStorage.setItem('investments_yesterday_cache', JSON.stringify(yesterdayMarket));
       } catch (e) {
@@ -380,13 +384,22 @@ export default function Investments() {
       const oldCoins = userData.coins;
       const newCoinsBalance = oldCoins - amount;
       
-      // Calculate investments_value from local state (avoid extra API call)
-      const newInvestments = [...investments, createdInvestment];
-      const investmentsValue = newInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      // Update snapshot with deltas (NO Investment.filter call)
+      const newInvestmentsValue = (portfolioSnapshot.investments_value || 0) + actualInvestment;
+      const newTotalInvestedAmount = (portfolioSnapshot.total_invested_amount || 0) + actualInvestment;
+      const newInvestmentCountTotal = (portfolioSnapshot.investment_count_total || 0) + 1;
       
-      // Calculate net worth locally (READ ONLY page - no updateNetWorth call)
+      const newCountByType = { ...portfolioSnapshot.investment_count_by_type };
+      const newValueByType = { ...portfolioSnapshot.investment_value_by_type };
+      const newInvestedByType = { ...portfolioSnapshot.investment_invested_by_type };
+      
+      newCountByType[businessId] = (newCountByType[businessId] || 0) + 1;
+      newValueByType[businessId] = (newValueByType[businessId] || 0) + actualInvestment;
+      newInvestedByType[businessId] = (newInvestedByType[businessId] || 0) + actualInvestment;
+      
+      // Calculate net worth locally (READ ONLY page)
       const itemsValue = userData.items_value || 0;
-      const newNetWorth = newCoinsBalance + investmentsValue + itemsValue;
+      const newNetWorth = newCoinsBalance + newInvestmentsValue + itemsValue;
       
       // Log coin change
       try {
@@ -409,7 +422,7 @@ export default function Investments() {
           invested_amount: actualInvestment,
           fee: TRANSACTION_FEE,
           total_cost: amount,
-          investments_value: investmentsValue,
+          investments_value: newInvestmentsValue,
           user_networth: newNetWorth,
           leaderboard_networth: leaderboardNetworth
         });
@@ -417,11 +430,28 @@ export default function Investments() {
         console.error("Error logging investment purchase:", logError);
       }
 
+      // Update user with snapshot deltas
       await base44.auth.updateMe({
         coins: newCoinsBalance,
         total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE,
-        investments_value: investmentsValue,
+        investments_value: newInvestmentsValue,
+        total_invested_amount: newTotalInvestedAmount,
+        investment_count_total: newInvestmentCountTotal,
+        investment_count_by_type: newCountByType,
+        investment_value_by_type: newValueByType,
+        investment_invested_by_type: newInvestedByType,
+        last_portfolio_snapshot_date_key: getDateKeyJerusalem(0),
         total_networth: newNetWorth
+      });
+
+      // Update local state
+      setPortfolioSnapshot({
+        investments_value: newInvestmentsValue,
+        total_invested_amount: newTotalInvestedAmount,
+        investment_count_total: newInvestmentCountTotal,
+        investment_count_by_type: newCountByType,
+        investment_value_by_type: newValueByType,
+        investment_invested_by_type: newInvestedByType
       });
 
       // Sync to LeaderboardEntry for public visibility
@@ -429,16 +459,13 @@ export default function Investments() {
       await syncLeaderboardEntry(freshUser, {
         coins: newCoinsBalance,
         total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE,
-        investments_value: investmentsValue,
+        investments_value: newInvestmentsValue,
         total_networth: newNetWorth
       });
 
       playKachingSound();
       toast.success(`השקעת ${actualInvestment} סטארטקוין ב${business.name}! (עמלה: ${TRANSACTION_FEE}) 🎉`);
       setInvestmentAmounts({ ...investmentAmounts, [businessId]: 0 });
-      
-      // Update local state with created investment (includes id)
-      setInvestments(newInvestments);
       setUserData({ ...userData, coins: newCoinsBalance });
     } catch (error) {
       console.error("Error investing:", error);
@@ -449,13 +476,13 @@ export default function Investments() {
   };
 
   const openConfirmDialog = (businessId, sellAmount) => {
-    const businessInvestments = investmentsByBusiness[businessId] || [];
-    if (businessInvestments.length === 0) {
+    // Use snapshot instead of local investments array
+    const totalValue = portfolioSnapshot?.investment_value_by_type?.[businessId] || 0;
+    
+    if (totalValue === 0) {
       toast.error("אין לך השקעות במוצר זה");
       return;
     }
-
-    const totalValue = businessInvestments.reduce((sum, inv) => sum + inv.current_value, 0);
     
     // Validate amount entered
     if (!sellAmount || sellAmount <= 0) {
@@ -475,25 +502,11 @@ export default function Investments() {
       return;
     }
 
-    // Calculate EXACT profit and tax using same logic as handleSell
-    let remainingToSell = sellAmount;
-    let totalInvestedSold = 0;
-    const sortedInvestments = [...businessInvestments].sort((a, b) => a.current_value - b.current_value);
-
-    for (const investment of sortedInvestments) {
-      if (remainingToSell <= 0) break;
-
-      if (investment.current_value <= remainingToSell) {
-        totalInvestedSold += investment.invested_amount;
-        remainingToSell -= investment.current_value;
-      } else {
-        const percentToSell = remainingToSell / investment.current_value;
-        const investedToDeduct = investment.invested_amount * percentToSell;
-        totalInvestedSold += investedToDeduct;
-        remainingToSell = 0;
-      }
-    }
-
+    // Estimate profit using snapshot (proportional calculation)
+    const totalInvestedInBusiness = portfolioSnapshot?.investment_invested_by_type?.[businessId] || 0;
+    const percentSelling = totalValue > 0 ? sellAmount / totalValue : 0;
+    const totalInvestedSold = totalInvestedInBusiness * percentSelling;
+    
     const investmentProfit = sellAmount - totalInvestedSold;
     const tax = investmentProfit > 0 ? investmentProfit * 0.25 : 0;
     const netAmount = amountAfterFee - tax;
@@ -513,11 +526,14 @@ export default function Investments() {
       return;
     }
 
-    const businessInvestments = investmentsByBusiness[businessId] || [];
-    if (businessInvestments.length === 0) return;
-
-    const totalValue = businessInvestments.reduce((sum, inv) => sum + inv.current_value, 0);
-    const totalInvested = businessInvestments.reduce((sum, inv) => sum + inv.invested_amount, 0);
+    // Use snapshot to validate
+    const totalValue = portfolioSnapshot?.investment_value_by_type?.[businessId] || 0;
+    const totalInvested = portfolioSnapshot?.investment_invested_by_type?.[businessId] || 0;
+    
+    if (totalValue === 0) {
+      toast.error("אין לך השקעות במוצר זה");
+      return;
+    }
     
     if (sellAmount > totalValue) {
       toast.error("אין לך מספיק להשקעות למכירה");
@@ -534,9 +550,16 @@ export default function Investments() {
     setIsSelling({ ...isSelling, [businessId]: true });
 
     try {
+      // Fetch investments for this business type only
+      const businessInvestments = await base44.entities.Investment.filter({
+        student_email: userData.email,
+        business_type: businessId
+      });
+      
       let remainingToSell = sellAmount;
       let totalInvestedSold = 0;
       const investmentsToDelete = [];
+      let deletedCount = 0;
 
       // Sort investments by current_value ascending to sell smallest first
       const sortedInvestments = [...businessInvestments].sort((a, b) => a.current_value - b.current_value);
@@ -549,6 +572,7 @@ export default function Investments() {
           investmentsToDelete.push(investment.id);
           totalInvestedSold += investment.invested_amount;
           remainingToSell -= investment.current_value;
+          deletedCount++;
         } else {
           // Partial sell - reduce investment proportionally
           const percentToSell = remainingToSell / investment.current_value;
@@ -595,16 +619,22 @@ export default function Investments() {
       const oldCoins = userData.coins;
       const newCoins = oldCoins + Math.round(netAmount);
       
-      // Reload investments to get accurate value after sale (with cache)
-      const allUserInvestmentsAfterSale = await safeRequest(
-        () => base44.entities.Investment.filter({ student_email: userData.email }),
-        { key: `INV:${userData.email}:refresh`, ttlMs: 1000, retries: 1 }
-      );
-      const investmentsValueAfterSale = allUserInvestmentsAfterSale.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      // Update snapshot with deltas (NO Investment.filter call)
+      const newInvestmentsValue = Math.max(0, (portfolioSnapshot.investments_value || 0) - sellAmount);
+      const newTotalInvestedAmount = Math.max(0, (portfolioSnapshot.total_invested_amount || 0) - totalInvestedSold);
+      const newInvestmentCountTotal = Math.max(0, (portfolioSnapshot.investment_count_total || 0) - deletedCount);
+      
+      const newCountByType = { ...portfolioSnapshot.investment_count_by_type };
+      const newValueByType = { ...portfolioSnapshot.investment_value_by_type };
+      const newInvestedByType = { ...portfolioSnapshot.investment_invested_by_type };
+      
+      newCountByType[businessId] = Math.max(0, (newCountByType[businessId] || 0) - deletedCount);
+      newValueByType[businessId] = Math.max(0, (newValueByType[businessId] || 0) - sellAmount);
+      newInvestedByType[businessId] = Math.max(0, (newInvestedByType[businessId] || 0) - totalInvestedSold);
       
       // Calculate net worth locally (READ ONLY page)
       const itemsValue = userData.items_value || 0;
-      const newNetWorth = newCoins + investmentsValueAfterSale + itemsValue;
+      const newNetWorth = newCoins + newInvestmentsValue + itemsValue;
       
       // Log 3 separate transactions: sale proceeds, fee, and tax
       try {
@@ -616,7 +646,7 @@ export default function Investments() {
           source: 'Investments',
           business: business?.name,
           sold_for: sellAmount,
-          investments_value: investmentsValueAfterSale
+          investments_value: newInvestmentsValue
         });
         
         // 2. Log the transaction fee (deducting)
@@ -624,7 +654,7 @@ export default function Investments() {
           source: 'Investments',
           business: business?.name,
           fee: TRANSACTION_FEE,
-          investments_value: investmentsValueAfterSale
+          investments_value: newInvestmentsValue
         });
         
         // 3. Log capital gains tax if applicable (deducting)
@@ -634,7 +664,7 @@ export default function Investments() {
             business: business?.name,
             profit: investmentProfit,
             tax: Math.round(capitalGainsTax),
-            investments_value: investmentsValueAfterSale
+            investments_value: newInvestmentsValue
           });
         }
       } catch (logError) {
@@ -644,13 +674,30 @@ export default function Investments() {
       const newRealizedProfit = (userData.total_realized_investment_profit || 0) + Math.round(investmentProfit);
       const newTotalFees = (userData.total_investment_fees || 0) + TRANSACTION_FEE;
 
+      // Update user with snapshot deltas
       await base44.auth.updateMe({ 
         coins: newCoins,
         total_investment_fees: newTotalFees,
         total_capital_gains_tax: newCapitalGainsTax,
         total_realized_investment_profit: newRealizedProfit,
-        investments_value: investmentsValueAfterSale,
+        investments_value: newInvestmentsValue,
+        total_invested_amount: newTotalInvestedAmount,
+        investment_count_total: newInvestmentCountTotal,
+        investment_count_by_type: newCountByType,
+        investment_value_by_type: newValueByType,
+        investment_invested_by_type: newInvestedByType,
+        last_portfolio_snapshot_date_key: getDateKeyJerusalem(0),
         total_networth: newNetWorth
+      });
+
+      // Update local state
+      setPortfolioSnapshot({
+        investments_value: newInvestmentsValue,
+        total_invested_amount: newTotalInvestedAmount,
+        investment_count_total: newInvestmentCountTotal,
+        investment_count_by_type: newCountByType,
+        investment_value_by_type: newValueByType,
+        investment_invested_by_type: newInvestedByType
       });
 
       // Sync to LeaderboardEntry for public visibility
@@ -660,7 +707,7 @@ export default function Investments() {
         total_investment_fees: newTotalFees,
         total_capital_gains_tax: newCapitalGainsTax,
         total_realized_investment_profit: newRealizedProfit,
-        investments_value: investmentsValueAfterSale,
+        investments_value: newInvestmentsValue,
         total_networth: newNetWorth
       });
 
@@ -675,9 +722,7 @@ export default function Investments() {
       }
 
       setSellAmounts({ ...sellAmounts, [businessId]: 0 });
-      
-      // Reload fresh data
-      await loadData();
+      setUserData({ ...userData, coins: newCoins });
     } catch (error) {
       console.error("Error selling:", error);
       toast.error("שגיאה במכירה");
@@ -700,33 +745,25 @@ export default function Investments() {
     );
   }
 
-  const totalInvested = investments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
-  const totalValue = investments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+  // Use snapshot for all totals
+  const totalInvested = portfolioSnapshot?.total_invested_amount || 0;
+  const totalValue = portfolioSnapshot?.investments_value || 0;
   const unrealizedProfit = totalValue - totalInvested;
   const realizedProfit = userData?.total_realized_investment_profit || 0;
   const totalProfit = unrealizedProfit + realizedProfit;
   const totalProfitPercent = totalInvested > 0 ? Math.round((unrealizedProfit / totalInvested) * 100) : 0;
   
-  // Calculate total daily profit across all investments using today's market performance
-  // Only count investments that existed before today (last_updated_date_key < today)
+  // Calculate total daily profit from snapshot using today's market performance
   const todayKey = getDateKeyJerusalem(0);
-  const totalDailyProfit = investments.reduce((sum, inv) => {
-    // Skip investments created today - they shouldn't benefit from today's performance
-    if (inv.last_updated_date_key === todayKey) {
-      return sum;
-    }
-    const todayChange = todayPerformance[inv.business_type] || 0;
-    const todayEarnings = Math.round(inv.current_value * (todayChange / 100));
-    return sum + todayEarnings;
-  }, 0);
-
-  const investmentsByBusiness = investments.reduce((acc, inv) => {
-    if (!acc[inv.business_type]) {
-      acc[inv.business_type] = [];
-    }
-    acc[inv.business_type].push(inv);
-    return acc;
-  }, {});
+  let totalDailyProfit = 0;
+  
+  if (portfolioSnapshot && userData?.last_portfolio_snapshot_date_key !== todayKey) {
+    BUSINESSES.forEach(business => {
+      const businessValue = portfolioSnapshot.investment_value_by_type?.[business.id] || 0;
+      const todayChange = todayPerformance[business.id] || 0;
+      totalDailyProfit += Math.round(businessValue * (todayChange / 100));
+    });
+  }
 
   return (
     <div className="px-4 py-8 max-w-4xl mx-auto">
@@ -893,27 +930,17 @@ export default function Investments() {
           </CardHeader>
           <CardContent className="space-y-2">
             {BUSINESSES.map((business) => {
-              const businessInvestments = investmentsByBusiness[business.id] || [];
-              const yesterdayChange = yesterdayPerformance[business.id] || 0;
-              const inputAmount = investmentAmounts[business.id] || 0;
-
-              const hasInvestments = businessInvestments.length > 0;
-              const totalInvestedInBusiness = hasInvestments ? businessInvestments.reduce((sum, inv) => sum + inv.invested_amount, 0) : 0;
-              const totalValueInBusiness = hasInvestments ? businessInvestments.reduce((sum, inv) => sum + inv.current_value, 0) : 0;
+              // Use snapshot for all business-level data
+              const totalValueInBusiness = portfolioSnapshot?.investment_value_by_type?.[business.id] || 0;
+              const totalInvestedInBusiness = portfolioSnapshot?.investment_invested_by_type?.[business.id] || 0;
+              const hasInvestments = totalValueInBusiness > 0;
+              
               const profitInBusiness = totalValueInBusiness - totalInvestedInBusiness;
               const profitPercent = totalInvestedInBusiness > 0 ? ((profitInBusiness / totalInvestedInBusiness) * 100).toFixed(1) : 0;
               
-              // Calculate today's profit using today's market performance
-              // Only count investments that existed before today
-              const todayProfit = hasInvestments ? businessInvestments.reduce((sum, inv) => {
-                // Skip investments created today - they shouldn't benefit from today's performance
-                if (inv.last_updated_date_key === todayKey) {
-                  return sum;
-                }
-                const todayChange = todayPerformance[business.id] || 0;
-                const todayEarnings = Math.round(inv.current_value * (todayChange / 100));
-                return sum + todayEarnings;
-              }, 0) : 0;
+              // Calculate today's profit from snapshot
+              const todayProfit = (userData?.last_portfolio_snapshot_date_key !== todayKey && totalValueInBusiness > 0) ? 
+                Math.round(totalValueInBusiness * ((todayPerformance[business.id] || 0) / 100)) : 0;
 
               return (
                 <div key={business.id} className={`bg-gradient-to-r ${business.color} rounded-lg p-3`}>
