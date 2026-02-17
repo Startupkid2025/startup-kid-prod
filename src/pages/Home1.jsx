@@ -111,11 +111,10 @@ export default function Home() {
       const newCoins = (user.coins || 0) + amount;
       const newTotalPassiveIncome = (user.total_passive_income || 0) + amount;
       
-      // Calculate net worth
+      // Calculate net worth using already declared purchasedItems
       const userInvestments = await base44.entities.Investment.filter({ student_email: user.email });
       const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
       
-      const purchasedItems = user.purchased_items || [];
       let itemsValue = 0;
       purchasedItems.forEach(itemId => {
         const item = AVATAR_ITEMS[itemId];
