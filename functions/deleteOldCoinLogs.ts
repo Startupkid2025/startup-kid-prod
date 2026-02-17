@@ -10,30 +10,42 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // Get all CoinLogs sorted by oldest first
-    const allLogs = await base44.asServiceRole.entities.CoinLog.list('created_date', 5000);
+    // Get oldest 2500 logs using pagination
+    const logsToDelete = [];
+    let skip = 0;
+    const limit = 500; // Fetch in batches
     
-    if (allLogs.length <= 2500) {
+    while (logsToDelete.length < 2500) {
+      const batch = await base44.asServiceRole.entities.CoinLog.list('created_date', limit, skip);
+      
+      if (batch.length === 0) break; // No more logs
+      
+      const remaining = 2500 - logsToDelete.length;
+      logsToDelete.push(...batch.slice(0, remaining));
+      
+      if (batch.length < limit) break; // Last batch
+      skip += limit;
+    }
+    
+    if (logsToDelete.length === 0) {
       return Response.json({ 
-        message: 'לא נמצאו מספיק רשומות למחיקה', 
-        total_logs: allLogs.length 
+        message: 'לא נמצאו רשומות למחיקה', 
+        total_logs: 0 
       });
     }
 
-    // Get the oldest 2500 logs
-    const logsToDelete = allLogs.slice(0, 2500);
-    
-    // Delete them
-    const deletePromises = logsToDelete.map(log => 
-      base44.asServiceRole.entities.CoinLog.delete(log.id)
-    );
-    
-    await Promise.all(deletePromises);
+    // Delete in batches to avoid timeout
+    const batchSize = 100;
+    for (let i = 0; i < logsToDelete.length; i += batchSize) {
+      const batch = logsToDelete.slice(i, i + batchSize);
+      await Promise.all(batch.map(log => 
+        base44.asServiceRole.entities.CoinLog.delete(log.id)
+      ));
+    }
 
     return Response.json({ 
       success: true,
-      deleted_count: logsToDelete.length,
-      remaining_logs: allLogs.length - logsToDelete.length
+      deleted_count: logsToDelete.length
     });
   } catch (error) {
     console.error('Error deleting old coin logs:', error);
