@@ -3,6 +3,11 @@ import { base44 } from "@/api/base44Client";
 /**
  * Logs coin changes to CoinLog entity
  * Call this function whenever you update a user's coins
+ * @param {string} studentEmail - User email
+ * @param {number} oldCoins - Previous balance
+ * @param {number} newCoins - New balance
+ * @param {string} reason - Reason for change
+ * @param {object} metadata - Additional metadata (should include actualLeaderboardNetworth from syncLeaderboardEntry)
  */
 export async function logCoinChange(studentEmail, oldCoins, newCoins, reason, metadata = {}) {
   try {
@@ -15,7 +20,9 @@ export async function logCoinChange(studentEmail, oldCoins, newCoins, reason, me
     const investmentsValue = metadata.investments_value ?? 0;
     const itemsValue = metadata.items_value ?? 0;
     const userNetworth = metadata.user_networth ?? (newCoins + investmentsValue + itemsValue);
-    const leaderboardNetworth = metadata.leaderboard_networth ?? metadata.new_leaderboard_value ?? userNetworth;
+    
+    // Use actualLeaderboardNetworth if provided (from syncLeaderboardEntry return value)
+    const leaderboardNetworth = metadata.actualLeaderboardNetworth ?? metadata.leaderboard_networth ?? metadata.new_leaderboard_value ?? userNetworth;
 
     await base44.entities.CoinLog.create({
       student_email: studentEmail,

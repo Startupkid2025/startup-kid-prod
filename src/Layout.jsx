@@ -98,22 +98,26 @@ export default function Layout({ children }) {
           });
           
           // Sync to leaderboard once with all data
-          await syncLeaderboardEntry(user.email, {
+          const actualLeaderboardNetworth = await syncLeaderboardEntry(user, {
             coins: newCoins,
             investments_value: user.investments_value || 0,
             items_value: user.items_value || 0,
             login_streak: 1,
             last_login_date: today,
-            total_login_streak_coins: 10
+            total_login_streak_coins: 10,
+            total_networth: newCoins + (user.investments_value || 0) + (user.items_value || 0)
           });
           
-          // Log the first login bonus
+          // Log the first login bonus with actual leaderboard value
           try {
             const { logCoinChange } = await import("./components/utils/coinLogger");
             await logCoinChange(user.email, oldCoins, newCoins, "בונוס כניסה ראשונה", {
               source: 'Layout - Login Streak',
               streak: 1,
-              reward: 10
+              reward: 10,
+              investments_value: user.investments_value || 0,
+              items_value: user.items_value || 0,
+              actualLeaderboardNetworth: actualLeaderboardNetworth
             });
           } catch (logError) {
             console.error("Error logging first login bonus:", logError);
@@ -145,16 +149,17 @@ export default function Layout({ children }) {
           });
           
           // Sync to leaderboard once with all data
-          await syncLeaderboardEntry(user.email, {
+          const actualLeaderboardNetworth = await syncLeaderboardEntry(user, {
             coins: newCoins,
             investments_value: user.investments_value || 0,
             items_value: user.items_value || 0,
             login_streak: newStreak,
             last_login_date: today,
-            total_login_streak_coins: (user.total_login_streak_coins || 0) + reward
+            total_login_streak_coins: (user.total_login_streak_coins || 0) + reward,
+            total_networth: newCoins + (user.investments_value || 0) + (user.items_value || 0)
           });
           
-          // Log the login streak bonus
+          // Log the login streak bonus with actual leaderboard value
           if (reward > 0) {
             try {
               const { logCoinChange } = await import("./components/utils/coinLogger");
@@ -162,7 +167,10 @@ export default function Layout({ children }) {
                 source: 'Layout - Login Streak',
                 streak: newStreak,
                 reward: reward,
-                isNewStreak: isNewStreak
+                isNewStreak: isNewStreak,
+                investments_value: user.investments_value || 0,
+                items_value: user.items_value || 0,
+                actualLeaderboardNetworth: actualLeaderboardNetworth
               });
             } catch (logError) {
               console.error("Error logging login streak bonus:", logError);
@@ -281,7 +289,7 @@ export default function Layout({ children }) {
             amount: totalPassiveIncome,
             investments_value: investmentsValue,
             user_networth: userNetworth,
-            leaderboard_networth: leaderboardNetworth
+            actualLeaderboardNetworth: actualLeaderboardNetworth
           });
           currentBalance += totalPassiveIncome;
         }
@@ -294,7 +302,7 @@ export default function Layout({ children }) {
             amount: -totalInflationLoss,
             investments_value: investmentsValue,
             user_networth: userNetworth,
-            leaderboard_networth: leaderboardNetworth
+            actualLeaderboardNetworth: actualLeaderboardNetworth
           });
           currentBalance -= totalInflationLoss;
         }
@@ -307,7 +315,7 @@ export default function Layout({ children }) {
             amount: -totalCreditInterest,
             investments_value: investmentsValue,
             user_networth: userNetworth,
-            leaderboard_networth: leaderboardNetworth
+            actualLeaderboardNetworth: actualLeaderboardNetworth
           });
         }
       } catch (logError) {
@@ -329,8 +337,8 @@ export default function Layout({ children }) {
       // Update net worth
       const newNetWorth = await updateNetWorth(user.email);
 
-      // Sync to LeaderboardEntry
-      await syncLeaderboardEntry(user.email, {
+      // Sync to LeaderboardEntry and get actual value
+      const actualLeaderboardNetworth = await syncLeaderboardEntry(user, {
         coins: newCoins,
         total_inflation_lost: (user.total_inflation_lost || 0) + totalInflationLoss,
         total_credit_interest: (user.total_credit_interest || 0) + totalCreditInterest,
