@@ -138,19 +138,6 @@ export default function Investments() {
     if (didLoadRef.current) return;
     didLoadRef.current = true;
     
-    // Session lock - prevent burst on remount (2 seconds)
-    const sessionKey = 'investments_last_load';
-    const lastLoad = sessionStorage.getItem(sessionKey);
-    if (lastLoad) {
-      const elapsed = Date.now() - parseInt(lastLoad);
-      if (elapsed < 2000) {
-        console.log('⏸️ Skipping load - recent session lock');
-        setIsLoading(false);
-        return;
-      }
-    }
-    sessionStorage.setItem(sessionKey, Date.now().toString());
-    
     console.log("TODAY KEY:", getDateKeyJerusalem(0), "YESTERDAY KEY:", getDateKeyJerusalem(-1));
     loadData();
   }, []);
