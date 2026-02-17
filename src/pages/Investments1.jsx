@@ -257,11 +257,8 @@ export default function Investments() {
       setTodayPerformance(todayMarket);
       setYesterdayPerformance(yesterdayMarket);
 
-      // READ ONLY: Load user's investments with cache
-      const myInvestments = await safeRequest(
-        () => base44.entities.Investment.filter({ student_email: user.email }),
-        { key: `INV:${user.email}`, ttlMs: 15000, retries: 1 }
-      );
+      // READ ONLY: Load user's investments (no cache needed on initial load)
+      const myInvestments = await base44.entities.Investment.filter({ student_email: user.email });
       setInvestments(myInvestments);
     } catch (error) {
       console.error("Error loading investments:", error);
