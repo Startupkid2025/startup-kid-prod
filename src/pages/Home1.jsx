@@ -13,6 +13,7 @@ import AvatarShop from "../components/avatar/AvatarShop";
 import Avatar from "../components/home/Avatar";
 import SkillBar from "../components/home/SkillBar";
 import CommunityFeed from "../components/home/CommunityFeed";
+import { safeRequest } from "../components/utils/base44SafeRequest";
 
 import GroupSelectionDialog from "../components/home/GroupSelectionDialog";
 import { toast } from "sonner";
@@ -129,23 +130,21 @@ export default function Home() {
         last_passive_income_date: todayKey
       });
       
-      // Update LeaderboardEntry directly
-      try {
-        const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
-          student_email: user.email 
-        });
+      // Update LeaderboardEntry in background
+      safeRequest(
+        () => base44.entities.LeaderboardEntry.filter({ student_email: user.email }),
+        { key: `LB:${user.email}`, ttlMs: 10000, retries: 0 }
+      ).then(leaderboardEntries => {
         if (leaderboardEntries.length > 0) {
-          await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+          base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
             coins: newCoins,
             total_networth: totalNetworth,
             investments_value: investmentsValue,
             items_value: itemsValue,
             total_passive_income: newTotalPassiveIncome
-          });
+          }).catch(err => console.error("Error updating leaderboard:", err));
         }
-      } catch (error) {
-        console.error("Error updating leaderboard:", error);
-      }
+      }).catch(err => console.error("Error fetching leaderboard:", err));
       
       // Show toast notification
       if (amount > 0) {
@@ -194,20 +193,22 @@ export default function Home() {
         })()
       ]);
 
-      // Load group info
+      // Load group info with cache
       try {
-        const allGroups = await base44.entities.Group.list();
+        const allGroups = await safeRequest(
+          () => base44.entities.Group.list(),
+          { key: 'Groups:all', ttlMs: 60000, retries: 1 }
+        );
         const myGroup = allGroups.find(g => g.student_emails?.includes(user.email));
         
         if (myGroup) {
           setUserGroup(myGroup);
           if (myGroup.next_lesson_id) {
-            try {
-              const lesson = await base44.entities.Lesson.get(myGroup.next_lesson_id);
-              setNextLesson(lesson);
-            } catch {
-              setNextLesson(null);
-            }
+            const lesson = await safeRequest(
+              () => base44.entities.Lesson.get(myGroup.next_lesson_id),
+              { key: `Lesson:${myGroup.next_lesson_id}`, ttlMs: 120000, retries: 1 }
+            ).catch(() => null);
+            setNextLesson(lesson);
           } else {
             setNextLesson(null);
           }
@@ -264,11 +265,24 @@ export default function Home() {
         return JSON.parse(cached);
       }
       
-      const allParticipations = await base44.entities.LessonParticipation.filter({ student_email: user.email });
-      const allLessons = await base44.entities.Lesson.list();
+      // Only load user's participations
+      const allParticipations = await safeRequest(
+        () => base44.entities.LessonParticipation.filter({ student_email: user.email }),
+        { key: `LP:${user.email}`, ttlMs: 300000, retries: 1 }
+      );
+
+      // Load only the lessons this user participated in
+      const lessonIds = [...new Set(allParticipations.map(p => p.lesson_id))];
+      const lessonPromises = lessonIds.map(id =>
+        safeRequest(
+          () => base44.entities.Lesson.get(id),
+          { key: `Lesson:${id}`, ttlMs: 300000, retries: 1 }
+        ).catch(() => null)
+      );
+      const lessons = (await Promise.all(lessonPromises)).filter(l => l !== null);
 
       const lessonMap = {};
-      allLessons.forEach(lesson => {
+      lessons.forEach(lesson => {
         lessonMap[lesson.id] = lesson;
       });
 
