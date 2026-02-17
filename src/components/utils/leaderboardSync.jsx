@@ -7,14 +7,47 @@ const SYNC_THROTTLE_MS = 30000; // 30 seconds between syncs per user
 /**
  * Ensures a LeaderboardEntry exists for the user.
  * Returns the leaderboard_entry_id.
+ * Cleans up duplicate entries if found.
  */
 export async function ensureLeaderboardEntry(user) {
-  // If user already has leaderboard_entry_id, return it
-  if (user.leaderboard_entry_id) {
-    return user.leaderboard_entry_id;
+  // Check for existing entries by email
+  const existingEntries = await base44.entities.LeaderboardEntry.filter({ 
+    student_email: user.email 
+  });
+
+  // If duplicates found, delete extras and keep the first one
+  if (existingEntries.length > 1) {
+    console.warn(`⚠️ Found ${existingEntries.length} duplicate LeaderboardEntry records for ${user.email}, cleaning up...`);
+    
+    const keepEntry = existingEntries[0];
+    for (let i = 1; i < existingEntries.length; i++) {
+      try {
+        await base44.entities.LeaderboardEntry.delete(existingEntries[i].id);
+        console.log(`🗑️ Deleted duplicate LeaderboardEntry ${existingEntries[i].id}`);
+      } catch (err) {
+        console.error(`Error deleting duplicate entry:`, err);
+      }
+    }
+    
+    // Update user with the kept entry's ID
+    if (user.leaderboard_entry_id !== keepEntry.id) {
+      await base44.auth.updateMe({ leaderboard_entry_id: keepEntry.id });
+    }
+    
+    return keepEntry.id;
   }
 
-  // Otherwise, create a new LeaderboardEntry
+  // If exactly one entry exists, use it
+  if (existingEntries.length === 1) {
+    const entry = existingEntries[0];
+    // Update user with the leaderboard_entry_id if missing
+    if (user.leaderboard_entry_id !== entry.id) {
+      await base44.auth.updateMe({ leaderboard_entry_id: entry.id });
+    }
+    return entry.id;
+  }
+
+  // No entries exist, create a new one
   try {
     const entry = await base44.entities.LeaderboardEntry.create({
       student_email: user.email,
