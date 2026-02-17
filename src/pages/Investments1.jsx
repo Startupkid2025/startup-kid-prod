@@ -138,6 +138,35 @@ export default function Investments() {
     if (didLoadRef.current) return;
     didLoadRef.current = true;
     
+    // Session lock - prevent burst on remount (2 seconds)
+    const sessionKey = 'investments_last_load';
+    const lastLoad = sessionStorage.getItem(sessionKey);
+    if (lastLoad) {
+      const elapsed = Date.now() - parseInt(lastLoad);
+      if (elapsed < 2000) {
+        console.log('⏸️ Skipping load - recent session lock');
+        // Try to restore from cache instead
+        const cachedUser = sessionStorage.getItem('investments_user_cache');
+        const cachedInvestments = sessionStorage.getItem('investments_cache');
+        const cachedToday = sessionStorage.getItem('investments_today_cache');
+        const cachedYesterday = sessionStorage.getItem('investments_yesterday_cache');
+        
+        if (cachedUser && cachedInvestments && cachedToday && cachedYesterday) {
+          try {
+            setUserData(JSON.parse(cachedUser));
+            setInvestments(JSON.parse(cachedInvestments));
+            setTodayPerformance(JSON.parse(cachedToday));
+            setYesterdayPerformance(JSON.parse(cachedYesterday));
+          } catch (e) {
+            console.error('Cache parse error:', e);
+          }
+        }
+        setIsLoading(false);
+        return;
+      }
+    }
+    sessionStorage.setItem(sessionKey, Date.now().toString());
+    
     console.log("TODAY KEY:", getDateKeyJerusalem(0), "YESTERDAY KEY:", getDateKeyJerusalem(-1));
     loadData();
   }, []);
@@ -270,6 +299,16 @@ export default function Investments() {
         { key: `INV:${user.email}`, ttlMs: 30 * 1000, retries: 1 }
       );
       setInvestments(myInvestments);
+      
+      // Cache data in session storage for quick remounts
+      try {
+        sessionStorage.setItem('investments_user_cache', JSON.stringify(user));
+        sessionStorage.setItem('investments_cache', JSON.stringify(myInvestments));
+        sessionStorage.setItem('investments_today_cache', JSON.stringify(todayMarket));
+        sessionStorage.setItem('investments_yesterday_cache', JSON.stringify(yesterdayMarket));
+      } catch (e) {
+        console.error('Session storage error:', e);
+      }
     } catch (error) {
       console.error("Error loading investments:", error);
       toast.error("שגיאה בטעינת נתונים. אנא נסה שוב מאוחר יותר.");
