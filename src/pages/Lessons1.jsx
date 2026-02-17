@@ -446,23 +446,16 @@ export default function Lessons() {
                       {/* Quiz Button */}
                       <Button
                         onClick={() => setQuizLesson(lesson)}
-                        className={`w-full font-bold ${
+                        className={`w-full font-bold flex items-center justify-center ${
                           hasQuiz 
                             ? "bg-green-500/20 border-2 border-green-500 text-green-200 hover:bg-green-500/30"
                             : "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white"
                         }`}
                       >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="flex items-center gap-2">
-                            <Award className="w-4 h-4" />
-                            חידות על השיעור {!hasQuiz && "🪙"}
-                          </span>
-                          {hasQuiz && (
-                            <span className="text-sm font-bold" dir="ltr">
-                              {quizProg.score}/{quizProg.total_questions} ✓
-                            </span>
-                          )}
-                        </div>
+                        <span className="flex items-center gap-2">
+                          <Award className="w-4 h-4" />
+                          {hasQuiz ? `חידות על השיעור (${quizProg.score}/${quizProg.total_questions} ✓)` : "חידות על השיעור 🪙"}
+                        </span>
                       </Button>
 
                       {/* Survey Button - always available if has participation */}
