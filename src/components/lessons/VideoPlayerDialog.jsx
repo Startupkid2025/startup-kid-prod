@@ -89,6 +89,14 @@ export default function VideoPlayerDialog({ isOpen, onClose, lesson }) {
                 }
                 
                 await base44.auth.updateMe(updates);
+                
+                // Sync level/XP to leaderboard
+                try {
+                  await syncLeaderboardEntry({...user, ...updates}, updates);
+                } catch (error) {
+                  console.error("Error syncing leaderboard after XP:", error);
+                }
+                
                 setHasGivenXP(true);
                 
                 toast.success(`צפית בהקלטה! קיבלת ${totalXP} XP 🎉`);

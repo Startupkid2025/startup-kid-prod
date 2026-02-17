@@ -158,19 +158,15 @@ export default function LessonQuizDialog({ isOpen, onClose, lesson, onComplete }
           total_networth: totalNetworth
         });
         
-        // Update leaderboard directly
+        // Sync to leaderboard
         try {
-          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: user.email });
-          if (leaderboardEntries.length > 0) {
-            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-              coins: newCoins,
-              total_networth: totalNetworth,
-              investments_value: investmentsValue,
-              items_value: itemsValue
-            });
-          }
+          const { syncLeaderboardEntry } = await import("../utils/leaderboardSync");
+          await syncLeaderboardEntry({...user, coins: newCoins, total_networth: totalNetworth}, {
+            investments_value: investmentsValue,
+            items_value: itemsValue
+          });
         } catch (error) {
-          console.error("Error updating leaderboard:", error);
+          console.error("Error syncing leaderboard:", error);
         }
       }
 
