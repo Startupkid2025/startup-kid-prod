@@ -83,19 +83,8 @@ export default function Layout({ children }) {
       const today = fmtIL.format(new Date());
       const lastLogin = user.last_login_date;
       
-      let needsSync = false;
-      let syncData = {
-        coins: user.coins || 0,
-        investments_value: user.investments_value || 0,
-        items_value: user.items_value || 0,
-        login_streak: user.login_streak || 0,
-        last_login_date: user.last_login_date || null
-      };
-      
       // Handle login streak if not already done today
       if (lastLogin !== today) {
-        needsSync = true;
-        
         if (!lastLogin) {
           // First time - just initialize
           const oldCoins = user.coins || 0;
@@ -108,10 +97,15 @@ export default function Layout({ children }) {
             total_login_streak_coins: 10
           });
           
-          syncData.login_streak = 1;
-          syncData.last_login_date = today;
-          syncData.coins = newCoins;
-          syncData.total_login_streak_coins = 10;
+          // Sync to leaderboard once with all data
+          await syncLeaderboardEntry(user.email, {
+            coins: newCoins,
+            investments_value: user.investments_value || 0,
+            items_value: user.items_value || 0,
+            login_streak: 1,
+            last_login_date: today,
+            total_login_streak_coins: 10
+          });
           
           // Log the first login bonus
           try {
@@ -150,10 +144,15 @@ export default function Layout({ children }) {
             total_login_streak_coins: (user.total_login_streak_coins || 0) + reward
           });
           
-          syncData.login_streak = newStreak;
-          syncData.last_login_date = today;
-          syncData.coins = newCoins;
-          syncData.total_login_streak_coins = (user.total_login_streak_coins || 0) + reward;
+          // Sync to leaderboard once with all data
+          await syncLeaderboardEntry(user.email, {
+            coins: newCoins,
+            investments_value: user.investments_value || 0,
+            items_value: user.items_value || 0,
+            login_streak: newStreak,
+            last_login_date: today,
+            total_login_streak_coins: (user.total_login_streak_coins || 0) + reward
+          });
           
           // Log the login streak bonus
           if (reward > 0) {
@@ -176,15 +175,6 @@ export default function Layout({ children }) {
             });
             setShowLoginReward(true);
           }
-        }
-      }
-      
-      // Sync once if needed
-      if (needsSync) {
-        try {
-          await syncLeaderboardEntry(user.email, syncData);
-        } catch (syncError) {
-          console.error("Error syncing leaderboard:", syncError);
         }
       }
       
