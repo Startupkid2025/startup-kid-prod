@@ -518,21 +518,22 @@ export default function Vocabulary() {
           const oldCoins = userData.coins || 0;
           const newCoinsTotal = oldCoins + coinsEarned;
 
+          // Calculate net worth
+          const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
+          const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+          
+          const purchasedItems = userData.purchased_items || [];
+          let itemsValue = 0;
+          purchasedItems.forEach(itemId => {
+            const item = AVATAR_ITEMS[itemId];
+            if (item) itemsValue += item.price || 0;
+          });
+          
+          const totalNetworth = newCoinsTotal + itemsValue + investmentsValue;
+
           // Log coin change
           import("../components/utils/coinLogger").then(async ({ logCoinChange }) => {
             try {
-              const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
-              const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-              
-              const purchasedItems = userData.purchased_items || [];
-              let itemsValue = 0;
-              purchasedItems.forEach(itemId => {
-                const item = AVATAR_ITEMS[itemId];
-                if (item) itemsValue += item.price || 0;
-              });
-              
-              const userNetworth = newCoinsTotal + itemsValue + investmentsValue;
-              
               let leaderboardNetworth = 0;
               try {
                 const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
@@ -549,7 +550,7 @@ export default function Vocabulary() {
                 coinsEarned: coinsEarned,
                 mastered: isMastered,
                 investments_value: investmentsValue,
-                user_networth: userNetworth,
+                user_networth: totalNetworth,
                 leaderboard_networth: leaderboardNetworth
               });
             } catch (err) {
@@ -560,6 +561,7 @@ export default function Vocabulary() {
           Promise.all([
             base44.auth.updateMe({
               coins: newCoinsTotal,
+              total_networth: totalNetworth,
               daily_vocabulary_words: updatedDailyWords,
               mastered_words: newMasteredCount
             }),
@@ -571,33 +573,30 @@ export default function Vocabulary() {
               difficulty_level: currentWord.difficulty,
               coins_earned: (existingWordProg.coins_earned || 0) + coinsEarned
             })
-          ]).then(() => {
+          ]).then(async () => {
             setUserData(prev => ({ 
               ...prev, 
               coins: newCoinsTotal,
+              total_networth: totalNetworth,
               daily_vocabulary_words: updatedDailyWords,
               mastered_words: newMasteredCount
             }));
             
-            // Update leaderboard with correct values
-            import("../components/utils/leaderboardSync").then(async ({ syncLeaderboardEntry }) => {
-              // Get current investments and items for proper networth calculation
-              const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
-              const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-              
-              const equippedItems = userData.equipped_items || {};
-              const itemsValue = Object.values(equippedItems).reduce((sum, itemId) => {
-                const item = AVATAR_ITEMS[itemId];
-                return sum + (item?.price || 0);
-              }, 0);
-              
-              syncLeaderboardEntry(userData.email, {
-                coins: newCoinsTotal,
-                mastered_words: newMasteredCount,
-                investments_value: investmentsValue,
-                items_value: itemsValue
-              });
-            });
+            // Update leaderboard directly
+            try {
+              const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+              if (leaderboardEntries.length > 0) {
+                await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+                  coins: newCoinsTotal,
+                  total_networth: totalNetworth,
+                  investments_value: investmentsValue,
+                  items_value: itemsValue,
+                  mastered_words: newMasteredCount
+                });
+              }
+            } catch (err) {
+              console.error("Error updating leaderboard:", err);
+            }
           });
         } else {
           await base44.entities.WordProgress.update(existingWordProg.id, {
@@ -645,21 +644,22 @@ export default function Vocabulary() {
           const oldCoins = userData.coins || 0;
           const newCoinsTotal = oldCoins + coinsEarned;
 
+          // Calculate net worth
+          const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
+          const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+          
+          const purchasedItems = userData.purchased_items || [];
+          let itemsValue = 0;
+          purchasedItems.forEach(itemId => {
+            const item = AVATAR_ITEMS[itemId];
+            if (item) itemsValue += item.price || 0;
+          });
+          
+          const totalNetworth = newCoinsTotal + itemsValue + investmentsValue;
+
           // Log coin change
           import("../components/utils/coinLogger").then(async ({ logCoinChange }) => {
             try {
-              const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
-              const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-              
-              const purchasedItems = userData.purchased_items || [];
-              let itemsValue = 0;
-              purchasedItems.forEach(itemId => {
-                const item = AVATAR_ITEMS[itemId];
-                if (item) itemsValue += item.price || 0;
-              });
-              
-              const userNetworth = newCoinsTotal + itemsValue + investmentsValue;
-              
               let leaderboardNetworth = 0;
               try {
                 const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
@@ -675,7 +675,7 @@ export default function Vocabulary() {
                 word: currentWord.english,
                 coinsEarned: coinsEarned,
                 investments_value: investmentsValue,
-                user_networth: userNetworth,
+                user_networth: totalNetworth,
                 leaderboard_networth: leaderboardNetworth
               });
             } catch (err) {
@@ -686,33 +686,31 @@ export default function Vocabulary() {
           Promise.all([
             base44.auth.updateMe({
               coins: newCoinsTotal,
+              total_networth: totalNetworth,
               daily_vocabulary_words: updatedDailyWords
             })
-          ]).then(() => {
+          ]).then(async () => {
             setUserData(prev => ({ 
               ...prev, 
               coins: newCoinsTotal,
+              total_networth: totalNetworth,
               daily_vocabulary_words: updatedDailyWords
             }));
             
-            // Update leaderboard with correct values
-            import("../components/utils/leaderboardSync").then(async ({ syncLeaderboardEntry }) => {
-              // Get current investments and items for proper networth calculation
-              const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
-              const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-              
-              const equippedItems = userData.equipped_items || {};
-              const itemsValue = Object.values(equippedItems).reduce((sum, itemId) => {
-                const item = AVATAR_ITEMS[itemId];
-                return sum + (item?.price || 0);
-              }, 0);
-              
-              syncLeaderboardEntry(userData.email, {
-                coins: newCoinsTotal,
-                investments_value: investmentsValue,
-                items_value: itemsValue
-              });
-            });
+            // Update leaderboard directly
+            try {
+              const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+              if (leaderboardEntries.length > 0) {
+                await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+                  coins: newCoinsTotal,
+                  total_networth: totalNetworth,
+                  investments_value: investmentsValue,
+                  items_value: itemsValue
+                });
+              }
+            } catch (err) {
+              console.error("Error updating leaderboard:", err);
+            }
           });
         }
 
