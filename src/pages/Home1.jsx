@@ -47,10 +47,13 @@ export default function Home() {
   const initializeIntroLesson = async (userEmail) => {
     try {
       // Check if user already has the intro lesson participation
-      const existingParticipations = await base44.entities.LessonParticipation.filter({
-        student_email: userEmail,
-        lesson_id: '68e4eebd3c0ca8414597076b' // סטארטאפ קיד - היכרות
-      });
+      const existingParticipations = await safeRequest(
+        () => base44.entities.LessonParticipation.filter({
+          student_email: userEmail,
+          lesson_id: '68e4eebd3c0ca8414597076b'
+        }),
+        { key: `LP:intro:${userEmail}`, ttlMs: 300000, retries: 1 }
+      ).catch(() => []);
 
       if (existingParticipations.length === 0) {
         // Create participation for intro lesson
@@ -340,7 +343,11 @@ export default function Home() {
     setUserData({ ...userData, equipped_items: newEquipped });
 
     try {
-      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+      const leaderboardEntries = await safeRequest(
+        () => base44.entities.LeaderboardEntry.filter({ student_email: userData.email }),
+        { key: `LB:${userData.email}`, ttlMs: 10000, retries: 0 }
+      ).catch(() => []);
+      
       if (leaderboardEntries.length > 0) {
         await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
           equipped_items: newEquipped
@@ -396,7 +403,11 @@ export default function Home() {
     });
 
     try {
-      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+      const leaderboardEntries = await safeRequest(
+        () => base44.entities.LeaderboardEntry.filter({ student_email: userData.email }),
+        { key: `LB:${userData.email}`, ttlMs: 10000, retries: 0 }
+      ).catch(() => []);
+      
       if (leaderboardEntries.length > 0) {
         await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
           purchased_items: newPurchasedItems,
@@ -464,7 +475,11 @@ export default function Home() {
     });
 
     try {
-      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+      const leaderboardEntries = await safeRequest(
+        () => base44.entities.LeaderboardEntry.filter({ student_email: userData.email }),
+        { key: `LB:${userData.email}`, ttlMs: 10000, retries: 0 }
+      ).catch(() => []);
+      
       if (leaderboardEntries.length > 0) {
         await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
           purchased_items: newPurchasedItems,
