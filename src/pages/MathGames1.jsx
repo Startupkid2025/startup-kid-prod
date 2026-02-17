@@ -559,21 +559,22 @@ ${question} = ${correctAnswer}
         const oldCoins = userData.coins || 0;
         const newCoins = oldCoins + coinsEarned;
         
+        // Calculate net worth
+        const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
+        const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+        
+        const purchasedItems = userData.purchased_items || [];
+        let itemsValue = 0;
+        purchasedItems.forEach(itemId => {
+          const item = AVATAR_ITEMS[itemId];
+          if (item) itemsValue += item.price || 0;
+        });
+        
+        const totalNetworth = newCoins + itemsValue + investmentsValue;
+        
         // Log the coin change
         try {
           const { logCoinChange } = await import('../components/utils/coinLogger');
-          
-          const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
-          const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-          
-          const purchasedItems = userData.purchased_items || [];
-          let itemsValue = 0;
-          purchasedItems.forEach(itemId => {
-            const item = AVATAR_ITEMS[itemId];
-            if (item) itemsValue += item.price || 0;
-          });
-          
-          const userNetworth = newCoins + itemsValue + investmentsValue;
           
           let leaderboardNetworth = 0;
           try {
@@ -590,46 +591,39 @@ ${question} = ${correctAnswer}
             question: currentQuestion.question,
             coinsEarned: coinsEarned,
             investments_value: investmentsValue,
-            user_networth: userNetworth,
+            user_networth: totalNetworth,
             leaderboard_networth: leaderboardNetworth
           });
         } catch (logError) {
           console.error("Error logging math coins:", logError);
         }
         
-        // Update User
+        // Update User with coins and networth
         await base44.auth.updateMe({
           coins: newCoins,
+          total_networth: totalNetworth,
           daily_math_count: (userData.daily_math_count || 0) + 1,
           total_math_earnings: (userData.total_math_earnings || 0) + coinsEarned,
           total_correct_math_answers: (userData.total_correct_math_answers || 0) + 1
         });
         setDailyCount(prev => prev + 1);
         
-        // Update LeaderboardEntry with all data including networth
+        // Update LeaderboardEntry directly
         try {
-          const { syncLeaderboardEntry } = await import('../components/utils/leaderboardSync');
+          const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
           
-          const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
-          const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-          
-          const purchasedItems = userData.purchased_items || [];
-          let itemsValue = 0;
-          purchasedItems.forEach(itemId => {
-            const item = AVATAR_ITEMS[itemId];
-            if (item) itemsValue += item.price || 0;
-          });
-          
-          await syncLeaderboardEntry(userData.email, {
-            coins: newCoins,
-            investments_value: investmentsValue,
-            items_value: itemsValue,
-            total_correct_math_answers: (userData.total_correct_math_answers || 0) + 1
-          });
-          
-          console.log("✅ LeaderboardEntry synced with networth");
+          if (leaderboardEntries.length > 0) {
+            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+              coins: newCoins,
+              total_networth: totalNetworth,
+              investments_value: investmentsValue,
+              items_value: itemsValue,
+              total_correct_math_answers: (userData.total_correct_math_answers || 0) + 1
+            });
+            console.log("✅ LeaderboardEntry updated");
+          }
         } catch (leaderboardError) {
-          console.error("❌ Error syncing leaderboard:", leaderboardError);
+          console.error("❌ Error updating leaderboard:", leaderboardError);
         }
       }
 
