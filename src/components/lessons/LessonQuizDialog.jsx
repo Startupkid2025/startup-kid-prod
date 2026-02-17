@@ -138,9 +138,8 @@ export default function LessonQuizDialog({ isOpen, onClose, lesson, onComplete }
       if (coinsToAdd > 0) {
         const newCoins = (user.coins || 0) + coinsToAdd;
         
-        // Calculate net worth
-        const userInvestments = await base44.entities.Investment.filter({ student_email: user.email });
-        const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+        // Calculate net worth using pre-calculated investments_value
+        const investmentsValue = user.investments_value || 0;
         
         const { AVATAR_ITEMS } = await import("../avatar/TamagotchiAvatar");
         const purchasedItems = user.purchased_items || [];

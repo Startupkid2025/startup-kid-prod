@@ -120,9 +120,8 @@ export default function AvatarShop({
         return sum + (AVATAR_ITEMS[itemId]?.price || 0);
       }, 0);
 
-      // Get investments value
-      const userInvestments = await base44.entities.Investment.filter({ student_email: userData.email });
-      const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      // Get investments value from pre-calculated userData
+      const investmentsValue = userData.investments_value || 0;
       
       const totalNetworth = newCoins + newItemsValue + investmentsValue;
 

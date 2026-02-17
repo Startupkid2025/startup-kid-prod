@@ -411,9 +411,8 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
     const newCoins = (user.coins || 0) + coinsToAdd;
     const finalCoins = Math.max(newCoins, -300);
 
-    // Calculate net worth
-    const userInvestments = await base44.entities.Investment.filter({ student_email: user.email });
-    const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+    // Calculate net worth using pre-calculated investments_value
+    const investmentsValue = user.investments_value || 0;
     
     const purchasedItems = user.purchased_items || [];
     let itemsValue = 0;
@@ -501,9 +500,8 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
     const newHunger = Math.max(0, hunger - 10);
     const totalFoodExpense = (user.total_food_expense || 0) + foodCost;
 
-    // Calculate net worth
-    const userInvestments = await base44.entities.Investment.filter({ student_email: user.email });
-    const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+    // Calculate net worth using pre-calculated investments_value
+    const investmentsValue = user.investments_value || 0;
     
     const purchasedItems = user.purchased_items || [];
     let itemsValue = 0;

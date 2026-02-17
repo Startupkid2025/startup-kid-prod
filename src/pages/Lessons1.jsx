@@ -231,9 +231,8 @@ export default function Lessons() {
       const surveyReward = 70;
       const newCoins = currentCoins + surveyReward;
       
-      // Calculate net worth
-      const userInvestments = await base44.entities.Investment.filter({ student_email: currentUser.email });
-      const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      // Calculate net worth using pre-calculated investments_value
+      const investmentsValue = currentUser.investments_value || 0;
       
       const { AVATAR_ITEMS } = await import("../components/avatar/TamagotchiAvatar");
       const purchasedItems = currentUser.purchased_items || [];
