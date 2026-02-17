@@ -5,6 +5,7 @@ import { ExternalLink, AlertCircle, Star, Play, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { safeRequest } from "../components/utils/base44SafeRequest";
+import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
 
 import LessonSurveyDialog from "../components/lessons/LessonSurveyDialog";
 import LessonQuizDialog from "../components/lessons/LessonQuizDialog";
@@ -225,19 +226,14 @@ export default function Lessons() {
         total_networth: totalNetworth
       });
 
-      // Update LeaderboardEntry directly
+      // Sync to leaderboard
       try {
-        const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: currentUser.email });
-        if (leaderboardEntries.length > 0) {
-          await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-            coins: newCoins,
-            total_networth: totalNetworth,
-            investments_value: investmentsValue,
-            items_value: itemsValue
-          });
-        }
+        await syncLeaderboardEntry({...currentUser, coins: newCoins, total_networth: totalNetworth}, {
+          investments_value: investmentsValue,
+          items_value: itemsValue
+        });
       } catch (error) {
-        console.error("Error updating leaderboard:", error);
+        console.error("Error syncing leaderboard:", error);
       }
 
       setSurveyLesson(null);
