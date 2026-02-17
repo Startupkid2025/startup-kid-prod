@@ -120,7 +120,23 @@ Deno.serve(async (req) => {
     
     console.log(`✅ Completed updating ${updatedCount} investments`);
     
-    // ========== STEP 3: Update Net Worth for All Users ==========
+    // ========== STEP 3: Recompute Portfolio Snapshots ==========
+    const processedEmails = new Set(investmentsNeedingUpdate.map(inv => inv.student_email));
+    console.log(`📸 Updating portfolio snapshots for ${processedEmails.size} users...`);
+    
+    let snapshotCount = 0;
+    for (const email of processedEmails) {
+      try {
+        await recomputeAndPersistPortfolioSnapshot(email);
+        snapshotCount++;
+      } catch (err) {
+        console.error(`Error updating snapshot for ${email}:`, err);
+      }
+    }
+    
+    console.log(`✅ Completed ${snapshotCount} portfolio snapshots`);
+    
+    // ========== STEP 4: Update Net Worth for All Users ==========
     const allUsers = await base44.asServiceRole.entities.User.list();
     const studentsToUpdate = allUsers.filter(u => u.user_type === 'student' || !u.user_type);
     let usersUpdated = 0;
@@ -222,6 +238,7 @@ Deno.serve(async (req) => {
       date: dateKey,
       marketCreated: existingMarket.length === 0,
       investmentsUpdated: updatedCount,
+      snapshotsUpdated: snapshotCount,
       usersUpdated: usersUpdated,
       marketChanges: businessTypeToChangeMap
     });
