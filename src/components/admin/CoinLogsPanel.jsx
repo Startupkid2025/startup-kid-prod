@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Search, TrendingUp, TrendingDown } from "lucide-react";
+import { RefreshCw, Search, TrendingUp, TrendingDown, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import moment from "moment";
+import { deleteOldCoinLogs } from "@/functions/deleteOldCoinLogs";
 
 export default function CoinLogsPanel({ students = [] }) {
   const [logs, setLogs] = useState([]);
@@ -14,6 +15,7 @@ export default function CoinLogsPanel({ students = [] }) {
   const [filterStudent, setFilterStudent] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isDeleting, setIsDeleting] = useState(false);
   const LOGS_PER_PAGE = 50;
 
   useEffect(() => {
@@ -50,6 +52,28 @@ export default function CoinLogsPanel({ students = [] }) {
     return student?.full_name || student?.first_name || email;
   };
 
+  const handleDeleteOldLogs = async () => {
+    if (!confirm('האם אתה בטוח שברצונך למחוק את 2500 הרשומות הישנות ביותר? פעולה זו אינה ניתנת לביטול.')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const result = await deleteOldCoinLogs();
+      if (result.success) {
+        toast.success(`נמחקו ${result.deleted_count} רשומות ישנות! נותרו ${result.remaining_logs} רשומות.`);
+        await loadLogs();
+      } else {
+        toast.info(result.message || 'לא היה צורך במחיקה');
+      }
+    } catch (error) {
+      console.error('Error deleting old logs:', error);
+      toast.error('שגיאה במחיקת רשומות ישנות');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <Card className="bg-white/5 backdrop-blur-md border-white/10">
@@ -67,14 +91,26 @@ export default function CoinLogsPanel({ students = [] }) {
           <CardTitle className="text-white text-lg">
             🪙 רישום שינויי מטבעות ({filteredLogs.length} רשומות)
           </CardTitle>
-          <Button
-            onClick={loadLogs}
-            size="sm"
-            variant="ghost"
-            className="text-white/70 hover:text-white hover:bg-white/10"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleDeleteOldLogs}
+              size="sm"
+              variant="ghost"
+              disabled={isDeleting || logs.length <= 2500}
+              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+            >
+              <Trash2 className="w-4 h-4 ml-1" />
+              {isDeleting ? 'מוחק...' : 'מחק 2500 ישנות'}
+            </Button>
+            <Button
+              onClick={loadLogs}
+              size="sm"
+              variant="ghost"
+              className="text-white/70 hover:text-white hover:bg-white/10"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
