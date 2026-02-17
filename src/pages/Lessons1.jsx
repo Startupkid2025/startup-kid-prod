@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ExternalLink, AlertCircle, Star, Play, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { safeRequest } from "../components/utils/base44SafeRequest";
 
 import LessonSurveyDialog from "../components/lessons/LessonSurveyDialog";
 import LessonQuizDialog from "../components/lessons/LessonQuizDialog";
@@ -90,55 +91,45 @@ export default function Lessons() {
       const user = await base44.auth.me();
       setCurrentUser(user);
 
-      const allLessons = await base44.entities.Lesson.list("-created_date");
-      
-      // Try to get participations
-      let myParticipations = [];
-      try {
-        myParticipations = await base44.entities.LessonParticipation.filter(
-          { student_email: user.email },
-          "-lesson_date"
-        );
-        console.log("Loaded participations:", myParticipations);
-      } catch (error) {
-        console.error("Error loading participations:", error);
-        // If there's an error, continue with empty participations
-      }
-
-      // Try to get quiz progress
-      let myQuizProgress = [];
-      try {
-        myQuizProgress = await base44.entities.QuizProgress.filter(
-          { student_email: user.email }
-        );
-        console.log("Loaded quiz progress:", myQuizProgress);
-      } catch (error) {
-        console.error("Error loading quiz progress:", error);
-        // If there's an error, continue with empty quiz progress
-      }
-
-      // Load all quiz questions to check which lessons have quizzes
-      let allQuizQuestions = [];
-      try {
-        allQuizQuestions = await base44.entities.QuizQuestion.list();
-      } catch (error) {
-        console.error("Error loading quiz questions:", error);
-      }
-
-      let myLessons;
-      
-      // Show lessons for users who are assigned to them
-      if (myParticipations.length === 0) {
-        console.log("No participations found for user:", user.email);
-        myLessons = [];
-      } else {
-        const participatedLessonIds = myParticipations.map(p => p.lesson_id);
-        console.log("Participated lesson IDs:", participatedLessonIds);
+      // Use cache for all API calls to reduce rate limit hits
+      const [myParticipations, myQuizProgress, allQuizQuestions, allGroups] = await Promise.all([
+        safeRequest(
+          () => base44.entities.LessonParticipation.filter({ student_email: user.email }, "-lesson_date"),
+          { key: `LP:${user.email}`, ttlMs: 30000, retries: 1 }
+        ).catch(() => []),
         
-        myLessons = allLessons.filter(lesson => 
-          participatedLessonIds.includes(lesson.id)
+        safeRequest(
+          () => base44.entities.QuizProgress.filter({ student_email: user.email }),
+          { key: `QP:${user.email}`, ttlMs: 30000, retries: 1 }
+        ).catch(() => []),
+        
+        safeRequest(
+          () => base44.entities.QuizQuestion.list(),
+          { key: 'QQ:all', ttlMs: 60000, retries: 1 }
+        ).catch(() => []),
+        
+        safeRequest(
+          () => base44.entities.Group.list(),
+          { key: 'Groups:all', ttlMs: 60000, retries: 1 }
+        ).catch(() => [])
+      ]);
+
+      let myLessons = [];
+      
+      // Only load lessons if user has participations
+      if (myParticipations.length > 0) {
+        const participatedLessonIds = myParticipations.map(p => p.lesson_id);
+        
+        // Load only the specific lessons this user participated in
+        const lessonPromises = participatedLessonIds.map(lessonId =>
+          safeRequest(
+            () => base44.entities.Lesson.get(lessonId),
+            { key: `Lesson:${lessonId}`, ttlMs: 120000, retries: 1 }
+          ).catch(() => null)
         );
-        console.log("Filtered lessons:", myLessons.length);
+        
+        const loadedLessons = await Promise.all(lessonPromises);
+        myLessons = loadedLessons.filter(l => l !== null);
 
         // Sort by participation date
         myLessons.sort((a, b) => {
@@ -151,38 +142,22 @@ export default function Lessons() {
         });
       }
 
-      console.log("Final lessons to display:", myLessons.length);
       setLessons(myLessons);
       setParticipations(myParticipations);
       setQuizProgress(myQuizProgress);
       setQuizQuestions(allQuizQuestions);
 
       // Load group and next lesson
-      try {
-        const allGroups = await base44.entities.Group.list();
-        const myGroup = allGroups.find(g => g.student_emails?.includes(user.email));
+      const myGroup = allGroups.find(g => g.student_emails?.includes(user.email));
+      setUserGroup(myGroup || null);
 
-        if (myGroup) {
-          setUserGroup(myGroup);
-
-          if (myGroup.next_lesson_id) {
-            try {
-              const lesson = await base44.entities.Lesson.get(myGroup.next_lesson_id);
-              setNextLesson(lesson);
-            } catch (lessonError) {
-              console.log("Next lesson not found or deleted");
-              setNextLesson(null);
-            }
-          } else {
-            setNextLesson(null);
-          }
-        } else {
-          setUserGroup(null);
-          setNextLesson(null);
-        }
-      } catch (groupError) {
-        console.error("Error loading group info:", groupError);
-        setUserGroup(null);
+      if (myGroup?.next_lesson_id) {
+        const nextLessonData = await safeRequest(
+          () => base44.entities.Lesson.get(myGroup.next_lesson_id),
+          { key: `Lesson:${myGroup.next_lesson_id}`, ttlMs: 120000, retries: 1 }
+        ).catch(() => null);
+        setNextLesson(nextLessonData);
+      } else {
         setNextLesson(null);
       }
     } catch (error) {
