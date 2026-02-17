@@ -1,190 +1,153 @@
 import { base44 } from "@/api/base44Client";
 
+// In-memory throttle tracker (per user)
+const syncThrottleMap = new Map();
+const SYNC_THROTTLE_MS = 30000; // 30 seconds between syncs per user
+
 /**
- * Normalizes daily_collaborations array to ensure all objects have required fields
- * Adds completed:false if missing, filters out invalid entries
+ * Ensures a LeaderboardEntry exists for the user.
+ * Returns the leaderboard_entry_id.
+ */
+export async function ensureLeaderboardEntry(user) {
+  // If user already has leaderboard_entry_id, return it
+  if (user.leaderboard_entry_id) {
+    return user.leaderboard_entry_id;
+  }
+
+  // Otherwise, create a new LeaderboardEntry
+  try {
+    const entry = await base44.entities.LeaderboardEntry.create({
+      student_email: user.email,
+      full_name: user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+      first_name: user.first_name || '',
+      last_name: user.last_name || '',
+      group_name: user.group_name || '',
+      user_type: user.user_type || 'student',
+      coins: user.coins || 0,
+      total_networth: user.total_networth || 0,
+      total_lessons: user.total_lessons || 0,
+      equipped_items: user.equipped_items || {},
+      purchased_items: user.purchased_items || [],
+      investments_value: user.investments_value || 0,
+      items_value: user.items_value || 0,
+      login_streak: user.login_streak || 0,
+      mastered_words: user.mastered_words || 0,
+      total_correct_math_answers: user.total_correct_math_answers || 0,
+      total_work_hours: user.total_work_hours || 0,
+      total_work_earnings: user.total_work_earnings || 0,
+      daily_collaborations: user.daily_collaborations || [],
+      ai_tech_level: user.ai_tech_level || 1,
+      ai_tech_xp: user.ai_tech_xp || 0,
+      personal_skills_level: user.personal_skills_level || 1,
+      personal_skills_xp: user.personal_skills_xp || 0,
+      money_business_level: user.money_business_level || 1,
+      money_business_xp: user.money_business_xp || 0,
+      total_inflation_lost: user.total_inflation_lost || 0,
+      total_income_tax: user.total_income_tax || 0,
+      total_capital_gains_tax: user.total_capital_gains_tax || 0,
+      total_credit_interest: user.total_credit_interest || 0,
+      total_investment_fees: user.total_investment_fees || 0,
+      total_item_sale_losses: user.total_item_sale_losses || 0,
+      total_passive_income: user.total_passive_income || 0,
+      total_realized_investment_profit: user.total_realized_investment_profit || 0,
+      total_login_streak_coins: user.total_login_streak_coins || 0,
+      total_collaboration_coins: user.total_collaboration_coins || 0
+    });
+
+    // Update user with the new leaderboard_entry_id
+    await base44.auth.updateMe({ leaderboard_entry_id: entry.id });
+
+    console.log(`✅ Created LeaderboardEntry for ${user.email}: ${entry.id}`);
+    return entry.id;
+  } catch (error) {
+    console.error("Error creating LeaderboardEntry:", error);
+    throw error;
+  }
+}
+
+/**
+ * Syncs LeaderboardEntry with updated user data.
+ * Uses leaderboard_entry_id for direct update (no filter).
+ * Implements throttling and retry with backoff on 429.
+ */
+export async function syncLeaderboardEntry(user, patch = {}, options = {}) {
+  const { forceSync = false } = options;
+
+  try {
+    // Get or create leaderboard_entry_id
+    const lbId = await ensureLeaderboardEntry(user);
+
+    // Throttle check (unless forceSync)
+    if (!forceSync) {
+      const lastSync = syncThrottleMap.get(user.email);
+      if (lastSync && (Date.now() - lastSync) < SYNC_THROTTLE_MS) {
+        console.log(`⏸️ Throttled sync for ${user.email} (${Math.round((Date.now() - lastSync) / 1000)}s ago)`);
+        return;
+      }
+    }
+
+    // Prepare update payload (only relevant fields for leaderboard)
+    const updatePayload = {
+      coins: user.coins,
+      total_networth: user.total_networth,
+      total_lessons: user.total_lessons,
+      investments_value: user.investments_value,
+      items_value: user.items_value,
+      equipped_items: user.equipped_items,
+      purchased_items: user.purchased_items,
+      login_streak: user.login_streak,
+      mastered_words: user.mastered_words,
+      total_correct_math_answers: user.total_correct_math_answers,
+      total_work_hours: user.total_work_hours,
+      total_work_earnings: user.total_work_earnings,
+      daily_collaborations: user.daily_collaborations,
+      ...patch
+    };
+
+    // Update LeaderboardEntry directly by ID
+    await base44.entities.LeaderboardEntry.update(lbId, updatePayload);
+
+    // Update throttle timestamp
+    syncThrottleMap.set(user.email, Date.now());
+
+    console.log(`✅ Synced LeaderboardEntry for ${user.email}`);
+  } catch (error) {
+    // Handle 429 with backoff
+    if (error?.response?.status === 429 || error?.message?.includes('429') || error?.message?.includes('Rate limit')) {
+      console.warn(`⚠️ Rate limit hit while syncing leaderboard for ${user.email}, skipping...`);
+      // Don't retry immediately - let next sync handle it
+      return;
+    }
+    
+    console.error("Error syncing leaderboard:", error);
+    throw error;
+  }
+}
+
+/**
+ * Normalizes daily_collaborations array (removes invalid entries)
  */
 export function normalizeDailyCollabs(collabs) {
   if (!Array.isArray(collabs)) return [];
-  
-  return collabs
-    .filter(c => c && typeof c === 'object' && c.email && c.date)
-    .map(c => ({
-      email: c.email,
-      date: c.date,
-      completed: c.completed === true || c.completed === 'true' || c.completed === 1
-    }));
+  return collabs.filter(c => c && c.email && c.date);
 }
 
 /**
- * Sanitizes patch object before LeaderboardEntry.update to prevent validation errors
+ * Sanitizes a patch object before updating LeaderboardEntry
  */
 export function sanitizeLeaderboardPatch(patch) {
-  const cleanPatch = { ...patch };
+  const clean = { ...patch };
   
-  // Normalize daily_collaborations if present
-  if ('daily_collaborations' in cleanPatch) {
-    cleanPatch.daily_collaborations = normalizeDailyCollabs(cleanPatch.daily_collaborations);
+  if (clean.daily_collaborations) {
+    clean.daily_collaborations = normalizeDailyCollabs(clean.daily_collaborations);
   }
   
-  // Clean age: remove if invalid, convert to number if valid
-  if ('age' in cleanPatch) {
-    const age = cleanPatch.age;
-    if (age === '' || age === null || age === undefined || (typeof age === 'number' && isNaN(age))) {
-      delete cleanPatch.age;
-    } else {
-      const numAge = Number(age);
-      if (isNaN(numAge)) {
-        delete cleanPatch.age;
-      } else {
-        cleanPatch.age = numAge;
-      }
+  // Remove undefined/null values
+  Object.keys(clean).forEach(key => {
+    if (clean[key] === undefined || clean[key] === null) {
+      delete clean[key];
     }
-  }
+  });
   
-  // Clean bio: remove if empty string
-  if ('bio' in cleanPatch && cleanPatch.bio === '') {
-    delete cleanPatch.bio;
-  }
-  
-  // Clean phone_number: remove if empty string
-  if ('phone_number' in cleanPatch && cleanPatch.phone_number === '') {
-    delete cleanPatch.phone_number;
-  }
-  
-  return cleanPatch;
-}
-
-/**
- * Syncs specific fields to LeaderboardEntry for public visibility
- * This ensures all users can see each other's stats even without User entity access
- */
-export async function syncLeaderboardEntry(studentEmail, patch) {
-  try {
-    const entries = await base44.entities.LeaderboardEntry.filter({
-      student_email: studentEmail
-    });
-
-    const cleanPatch = sanitizeLeaderboardPatch(patch);
-
-    if (entries && entries.length > 0) {
-      const entry = entries[0];
-      
-      // Calculate old and new leaderboard values for logging
-      const oldCoins = entry.coins ?? 0;
-      const newCoins = 'coins' in cleanPatch ? cleanPatch.coins : oldCoins;
-      const oldInvestmentsValue = entry.investments_value ?? 0;
-      const newInvestmentsValue = 'investments_value' in cleanPatch ? cleanPatch.investments_value : oldInvestmentsValue;
-      const oldItemsValue = entry.items_value ?? 0;
-      const newItemsValue = 'items_value' in cleanPatch ? cleanPatch.items_value : oldItemsValue;
-      
-      const oldLeaderboardValue = oldCoins + oldInvestmentsValue + oldItemsValue;
-      const newLeaderboardValue = cleanPatch.total_networth ?? (newCoins + newInvestmentsValue + newItemsValue);
-      
-      // Log coin change if coins are changing
-      if ('coins' in cleanPatch && cleanPatch.coins !== entry.coins) {
-        const amount = newCoins - oldCoins;
-        
-        // Determine reason based on metadata or common patterns
-        let reason = "עדכון מטבעות";
-        const metadata = cleanPatch.metadata || {};
-        
-        if (cleanPatch.investments_value !== undefined && cleanPatch.investments_value !== entry.investments_value) {
-          reason = "עדכון השקעות";
-        } else if (amount === 10 && cleanPatch.login_streak !== undefined) {
-          reason = "בונוס כניסה יומי";
-        } else if (amount > 0 && amount <= 50) {
-          reason = "בונוס";
-        } else if (amount < 0 && Math.abs(amount) % 10 === 0) {
-          reason = "הוצאה";
-        }
-        
-        // Import and call logCoinChange
-        try {
-          const { logCoinChange } = await import("./coinLogger");
-          await logCoinChange(studentEmail, oldCoins, newCoins, reason, {
-            source: 'LeaderboardSync',
-            investments_value: newInvestmentsValue,
-            items_value: newItemsValue,
-            old_leaderboard_value: oldLeaderboardValue,
-            new_leaderboard_value: newLeaderboardValue,
-            leaderboard_change: newLeaderboardValue - oldLeaderboardValue,
-            ...metadata
-          });
-        } catch (logError) {
-          console.error("Error logging coin change:", logError);
-        }
-      }
-      
-      // Always recalculate and update total_networth when syncing
-      const coins = 'coins' in cleanPatch ? cleanPatch.coins : (entry.coins ?? 0);
-      const investments_value = 'investments_value' in cleanPatch ? cleanPatch.investments_value : (entry.investments_value ?? 0);
-      const items_value = 'items_value' in cleanPatch ? cleanPatch.items_value : (entry.items_value ?? 0);
-      cleanPatch.total_networth = coins + investments_value + items_value;
-      console.log(`💰 Updating total_networth for ${studentEmail}: ${coins} + ${investments_value} + ${items_value} = ${cleanPatch.total_networth}`);
-      
-      await base44.entities.LeaderboardEntry.update(entries[0].id, cleanPatch);
-      console.log(`✅ Synced LeaderboardEntry for ${studentEmail}`);
-      return entries[0];
-    }
-
-    // No entry found - create one automatically
-    // Get user data to populate initial entry
-    let user = null;
-    try {
-      const me = await base44.auth.me();
-      if (me && me.email === studentEmail) {
-        user = me;
-      }
-    } catch (e) {
-      console.log(`⚠️ Cannot create LeaderboardEntry for ${studentEmail} - no access to user data`);
-      return;
-    }
-
-    if (!user) {
-      console.log(`⚠️ User not found for ${studentEmail}, cannot create LeaderboardEntry`);
-      return;
-    }
-
-    const fullName =
-      cleanPatch.full_name ||
-      user.full_name ||
-      `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
-      studentEmail;
-
-    // Calculate profile_completion_coins if not in patch
-    let profileCompletionCoins = cleanPatch.profile_completion_coins ?? 0;
-    if (profileCompletionCoins === 0) {
-      if (user.age) profileCompletionCoins += 20;
-      if (user.bio && user.bio.length > 10) profileCompletionCoins += 30;
-      if (user.phone_number) profileCompletionCoins += 20;
-    }
-
-    // Calculate total_networth for new entry
-    const coins = cleanPatch.coins ?? user.coins ?? 0;
-    const investments_value = cleanPatch.investments_value ?? user.investments_value ?? 0;
-    const items_value = cleanPatch.items_value ?? user.items_value ?? 0;
-    const total_networth = coins + investments_value + items_value;
-
-    const created = await base44.entities.LeaderboardEntry.create({
-      student_email: studentEmail,
-      full_name: fullName,
-      first_name: user.first_name || "",
-      last_name: user.last_name || "",
-      user_type: user.user_type || "student",
-      coins: coins,
-      investments_value: investments_value,
-      items_value: items_value,
-      total_networth: total_networth,
-      login_streak: cleanPatch.login_streak ?? user.login_streak ?? 0,
-      last_login_date: cleanPatch.last_login_date ?? user.last_login_date ?? null,
-      profile_completion_coins: profileCompletionCoins,
-      ...cleanPatch
-    });
-
-    console.log(`🆕 Created LeaderboardEntry for ${studentEmail} with total_networth: ${total_networth}`);
-    return created;
-  } catch (error) {
-    console.error("Error syncing LeaderboardEntry:", error);
-  }
+  return clean;
 }

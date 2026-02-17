@@ -37,10 +37,12 @@ export default function Home() {
   const [investmentsValue, setInvestmentsValue] = useState(null);
 
   const loadingRef = React.useRef(false);
+  const hasLoadedRef = React.useRef(false);
 
   useEffect(() => {
-    // Prevent multiple simultaneous loads
-    if (loadingRef.current) return;
+    // Prevent multiple loads (React StrictMode guard)
+    if (loadingRef.current || hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
     loadData();
   }, []);
 
@@ -185,16 +187,11 @@ export default function Home() {
         setShowGroupSelection(true);
       }
       
-      // Initialize intro lesson & calculate lesson counts in parallel
-      const [lessonCounts] = await Promise.all([
-        calculateLessonCounts(user),
-        (async () => {
-          if (!user.tutorial_initialized) {
-            await initializeIntroLesson(user.email);
-            await base44.auth.updateMe({ tutorial_initialized: true });
-          }
-        })()
-      ]);
+      // Initialize intro lesson if needed
+      if (!user.tutorial_initialized) {
+        await initializeIntroLesson(user.email);
+        await base44.auth.updateMe({ tutorial_initialized: true });
+      }
 
       // Load group info with cache
       try {
@@ -235,7 +232,7 @@ export default function Home() {
         if (item) itemsValue += item.price || 0;
       });
 
-      setUserData({ ...user, ...lessonCounts });
+      setUserData(user);
       setInvestmentsValue(invValue);
 
       const worth = (user.coins || 0) + itemsValue + invValue;
@@ -255,82 +252,7 @@ export default function Home() {
 
 
 
-  const calculateLessonCounts = async (user) => {
-    try {
-      // Use cache - only recalculate every 5 minutes
-      const cacheKey = `lesson_counts_${user.email}`;
-      const cacheTimeKey = `${cacheKey}_time`;
-      const cached = sessionStorage.getItem(cacheKey);
-      const cachedTime = sessionStorage.getItem(cacheTimeKey);
-      
-      if (cached && cachedTime && (Date.now() - parseInt(cachedTime)) < 300000) {
-        console.log("📦 Using cached lesson counts");
-        return JSON.parse(cached);
-      }
-      
-      // Only load user's participations
-      const allParticipations = await safeRequest(
-        () => base44.entities.LessonParticipation.filter({ student_email: user.email }),
-        { key: `LP:${user.email}`, ttlMs: 300000, retries: 1 }
-      );
 
-      // Load only the lessons this user participated in
-      const lessonIds = [...new Set(allParticipations.map(p => p.lesson_id))];
-      const lessonPromises = lessonIds.map(id =>
-        safeRequest(
-          () => base44.entities.Lesson.get(id),
-          { key: `Lesson:${id}`, ttlMs: 300000, retries: 1 }
-        ).catch(() => null)
-      );
-      const lessons = (await Promise.all(lessonPromises)).filter(l => l !== null);
-
-      const lessonMap = {};
-      lessons.forEach(lesson => {
-        lessonMap[lesson.id] = lesson;
-      });
-
-      const counts = {
-        ai_tech_lessons: 0,
-        social_skills_lessons: 0,
-        money_business_lessons: 0
-      };
-
-      allParticipations.forEach(participation => {
-        if (participation.attended) {
-          const lesson = lessonMap[participation.lesson_id];
-          if (!lesson) return;
-
-          // Count based on lesson category
-          if (lesson.category === 'ai_tech') counts.ai_tech_lessons++;
-          if (lesson.category === 'personal_skills' || lesson.category === 'social_skills') counts.social_skills_lessons++;
-          if (lesson.category === 'money_business') counts.money_business_lessons++;
-        }
-      });
-
-      // Calculate total_lessons - real count of attended lessons
-      const total_lessons = counts.ai_tech_lessons + counts.social_skills_lessons + counts.money_business_lessons;
-      const result = { ...counts, total_lessons };
-      
-      // Cache the results
-      sessionStorage.setItem(cacheKey, JSON.stringify(result));
-      sessionStorage.setItem(cacheTimeKey, Date.now().toString());
-      
-      // Update User entity if there's a mismatch (do this in background)
-      if (user.total_lessons !== total_lessons) {
-        base44.auth.updateMe({ total_lessons }).catch(err => console.error("Error updating total_lessons:", err));
-      }
-
-      return result;
-    } catch (error) {
-      console.error("Error calculating lesson counts:", error);
-      return {
-        ai_tech_lessons: 0,
-        social_skills_lessons: 0,
-        money_business_lessons: 0,
-        total_lessons: 0
-      };
-    }
-  };
 
 
 
@@ -342,19 +264,12 @@ export default function Home() {
     await base44.auth.updateMe({ equipped_items: newEquipped });
     setUserData({ ...userData, equipped_items: newEquipped });
 
+    // Sync to leaderboard
     try {
-      const leaderboardEntries = await safeRequest(
-        () => base44.entities.LeaderboardEntry.filter({ student_email: userData.email }),
-        { key: `LB:${userData.email}`, ttlMs: 10000, retries: 0 }
-      ).catch(() => []);
-      
-      if (leaderboardEntries.length > 0) {
-        await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-          equipped_items: newEquipped
-        });
-      }
+      const { syncLeaderboardEntry } = await import("../components/utils/leaderboardSync");
+      await syncLeaderboardEntry(userData, { equipped_items: newEquipped });
     } catch (error) {
-      console.error("Error updating leaderboard:", error);
+      console.error("Error syncing leaderboard:", error);
     }
   };
 
@@ -402,23 +317,16 @@ export default function Home() {
       total_networth: totalNetworth
     });
 
+    // Sync to leaderboard
     try {
-      const leaderboardEntries = await safeRequest(
-        () => base44.entities.LeaderboardEntry.filter({ student_email: userData.email }),
-        { key: `LB:${userData.email}`, ttlMs: 10000, retries: 0 }
-      ).catch(() => []);
-      
-      if (leaderboardEntries.length > 0) {
-        await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
-          purchased_items: newPurchasedItems,
-          coins: newCoins,
-          total_networth: totalNetworth,
-          investments_value: investmentsValue,
-          items_value: newItemsValue
-        });
-      }
+      const { syncLeaderboardEntry } = await import("../components/utils/leaderboardSync");
+      await syncLeaderboardEntry({...userData, coins: newCoins, total_networth: totalNetworth}, {
+        purchased_items: newPurchasedItems,
+        investments_value: investmentsValue,
+        items_value: newItemsValue
+      });
     } catch (error) {
-      console.error("Error updating leaderboard:", error);
+      console.error("Error syncing leaderboard:", error);
     }
 
     toast.success(`🎉 קנית את ${item.name}!`);

@@ -351,10 +351,10 @@ export default function Leaderboard() {
     base44.auth.me().then(setCurrentUser).catch(console.error);
   }, []);
 
-  // Fetch leaderboard entries with react-query
+  // Fetch leaderboard entries with react-query (use listAll for pagination safety)
   const { data: leaderboardEntries = [], isLoading } = useQuery({
     queryKey: ['leaderboardEntries'],
-    queryFn: () => base44.entities.LeaderboardEntry.list("-total_networth", 200),
+    queryFn: () => listAll(base44.entities.LeaderboardEntry, "-total_networth", 100),
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
@@ -472,7 +472,7 @@ export default function Leaderboard() {
         equipped_items: entry.equipped_items || {},
         totalValue: entry.total_networth || 0,
         masteredWords: entry.mastered_words || 0,
-        masteredMathQuestions: entry.total_correct_math_answers || 1,
+        masteredMathQuestions: entry.total_correct_math_answers || 0,
         loginStreak: entry.login_streak || 0,
         collaborationCount: collaborationCount,
         workHours: entry.total_work_hours || 0,
