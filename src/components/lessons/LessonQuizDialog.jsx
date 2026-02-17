@@ -10,6 +10,7 @@ import { Award, Check, X, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import { safeRequest } from "../utils/base44SafeRequest";
 
 export default function LessonQuizDialog({ isOpen, onClose, lesson, onComplete }) {
   const [questions, setQuestions] = useState([]);
@@ -31,11 +32,23 @@ export default function LessonQuizDialog({ isOpen, onClose, lesson, onComplete }
     try {
       const user = await base44.auth.me();
       
-      // Check if user is registered to this lesson
-      const participationList = await base44.entities.LessonParticipation.filter({
-        lesson_id: lesson.id,
-        student_email: user.email
-      });
+      // All API calls with cache
+      const [participationList, progressList, quizQuestions] = await Promise.all([
+        safeRequest(
+          () => base44.entities.LessonParticipation.filter({ lesson_id: lesson.id, student_email: user.email }),
+          { key: `LP:${lesson.id}:${user.email}`, ttlMs: 60000, retries: 1 }
+        ).catch(() => []),
+        
+        safeRequest(
+          () => base44.entities.QuizProgress.filter({ lesson_id: lesson.id, student_email: user.email }),
+          { key: `QP:${lesson.id}:${user.email}`, ttlMs: 30000, retries: 1 }
+        ).catch(() => []),
+        
+        safeRequest(
+          () => base44.entities.QuizQuestion.filter({ lesson_id: lesson.id }, "order"),
+          { key: `QQ:${lesson.id}`, ttlMs: 120000, retries: 1 }
+        ).catch(() => [])
+      ]);
 
       if (participationList.length === 0) {
         toast.error("רק תלמידים שרשומים לשיעור יכולים לענות על החידון");
@@ -49,21 +62,10 @@ export default function LessonQuizDialog({ isOpen, onClose, lesson, onComplete }
         onClose();
         return;
       }
-      
-      // Check if user already completed this quiz
-      const progressList = await base44.entities.QuizProgress.filter({
-        lesson_id: lesson.id,
-        student_email: user.email
-      });
 
       if (progressList.length > 0) {
         setExistingProgress(progressList[0]);
       }
-
-      const quizQuestions = await base44.entities.QuizQuestion.filter(
-        { lesson_id: lesson.id },
-        "order"
-      );
       
       if (quizQuestions.length === 0) {
         toast.error("אין שאלות לחידון זה עדיין");
