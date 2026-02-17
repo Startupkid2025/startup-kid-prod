@@ -2193,6 +2193,39 @@ export default function Admin() {
                   </div>
                 </div>
 
+                <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-white font-bold mb-1">סנכרון Users ללידרבורד</h3>
+                      <p className="text-white/70 text-sm">
+                        יוצר רשומות LeaderboardEntry לכל המשתמשים שעדיין אין להם
+                      </p>
+                    </div>
+                    <Button
+                      onClick={async () => {
+                        if (!confirm("לסנכרן את כל המשתמשים ללידרבורד?")) return;
+                        setIsRecalculatingCoins(true);
+                        try {
+                          const response = await base44.functions.invoke('syncAllUsersToLeaderboard', {});
+                          const result = response.data;
+                          toast.success(`✅ ${result.created} רשומות נוצרו, ${result.existing} כבר היו קיימות`);
+                          await refreshCurrentTab();
+                        } catch (error) {
+                          console.error("Error:", error);
+                          toast.error("שגיאה בסנכרון: " + (error.message || error));
+                        } finally {
+                          setIsRecalculatingCoins(false);
+                        }
+                      }}
+                      disabled={isRecalculatingCoins}
+                      className="bg-teal-600 hover:bg-teal-700"
+                    >
+                      {isRecalculatingCoins ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : "🔄"}
+                      סנכרן לידרבורד
+                    </Button>
+                  </div>
+                </div>
+
 
               </CardContent>
             </Card>
