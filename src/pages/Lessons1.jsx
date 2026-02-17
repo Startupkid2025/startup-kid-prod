@@ -15,7 +15,6 @@ export default function Lessons() {
   const [lessons, setLessons] = useState([]);
   const [participations, setParticipations] = useState([]);
   const [quizProgress, setQuizProgress] = useState([]);
-  const [quizQuestions, setQuizQuestions] = useState([]); // New state for quiz questions
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [surveyLesson, setSurveyLesson] = useState(null);
@@ -110,7 +109,6 @@ export default function Lessons() {
       ]);
 
       let myLessons = [];
-      let allQuizQuestions = [];
       
       // Only load lessons if user has participations
       if (myParticipations.length > 0) {
@@ -136,23 +134,11 @@ export default function Lessons() {
           
           return new Date(participationB.lesson_date) - new Date(participationA.lesson_date);
         });
-
-        // Load quiz questions only for participated lessons
-        const quizPromises = participatedLessonIds.map(lessonId =>
-          safeRequest(
-            () => base44.entities.QuizQuestion.filter({ lesson_id: lessonId }),
-            { key: `QQ:${lessonId}`, ttlMs: 120000, retries: 1 }
-          ).catch(() => [])
-        );
-        
-        const quizResults = await Promise.all(quizPromises);
-        allQuizQuestions = quizResults.flat();
       }
 
       setLessons(myLessons);
       setParticipations(myParticipations);
       setQuizProgress(myQuizProgress);
-      setQuizQuestions(allQuizQuestions);
 
       // Load group and next lesson
       const myGroup = allGroups.find(g => g.student_emails?.includes(user.email));
@@ -181,10 +167,6 @@ export default function Lessons() {
 
   const getQuizProgressForLesson = (lessonId) => {
     return quizProgress.find(q => q.lesson_id === lessonId);
-  };
-
-  const hasQuizQuestions = (lessonId) => {
-    return quizQuestions.some(q => q.lesson_id === lessonId);
   };
 
   const handleOpenSurvey = (lesson, participation) => {
@@ -331,7 +313,6 @@ export default function Lessons() {
             const hasSurvey = participation?.survey_completed;
             const hasQuiz = quizProg?.completed;
             const watchedRecording = participation?.watched_recording || false;
-            const hasQuestions = hasQuizQuestions(lesson.id); // Check if quiz questions exist for this lesson
             
             const isDemoWithoutParticipation = currentUser?.user_type === "demo" && !participation;
             
@@ -462,27 +443,25 @@ export default function Lessons() {
                         </Button>
                       )}
 
-                      {/* Quiz Button - always available if there are questions */}
-                      {hasQuestions && (
-                        <Button
-                          onClick={() => setQuizLesson(lesson)}
-                          className={`w-full font-bold flex items-center justify-center ${
-                            hasQuiz 
-                              ? "bg-green-500/20 border-2 border-green-500 text-green-200 hover:bg-green-500/30"
-                              : "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white"
-                          }`}
-                        >
-                          <span className="flex items-center gap-2">
-                            <Award className="w-4 h-4" />
-                            {hasQuiz ? "חידות על השיעור" : "חידות על השיעור 🪙"}
+                      {/* Quiz Button - always show, questions loaded on click */}
+                      <Button
+                        onClick={() => setQuizLesson(lesson)}
+                        className={`w-full font-bold flex items-center justify-center ${
+                          hasQuiz 
+                            ? "bg-green-500/20 border-2 border-green-500 text-green-200 hover:bg-green-500/30"
+                            : "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <Award className="w-4 h-4" />
+                          {hasQuiz ? "חידות על השיעור" : "חידות על השיעור 🪙"}
+                        </span>
+                        {hasQuiz && (
+                          <span className="mr-2" dir="ltr">
+                            ({quizProg.score}/{quizProg.total_questions} ✓)
                           </span>
-                          {hasQuiz && (
-                            <span className="mr-2" dir="ltr">
-                              ({quizProg.score}/{quizProg.total_questions} ✓)
-                            </span>
-                          )}
-                        </Button>
-                      )}
+                        )}
+                      </Button>
 
                       {/* Survey Button - always available if has participation */}
                       {participation && !hasSurvey && (
