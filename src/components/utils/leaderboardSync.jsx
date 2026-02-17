@@ -69,6 +69,7 @@ export async function ensureLeaderboardEntry(user) {
  * Syncs LeaderboardEntry with updated user data.
  * Uses leaderboard_entry_id for direct update (no filter).
  * Implements throttling and retry with backoff on 429.
+ * Returns the actual total_networth that was synced to leaderboard.
  */
 export async function syncLeaderboardEntry(user, patch = {}, options = {}) {
   const { forceSync = false } = options;
@@ -82,7 +83,7 @@ export async function syncLeaderboardEntry(user, patch = {}, options = {}) {
       const lastSync = syncThrottleMap.get(user.email);
       if (lastSync && (Date.now() - lastSync) < SYNC_THROTTLE_MS) {
         console.log(`⏸️ Throttled sync for ${user.email} (${Math.round((Date.now() - lastSync) / 1000)}s ago)`);
-        return;
+        return null;
       }
     }
 
@@ -111,12 +112,15 @@ export async function syncLeaderboardEntry(user, patch = {}, options = {}) {
     syncThrottleMap.set(user.email, Date.now());
 
     console.log(`✅ Synced LeaderboardEntry for ${user.email}`);
+    
+    // Return the actual total_networth that was synced
+    return updatePayload.total_networth || null;
   } catch (error) {
     // Handle 429 with backoff
     if (error?.response?.status === 429 || error?.message?.includes('429') || error?.message?.includes('Rate limit')) {
       console.warn(`⚠️ Rate limit hit while syncing leaderboard for ${user.email}, skipping...`);
       // Don't retry immediately - let next sync handle it
-      return;
+      return null;
     }
     
     console.error("Error syncing leaderboard:", error);
