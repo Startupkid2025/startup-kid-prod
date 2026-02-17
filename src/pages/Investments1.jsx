@@ -138,6 +138,19 @@ export default function Investments() {
     if (didLoadRef.current) return;
     didLoadRef.current = true;
     
+    // Session lock - prevent burst on remount (2 seconds)
+    const sessionKey = 'investments_last_load';
+    const lastLoad = sessionStorage.getItem(sessionKey);
+    if (lastLoad) {
+      const elapsed = Date.now() - parseInt(lastLoad);
+      if (elapsed < 2000) {
+        console.log('⏸️ Skipping load - recent session lock');
+        setIsLoading(false);
+        return;
+      }
+    }
+    sessionStorage.setItem(sessionKey, Date.now().toString());
+    
     console.log("TODAY KEY:", getDateKeyJerusalem(0), "YESTERDAY KEY:", getDateKeyJerusalem(-1));
     loadData();
   }, []);
@@ -167,10 +180,16 @@ export default function Investments() {
   const getTodayMarket = async () => {
     const today = getDateKeyJerusalem(0);
     
+    // Calculate TTL until end of day in Jerusalem timezone
+    const now = new Date();
+    const [y, m, d] = today.split('-').map(Number);
+    const endOfDay = new Date(Date.UTC(y, m - 1, d, 21, 0, 0, 0)); // 00:00 next day in Jerusalem = 21:00 UTC
+    const ttlUntilEndOfDay = Math.max(endOfDay - now, 60 * 1000); // Minimum 1 minute
+    
     try {
       const existingMarket = await safeRequest(
         () => base44.entities.DailyMarketPerformance.filter({ date: today }),
-        { key: `DMP:${today}:v2`, ttlMs: 5 * 60 * 1000, retries: 1 }
+        { key: `DMP:${today}`, ttlMs: ttlUntilEndOfDay, retries: 1 }
       );
       
       if (existingMarket.length > 0) {
@@ -204,10 +223,11 @@ export default function Investments() {
   const getYesterdayMarket = async () => {
     const yesterday = getDateKeyJerusalem(-1);
     
+    // Yesterday data never changes - cache for 24 hours
     try {
       const yesterdayMarket = await safeRequest(
         () => base44.entities.DailyMarketPerformance.filter({ date: yesterday }),
-        { key: `DMP:${yesterday}:v2`, ttlMs: 5 * 60 * 1000, retries: 1 }
+        { key: `DMP:${yesterday}`, ttlMs: 24 * 60 * 60 * 1000, retries: 1 }
       );
       
       if (yesterdayMarket.length > 0) {
@@ -257,8 +277,11 @@ export default function Investments() {
       setTodayPerformance(todayMarket);
       setYesterdayPerformance(yesterdayMarket);
 
-      // READ ONLY: Load user's investments (no cache needed on initial load)
-      const myInvestments = await base44.entities.Investment.filter({ student_email: user.email });
+      // READ ONLY: Load user's investments with safeRequest
+      const myInvestments = await safeRequest(
+        () => base44.entities.Investment.filter({ student_email: user.email }),
+        { key: `INV:${user.email}`, ttlMs: 30 * 1000, retries: 1 }
+      );
       setInvestments(myInvestments);
     } catch (error) {
       console.error("Error loading investments:", error);
@@ -333,9 +356,10 @@ export default function Investments() {
       // Calculate investments_value from local state (avoid extra API call)
       const newInvestments = [...investments, createdInvestment];
       const investmentsValue = newInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
-
-      // Update net worth BEFORE logging
-      const newNetWorth = await updateNetWorth(userData.email);
+      
+      // Calculate net worth locally (READ ONLY page - no updateNetWorth call)
+      const itemsValue = userData.items_value || 0;
+      const newNetWorth = newCoinsBalance + investmentsValue + itemsValue;
       
       // Log coin change
       try {
@@ -369,11 +393,13 @@ export default function Investments() {
       await base44.auth.updateMe({
         coins: newCoinsBalance,
         total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE,
-        investments_value: investmentsValue
+        investments_value: investmentsValue,
+        total_networth: newNetWorth
       });
 
       // Sync to LeaderboardEntry for public visibility
-      await syncLeaderboardEntry(userData.email, {
+      const freshUser = await base44.auth.me();
+      await syncLeaderboardEntry(freshUser, {
         coins: newCoinsBalance,
         total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE,
         investments_value: investmentsValue,
@@ -542,16 +568,16 @@ export default function Investments() {
       const oldCoins = userData.coins;
       const newCoins = oldCoins + Math.round(netAmount);
       
-      // Update net worth BEFORE logging
-      const newNetWorth = await updateNetWorth(userData.email);
-      
-      // Update investments_value after calculating all fees and taxes
-      // (This will be used for logging)
+      // Reload investments to get accurate value after sale (with cache)
       const allUserInvestmentsAfterSale = await safeRequest(
         () => base44.entities.Investment.filter({ student_email: userData.email }),
-        { key: `INV:${userData.email}`, ttlMs: 5000, retries: 1 }
+        { key: `INV:${userData.email}:refresh`, ttlMs: 1000, retries: 1 }
       );
       const investmentsValueAfterSale = allUserInvestmentsAfterSale.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+      
+      // Calculate net worth locally (READ ONLY page)
+      const itemsValue = userData.items_value || 0;
+      const newNetWorth = newCoins + investmentsValueAfterSale + itemsValue;
       
       // Log 3 separate transactions: sale proceeds, fee, and tax
       try {
@@ -596,11 +622,13 @@ export default function Investments() {
         total_investment_fees: newTotalFees,
         total_capital_gains_tax: newCapitalGainsTax,
         total_realized_investment_profit: newRealizedProfit,
-        investments_value: investmentsValueAfterSale
+        investments_value: investmentsValueAfterSale,
+        total_networth: newNetWorth
       });
 
       // Sync to LeaderboardEntry for public visibility
-      await syncLeaderboardEntry(userData.email, {
+      const freshUser = await base44.auth.me();
+      await syncLeaderboardEntry(freshUser, {
         coins: newCoins,
         total_investment_fees: newTotalFees,
         total_capital_gains_tax: newCapitalGainsTax,
