@@ -10,6 +10,12 @@ const SYNC_THROTTLE_MS = 30000; // 30 seconds between syncs per user
  * Cleans up duplicate entries if found.
  */
 export async function ensureLeaderboardEntry(user) {
+  // Guard: must have a valid email
+  if (!user?.email) {
+    console.warn('⚠️ ensureLeaderboardEntry called without user email, skipping');
+    return null;
+  }
+
   // Check for existing entries by email
   const existingEntries = await base44.entities.LeaderboardEntry.filter({ 
     student_email: user.email 
