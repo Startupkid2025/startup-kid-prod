@@ -588,6 +588,21 @@ export default function StudentRow({
                 <Coins className="w-4 h-4" />
               </Button>
 
+              {/* Edit Group Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-green-300 hover:text-green-200 w-9 h-9 hover:bg-gradient-to-br hover:from-green-500/30 hover:to-teal-500/30 transition-all duration-300 hover:shadow-lg border border-transparent hover:border-green-400/50 rounded-xl"
+                title="שנה קבוצה"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedGroupId(studentGroup?.id || "none");
+                  setShowGroupDialog(true);
+                }}
+              >
+                <FolderEdit className="w-4 h-4" />
+              </Button>
+
               {/* Edit Student Button */}
               <Button
                 variant="ghost"
