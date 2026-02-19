@@ -161,6 +161,7 @@ export async function syncLeaderboardEntry(user, patch = {}, options = {}) {
       equipped_items: user.equipped_items,
       purchased_items: user.purchased_items,
       login_streak: user.login_streak,
+      last_login_date: user.last_login_date,
       mastered_words: user.mastered_words,
       total_correct_math_answers: user.total_correct_math_answers,
       total_work_hours: user.total_work_hours,
