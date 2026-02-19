@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, UserCheck, Calendar, Plus, UserX, Edit2, Users, Play, Trash2, Coins } from "lucide-react";
+import { ChevronDown, ChevronUp, UserCheck, Calendar, Plus, UserX, Edit2, Users, Play, Trash2, Coins, FolderEdit } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
