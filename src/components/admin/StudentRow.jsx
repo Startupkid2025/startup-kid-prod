@@ -72,6 +72,8 @@ export default function StudentRow({
   });
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showGroupDialog, setShowGroupDialog] = useState(false);
+  const [selectedGroupId, setSelectedGroupId] = useState("");
 
   const getParticipationForLesson = (lessonId) => {
     return participations.find(
