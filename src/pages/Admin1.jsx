@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
+import { syncLeaderboardEntry } from "../components/utils/leaderboardSync.ts";
 
 import StudentRow from "../components/admin/StudentRow";
 import AddLessonDialog from "../components/admin/AddLessonDialog";
