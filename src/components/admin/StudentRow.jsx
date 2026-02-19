@@ -887,6 +887,34 @@ export default function StudentRow({
         )}
       </div>
 
+      {/* Edit Group Dialog */}
+      <Dialog open={showGroupDialog} onOpenChange={setShowGroupDialog}>
+        <DialogContent className="bg-white/95 backdrop-blur-xl border-2 border-green-300">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-green-700">
+              שנה קבוצה - {student.full_name || student.email}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Select value={selectedGroupId || "none"} onValueChange={setSelectedGroupId}>
+              <SelectTrigger className="border-2 border-green-200">
+                <SelectValue placeholder="בחר קבוצה" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">ללא קבוצה</SelectItem>
+                {groups.map(g => (
+                  <SelectItem key={g.id} value={g.id}>{g.group_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex gap-3">
+              <Button onClick={() => setShowGroupDialog(false)} variant="outline" className="flex-1">ביטול</Button>
+              <Button onClick={handleSaveGroup} className="flex-1 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600">שמור</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Add Date Dialog */}
       <Dialog open={showDateDialog} onOpenChange={setShowDateDialog}>
         <DialogContent className="bg-white/95 backdrop-blur-xl border-2 border-purple-300">
