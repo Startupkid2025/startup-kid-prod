@@ -435,6 +435,50 @@ export default function StudentRow({
   };
 
 
+  // Handle changing student group
+  const handleSaveGroup = async () => {
+    try {
+      // Remove from all groups first
+      for (const group of groups) {
+        if (group.student_emails?.includes(student.email)) {
+          await base44.entities.Group.update(group.id, {
+            student_emails: group.student_emails.filter(e => e !== student.email)
+          });
+        }
+      }
+
+      // Add to new group if selected
+      if (selectedGroupId && selectedGroupId !== "none") {
+        const newGroup = groups.find(g => g.id === selectedGroupId);
+        if (newGroup) {
+          await base44.entities.Group.update(newGroup.id, {
+            student_emails: [...(newGroup.student_emails || []), student.email]
+          });
+        }
+      }
+
+      // Update LeaderboardEntry group_name
+      const newGroupName = selectedGroupId && selectedGroupId !== "none"
+        ? groups.find(g => g.id === selectedGroupId)?.group_name || ""
+        : "";
+      try {
+        const lbEntries = await base44.entities.LeaderboardEntry.filter({ student_email: student.email });
+        if (lbEntries.length > 0) {
+          await base44.entities.LeaderboardEntry.update(lbEntries[0].id, { group_name: newGroupName });
+        }
+      } catch (e) {
+        console.error("Error updating leaderboard group:", e);
+      }
+
+      toast.success("הקבוצה עודכנה בהצלחה! ✨");
+      setShowGroupDialog(false);
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error("Error updating group:", error);
+      toast.error("שגיאה בעדכון הקבוצה");
+    }
+  };
+
   const totalParticipations = participations.filter(
     p => p.student_email === student.email
   ).length;
