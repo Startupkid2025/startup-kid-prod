@@ -997,5 +997,6 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
