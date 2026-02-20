@@ -966,5 +966,35 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
         </div>
       </Card>
     </motion.div>
+
+    {/* No Energy Dialog */}
+    <Dialog open={showNoEnergyDialog} onOpenChange={setShowNoEnergyDialog}>
+      <DialogContent className="bg-gradient-to-br from-indigo-900 to-purple-900 border-2 border-purple-400/60 text-white max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-black text-center text-white">
+            😴 אין אנרגיה!
+          </DialogTitle>
+        </DialogHeader>
+        <div className="text-center py-4 space-y-4">
+          <div className="text-6xl">⚡</div>
+          <p className="text-white/90 text-lg font-bold">
+            {user?.avatar_name} עייף מדי לעבוד!
+          </p>
+          <p className="text-white/70 text-sm">
+            האנרגיה שלו נמוכה מ-30%. שלח אותו לישון כדי לחדש כוחות 🌙
+          </p>
+          <div className="bg-white/10 rounded-xl p-3 border border-white/20">
+            <p className="text-xs text-white/60 mb-1">אנרגיה נוכחית</p>
+            <p className="text-3xl font-black text-red-400">{energy}%</p>
+          </div>
+          <Button
+            onClick={() => setShowNoEnergyDialog(false)}
+            className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold"
+          >
+            הבנתי, אשלח אותו לישון 🌙
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
