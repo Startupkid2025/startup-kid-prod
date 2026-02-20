@@ -222,6 +222,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
   const [timeLeft, setTimeLeft] = React.useState(0);
   const [energy, setEnergy] = React.useState(100);
   const [hunger, setHunger] = React.useState(0);
+  const [showNoEnergyDialog, setShowNoEnergyDialog] = React.useState(false);
 
   React.useEffect(() => {
     loadUser();
