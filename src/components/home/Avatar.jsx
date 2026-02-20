@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Edit2, Check, X, Briefcase, Clock, Coins, Moon, UtensilsCrossed, Zap, Heart } from "lucide-react";
 import TamagotchiAvatar from "../avatar/TamagotchiAvatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { base44 } from "@/api/base44Client";
 import { AVATAR_ITEMS } from "../avatar/TamagotchiAvatar";
 import { toast } from "sonner";
