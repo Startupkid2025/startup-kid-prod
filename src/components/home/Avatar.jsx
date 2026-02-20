@@ -329,7 +329,7 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
   const sendToWork = async () => {
     // Check if tired
     if (energy < 30) {
-      toast.error(`${user.avatar_name} עייף מדי! שלח אותו לישון קודם 😴`);
+      setShowNoEnergyDialog(true);
       return;
     }
     
