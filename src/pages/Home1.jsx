@@ -833,7 +833,7 @@ export default function Home() {
                 {SKILLS.map((skill, index) => {
                   const level = userData[`${skill.key}_level`] || 1;
                   const xp = userData[`${skill.key}_xp`] || 0;
-                  const lessonCount = userData[`${skill.key}_lessons`] || 0;
+                  const lessonCount = skillLessonCounts[skill.key] || 0;
 
                   return (
                     <SkillBar
