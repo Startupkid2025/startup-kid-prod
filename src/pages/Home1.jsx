@@ -35,6 +35,7 @@ export default function Home() {
   const [nextLesson, setNextLesson] = useState(null);
   const [netWorth, setNetWorth] = useState(0);
   const [investmentsValue, setInvestmentsValue] = useState(null);
+  const [skillLessonCounts, setSkillLessonCounts] = useState({ ai_tech: 0, social_skills: 0, money_business: 0 });
 
   const loadingRef = React.useRef(false);
   const hasLoadedRef = React.useRef(false);
