@@ -239,6 +239,33 @@ export default function Home() {
       const worth = (user.coins || 0) + itemsValue + invValue;
       setNetWorth(worth);
 
+      // Count lessons per skill category
+      try {
+        const participations = await safeRequest(
+          () => base44.entities.LessonParticipation.filter({ student_email: user.email }),
+          { key: `LP:${user.email}`, ttlMs: 60000, retries: 1 }
+        );
+        const attendedIds = participations.filter(p => p.attended).map(p => p.lesson_id);
+        const uniqueIds = [...new Set(attendedIds)];
+        const counts = { ai_tech: 0, social_skills: 0, money_business: 0 };
+        if (uniqueIds.length > 0) {
+          const lessonDocs = await Promise.all(
+            uniqueIds.map(id => safeRequest(
+              () => base44.entities.Lesson.get(id),
+              { key: `Lesson:${id}`, ttlMs: 120000, retries: 0 }
+            ).catch(() => null))
+          );
+          lessonDocs.forEach(lesson => {
+            if (lesson && counts.hasOwnProperty(lesson.category)) {
+              counts[lesson.category]++;
+            }
+          });
+        }
+        setSkillLessonCounts(counts);
+      } catch (e) {
+        console.error("Error counting skill lessons:", e);
+      }
+
       setIsLoading(false);
     } catch (error) {
       console.error("Error loading data:", error);
