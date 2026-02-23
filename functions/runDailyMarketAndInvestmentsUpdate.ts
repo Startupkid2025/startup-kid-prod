@@ -142,12 +142,41 @@ Deno.serve(async (req) => {
     
     console.log(`✅ Completed updating ${updatedCount} investments`);
     
-    // ========== STEP 3: Update Net Worth for Affected Users ==========
-    // Build investment value map per email from updated allInvestments
+    // ========== STEP 3: Update Net Worth + Portfolio Snapshot for Affected Users ==========
+    const BUSINESS_TYPES = ['tech_startup', 'real_estate', 'crypto', 'stock_market', 'government_bonds', 'gold'];
+
+    // Build per-email maps from updated allInvestments
     const invValueByEmail = {};
+    const invInvestedByEmail = {};
+    const invCountByEmail = {};
+    const invCountByTypeByEmail = {};
+    const invValueByTypeByEmail = {};
+    const invInvestedByTypeByEmail = {};
+
     for (const inv of allInvestments) {
-      if (!invValueByEmail[inv.student_email]) invValueByEmail[inv.student_email] = 0;
-      invValueByEmail[inv.student_email] += inv.current_value || 0;
+      const email = inv.student_email;
+      if (!invValueByEmail[email]) {
+        invValueByEmail[email] = 0;
+        invInvestedByEmail[email] = 0;
+        invCountByEmail[email] = 0;
+        invCountByTypeByEmail[email] = {};
+        invValueByTypeByEmail[email] = {};
+        invInvestedByTypeByEmail[email] = {};
+        BUSINESS_TYPES.forEach(t => {
+          invCountByTypeByEmail[email][t] = 0;
+          invValueByTypeByEmail[email][t] = 0;
+          invInvestedByTypeByEmail[email][t] = 0;
+        });
+      }
+      invValueByEmail[email] += inv.current_value || 0;
+      invInvestedByEmail[email] += inv.invested_amount || 0;
+      invCountByEmail[email] += 1;
+      const t = inv.business_type;
+      if (t && BUSINESS_TYPES.includes(t)) {
+        invCountByTypeByEmail[email][t] = (invCountByTypeByEmail[email][t] || 0) + 1;
+        invValueByTypeByEmail[email][t] = (invValueByTypeByEmail[email][t] || 0) + (inv.current_value || 0);
+        invInvestedByTypeByEmail[email][t] = (invInvestedByTypeByEmail[email][t] || 0) + (inv.invested_amount || 0);
+      }
     }
 
     // Fetch all users & leaderboard entries once
@@ -173,9 +202,19 @@ Deno.serve(async (req) => {
         const itemsValue = user.items_value || 0;
         const totalNetworth = Math.round(currentCoins + newInvestmentsValue + itemsValue);
 
+        // Build empty snapshot defaults for users with no investments
+        const emptyTypes = {};
+        BUSINESS_TYPES.forEach(t => { emptyTypes[t] = 0; });
+
         await updateWithRetry(() => base44.asServiceRole.entities.User.update(user.id, {
           total_networth: totalNetworth,
-          investments_value: newInvestmentsValue
+          investments_value: newInvestmentsValue,
+          total_invested_amount: Math.round(invInvestedByEmail[user.email] || 0),
+          investment_count_total: invCountByEmail[user.email] || 0,
+          investment_count_by_type: invCountByTypeByEmail[user.email] || emptyTypes,
+          investment_value_by_type: invValueByTypeByEmail[user.email] || emptyTypes,
+          investment_invested_by_type: invInvestedByTypeByEmail[user.email] || emptyTypes,
+          last_portfolio_snapshot_date_key: dateKey
         }));
 
         const lb = lbByEmail[user.email];
