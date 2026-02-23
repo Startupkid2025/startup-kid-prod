@@ -241,18 +241,6 @@ export default function Home() {
       const worth = (user.coins || 0) + itemsValue + invValue;
       setNetWorth(worth);
 
-      // Load user investments and daily market in parallel
-      try {
-        const [investments, marketEntries] = await Promise.all([
-          base44.entities.Investment.filter({ student_email: user.email }),
-          base44.entities.DailyMarketPerformance.list('-date', 1)
-        ]);
-        setUserInvestments(investments);
-        setDailyMarket(marketEntries?.[0] || null);
-      } catch (e) {
-        console.error("Error loading investments/market:", e);
-      }
-
       // Count lessons per skill category
       try {
         const participations = await safeRequest(
