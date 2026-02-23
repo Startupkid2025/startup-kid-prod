@@ -821,6 +821,67 @@ export default function Home() {
                 </motion.div>
                 </div>
 
+      {/* Investments Row */}
+      {userInvestments.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+        >
+          <Card className="bg-white/10 backdrop-blur-md border-white/20">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-green-300" />
+                  ההשקעות שלי
+                </h2>
+                <span className="text-white/70 text-sm font-medium">
+                  סה"כ: {userInvestments.reduce((s, i) => s + (i.current_value || 0), 0).toLocaleString('he-IL')} 🪙
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {userInvestments.map(inv => {
+                  const BUSINESSES = [
+                    { id: "government_bonds", name: "אג\"ח ממשלתיות", icon: "🏛️" },
+                    { id: "gold", name: "זהב", icon: "💛" },
+                    { id: "real_estate", name: "נדל\"ן", icon: "🏢" },
+                    { id: "stock_market", name: "מניות", icon: "📈" },
+                    { id: "crypto", name: "קריפטו", icon: "₿" },
+                    { id: "tech_startup", name: "סטארטאפ", icon: "🚀" },
+                  ];
+                  const biz = BUSINESSES.find(b => b.id === inv.business_type) || { name: inv.business_type, icon: "💼" };
+                  const dailyChangeKey = `${inv.business_type}_change`;
+                  const dailyChangePct = dailyMarket?.[dailyChangeKey] ?? null;
+                  const profit = (inv.current_value || 0) - (inv.invested_amount || 0);
+                  const profitPct = inv.invested_amount > 0 ? (profit / inv.invested_amount) * 100 : 0;
+                  const isPositive = profit >= 0;
+                  const isDailyPos = dailyChangePct !== null ? dailyChangePct >= 0 : null;
+                  return (
+                    <div key={inv.id} className="bg-white/10 rounded-xl p-3 border border-white/10 flex flex-col gap-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xl">{biz.icon}</span>
+                        <span className="text-white font-bold text-xs truncate">{biz.name}</span>
+                      </div>
+                      <div className="text-white font-black text-base">
+                        {(inv.current_value || 0).toLocaleString('he-IL')} 🪙
+                      </div>
+                      <div className={`text-xs font-bold ${isPositive ? 'text-green-300' : 'text-red-300'}`}>
+                        {isPositive ? '▲' : '▼'} {Math.abs(profit).toLocaleString('he-IL')} ({profitPct.toFixed(1)}%)
+                      </div>
+                      {dailyChangePct !== null && (
+                        <div className={`text-[11px] font-medium ${isDailyPos ? 'text-green-200' : 'text-red-200'} bg-white/10 rounded-md px-2 py-0.5 text-center`}>
+                          היום: {isDailyPos ? '+' : ''}{dailyChangePct.toFixed(2)}%
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
       {/* Second Row - Avatar + Skills */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Avatar */}
