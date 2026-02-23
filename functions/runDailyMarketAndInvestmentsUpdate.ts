@@ -146,117 +146,69 @@ Deno.serve(async (req) => {
     
     console.log(`✅ Completed updating ${updatedCount} investments`);
     
-    // ========== STEP 3: Recompute Portfolio Snapshots ==========
-    const processedEmails = new Set(investmentsNeedingUpdate.map(inv => inv.student_email));
-    console.log(`📸 Updating portfolio snapshots for ${processedEmails.size} users...`);
-    
-    let snapshotCount = 0;
-    for (const email of processedEmails) {
-      try {
-        await recomputeAndPersistPortfolioSnapshot(email);
-        snapshotCount++;
-      } catch (err) {
-        console.error(`Error updating snapshot for ${email}:`, err);
-      }
+    // ========== STEP 3: Update Net Worth for Affected Users ==========
+    // Build investment value map per email from updated allInvestments
+    const invValueByEmail = {};
+    for (const inv of allInvestments) {
+      if (!invValueByEmail[inv.student_email]) invValueByEmail[inv.student_email] = 0;
+      invValueByEmail[inv.student_email] += inv.current_value || 0;
     }
-    
-    console.log(`✅ Completed ${snapshotCount} portfolio snapshots`);
-    
-    // ========== STEP 4: Update Net Worth for All Users ==========
-    const allUsers = await base44.asServiceRole.entities.User.list();
+
+    // Fetch all users & leaderboard entries once
+    const [allUsers, allLeaderboard] = await Promise.all([
+      base44.asServiceRole.entities.User.list(undefined, 200),
+      base44.asServiceRole.entities.LeaderboardEntry.list(undefined, 200)
+    ]);
+
+    const lbByEmail = {};
+    for (const lb of allLeaderboard) {
+      lbByEmail[lb.student_email] = lb;
+    }
+
     const studentsToUpdate = allUsers.filter(u => u.user_type === 'student' || !u.user_type);
     let usersUpdated = 0;
-    
-    console.log(`👥 Processing ${studentsToUpdate.length} users`);
-    
-    // Process users in batches
-    const USER_BATCH_SIZE = 15;
-    for (let i = 0; i < studentsToUpdate.length; i += USER_BATCH_SIZE) {
-      const userBatch = studentsToUpdate.slice(i, i + USER_BATCH_SIZE);
-      
-      await Promise.all(userBatch.map(async (user) => {
-        try {
-          const currentCoins = user.coins || 0;
-          const equippedItems = user.equipped_items || {};
-          
-          // Only equipped items count
-          let itemsValue = 0;
-          
-          const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
-          const oldInvestmentsValue = user.investments_value || 0;
-          const newInvestmentsValue = Math.round(userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0));
-          const investmentChange = newInvestmentsValue - oldInvestmentsValue;
-          
-          // Log investment value change if there is one
-          if (investmentChange !== 0) {
-            try {
-              await base44.asServiceRole.entities.CoinLog.create({
-                student_email: user.email,
-                amount: investmentChange,
-                reason: "עדכון שווי השקעות יומי",
-                previous_balance: oldInvestmentsValue,
-                new_balance: newInvestmentsValue,
-                metadata: {
-                  timestamp: new Date().toISOString(),
-                  source: 'Daily Investments Update',
-                  date: dateKey,
-                  type: 'investment_value_change',
-                  investments_value: newInvestmentsValue,
-                  items_value: itemsValue,
-                  user_networth: currentCoins + itemsValue + newInvestmentsValue,
-                  leaderboard_networth: currentCoins + itemsValue + newInvestmentsValue
-                }
-              });
-            } catch (logError) {
-              console.error(`Error logging investment change for ${user.email}:`, logError);
-            }
-          }
-          
-          const totalNetworth = Math.round(currentCoins + itemsValue + newInvestmentsValue);
-          
-          await base44.asServiceRole.entities.User.update(user.id, {
-            total_networth: totalNetworth,
-            investments_value: newInvestmentsValue
-          });
 
-          // Upsert to LeaderboardEntry
-          const existingEntry = await base44.asServiceRole.entities.LeaderboardEntry.filter({
-            student_email: user.email
-          });
+    console.log(`👥 Processing ${studentsToUpdate.length} users sequentially`);
 
-          const leaderboardData = {
-            total_networth: totalNetworth,
-            investments_value: newInvestmentsValue,
-            coins: currentCoins,
-            last_updated: new Date().toISOString()
-          };
+    for (const user of studentsToUpdate) {
+      try {
+        const currentCoins = user.coins || 0;
+        const newInvestmentsValue = Math.round(invValueByEmail[user.email] || 0);
+        const totalNetworth = Math.round(currentCoins + newInvestmentsValue);
 
-          if (existingEntry.length > 0) {
-            await base44.asServiceRole.entities.LeaderboardEntry.update(existingEntry[0].id, leaderboardData);
-          } else {
-            await base44.asServiceRole.entities.LeaderboardEntry.create({
-              student_email: user.email,
-              full_name: user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email,
-              first_name: user.first_name || '',
-              last_name: user.last_name || '',
-              ...leaderboardData
-            });
-          }
-          
-          usersUpdated++;
-        } catch (error) {
-          console.error(`Error updating net worth for ${user.email}:`, error);
+        await updateWithRetry(() => base44.asServiceRole.entities.User.update(user.id, {
+          total_networth: totalNetworth,
+          investments_value: newInvestmentsValue
+        }));
+
+        const lb = lbByEmail[user.email];
+        const leaderboardData = {
+          total_networth: totalNetworth,
+          investments_value: newInvestmentsValue,
+          coins: currentCoins
+        };
+
+        if (lb) {
+          await updateWithRetry(() => base44.asServiceRole.entities.LeaderboardEntry.update(lb.id, leaderboardData));
+        } else {
+          await updateWithRetry(() => base44.asServiceRole.entities.LeaderboardEntry.create({
+            student_email: user.email,
+            full_name: user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email,
+            first_name: user.first_name || '',
+            last_name: user.last_name || '',
+            ...leaderboardData
+          }));
         }
-      }));
-      
-      console.log(`✅ Updated batch ${Math.floor(i / USER_BATCH_SIZE) + 1}: ${usersUpdated}/${studentsToUpdate.length} users`);
-      
-      // Delay between batches
-      if (i + USER_BATCH_SIZE < studentsToUpdate.length) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        usersUpdated++;
+
+        // Small delay between users
+        await new Promise(r => setTimeout(r, 300));
+      } catch (error) {
+        console.error(`Error updating net worth for ${user.email}:`, error);
       }
     }
-    
+
     console.log(`✅ Completed updating net worth for ${usersUpdated} users`);
     
     return Response.json({
