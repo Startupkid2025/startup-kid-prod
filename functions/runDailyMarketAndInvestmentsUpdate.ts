@@ -216,7 +216,6 @@ Deno.serve(async (req) => {
       date: dateKey,
       marketCreated: existingMarket.length === 0,
       investmentsUpdated: updatedCount,
-      snapshotsUpdated: snapshotCount,
       usersUpdated: usersUpdated,
       marketChanges: businessTypeToChangeMap
     });
