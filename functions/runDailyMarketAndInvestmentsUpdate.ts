@@ -170,7 +170,8 @@ Deno.serve(async (req) => {
       try {
         const currentCoins = user.coins || 0;
         const newInvestmentsValue = Math.round(invValueByEmail[user.email] || 0);
-        const totalNetworth = Math.round(currentCoins + newInvestmentsValue);
+        const itemsValue = user.items_value || 0;
+        const totalNetworth = Math.round(currentCoins + newInvestmentsValue + itemsValue);
 
         await updateWithRetry(() => base44.asServiceRole.entities.User.update(user.id, {
           total_networth: totalNetworth,
