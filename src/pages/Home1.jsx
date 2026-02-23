@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 const SKILLS = [
   { key: "ai_tech", name: "בינה מלאכותית וטכנולוגיה", icon: "🤖", color: "from-blue-400 to-cyan-400" },
-  { key: "social_skills", name: "מיומנויות אישיות", icon: "❤️", color: "from-pink-400 to-rose-400" },
+  { key: "personal_skills", name: "מיומנויות אישיות", icon: "❤️", color: "from-pink-400 to-rose-400" },
   { key: "money_business", name: "כסף ועסקים", icon: "💸", color: "from-yellow-400 to-amber-400" }
 ];
 
