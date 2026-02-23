@@ -114,34 +114,30 @@ Deno.serve(async (req) => {
     
     let updatedCount = 0;
     
-    // Process sequentially in small batches with delay to avoid rate limits
-    const BATCH_SIZE = 5;
-    const BATCH_DELAY = 1500;
+    // Process fully sequentially with delay between each to avoid rate limits
+    for (const investment of investmentsNeedingUpdate) {
+      const changePercent = businessTypeToChangeMap[investment.business_type] || 0;
+      const prevValue = investment.current_value;
+      const newValue = Math.round(prevValue * (1 + changePercent / 100));
+      const unrealizedProfit = newValue - (investment.invested_amount || 0);
 
-    for (let i = 0; i < investmentsNeedingUpdate.length; i += BATCH_SIZE) {
-      const batch = investmentsNeedingUpdate.slice(i, i + BATCH_SIZE);
-      
-      await Promise.all(batch.map(async (investment) => {
-        const changePercent = businessTypeToChangeMap[investment.business_type] || 0;
-        const prevValue = investment.current_value;
-        const newValue = Math.round(prevValue * (1 + changePercent / 100));
-        const unrealizedProfit = newValue - (investment.invested_amount || 0);
-        
-        await updateWithRetry(() => base44.asServiceRole.entities.Investment.update(investment.id, {
-          current_value: newValue,
-          daily_change_percent: changePercent,
-          last_updated: new Date().toISOString(),
-          last_updated_date_key: dateKey,
-          unrealized_profit: unrealizedProfit
-        }));
+      // Also update local copy so invValueByEmail reflects new values
+      investment.current_value = newValue;
+
+      await updateWithRetry(() => base44.asServiceRole.entities.Investment.update(investment.id, {
+        current_value: newValue,
+        daily_change_percent: changePercent,
+        last_updated: new Date().toISOString(),
+        last_updated_date_key: dateKey,
+        unrealized_profit: unrealizedProfit
       }));
-      
-      updatedCount += batch.length;
-      if (updatedCount % 30 === 0 || i + BATCH_SIZE >= investmentsNeedingUpdate.length) {
+
+      updatedCount++;
+      if (updatedCount % 30 === 0 || updatedCount === investmentsNeedingUpdate.length) {
         console.log(`✅ Updated ${updatedCount}/${investmentsNeedingUpdate.length} investments`);
       }
-      
-      await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
+
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
     
     console.log(`✅ Completed updating ${updatedCount} investments`);
