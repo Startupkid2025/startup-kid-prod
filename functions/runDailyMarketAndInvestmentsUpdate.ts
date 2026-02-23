@@ -76,46 +76,72 @@ Deno.serve(async (req) => {
       crypto: parseFloat(marketChanges.crypto)
     };
     
+    // Helper: update a single item with retry on 429
+    const updateWithRetry = async (fn, maxRetries = 5) => {
+      let delay = 2000;
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          return await fn();
+        } catch (err) {
+          const is429 = err?.status === 429 || err?.message?.includes('429') || err?.message?.includes('Rate limit');
+          if (is429 && attempt < maxRetries) {
+            console.log(`⏳ Rate limit hit, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+            await new Promise(r => setTimeout(r, delay));
+            delay = Math.min(delay * 2, 30000);
+          } else {
+            throw err;
+          }
+        }
+      }
+    };
+
     // ========== STEP 2: Update Investments ==========
-    const allInvestments = await base44.asServiceRole.entities.Investment.list();
+    // Fetch all investments in batches of 100
+    const allInvestments = [];
+    let skip = 0;
+    while (true) {
+      const batch = await base44.asServiceRole.entities.Investment.list(undefined, 100, skip);
+      if (!batch || batch.length === 0) break;
+      allInvestments.push(...batch);
+      if (batch.length < 100) break;
+      skip += 100;
+    }
     
     // Filter investments that need updating (use date_key to avoid timezone issues)
-    const investmentsNeedingUpdate = allInvestments.filter(inv => {
-      return inv.last_updated_date_key !== dateKey;
-    });
+    const investmentsNeedingUpdate = allInvestments.filter(inv => inv.last_updated_date_key !== dateKey);
     
-    console.log(`📈 Found ${investmentsNeedingUpdate.length} investments to update`);
+    console.log(`📈 Found ${investmentsNeedingUpdate.length} investments to update (total: ${allInvestments.length})`);
     
     let updatedCount = 0;
     
-    // Process in batches to avoid rate limits
-    const BATCH_SIZE = 30;
+    // Process sequentially in small batches with delay to avoid rate limits
+    const BATCH_SIZE = 5;
+    const BATCH_DELAY = 1500;
+
     for (let i = 0; i < investmentsNeedingUpdate.length; i += BATCH_SIZE) {
       const batch = investmentsNeedingUpdate.slice(i, i + BATCH_SIZE);
       
-      // Update batch in parallel
       await Promise.all(batch.map(async (investment) => {
         const changePercent = businessTypeToChangeMap[investment.business_type] || 0;
         const prevValue = investment.current_value;
         const newValue = Math.round(prevValue * (1 + changePercent / 100));
         const unrealizedProfit = newValue - (investment.invested_amount || 0);
         
-        await base44.asServiceRole.entities.Investment.update(investment.id, {
+        await updateWithRetry(() => base44.asServiceRole.entities.Investment.update(investment.id, {
           current_value: newValue,
           daily_change_percent: changePercent,
           last_updated: new Date().toISOString(),
           last_updated_date_key: dateKey,
           unrealized_profit: unrealizedProfit
-        });
+        }));
       }));
       
       updatedCount += batch.length;
-      console.log(`✅ Updated batch ${Math.floor(i / BATCH_SIZE) + 1}: ${updatedCount}/${investmentsNeedingUpdate.length} investments`);
-      
-      // Delay between batches to avoid rate limits
-      if (i + BATCH_SIZE < investmentsNeedingUpdate.length) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+      if (updatedCount % 30 === 0 || i + BATCH_SIZE >= investmentsNeedingUpdate.length) {
+        console.log(`✅ Updated ${updatedCount}/${investmentsNeedingUpdate.length} investments`);
       }
+      
+      await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
     }
     
     console.log(`✅ Completed updating ${updatedCount} investments`);
