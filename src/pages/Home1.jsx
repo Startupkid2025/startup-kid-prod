@@ -249,7 +249,7 @@ export default function Home() {
         );
         const attendedIds = participations.filter(p => p.attended).map(p => p.lesson_id);
         const uniqueIds = [...new Set(attendedIds)];
-        const counts = { ai_tech: 0, social_skills: 0, money_business: 0 };
+        const counts = { ai_tech: 0, personal_skills: 0, money_business: 0 };
         if (uniqueIds.length > 0) {
           const lessonDocs = await Promise.all(
             uniqueIds.map(id => safeRequest(
