@@ -60,23 +60,45 @@ Deno.serve(async (req) => {
           return sum + (AVATAR_ITEM_PRICES[itemId] || 0);
         }, 0);
 
-        // Calculate investments value
+        // Calculate investments value + snapshot
         const investments = await base44.asServiceRole.entities.Investment.filter({ 
           student_email: user.email 
         });
-        const investmentsValue = investments.reduce((sum, inv) => {
-          return sum + (inv.current_value || 0);
-        }, 0);
+        const investmentsValue = investments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+        const totalInvestedAmount = investments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
+
+        const BUSINESS_TYPES = ['tech_startup', 'real_estate', 'crypto', 'stock_market', 'government_bonds', 'gold'];
+        const investmentCountByType = {};
+        const investmentValueByType = {};
+        const investmentInvestedByType = {};
+        BUSINESS_TYPES.forEach(t => {
+          investmentCountByType[t] = 0;
+          investmentValueByType[t] = 0;
+          investmentInvestedByType[t] = 0;
+        });
+        for (const inv of investments) {
+          const t = inv.business_type;
+          if (t && BUSINESS_TYPES.includes(t)) {
+            investmentCountByType[t] = (investmentCountByType[t] || 0) + 1;
+            investmentValueByType[t] = (investmentValueByType[t] || 0) + (inv.current_value || 0);
+            investmentInvestedByType[t] = (investmentInvestedByType[t] || 0) + (inv.invested_amount || 0);
+          }
+        }
 
         // Calculate net worth: coins + investments_value + items_value
         const coins = user.coins || 0;
         const netWorth = coins + investmentsValue + itemsValue;
 
-        // Update user with all three fields
+        // Update user with all fields including portfolio snapshot
         await base44.asServiceRole.entities.User.update(user.id, {
           investments_value: investmentsValue,
           items_value: itemsValue,
           total_networth: netWorth,
+          total_invested_amount: totalInvestedAmount,
+          investment_count_total: investments.length,
+          investment_count_by_type: investmentCountByType,
+          investment_value_by_type: investmentValueByType,
+          investment_invested_by_type: investmentInvestedByType,
           last_calculated_at: new Date().toISOString()
         });
 
