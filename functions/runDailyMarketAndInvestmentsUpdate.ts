@@ -257,9 +257,6 @@ Deno.serve(async (req) => {
         }
 
         usersUpdated++;
-
-        // Small delay between users
-        await new Promise(r => setTimeout(r, 300));
       } catch (error) {
         console.error(`Error updating net worth for ${user.email}:`, error);
       }
