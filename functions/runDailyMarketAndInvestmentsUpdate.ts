@@ -113,34 +113,29 @@ Deno.serve(async (req) => {
     console.log(`📈 Found ${investmentsNeedingUpdate.length} investments to update (total: ${allInvestments.length})`);
     
     let updatedCount = 0;
-    const INV_BATCH_SIZE = 15;
     
-    // Process in batches of 15 in parallel, with 1.5s delay between batches
-    for (let i = 0; i < investmentsNeedingUpdate.length; i += INV_BATCH_SIZE) {
-      const batch = investmentsNeedingUpdate.slice(i, i + INV_BATCH_SIZE);
-      
-      await Promise.all(batch.map(async (investment) => {
-        const changePercent = businessTypeToChangeMap[investment.business_type] || 0;
-        const prevValue = investment.current_value;
-        const newValue = Math.round(prevValue * (1 + changePercent / 100));
-        const unrealizedProfit = newValue - (investment.invested_amount || 0);
-        investment.current_value = newValue;
+    // Process sequentially with 200ms delay — safest against rate limits
+    for (const investment of investmentsNeedingUpdate) {
+      const changePercent = businessTypeToChangeMap[investment.business_type] || 0;
+      const prevValue = investment.current_value;
+      const newValue = Math.round(prevValue * (1 + changePercent / 100));
+      const unrealizedProfit = newValue - (investment.invested_amount || 0);
+      investment.current_value = newValue;
 
-        await updateWithRetry(() => base44.asServiceRole.entities.Investment.update(investment.id, {
-          current_value: newValue,
-          daily_change_percent: changePercent,
-          last_updated: new Date().toISOString(),
-          last_updated_date_key: dateKey,
-          unrealized_profit: unrealizedProfit
-        }));
+      await updateWithRetry(() => base44.asServiceRole.entities.Investment.update(investment.id, {
+        current_value: newValue,
+        daily_change_percent: changePercent,
+        last_updated: new Date().toISOString(),
+        last_updated_date_key: dateKey,
+        unrealized_profit: unrealizedProfit
       }));
 
-      updatedCount += batch.length;
-      console.log(`✅ Updated ${updatedCount}/${investmentsNeedingUpdate.length} investments`);
-      
-      if (i + INV_BATCH_SIZE < investmentsNeedingUpdate.length) {
-        await new Promise(r => setTimeout(r, 1500));
+      updatedCount++;
+      if (updatedCount % 50 === 0 || updatedCount === investmentsNeedingUpdate.length) {
+        console.log(`✅ Updated ${updatedCount}/${investmentsNeedingUpdate.length} investments`);
       }
+
+      await new Promise(r => setTimeout(r, 200));
     }
     
     console.log(`✅ Completed updating ${updatedCount} investments`);
