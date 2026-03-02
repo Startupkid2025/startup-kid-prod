@@ -212,10 +212,13 @@ Deno.serve(async (req) => {
 
     const studentsToUpdate = allUsers.filter(u => u.user_type === 'student' || !u.user_type);
     let usersUpdated = 0;
+    const USER_BATCH_SIZE = 5;
 
-    console.log(`👥 Processing ${studentsToUpdate.length} users sequentially`);
+    console.log(`👥 Processing ${studentsToUpdate.length} users in batches of ${USER_BATCH_SIZE}`);
 
-    for (const user of studentsToUpdate) {
+    for (let i = 0; i < studentsToUpdate.length; i += USER_BATCH_SIZE) {
+      const userBatch = studentsToUpdate.slice(i, i + USER_BATCH_SIZE);
+      await Promise.all(userBatch.map(async (user) => {
       try {
         const currentCoins = user.coins || 0;
         const newInvestmentsValue = Math.round(invValueByEmail[user.email] || 0);
