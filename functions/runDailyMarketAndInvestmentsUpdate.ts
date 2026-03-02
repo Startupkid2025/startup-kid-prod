@@ -263,6 +263,11 @@ Deno.serve(async (req) => {
       } catch (error) {
         console.error(`Error updating net worth for ${user.email}:`, error);
       }
+      }));
+      console.log(`👥 Updated ${usersUpdated}/${studentsToUpdate.length} users`);
+      if (i + USER_BATCH_SIZE < studentsToUpdate.length) {
+        await new Promise(r => setTimeout(r, 1000));
+      }
     }
 
     console.log(`✅ Completed updating net worth for ${usersUpdated} users`);
