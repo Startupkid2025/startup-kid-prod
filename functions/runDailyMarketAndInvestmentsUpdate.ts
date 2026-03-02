@@ -182,11 +182,28 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Fetch all users & leaderboard entries once
-    const [allUsers, allLeaderboard] = await Promise.all([
-      base44.asServiceRole.entities.User.list(undefined, 200),
-      base44.asServiceRole.entities.LeaderboardEntry.list(undefined, 200)
-    ]);
+    // Fetch all users & leaderboard entries (paginated)
+    const allUsers = [];
+    let uSkip = 0;
+    while (true) {
+      const batch = await base44.asServiceRole.entities.User.list(undefined, 100, uSkip);
+      if (!batch || batch.length === 0) break;
+      allUsers.push(...batch);
+      if (batch.length < 100) break;
+      uSkip += 100;
+      await new Promise(r => setTimeout(r, 500));
+    }
+    
+    const allLeaderboard = [];
+    let lbSkip = 0;
+    while (true) {
+      const batch = await base44.asServiceRole.entities.LeaderboardEntry.list(undefined, 100, lbSkip);
+      if (!batch || batch.length === 0) break;
+      allLeaderboard.push(...batch);
+      if (batch.length < 100) break;
+      lbSkip += 100;
+      await new Promise(r => setTimeout(r, 500));
+    }
 
     const lbByEmail = {};
     for (const lb of allLeaderboard) {
