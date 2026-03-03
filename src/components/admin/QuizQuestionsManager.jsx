@@ -187,7 +187,7 @@ export default function QuizQuestionsManager({ lesson, isOpen, onClose }) {
               <select
                 value={editingQuestion.correct_answer}
                 onChange={(e) => setEditingQuestion({...editingQuestion, correct_answer: e.target.value})}
-                className="w-full bg-white/10 border border-white/20 text-white rounded-md p-2"
+                className="w-full bg-white/10 border border-white/20 text-white rounded-md p-2 [&>option]:text-gray-900 [&>option]:bg-white"
               >
                 <option value="A">A</option>
                 <option value="B">B</option>
