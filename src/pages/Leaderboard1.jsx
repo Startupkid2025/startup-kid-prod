@@ -387,10 +387,10 @@ export default function Leaderboard() {
     return () => clearInterval(timer);
   }, []);
 
-  // Filter out demo/parent users
+  // Filter to show only students (exclude demo, parent, admin, and any other non-student types)
   const filteredEntries = useMemo(() => {
     return leaderboardEntries.filter(entry => 
-      entry.user_type !== 'demo' && entry.user_type !== 'parent'
+      entry.user_type === 'student' || !entry.user_type
     );
   }, [leaderboardEntries]);
 
