@@ -700,15 +700,16 @@ export default function Investments() {
         investment_invested_by_type: newInvestedByType
       });
 
-      // Sync to LeaderboardEntry for public visibility
-      await syncLeaderboardEntry(userData.email, {
+      // Sync to LeaderboardEntry for public visibility (force to bypass throttle)
+      const freshUser = await base44.auth.me();
+      await syncLeaderboardEntry(freshUser, {
         coins: newCoins,
         total_investment_fees: newTotalFees,
         total_capital_gains_tax: newCapitalGainsTax,
         total_realized_investment_profit: newRealizedProfit,
         investments_value: newInvestmentsValue,
         total_networth: newNetWorth
-      });
+      }, { forceSync: true });
 
       const grossProfit = investmentProfit;
       const netProfit = netAmount - TRANSACTION_FEE;
