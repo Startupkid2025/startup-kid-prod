@@ -701,8 +701,7 @@ export default function Investments() {
       });
 
       // Sync to LeaderboardEntry for public visibility
-      const freshUser = await base44.auth.me();
-      await syncLeaderboardEntry(freshUser, {
+      await syncLeaderboardEntry(userData.email, {
         coins: newCoins,
         total_investment_fees: newTotalFees,
         total_capital_gains_tax: newCapitalGainsTax,
