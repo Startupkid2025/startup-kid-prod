@@ -322,7 +322,7 @@ export default function EconomyAdminPanel() {
 
         const income = {
           base: safeNum(user.base_coins ?? user.base ?? 500),
-          lessonsCoins: safeNum(user.total_lessons_coins ?? (user.total_lessons * 100)),
+          lessonsCoins: safeNum(user.total_lessons_coins ?? ((user.total_lessons || 0) * 100)),
           vocabulary: wordProgress.reduce((sum, w) => sum + safeNum(w.coins_earned), 0),
           math: mathProgress.reduce((sum, m) => sum + safeNum(m.coins_earned), 0),
           surveys: safeNum(user.survey_coins ?? user.total_survey_coins) || (participations.filter(p => p.survey_completed).length * 70),
