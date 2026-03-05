@@ -454,14 +454,14 @@ export default function Investments() {
         investment_invested_by_type: newInvestedByType
       });
 
-      // Sync to LeaderboardEntry for public visibility
+      // Sync to LeaderboardEntry for public visibility (force to bypass throttle)
       const freshUser = await base44.auth.me();
       await syncLeaderboardEntry(freshUser, {
         coins: newCoinsBalance,
         total_investment_fees: (userData.total_investment_fees || 0) + TRANSACTION_FEE,
         investments_value: newInvestmentsValue,
         total_networth: newNetWorth
-      });
+      }, { forceSync: true });
 
       playKachingSound();
       toast.success(`השקעת ${actualInvestment} סטארטקוין ב${business.name}! (עמלה: ${TRANSACTION_FEE}) 🎉`);
