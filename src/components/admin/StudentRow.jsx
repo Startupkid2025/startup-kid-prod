@@ -362,10 +362,7 @@ export default function StudentRow({
       const fullName = `${editedStudent.first_name.trim()} ${editedStudent.last_name.trim()}`;
       console.log("Updating student:", student.id, "with data:", editedStudent);
 
-      // Update User entity - fetch fresh user data first
-      const allUsers = await base44.entities.User.list();
-      const freshUserData = allUsers.find(u => u.id === student.id);
-      
+      // Update User entity first
       await base44.entities.User.update(student.id, {
         first_name: editedStudent.first_name.trim(),
         last_name: editedStudent.last_name.trim(),
@@ -374,15 +371,13 @@ export default function StudentRow({
         total_work_hours: Number(editedStudent.total_work_hours) || 0
       });
       
-      console.log("Updated user name to:", fullName);
+      console.log("Updated user name to:", fullName, "user_type:", editedStudent.user_type);
       
-      // Update LeaderboardEntry if exists
+      // Update LeaderboardEntry
       try {
         const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
           student_email: student.email 
         });
-
-        console.log("Found leaderboard entries:", leaderboardEntries.length);
 
         if (editedStudent.user_type !== 'student') {
           // Remove from leaderboard if NOT a student
@@ -391,30 +386,29 @@ export default function StudentRow({
             console.log("Removed from leaderboard");
           }
         } else {
-          // Add/update leaderboard if a student
-          const leaderboardData = {
-            student_email: student.email,
-            full_name: fullName,
-            first_name: editedStudent.first_name.trim(),
-            last_name: editedStudent.last_name.trim(),
-            ai_tech_level: freshUserData?.ai_tech_level || student.ai_tech_level || 1,
-            ai_tech_xp: freshUserData?.ai_tech_xp || student.ai_tech_xp || 0,
-            personal_dev_level: freshUserData?.personal_dev_level || student.personal_dev_level || 1,
-            personal_dev_xp: freshUserData?.personal_dev_xp || student.personal_dev_xp || 0,
-            social_skills_level: freshUserData?.social_skills_level || student.social_skills_level || 1,
-            social_skills_xp: freshUserData?.social_skills_xp || student.social_skills_xp || 0,
-            money_business_level: freshUserData?.money_business_level || student.money_business_level || 1,
-            money_business_xp: freshUserData?.money_business_xp || student.money_business_xp || 0,
-            total_lessons: freshUserData?.total_lessons || student.total_lessons || 0,
-            coins: freshUserData?.coins || student.coins || 0,
-            equipped_items: freshUserData?.equipped_items || student.equipped_items || {},
-            purchased_items: freshUserData?.purchased_items || student.purchased_items || [],
-            user_type: editedStudent.user_type
-          };
-
-          // Always sync (create or update) via syncLeaderboardEntry
-          await syncLeaderboardEntry(student.email, leaderboardData);
-          console.log("Synced leaderboard entry with new name:", fullName);
+          // Add/update leaderboard if a student - directly update without re-fetching user
+          if (leaderboardEntries.length > 0) {
+            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+              full_name: fullName,
+              first_name: editedStudent.first_name.trim(),
+              last_name: editedStudent.last_name.trim(),
+              user_type: 'student'
+            });
+          } else {
+            // Create new leaderboard entry
+            await base44.entities.LeaderboardEntry.create({
+              student_email: student.email,
+              full_name: fullName,
+              first_name: editedStudent.first_name.trim(),
+              last_name: editedStudent.last_name.trim(),
+              user_type: 'student',
+              coins: student.coins || 0,
+              total_lessons: student.total_lessons || 0,
+              equipped_items: student.equipped_items || {},
+              purchased_items: student.purchased_items || []
+            });
+          }
+          console.log("Synced leaderboard entry with user_type: student");
         }
       } catch (leaderboardError) {
         console.error("Error updating leaderboard:", leaderboardError);
