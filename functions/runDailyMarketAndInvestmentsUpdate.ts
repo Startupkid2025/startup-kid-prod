@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
         console.log(`✅ Updated ${updatedCount}/${investmentsNeedingUpdate.length} investments`);
       }
 
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 500));
     }
     
     console.log(`✅ Completed updating ${updatedCount} investments`);
@@ -252,7 +252,7 @@ Deno.serve(async (req) => {
         }
 
         usersUpdated++;
-        await new Promise(r => setTimeout(r, 300));
+        await new Promise(r => setTimeout(r, 500));
       } catch (error) {
         console.error(`Error updating net worth for ${user.email}:`, error);
       }
