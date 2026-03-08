@@ -380,13 +380,18 @@ export default function StudentRow({
         });
 
         if (editedStudent.user_type !== 'student') {
-          // Remove from leaderboard if NOT a student
+          // Update user_type in leaderboard (keep the entry but mark as non-student)
           if (leaderboardEntries.length > 0) {
-            await base44.entities.LeaderboardEntry.delete(leaderboardEntries[0].id);
-            console.log("Removed from leaderboard");
+            await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
+              user_type: editedStudent.user_type,
+              full_name: fullName,
+              first_name: editedStudent.first_name.trim(),
+              last_name: editedStudent.last_name.trim(),
+            });
+            console.log("Updated leaderboard entry user_type to:", editedStudent.user_type);
           }
         } else {
-          // Add/update leaderboard if a student - directly update without re-fetching user
+          // Add/update leaderboard if a student
           if (leaderboardEntries.length > 0) {
             await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
               full_name: fullName,
@@ -395,8 +400,8 @@ export default function StudentRow({
               user_type: 'student'
             });
           } else {
-            // Create new leaderboard entry
-            await base44.entities.LeaderboardEntry.create({
+            // Create new leaderboard entry (was deleted previously or never existed)
+            const newEntry = await base44.entities.LeaderboardEntry.create({
               student_email: student.email,
               full_name: fullName,
               first_name: editedStudent.first_name.trim(),
@@ -404,9 +409,18 @@ export default function StudentRow({
               user_type: 'student',
               coins: student.coins || 0,
               total_lessons: student.total_lessons || 0,
+              investments_value: student.investments_value || 0,
+              items_value: student.items_value || 0,
+              login_streak: student.login_streak || 0,
+              total_networth: student.total_networth || 0,
               equipped_items: student.equipped_items || {},
-              purchased_items: student.purchased_items || []
+              purchased_items: student.purchased_items || [],
+              mastered_words: student.mastered_words || 0,
+              total_correct_math_answers: student.total_correct_math_answers || 0,
+              group_name: student.group_name || ''
             });
+            // Save the new leaderboard entry ID on the user
+            await base44.entities.User.update(student.id, { leaderboard_entry_id: newEntry.id });
           }
           console.log("Synced leaderboard entry with user_type: student");
         }
