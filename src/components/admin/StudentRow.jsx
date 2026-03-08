@@ -239,10 +239,14 @@ export default function StudentRow({
         last_login_date: today
       });
       
-      await syncLeaderboardEntry(student.email, {
-        login_streak: newStreak,
-        last_login_date: today
-      });
+      // Find and update leaderboard entry directly
+      const lbEntries = await base44.entities.LeaderboardEntry.filter({ student_email: student.email });
+      if (lbEntries.length > 0) {
+        await base44.entities.LeaderboardEntry.update(lbEntries[0].id, {
+          login_streak: newStreak,
+          last_login_date: today
+        });
+      }
       
       toast.success(`רצף הכניסות של ${student.full_name} עודכן ל-${newStreak} ימים! 🔥`);
       setShowEditStreakDialog(false);
