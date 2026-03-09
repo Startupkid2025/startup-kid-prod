@@ -192,20 +192,8 @@ export default function Admin() {
     }
   };
 
-  const _recalculateAllCoinsAccurately = async (previewOnly = true) => {
-    // Moved to EconomyAdminPanel
-    const [allUsers] = await Promise.all([base44.entities.User.list()]);
-
-  };
-
   const fixAdminCoins = async () => {
-    // stub - moved
     toast.info("פונקציה זו הועברה לפאנל Economy");
-    const allUsers = await base44.entities.User.list();
-    if (false) {
-      const [allWordProgress, allMathProgress, allParticipations, allQuizProgress] = [[], [], [], []];
-
-    }
   };
 
   const resetAllLoginStreaks = async () => {
