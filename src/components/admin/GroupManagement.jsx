@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Edit2, Trash2, Users, Calendar, Clock, Loader2, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
-import AddGroupDialog from "./AddGroupDialog";
-import EditGroupDialog from "./EditGroupDialog";
+import AddGroupDialog from "./AddGroupDialog.jsx";
+import EditGroupDialog from "./EditGroupDialog.jsx";
 import ManageGroupStudentsDialog from "./ManageGroupStudentsDialog";
 import GroupScheduleManager from "./GroupScheduleManager";
 import GroupLessonStatus from "./GroupLessonStatus";
@@ -16,6 +16,7 @@ export default function GroupManagement() {
   const [groups, setGroups] = useState([]);
   const [lessons, setLessons] = useState([]);
   const [students, setStudents] = useState([]);
+  const [teachers, setTeachers] = useState([]);
   const [scheduledLessons, setScheduledLessons] = useState([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingGroup, setEditingGroup] = useState(null);
@@ -31,10 +32,13 @@ export default function GroupManagement() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const allGroups = await base44.entities.Group.list();
-      const allLessons = await base44.entities.Lesson.list();
-      const allUsers = await base44.entities.User.list();
-      const allScheduledLessons = await base44.entities.ScheduledLesson.list();
+      const [allGroups, allLessons, allUsers, allScheduledLessons, allTeachers] = await Promise.all([
+        base44.entities.Group.list(),
+        base44.entities.Lesson.list(),
+        base44.entities.User.list(),
+        base44.entities.ScheduledLesson.list(),
+        base44.entities.Teacher.list()
+      ]);
 
       // Sort groups by name (א', ב', ג', etc.)
       const sortedGroups = allGroups.sort((a, b) => {
@@ -45,6 +49,7 @@ export default function GroupManagement() {
       setLessons(allLessons);
       setStudents(allUsers);
       setScheduledLessons(allScheduledLessons);
+      setTeachers(allTeachers);
     } catch (error) {
       console.error("Error loading data:", error);
       toast.error("שגיאה בטעינת הנתונים");
@@ -148,6 +153,7 @@ export default function GroupManagement() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {groups.map((group) => {
           const nextLesson = lessons.find(l => l.id === group.next_lesson_id);
+          const groupTeacher = teachers.find(t => t.id === group.teacher_id);
           
           // Count only actual students (not teachers/admins/parents)
           const actualStudents = (group.student_emails || []).filter(email => {
@@ -250,6 +256,12 @@ export default function GroupManagement() {
                     <Users className="w-4 h-4" />
                     <span>{studentCount} תלמידים</span>
                   </div>
+                  {groupTeacher && (
+                    <div className="flex items-center gap-2 text-white/80">
+                      <span className="text-base">👩‍🏫</span>
+                      <span>{groupTeacher.full_name}</span>
+                    </div>
+                  )}
                   {nextLesson && (
                     <div className="bg-purple-500/20 rounded-lg p-3 mt-3 border border-purple-500/30">
                       <p className="text-xs text-purple-200 mb-1">שיעור הבא:</p>
