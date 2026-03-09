@@ -203,6 +203,7 @@ export default function GroupManagement() {
                         size="sm"
                         variant="outline"
                         className="bg-purple-500/20 border-purple-500/30 hover:bg-purple-500/30 text-purple-200"
+                        title="יומן שיעורים"
                       >
                         <Calendar className="w-4 h-4" />
                       </Button>
