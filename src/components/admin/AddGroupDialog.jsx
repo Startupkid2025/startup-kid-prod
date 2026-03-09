@@ -16,13 +16,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export default function AddGroupDialog({ isOpen, onClose, lessons, onSubmit }) {
+export default function AddGroupDialog({ isOpen, onClose, lessons, teachers = [], onSubmit }) {
   const [groupData, setGroupData] = useState({
     group_name: "",
     day_of_week: 0,
     hour: "17:00",
     student_emails: [],
-    next_lesson_id: ""
+    next_lesson_id: "",
+    teacher_email: ""
   });
 
   const dayNames = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
