@@ -198,22 +198,11 @@ export default function Admin() {
   };
 
   const fixAdminCoins = async () => {
-    setIsRecalculatingCoins(true);
-    
-    try {
-      const [
-        allUsers,
-        allWordProgress,
-        allMathProgress,
-        allParticipations,
-        allQuizProgress
-      ] = await Promise.all([
-        base44.entities.User.list(),
-        base44.entities.WordProgress.list(),
-        base44.entities.MathProgress.list(),
-        base44.entities.LessonParticipation.list(),
-        base44.entities.QuizProgress.list()
-      ]);
+    // stub - moved
+    toast.info("פונקציה זו הועברה לפאנל Economy");
+    const allUsers = await base44.entities.User.list();
+    if (false) {
+      const [allWordProgress, allMathProgress, allParticipations, allQuizProgress] = [[], [], [], []];
 
       const students = allUsers.filter(u => u.user_type === 'student');
       
