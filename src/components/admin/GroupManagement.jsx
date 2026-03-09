@@ -212,6 +212,7 @@ export default function GroupManagement() {
                         size="sm"
                         variant="outline"
                         className="bg-blue-500/20 border-blue-500/30 hover:bg-blue-500/30 text-blue-200"
+                        title="תלמידים בקבוצה"
                       >
                         <Users className="w-4 h-4" />
                       </Button>
@@ -220,6 +221,7 @@ export default function GroupManagement() {
                         size="sm"
                         variant="outline"
                         className="bg-white/10 border-white/20 hover:bg-white/20 text-white"
+                        title="עריכת קבוצה"
                       >
                         <Edit2 className="w-4 h-4" />
                       </Button>
@@ -228,6 +230,7 @@ export default function GroupManagement() {
                         size="sm"
                         variant="outline"
                         className="bg-red-500/20 border-red-500/30 hover:bg-red-500/30 text-red-200"
+                        title="מחיקת קבוצה"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
