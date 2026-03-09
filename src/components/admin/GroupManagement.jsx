@@ -252,6 +252,15 @@ export default function GroupManagement() {
                     <Users className="w-4 h-4" />
                     <span>{studentCount} תלמידים</span>
                   </div>
+                  {group.teacher_email && (() => {
+                    const teacher = teachers.find(t => t.email === group.teacher_email);
+                    return teacher ? (
+                      <div className="flex items-center gap-2 text-white/80">
+                        <span className="text-sm">👨‍🏫</span>
+                        <span className="text-sm">{teacher.full_name}</span>
+                      </div>
+                    ) : null;
+                  })()}
                   {nextLesson && (
                     <div className="bg-purple-500/20 rounded-lg p-3 mt-3 border border-purple-500/30">
                       <p className="text-xs text-purple-200 mb-1">שיעור הבא:</p>
