@@ -303,11 +303,6 @@ export default function Admin() {
 
   const recomputeStudentCashBalance = async (dryRun = true) => {
     toast.info("פונקציה זו הועברה לפאנל Economy");
-    if (false) {
-      const [allUsers] = [[]];
-      const [allWordProgress, allMathProgress, allParticipations, allQuizProgress] = [[], [], [], []];
-
-    }
   };
 
   const addPassiveIncomeBackpay = async () => {
