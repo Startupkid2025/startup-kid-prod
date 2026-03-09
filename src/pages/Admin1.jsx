@@ -538,6 +538,13 @@ export default function Admin() {
               <span className="hidden sm:inline">משימות</span>
             </TabsTrigger>
             <TabsTrigger 
+              value="teachers"
+              className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white whitespace-nowrap px-3 py-2"
+            >
+              <GraduationCap className="w-4 h-4 ml-1" />
+              <span className="hidden sm:inline">מורים</span>
+            </TabsTrigger>
+            <TabsTrigger 
               value="coin-logs"
               className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white whitespace-nowrap px-3 py-2"
             >
@@ -1233,6 +1240,10 @@ export default function Admin() {
             <InvestmentsManager />
             <EconomyAdminPanel />
           </div>
+        </TabsContent>
+
+        <TabsContent value="teachers">
+          <TeachersAdminPanel />
         </TabsContent>
 
         <TabsContent value="coin-logs">
