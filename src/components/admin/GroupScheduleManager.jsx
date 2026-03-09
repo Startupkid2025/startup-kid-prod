@@ -235,6 +235,7 @@ export default function GroupScheduleManager({ group }) {
                 size="sm"
                 variant="outline"
                 className="bg-white/10 border-white/20 hover:bg-white/20 text-white"
+                title="חודש קודם"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
@@ -246,6 +247,7 @@ export default function GroupScheduleManager({ group }) {
                 size="sm"
                 variant="outline"
                 className="bg-white/10 border-white/20 hover:bg-white/20 text-white"
+                title="חודש הבא"
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
