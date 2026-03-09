@@ -191,25 +191,9 @@ export default function Admin() {
     }
   };
 
-  const recalculateAllCoinsAccurately = async (previewOnly = true) => {
-    setIsRecalculatingCoins(true);
-    
-    try {
-      console.log(`\n💰 ${previewOnly ? 'PREVIEW' : '🚨 APPLYING'} Coins Recalculation\n`);
-      
-      const [
-        allUsers,
-        allWordProgress,
-        allMathProgress,
-        allParticipations,
-        allQuizProgress
-      ] = await Promise.all([
-        base44.entities.User.list(),
-        base44.entities.WordProgress.list(),
-        base44.entities.MathProgress.list(),
-        base44.entities.LessonParticipation.list(),
-        base44.entities.QuizProgress.list()
-      ]);
+  const _recalculateAllCoinsAccurately = async (previewOnly = true) => {
+    // Moved to EconomyAdminPanel
+    const [allUsers] = await Promise.all([base44.entities.User.list()]);
 
       const students = allUsers.filter(u => u.user_type === 'student');
       const previewResults = [];
