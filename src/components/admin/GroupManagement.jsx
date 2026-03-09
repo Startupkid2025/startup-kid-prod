@@ -40,7 +40,6 @@ export default function GroupManagement() {
         base44.entities.Teacher.list()
       ]);
 
-      // Sort groups by name (א', ב', ג', etc.)
       const sortedGroups = allGroups.sort((a, b) => {
         return a.group_name.localeCompare(b.group_name, 'he');
       });
