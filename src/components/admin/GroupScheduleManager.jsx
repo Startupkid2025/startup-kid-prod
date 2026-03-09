@@ -234,10 +234,10 @@ export default function GroupScheduleManager({ group }) {
                 onClick={handlePrevMonth}
                 size="sm"
                 variant="outline"
-                className="bg-white/10 border-white/20 hover:bg-white/20 text-white"
-                title="חודש קודם"
+                className="bg-white/10 border-white/20 hover:bg-white/20 text-white gap-1"
               >
                 <ChevronLeft className="w-4 h-4" />
+                <span>קודם</span>
               </Button>
               <span className="text-lg font-bold">
                 {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
@@ -246,9 +246,9 @@ export default function GroupScheduleManager({ group }) {
                 onClick={handleNextMonth}
                 size="sm"
                 variant="outline"
-                className="bg-white/10 border-white/20 hover:bg-white/20 text-white"
-                title="חודש הבא"
+                className="bg-white/10 border-white/20 hover:bg-white/20 text-white gap-1"
               >
+                <span>הבא</span>
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
