@@ -15,6 +15,7 @@ import GroupLessonStatus from "./GroupLessonStatus";
 export default function GroupManagement() {
   const [groups, setGroups] = useState([]);
   const [lessons, setLessons] = useState([]);
+  const [teachers, setTeachers] = useState([]);
   const [students, setStudents] = useState([]);
   const [scheduledLessons, setScheduledLessons] = useState([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -35,6 +36,7 @@ export default function GroupManagement() {
       const allLessons = await base44.entities.Lesson.list();
       const allUsers = await base44.entities.User.list();
       const allScheduledLessons = await base44.entities.ScheduledLesson.list();
+      setTeachers(allUsers.filter(u => u.user_type === "teacher"));
 
       // Sort groups by name (א', ב', ג', etc.)
       const sortedGroups = allGroups.sort((a, b) => {
@@ -282,6 +284,7 @@ export default function GroupManagement() {
         isOpen={showAddDialog}
         onClose={() => setShowAddDialog(false)}
         lessons={lessons}
+        teachers={teachers}
         onSubmit={handleAddGroup}
       />
 
