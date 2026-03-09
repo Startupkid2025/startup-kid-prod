@@ -16,14 +16,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export default function AddGroupDialog({ isOpen, onClose, lessons, teachers = [], onSubmit }) {
+export default function AddGroupDialog({ isOpen, onClose, lessons, onSubmit }) {
   const [groupData, setGroupData] = useState({
     group_name: "",
     day_of_week: 0,
     hour: "17:00",
     student_emails: [],
-    next_lesson_id: "",
-    teacher_email: ""
+    next_lesson_id: ""
   });
 
   const dayNames = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
@@ -36,8 +35,7 @@ export default function AddGroupDialog({ isOpen, onClose, lessons, teachers = []
         day_of_week: 0,
         hour: "17:00",
         student_emails: [],
-        next_lesson_id: "",
-        teacher_email: ""
+        next_lesson_id: ""
       });
     }
   };
@@ -97,28 +95,6 @@ export default function AddGroupDialog({ isOpen, onClose, lessons, teachers = []
               onChange={(e) => setGroupData({ ...groupData, hour: e.target.value })}
               className="border-2 border-purple-200"
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-gray-700 font-medium">
-              מורה (אופציונלי)
-            </Label>
-            <Select
-              value={groupData.teacher_email}
-              onValueChange={(value) => setGroupData({ ...groupData, teacher_email: value })}
-            >
-              <SelectTrigger className="border-2 border-purple-200">
-                <SelectValue placeholder="בחר מורה" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={null}>ללא מורה</SelectItem>
-                {teachers.map((teacher) => (
-                  <SelectItem key={teacher.id} value={teacher.email}>
-                    {teacher.full_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-2">

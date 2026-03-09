@@ -15,7 +15,6 @@ import GroupLessonStatus from "./GroupLessonStatus";
 export default function GroupManagement() {
   const [groups, setGroups] = useState([]);
   const [lessons, setLessons] = useState([]);
-  const [teachers, setTeachers] = useState([]);
   const [students, setStudents] = useState([]);
   const [scheduledLessons, setScheduledLessons] = useState([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -36,7 +35,6 @@ export default function GroupManagement() {
       const allLessons = await base44.entities.Lesson.list();
       const allUsers = await base44.entities.User.list();
       const allScheduledLessons = await base44.entities.ScheduledLesson.list();
-      setTeachers(allUsers.filter(u => u.user_type === "teacher"));
 
       // Sort groups by name (א', ב', ג', etc.)
       const sortedGroups = allGroups.sort((a, b) => {
@@ -252,15 +250,6 @@ export default function GroupManagement() {
                     <Users className="w-4 h-4" />
                     <span>{studentCount} תלמידים</span>
                   </div>
-                  {group.teacher_email && (() => {
-                    const teacher = teachers.find(t => t.email === group.teacher_email);
-                    return teacher ? (
-                      <div className="flex items-center gap-2 text-white/80">
-                        <span className="text-sm">👨‍🏫</span>
-                        <span className="text-sm">{teacher.full_name}</span>
-                      </div>
-                    ) : null;
-                  })()}
                   {nextLesson && (
                     <div className="bg-purple-500/20 rounded-lg p-3 mt-3 border border-purple-500/30">
                       <p className="text-xs text-purple-200 mb-1">שיעור הבא:</p>
@@ -293,7 +282,6 @@ export default function GroupManagement() {
         isOpen={showAddDialog}
         onClose={() => setShowAddDialog(false)}
         lessons={lessons}
-        teachers={teachers}
         onSubmit={handleAddGroup}
       />
 
