@@ -313,24 +313,10 @@ export default function Admin() {
   };
 
   const recomputeStudentCashBalance = async (dryRun = true) => {
-    setIsRecalculatingCoins(true);
-    
-    try {
-      console.log(`\n💰 ${dryRun ? 'DRY RUN' : '🚨 APPLYING'} - Recompute Cash Balance\n`);
-      
-      const [
-        allUsers,
-        allWordProgress,
-        allMathProgress,
-        allParticipations,
-        allQuizProgress
-      ] = await Promise.all([
-        base44.entities.User.list(),
-        base44.entities.WordProgress.list(),
-        base44.entities.MathProgress.list(),
-        base44.entities.LessonParticipation.list(),
-        base44.entities.QuizProgress.list()
-      ]);
+    toast.info("פונקציה זו הועברה לפאנל Economy");
+    if (false) {
+      const [allUsers] = [[]];
+      const [allWordProgress, allMathProgress, allParticipations, allQuizProgress] = [[], [], [], []];
 
       const students = allUsers.filter(u => u.user_type === 'student');
       const results = [];
