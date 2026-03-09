@@ -247,18 +247,15 @@ export default function Home() {
           () => base44.entities.LessonParticipation.filter({ student_email: user.email }),
           { key: `LP:${user.email}`, ttlMs: 60000, retries: 1 }
         );
-        const attendedIds = participations.filter(p => p.attended).map(p => p.lesson_id);
-        const uniqueIds = [...new Set(attendedIds)];
+        const attendedIds = new Set(participations.filter(p => p.attended).map(p => p.lesson_id));
         const counts = { ai_tech: 0, personal_skills: 0, money_business: 0 };
-        if (uniqueIds.length > 0) {
-          const lessonDocs = await Promise.all(
-            uniqueIds.map(id => safeRequest(
-              () => base44.entities.Lesson.get(id),
-              { key: `Lesson:${id}`, ttlMs: 120000, retries: 0 }
-            ).catch(() => null))
+        if (attendedIds.size > 0) {
+          const allLessons = await safeRequest(
+            () => base44.entities.Lesson.list(),
+            { key: 'Lessons:all', ttlMs: 120000, retries: 1 }
           );
-          lessonDocs.forEach(lesson => {
-            if (lesson && counts.hasOwnProperty(lesson.category)) {
+          allLessons.forEach(lesson => {
+            if (attendedIds.has(lesson.id) && counts.hasOwnProperty(lesson.category)) {
               counts[lesson.category]++;
             }
           });
