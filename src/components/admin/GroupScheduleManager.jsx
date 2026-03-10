@@ -261,6 +261,55 @@ export default function GroupScheduleManager({ group }) {
     }
   };
 
+  const handleEnrollAllStudents = async (scheduledLesson) => {
+    if (!scheduledLesson.lesson_id) {
+      toast.error("לא ניתן לשייך תלמידים — לשיעור זה אין שיעור מוגדר (lesson_id)");
+      return;
+    }
+    setIsEnrollingAll(true);
+    setEnrollSummary(null);
+    try {
+      // Fetch group students
+      const groupData = await base44.entities.Group.filter({ id: scheduledLesson.group_id });
+      const studentEmails = groupData?.[0]?.student_emails || group.student_emails || [];
+
+      if (studentEmails.length === 0) {
+        toast.error("אין תלמידים בקבוצה");
+        setIsEnrollingAll(false);
+        return;
+      }
+
+      // Fetch existing participations for this lesson+date
+      const existing = await base44.entities.LessonParticipation.filter({
+        lesson_id: scheduledLesson.lesson_id,
+        lesson_date: scheduledLesson.scheduled_date,
+      });
+      const alreadyEnrolled = new Set((existing || []).map(p => p.student_email));
+
+      const toCreate = studentEmails.filter(email => !alreadyEnrolled.has(email));
+      const skipped = studentEmails.filter(email => alreadyEnrolled.has(email));
+
+      if (toCreate.length > 0) {
+        const records = toCreate.map(email => ({
+          lesson_id: scheduledLesson.lesson_id,
+          student_email: email,
+          lesson_date: scheduledLesson.scheduled_date,
+          attended: false,
+          watched_recording: false,
+          survey_completed: false,
+        }));
+        await base44.entities.LessonParticipation.bulkCreate(records);
+      }
+
+      setEnrollSummary({ added: toCreate, skipped });
+      toast.success(`נוספו ${toCreate.length} תלמידים, דולגו ${skipped.length}`);
+    } catch (error) {
+      console.error("Error enrolling students:", error);
+      toast.error("שגיאה בשיוך תלמידים: " + (error.message || ""));
+    }
+    setIsEnrollingAll(false);
+  };
+
   const handleDeleteLesson = async (scheduledLesson) => {
     if (!confirm("האם אתה בטוח שברצונך למחוק שיעור זה מהיומן?")) return;
     
