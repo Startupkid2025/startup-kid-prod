@@ -521,12 +521,18 @@ export default function GroupScheduleManager({ group }) {
 
       {/* Add/Edit Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="bg-white/95 backdrop-blur-xl border-2 border-purple-300 max-w-md">
+        <DialogContent className="bg-white/95 backdrop-blur-xl border-2 border-purple-300 max-w-md" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-purple-600">
               {editingLesson?.id ? "ערוך שיעור" : "הוסף שיעור ליומן"}
             </DialogTitle>
           </DialogHeader>
+          {editingLesson?.no_class && (
+            <div className="bg-gray-100 border border-gray-300 rounded-lg p-3 text-sm text-gray-600 flex items-center gap-2">
+              <Ban className="w-4 h-4 text-gray-500 shrink-0" />
+              <span>יום זה מסומן כ"לא התקיים שיעור"{editingLesson.no_class_reason ? ` — ${editingLesson.no_class_reason}` : ""}. עריכה חסומה.</span>
+            </div>
+          )}
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
