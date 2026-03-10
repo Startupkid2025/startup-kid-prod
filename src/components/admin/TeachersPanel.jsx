@@ -42,12 +42,26 @@ export default function TeachersPanel() {
 
   const getTeacherGroups = (teacherId) => groups.filter(g => g.teacher_id === teacherId);
 
+  const hoursOverlap = (hourA, hourB) => {
+    if (!hourA || !hourB) return false;
+    // Parse HH:MM and assume 1-hour duration per class
+    const toMinutes = (h) => {
+      const [hh, mm] = h.split(":").map(Number);
+      return hh * 60 + (mm || 0);
+    };
+    const startA = toMinutes(hourA);
+    const startB = toMinutes(hourB);
+    const endA = startA + 60;
+    const endB = startB + 60;
+    return startA < endB && startB < endA;
+  };
+
   const getConflicts = (teacherId) => {
     const tGroups = getTeacherGroups(teacherId);
     const conflicts = [];
     for (let i = 0; i < tGroups.length; i++) {
       for (let j = i + 1; j < tGroups.length; j++) {
-        if (tGroups[i].day_of_week === tGroups[j].day_of_week) {
+        if (tGroups[i].day_of_week === tGroups[j].day_of_week && hoursOverlap(tGroups[i].hour, tGroups[j].hour)) {
           conflicts.push({ a: tGroups[i], b: tGroups[j] });
         }
       }
