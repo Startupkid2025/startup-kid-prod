@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
 import '@/index.css'
 
+console.log('[DEPLOY-TEST-OK] If you see this, GitHub → Base44 production deploy works.');
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   // <React.StrictMode>
   <App />
