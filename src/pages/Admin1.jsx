@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { safeRequest } from "../components/utils/base44SafeRequest";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, BookOpen, Shield, Edit2, Trash2, FileText, Languages, Filter, Search, ChevronDown, ChevronUp, RefreshCw, Loader2, GraduationCap } from "lucide-react";
+import { Plus, Users, BookOpen, Shield, Edit2, Trash2, FileText, Languages, Filter, Search, ChevronDown, ChevronUp, RefreshCw, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,7 +22,6 @@ import LessonCard from "../components/lessons/LessonCard";
 import LessonStudentsList from "../components/admin/LessonStudentsList";
 import GroupManagement from "../components/admin/GroupManagement";
 import TeacherManagement from "../components/admin/TeacherManagement";
-import TeachersPanel from "../components/admin/TeachersPanel";
 import QuizQuestionsManager from "../components/admin/QuizQuestionsManager";
 import VocabularyManager from "../components/admin/VocabularyManager";
 import VocabSuggestionsManager from "../components/admin/VocabSuggestionsManager";
@@ -66,11 +66,15 @@ export default function Admin() {
   const [currentPage, setCurrentPage] = useState(1);
   const STUDENTS_PER_PAGE = 20;
 
+  const initialLoadDone = useRef(false);
+
   useEffect(() => {
     loadInitialData();
   }, []);
 
   useEffect(() => {
+    // Skip if initial load hasn't completed yet (it will call loadTabData itself)
+    if (!initialLoadDone.current) return;
     if (!loadedTabs[activeTab]) {
       loadTabData(activeTab);
     }
@@ -90,11 +94,13 @@ export default function Admin() {
 
       setIsLoading(false);
       // Load first tab data
-      loadTabData("students");
+      await loadTabData("students");
+      initialLoadDone.current = true;
     } catch (error) {
       console.error("Error loading user:", error);
       toast.error("שגיאה בטעינת נתונים");
       setIsLoading(false);
+      initialLoadDone.current = true;
     }
   };
 
@@ -105,25 +111,20 @@ export default function Admin() {
       console.log(`Loading ${tab} data...`);
       
       if (tab === "students") {
-        // Load all data in parallel for faster loading
-        const [
-          allUsers,
-          allLessons,
-          allParticipations,
-          allGroups,
-          allScheduledLessons,
-          allWordProgress,
-          allMathProgress,
-          allQuizProgress
-        ] = await Promise.all([
-          retryWithBackoff(() => base44.entities.User.list()),
-          retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date")),
-          retryWithBackoff(() => base44.entities.LessonParticipation.list()),
-          retryWithBackoff(() => base44.entities.Group.list()),
-          retryWithBackoff(() => base44.entities.ScheduledLesson.list()),
-          retryWithBackoff(() => base44.entities.WordProgress.list()),
-          retryWithBackoff(() => base44.entities.MathProgress.list()),
-          retryWithBackoff(() => base44.entities.QuizProgress.list())
+        // Stagger in batches of 3 to avoid rate limits
+        const [allUsers, allLessons, allGroups] = await Promise.all([
+          safeRequest(() => base44.entities.User.list(), { key: "admin-users" }),
+          safeRequest(() => base44.entities.Lesson.list("-lesson_date"), { key: "admin-lessons" }),
+          safeRequest(() => base44.entities.Group.list(), { key: "admin-groups" }),
+        ]);
+        const [allParticipations, allScheduledLessons, allWordProgress] = await Promise.all([
+          safeRequest(() => base44.entities.LessonParticipation.list(), { key: "admin-participations" }),
+          safeRequest(() => base44.entities.ScheduledLesson.list(), { key: "admin-scheduled" }),
+          safeRequest(() => base44.entities.WordProgress.list(), { key: "admin-wordprogress" }),
+        ]);
+        const [allMathProgress, allQuizProgress] = await Promise.all([
+          safeRequest(() => base44.entities.MathProgress.list(), { key: "admin-mathprogress" }),
+          safeRequest(() => base44.entities.QuizProgress.list(), { key: "admin-quizprogress" }),
         ]);
         
         setStudents(allUsers);
@@ -137,9 +138,9 @@ export default function Admin() {
         setInvestments([]);
       } else if (tab === "lessons") {
         const [allLessons, allParticipations, allUsers] = await Promise.all([
-          retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date")),
-          retryWithBackoff(() => base44.entities.LessonParticipation.list()),
-          retryWithBackoff(() => base44.entities.User.list())
+          safeRequest(() => base44.entities.Lesson.list("-lesson_date"), { key: "admin-lessons" }),
+          safeRequest(() => base44.entities.LessonParticipation.list(), { key: "admin-participations" }),
+          safeRequest(() => base44.entities.User.list(), { key: "admin-users" }),
         ]);
         
         setLessons(allLessons);
@@ -192,8 +193,352 @@ export default function Admin() {
     }
   };
 
+  const recalculateAllCoinsAccurately = async (previewOnly = true) => {
+    setIsRecalculatingCoins(true);
+    
+    try {
+      console.log(`\n💰 ${previewOnly ? 'PREVIEW' : '🚨 APPLYING'} Coins Recalculation\n`);
+
+      const [allUsers, allWordProgress, allMathProgress] = await Promise.all([
+        safeRequest(() => base44.entities.User.list(), { key: "recalc-users" }),
+        safeRequest(() => base44.entities.WordProgress.list(), { key: "recalc-wp" }),
+        safeRequest(() => base44.entities.MathProgress.list(), { key: "recalc-mp" }),
+      ]);
+      const [allParticipations, allQuizProgress] = await Promise.all([
+        safeRequest(() => base44.entities.LessonParticipation.list(), { key: "recalc-lp" }),
+        safeRequest(() => base44.entities.QuizProgress.list(), { key: "recalc-qp" }),
+      ]);
+
+      const students = allUsers.filter(u => u.user_type === 'student');
+      const previewResults = [];
+      
+      const wordProgressMap = new Map();
+      const mathProgressMap = new Map();
+      const participationsMap = new Map();
+      const quizProgressMap = new Map();
+      
+      allWordProgress.forEach(w => {
+        if (!wordProgressMap.has(w.student_email)) wordProgressMap.set(w.student_email, []);
+        wordProgressMap.get(w.student_email).push(w);
+      });
+      
+      allMathProgress.forEach(m => {
+        if (!mathProgressMap.has(m.student_email)) mathProgressMap.set(m.student_email, []);
+        mathProgressMap.get(m.student_email).push(m);
+      });
+      
+      allParticipations.forEach(p => {
+        if (!participationsMap.has(p.student_email)) participationsMap.set(p.student_email, []);
+        participationsMap.get(p.student_email).push(p);
+      });
+      
+      allQuizProgress.forEach(q => {
+        if (!quizProgressMap.has(q.student_email)) quizProgressMap.set(q.student_email, []);
+        quizProgressMap.get(q.student_email).push(q);
+      });
+      
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (let i = 0; i < students.length; i++) {
+        const user = students[i];
+        
+        try {
+          const baseCoins = 500;
+          const lessonsCoins = (user.total_lessons || 0) * 100;
+          
+          const userWordProgress = wordProgressMap.get(user.email) || [];
+          const wordCoins = userWordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
+          
+          const userMathProgress = mathProgressMap.get(user.email) || [];
+          const mathCoins = userMathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
+          
+          const userParticipations = participationsMap.get(user.email) || [];
+          const completedSurveys = userParticipations.filter(p => p.survey_completed === true);
+          const surveyCoins = completedSurveys.length * 70;
+          
+          const userQuizProgress = quizProgressMap.get(user.email) || [];
+          const quizCoins = userQuizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
+          
+          let profileTasksCoins = 0;
+          if (user.completed_instagram_follow) profileTasksCoins += 50;
+          if (user.completed_youtube_subscribe) profileTasksCoins += 50;
+          if (user.completed_facebook_follow) profileTasksCoins += 50;
+          if (user.completed_discord_join) profileTasksCoins += 50;
+          if (user.completed_share) profileTasksCoins += 100;
+          
+          let profileDetailsCoins = 0;
+          if (user.age) profileDetailsCoins += 20;
+          if (user.bio && user.bio.length > 10) profileDetailsCoins += 30;
+          if (user.phone_number) profileDetailsCoins += 20;
+          
+          const workCoins = user.total_work_earnings || 0;
+          const collaborationCoins = user.total_collaboration_coins || 0;
+          const loginStreakCoins = user.total_login_streak_coins || 0;
+          const passiveIncomeCoins = user.total_passive_income || 0;
+          const adminCoins = user.total_admin_coins || 0;
+
+          // Use pre-calculated investments_value instead of fetching
+          const investmentsValue = user.investments_value || 0;
+          const realizedProfit = user.total_realized_investment_profit || 0;
+
+          // Only count REALIZED investment profit, not unrealized (unrealized is in current_value)
+          const totalIncome = baseCoins + lessonsCoins + wordCoins + mathCoins + 
+                             surveyCoins + quizCoins + profileTasksCoins + 
+                             profileDetailsCoins + workCoins + collaborationCoins + 
+                             loginStreakCoins + passiveIncomeCoins + realizedProfit + (user.total_admin_coins || 0);
+
+          const purchasedItems = user.purchased_items || [];
+          let itemsValue = 0;
+          purchasedItems.forEach(itemId => {
+            const item = AVATAR_ITEMS[itemId];
+            if (item && item.price) {
+              itemsValue += item.price;
+            }
+          });
+
+          const inflationLoss = user.total_inflation_lost || 0;
+          const incomeTax = user.total_income_tax || 0;
+          const capitalGainsTax = user.total_capital_gains_tax || 0;
+          const creditInterest = user.total_credit_interest || 0;
+          const itemSaleLosses = user.total_item_sale_losses || 0;
+          const investmentFees = user.total_investment_fees || 0;
+
+          const totalLosses = inflationLoss + incomeTax + capitalGainsTax + creditInterest + itemSaleLosses + investmentFees;
+          
+          // DON'T subtract investments! They are assets, not expenses
+          const correctCoins = Math.round(totalIncome - itemsValue - totalLosses);
+          const oldCoins = user.coins || 0;
+          const coinsDiff = correctCoins - oldCoins;
+          
+          // 🔍 DEBUG LOG for each user
+          console.log(`\n📊 ${user.full_name} (${user.email}):`);
+          console.log(`  oldCoins: ${oldCoins}`);
+          console.log(`  correctCoins: ${correctCoins}`);
+          console.log(`  diff: ${coinsDiff >= 0 ? '+' : ''}${coinsDiff}`);
+          console.log(`  totalIncome: ${totalIncome}`);
+          console.log(`  itemsValue: ${itemsValue}`);
+          console.log(`  totalLosses: ${totalLosses} (breakdown below)`);
+          console.log(`    - inflationLoss: ${inflationLoss}`);
+          console.log(`    - incomeTax: ${incomeTax}`);
+          console.log(`    - capitalGainsTax: ${capitalGainsTax}`);
+          console.log(`    - creditInterest: ${creditInterest} ⚠️`);
+          console.log(`    - itemSaleLosses: ${itemSaleLosses}`);
+          console.log(`    - investmentFees: ${investmentFees}`);
+          console.log(`  ✅ Formula: ${totalIncome} - ${itemsValue} - ${totalLosses} = ${correctCoins}`);
+          console.log(`  (investments ${investmentsValue} NOT subtracted - they are assets!)\n`);
+          
+          // Build preview result
+          const resultItem = {
+            email: user.email,
+            name: user.full_name,
+            oldCoins,
+            correctCoins,
+            diff: coinsDiff,
+            totalIncome,
+            itemsValue,
+            totalLosses,
+            creditInterest,
+            warning: null,
+            willUpdate: true
+          };
+          
+          // 🛡️ SAFEGUARD: Detect anomalies
+          if (correctCoins < -5000) {
+            resultItem.warning = `⚠️ ANOMALY: correctCoins (${correctCoins}) < -5000`;
+            resultItem.willUpdate = false;
+            console.log(`  🚨 ${resultItem.warning} - SKIPPING UPDATE!`);
+          } else if (Math.abs(coinsDiff) > 5000) {
+            resultItem.warning = `⚠️ ANOMALY: diff (${coinsDiff}) > 5000`;
+            resultItem.willUpdate = false;
+            console.log(`  🚨 ${resultItem.warning} - SKIPPING UPDATE!`);
+          }
+          
+          previewResults.push(resultItem);
+          
+          // Only update if NOT preview mode AND passes safeguards
+          if (!previewOnly && resultItem.willUpdate) {
+            await retryWithBackoff(async () => {
+              await base44.entities.User.update(user.id, { coins: correctCoins });
+            });
+            
+            await sleep(100);
+            
+            await retryWithBackoff(async () => {
+              await syncLeaderboardEntry(user.email, { coins: correctCoins });
+            });
+            
+            console.log(`  ✅ UPDATED!`);
+          } else if (previewOnly) {
+            console.log(`  👁️ PREVIEW MODE - no changes made`);
+          }
+          
+          successCount++;
+          
+          if (i < students.length - 1) {
+            await sleep(previewOnly ? 200 : 600);
+          }
+        } catch (error) {
+          failCount++;
+        }
+      }
+      
+      // Save preview results to state
+      if (previewOnly) {
+        setCoinsPreviewResults(previewResults);
+        const anomalyCount = previewResults.filter(r => !r.willUpdate).length;
+        toast.success(
+          `👁️ תצוגה מקדימה: ${successCount} תלמידים נבדקו` + 
+          (anomalyCount > 0 ? ` (${anomalyCount} חריגים!)` : ''),
+          { duration: 8000 }
+        );
+      } else {
+        setCoinsPreviewResults(null);
+        if (failCount === 0) {
+          toast.success(`✅ חישוב מחדש הושלם! ${successCount} תלמידים עודכנו`);
+        } else {
+          toast.warning(`⚠️ הסתיים: ${successCount} הצליחו, ${failCount} נכשלו`);
+        }
+        await refreshCurrentTab();
+      }
+    } catch (error) {
+      toast.error("שגיאה קריטית בחישוב מחדש");
+    } finally {
+      setIsRecalculatingCoins(false);
+    }
+  };
+
   const fixAdminCoins = async () => {
-    toast.info("פונקציה זו הועברה לפאנל Economy");
+    setIsRecalculatingCoins(true);
+
+    try {
+      const [allUsers, allWordProgress, allMathProgress] = await Promise.all([
+        safeRequest(() => base44.entities.User.list(), { key: "fix-users" }),
+        safeRequest(() => base44.entities.WordProgress.list(), { key: "fix-wp" }),
+        safeRequest(() => base44.entities.MathProgress.list(), { key: "fix-mp" }),
+      ]);
+      const [allParticipations, allQuizProgress] = await Promise.all([
+        safeRequest(() => base44.entities.LessonParticipation.list(), { key: "fix-lp" }),
+        safeRequest(() => base44.entities.QuizProgress.list(), { key: "fix-qp" }),
+      ]);
+
+      const students = allUsers.filter(u => u.user_type === 'student');
+      
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (let i = 0; i < students.length; i++) {
+        const user = students[i];
+        
+        try {
+          // Calculate expected income from all sources (WITHOUT admin coins)
+          const baseCoins = 500;
+          const lessonsCoins = (user.total_lessons || 0) * 100;
+          
+          const userWordProgress = allWordProgress.filter(w => w.student_email === user.email);
+          const wordCoins = userWordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
+          
+          const userMathProgress = allMathProgress.filter(m => m.student_email === user.email);
+          const mathCoins = userMathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
+          
+          const userParticipations = allParticipations.filter(p => p.student_email === user.email);
+          const surveyCoins = userParticipations.filter(p => p.survey_completed === true).length * 70;
+          
+          const userQuizProgress = allQuizProgress.filter(q => q.student_email === user.email);
+          const quizCoins = userQuizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
+          
+          let profileTasksCoins = 0;
+          if (user.completed_instagram_follow) profileTasksCoins += 50;
+          if (user.completed_youtube_subscribe) profileTasksCoins += 50;
+          if (user.completed_facebook_follow) profileTasksCoins += 50;
+          if (user.completed_discord_join) profileTasksCoins += 50;
+          if (user.completed_share) profileTasksCoins += 100;
+          
+          let profileDetailsCoins = 0;
+          if (user.age) profileDetailsCoins += 20;
+          if (user.bio && user.bio.length > 10) profileDetailsCoins += 30;
+          if (user.phone_number) profileDetailsCoins += 20;
+          
+          const workCoins = user.total_work_earnings || 0;
+          const collaborationCoins = user.total_collaboration_coins || 0;
+          const loginStreakCoins = user.total_login_streak_coins || 0;
+
+          const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
+          const totalInvested = userInvestments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
+          const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+          const unrealizedProfit = investmentsValue - totalInvested;
+          const realizedProfit = user.total_realized_investment_profit || 0;
+          // Investment profits are paid as cash (dividends) and added to coins
+          const totalInvestmentProfit = realizedProfit;
+
+          // Calculate expected income WITHOUT admin coins
+          const expectedIncome = baseCoins + lessonsCoins + wordCoins + mathCoins + 
+                             surveyCoins + quizCoins + profileTasksCoins + 
+                             profileDetailsCoins + workCoins + collaborationCoins + 
+                             loginStreakCoins + totalInvestmentProfit;
+
+          // Calculate assets
+          const purchasedItems = user.purchased_items || [];
+          let itemsValue = 0;
+          purchasedItems.forEach(itemId => {
+            const item = AVATAR_ITEMS[itemId];
+            if (item && item.price) {
+              itemsValue += item.price;
+            }
+          });
+
+          // Calculate losses
+          const totalLosses = (user.total_inflation_lost || 0) + 
+                            (user.total_income_tax || 0) + 
+                            (user.total_capital_gains_tax || 0) + 
+                            (user.total_credit_interest || 0) + 
+                            (user.total_item_sale_losses || 0) + 
+                            (user.total_investment_fees || 0);
+
+          // Current coins + items + investments = what they actually have
+          const actualAssets = (user.coins || 0) + itemsValue + investmentsValue;
+          
+          // The difference between actual assets and expected income (minus losses) is admin coins
+          const calculatedAdminCoins = Math.round(actualAssets + totalLosses - expectedIncome);
+
+          await retryWithBackoff(async () => {
+            await base44.entities.User.update(user.id, { 
+              total_admin_coins: calculatedAdminCoins
+            });
+          });
+          
+          await sleep(100);
+          
+          await retryWithBackoff(async () => {
+            await syncLeaderboardEntry(user.email, { 
+              total_admin_coins: calculatedAdminCoins
+            });
+          });
+          
+          successCount++;
+          
+          if (i < students.length - 1) {
+            await sleep(400);
+          }
+        } catch (error) {
+          failCount++;
+          console.error(`Failed to fix admin coins for ${user.email}:`, error);
+        }
+      }
+      
+      if (failCount === 0) {
+        toast.success(`✅ תיקון הושלם! ${successCount} תלמידים עודכנו`);
+      } else {
+        toast.warning(`⚠️ הסתיים: ${successCount} הצליחו, ${failCount} נכשלו`);
+      }
+
+      await refreshCurrentTab();
+    } catch (error) {
+      console.error("Error fixing admin coins:", error);
+      toast.error("שגיאה בתיקון");
+    } finally {
+      setIsRecalculatingCoins(false);
+    }
   };
 
   const resetAllLoginStreaks = async () => {
@@ -302,7 +647,212 @@ export default function Admin() {
   };
 
   const recomputeStudentCashBalance = async (dryRun = true) => {
-    toast.info("פונקציה זו הועברה לפאנל Economy");
+    setIsRecalculatingCoins(true);
+    
+    try {
+      console.log(`\n💰 ${dryRun ? 'DRY RUN' : '🚨 APPLYING'} - Recompute Cash Balance\n`);
+
+      const [allUsers, allWordProgress, allMathProgress] = await Promise.all([
+        safeRequest(() => base44.entities.User.list(), { key: "recomp-users" }),
+        safeRequest(() => base44.entities.WordProgress.list(), { key: "recomp-wp" }),
+        safeRequest(() => base44.entities.MathProgress.list(), { key: "recomp-mp" }),
+      ]);
+      const [allParticipations, allQuizProgress] = await Promise.all([
+        safeRequest(() => base44.entities.LessonParticipation.list(), { key: "recomp-lp" }),
+        safeRequest(() => base44.entities.QuizProgress.list(), { key: "recomp-qp" }),
+      ]);
+
+      const students = allUsers.filter(u => u.user_type === 'student');
+      const results = [];
+      
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (let i = 0; i < students.length; i++) {
+        const user = students[i];
+        
+        try {
+          // === INCOME SOURCES ===
+          const baseCoins = 500;
+          const lessonsCoins = (user.total_lessons || 0) * 100;
+          
+          const userWordProgress = allWordProgress.filter(w => w.student_email === user.email);
+          const vocabularyCoins = userWordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
+          
+          const userMathProgress = allMathProgress.filter(m => m.student_email === user.email);
+          const mathCoins = userMathProgress.reduce((sum, m) => sum + (m.coins_earned || 0), 0);
+          
+          const userParticipations = allParticipations.filter(p => p.student_email === user.email);
+          const surveysCoins = userParticipations.filter(p => p.survey_completed === true).length * 70;
+          
+          const userQuizProgress = allQuizProgress.filter(q => q.student_email === user.email);
+          const quizCoins = userQuizProgress.reduce((sum, q) => sum + (q.coins_earned || 0), 0);
+          
+          let profileTasksCoins = 0;
+          if (user.completed_instagram_follow) profileTasksCoins += 50;
+          if (user.completed_youtube_subscribe) profileTasksCoins += 50;
+          if (user.completed_facebook_follow) profileTasksCoins += 50;
+          if (user.completed_discord_join) profileTasksCoins += 50;
+          if (user.completed_share) profileTasksCoins += 100;
+          
+          let profileDetailsCoins = 0;
+          if (user.age) profileDetailsCoins += 20;
+          if (user.bio && user.bio.length > 10) profileDetailsCoins += 30;
+          if (user.phone_number) profileDetailsCoins += 20;
+          
+          const workCoins = user.total_work_earnings || 0;
+          const collaborationCoins = user.total_collaboration_coins || 0;
+          const loginStreakCoins = user.total_login_streak_coins || 0;
+          const passiveIncomeCoins = user.total_passive_income || 0;
+          const adminCoins = user.total_admin_coins || 0;
+          
+          // Realized investment profit (dividends paid to cash)
+          const realizedInvestmentProfit = user.total_realized_investment_profit || 0;
+          
+          const totalIncome = baseCoins + lessonsCoins + vocabularyCoins + mathCoins + 
+                             surveysCoins + quizCoins + profileTasksCoins + 
+                             profileDetailsCoins + workCoins + collaborationCoins + 
+                             loginStreakCoins + passiveIncomeCoins + adminCoins + 
+                             realizedInvestmentProfit;
+          
+          // === LOSSES (excluding creditInterest for now) ===
+          const inflationLoss = user.total_inflation_lost || 0;
+          const incomeTax = user.total_income_tax || 0;
+          const capitalGainsTax = user.total_capital_gains_tax || 0;
+          const investmentFees = user.total_investment_fees || 0;
+          const itemSaleLosses = user.total_item_sale_losses || 0;
+          
+          const totalLosses = inflationLoss + incomeTax + capitalGainsTax + 
+                            investmentFees + itemSaleLosses;
+          
+          // === ITEMS SPENT ===
+          const purchasedItems = user.purchased_items || [];
+          let itemsSpent = 0;
+          purchasedItems.forEach(itemId => {
+            const item = AVATAR_ITEMS[itemId];
+            if (item && item.price) {
+              itemsSpent += item.price;
+            }
+          });
+          
+          // === INVESTMENTS SPENT ===
+          // When you buy an investment, cash goes DOWN by invested_amount
+          const userInvestments = allInvestments.filter(inv => inv.student_email === user.email);
+          const investmentsSpent = userInvestments.reduce((sum, inv) => sum + (inv.invested_amount || 0), 0);
+          
+          // Current value of investments (for netWorth calculation)
+          const investmentsValue = userInvestments.reduce((sum, inv) => sum + (inv.current_value || 0), 0);
+          
+          // === COMPUTE NEW COINS ===
+          const newCoins = Math.round(totalIncome - totalLosses - itemsSpent - investmentsSpent);
+          const oldCoins = user.coins || 0;
+          const diff = newCoins - oldCoins;
+          
+          // === VALIDATION ===
+          const netWorth = newCoins + itemsSpent + investmentsValue;
+          
+          // === DEBUG LOG ===
+          console.log(`\n📊 ${user.full_name} (${user.email}):`);
+          console.log(`  === INCOME ===`);
+          console.log(`    base: ${baseCoins}, lessons: ${lessonsCoins}, vocab: ${vocabularyCoins}, math: ${mathCoins}`);
+          console.log(`    surveys: ${surveysCoins}, quizzes: ${quizCoins}, work: ${workCoins}`);
+          console.log(`    collab: ${collaborationCoins}, streak: ${loginStreakCoins}, passive: ${passiveIncomeCoins}`);
+          console.log(`    admin: ${adminCoins}, realized_profit: ${realizedInvestmentProfit}`);
+          console.log(`    📈 TOTAL INCOME: ${totalIncome}`);
+          console.log(`  === LOSSES (no creditInterest) ===`);
+          console.log(`    inflation: ${inflationLoss}, incomeTax: ${incomeTax}, capitalGainsTax: ${capitalGainsTax}`);
+          console.log(`    investmentFees: ${investmentFees}, itemSaleLosses: ${itemSaleLosses}`);
+          console.log(`    📉 TOTAL LOSSES: ${totalLosses}`);
+          console.log(`  === SPENDING ===`);
+          console.log(`    itemsSpent: ${itemsSpent} (${purchasedItems.length} items)`);
+          console.log(`    investmentsSpent: ${investmentsSpent} (${userInvestments.length} investments)`);
+          console.log(`  === RESULT ===`);
+          console.log(`    oldCoins: ${oldCoins}`);
+          console.log(`    newCoins: ${newCoins}`);
+          console.log(`    diff: ${diff >= 0 ? '+' : ''}${diff}`);
+          console.log(`  === VALIDATION ===`);
+          console.log(`    investmentsValue (current): ${investmentsValue}`);
+          console.log(`    netWorth: ${netWorth} (coins + items + investments)`);
+          console.log(`    ✅ Formula: ${totalIncome} - ${totalLosses} - ${itemsSpent} - ${investmentsSpent} = ${newCoins}\n`);
+          
+          const resultItem = {
+            email: user.email,
+            name: user.full_name,
+            oldCoins,
+            newCoins,
+            diff,
+            totalIncome,
+            totalLosses,
+            itemsSpent,
+            investmentsSpent,
+            investmentsValue,
+            netWorth,
+            warning: null,
+            willUpdate: true
+          };
+          
+          // Safeguards
+          if (newCoins < -10000) {
+            resultItem.warning = `⚠️ ANOMALY: newCoins (${newCoins}) < -10000`;
+            resultItem.willUpdate = false;
+          } else if (Math.abs(diff) > 10000) {
+            resultItem.warning = `⚠️ ANOMALY: diff (${diff}) > 10000`;
+            resultItem.willUpdate = false;
+          }
+          
+          if (resultItem.warning) {
+            console.log(`  🚨 ${resultItem.warning} - SKIPPING!`);
+          }
+          
+          results.push(resultItem);
+          
+          // Apply if not dry run and passes safeguards
+          if (!dryRun && resultItem.willUpdate) {
+            await retryWithBackoff(async () => {
+              await base44.entities.User.update(user.id, { coins: newCoins });
+            });
+            await sleep(100);
+            await retryWithBackoff(async () => {
+              await syncLeaderboardEntry(user.email, { coins: newCoins });
+            });
+            console.log(`  ✅ UPDATED!`);
+          } else if (dryRun) {
+            console.log(`  👁️ DRY RUN - no changes`);
+          }
+          
+          successCount++;
+          if (i < students.length - 1) {
+            await sleep(dryRun ? 200 : 600);
+          }
+        } catch (error) {
+          failCount++;
+          console.error(`Failed for ${user.email}:`, error);
+        }
+      }
+      
+      if (dryRun) {
+        setCoinsPreviewResults(results);
+        const anomalyCount = results.filter(r => !r.willUpdate).length;
+        toast.success(
+          `👁️ Dry Run: ${successCount} תלמידים נבדקו` +
+          (anomalyCount > 0 ? ` (${anomalyCount} חריגים!)` : ''),
+          { duration: 8000 }
+        );
+      } else {
+        setCoinsPreviewResults(null);
+        if (failCount === 0) {
+          toast.success(`✅ Cash Balance עודכן! ${successCount} תלמידים`);
+        } else {
+          toast.warning(`⚠️ ${successCount} הצליחו, ${failCount} נכשלו`);
+        }
+        await refreshCurrentTab();
+      }
+    } catch (error) {
+      console.error("Error recomputing cash balance:", error);
+      toast.error("שגיאה בחישוב מחדש");
+    } finally {
+      setIsRecalculatingCoins(false);
+    }
   };
 
   const addPassiveIncomeBackpay = async () => {
@@ -780,13 +1330,6 @@ export default function Admin() {
             >
               <Users className="w-4 h-4 ml-1" />
               <span className="hidden sm:inline">תלמידים</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="teachers"
-              className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white whitespace-nowrap px-3 py-2"
-            >
-              <GraduationCap className="w-4 h-4 ml-1" />
-              <span className="hidden sm:inline">מורים</span>
             </TabsTrigger>
             <TabsTrigger 
               value="lessons"
@@ -1526,10 +2069,6 @@ export default function Admin() {
             <InvestmentsManager />
             <EconomyAdminPanel />
           </div>
-        </TabsContent>
-
-        <TabsContent value="teachers">
-          <TeachersPanel />
         </TabsContent>
 
         <TabsContent value="coin-logs">
