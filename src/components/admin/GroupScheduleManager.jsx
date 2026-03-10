@@ -446,7 +446,11 @@ export default function GroupScheduleManager({ group }) {
                             בוטל
                           </div>
                         ) : lesson ? (
-                          <div className="bg-green-500/30 rounded px-1 py-0.5 text-[9px] text-green-200 line-clamp-2">
+                          <div
+                            dir="rtl"
+                            style={{ unicodeBidi: 'isolate' }}
+                            className="bg-green-500/30 rounded px-1 py-0.5 text-[10.5px] text-green-200 break-words leading-tight"
+                          >
                             {lesson.lesson_name}
                           </div>
                         ) : (
