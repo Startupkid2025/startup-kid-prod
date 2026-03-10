@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Home, BookOpen, TrendingUp, User, Shield, Trophy } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { safeRequest } from "./components/utils/base44SafeRequest";
 import { APP_VERSION, BUILD_ENV } from "@/lib/version";
 import { toast } from "sonner";
 import { AVATAR_ITEMS } from "./components/avatar/TamagotchiAvatar";
@@ -73,7 +74,22 @@ export default function Layout({ children }) {
       }
       
       setCurrentUser(user);
-      
+
+      // Prefetch admin data in background so Admin1 loads instantly
+      if (user.role === "admin") {
+        const TTL = 120000;
+        Promise.all([
+          safeRequest(() => base44.entities.User.list(), { key: "admin-users", ttlMs: TTL }),
+          safeRequest(() => base44.entities.Lesson.list("-lesson_date"), { key: "admin-lessons", ttlMs: TTL }),
+          safeRequest(() => base44.entities.Group.list(), { key: "admin-groups", ttlMs: TTL }),
+          safeRequest(() => base44.entities.LessonParticipation.list(), { key: "admin-participations", ttlMs: TTL }),
+          safeRequest(() => base44.entities.ScheduledLesson.list(), { key: "admin-scheduled", ttlMs: TTL }),
+          safeRequest(() => base44.entities.WordProgress.list(), { key: "admin-wordprogress", ttlMs: TTL }),
+          safeRequest(() => base44.entities.MathProgress.list(), { key: "admin-mathprogress", ttlMs: TTL }),
+          safeRequest(() => base44.entities.QuizProgress.list(), { key: "admin-quizprogress", ttlMs: TTL }),
+        ]).catch(() => {}); // Fire and forget — Admin1 will retry if needed
+      }
+
       // Use Jerusalem timezone
       const DATE_TZ = "Asia/Jerusalem";
       const fmtIL = new Intl.DateTimeFormat("en-CA", {
