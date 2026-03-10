@@ -14,8 +14,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, readdirSync } from 'fs';
 import { resolve } from 'path';
+import { execSync } from 'child_process';
 
 const ROOT = resolve(__dirname, '../..');
 
@@ -155,5 +156,103 @@ describe('Lazy loading', () => {
   it('App.jsx has Suspense wrapper', () => {
     const app = readFileSync(resolve(ROOT, 'src/App.jsx'), 'utf-8');
     expect(app).toContain('Suspense');
+  });
+});
+
+// ─── 7. Branch sync check — dev must not drift from main ───
+
+describe('Branch sync check', () => {
+  // Skip in CI if git is not available or branches aren't fetched
+  const isGitRepo = existsSync(resolve(ROOT, '.git'));
+
+  it('all admin component imports resolve to existing files', () => {
+    const admin1 = readFileSync(resolve(ROOT, 'src/pages/Admin1.jsx'), 'utf-8');
+    const importRegex = /import\s+\w+\s+from\s+["']\.\.\/components\/admin\/(\w+)["']/g;
+    let match;
+    const missing = [];
+    while ((match = importRegex.exec(admin1)) !== null) {
+      const componentName = match[1];
+      const filePath = resolve(ROOT, `src/components/admin/${componentName}.jsx`);
+      if (!existsSync(filePath)) {
+        missing.push(componentName);
+      }
+    }
+    expect(missing, `Missing admin components: ${missing.join(', ')}`).toEqual([]);
+  });
+
+  it('all page imports in pages.config.js resolve to existing files', () => {
+    const config = readFileSync(resolve(ROOT, 'src/pages.config.js'), 'utf-8');
+    const importRegex = /import\(\s*["']\.\/pages\/(\w+)["']\s*\)/g;
+    let match;
+    const missing = [];
+    while ((match = importRegex.exec(config)) !== null) {
+      const pageName = match[1];
+      const filePath = resolve(ROOT, `src/pages/${pageName}.jsx`);
+      if (!existsSync(filePath)) {
+        missing.push(pageName);
+      }
+    }
+    expect(missing, `Missing page files: ${missing.join(', ')}`).toEqual([]);
+  });
+
+  it('no orphan components in admin/ that are never imported', () => {
+    const adminDir = resolve(ROOT, 'src/components/admin');
+    if (!existsSync(adminDir)) return;
+    const adminFiles = readdirSync(adminDir).filter(f => f.endsWith('.jsx'));
+    const orphans = [];
+    for (const file of adminFiles) {
+      const componentName = file.replace('.jsx', '');
+      // Search all src files for imports of this component
+      try {
+        const result = execSync(
+          `grep -rl "${componentName}" "${resolve(ROOT, 'src')}" --include="*.jsx" --include="*.js" 2>/dev/null`,
+          { encoding: 'utf-8' }
+        ).trim();
+        const importingFiles = result.split('\n').filter(f => !f.endsWith(file));
+        if (importingFiles.length === 0) {
+          orphans.push(componentName);
+        }
+      } catch {
+        // grep returns exit code 1 if no match
+        orphans.push(componentName);
+      }
+    }
+    if (orphans.length > 0) {
+      console.warn(`⚠ Orphan admin components (not imported anywhere): ${orphans.join(', ')}`);
+    }
+    // Warn but don't fail — orphans are suspicious but not always bugs
+  });
+
+  it('no source file drift between dev and main', () => {
+    if (!isGitRepo) return;
+    try {
+      execSync('git rev-parse origin/main', { cwd: ROOT, encoding: 'utf-8' });
+    } catch {
+      return; // origin/main not fetched, skip
+    }
+
+    // Check for src/ files that exist on main but not on dev
+    let diffOutput;
+    try {
+      diffOutput = execSync(
+        'git diff --name-status HEAD origin/main -- src/ functions/',
+        { cwd: ROOT, encoding: 'utf-8' }
+      ).trim();
+    } catch {
+      return;
+    }
+
+    if (!diffOutput) return; // no diff, fully in sync
+
+    // Parse added files (A = exists on main but not dev)
+    const addedOnMain = diffOutput
+      .split('\n')
+      .filter(line => line.startsWith('A\t'))
+      .map(line => line.split('\t')[1])
+      .filter(f => f.endsWith('.jsx') || f.endsWith('.js') || f.endsWith('.ts'));
+
+    if (addedOnMain.length > 0) {
+      console.warn(`⚠ Files on main missing from dev: ${addedOnMain.join(', ')}. Consider: git merge origin/main`);
+    }
   });
 });

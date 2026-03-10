@@ -4,7 +4,7 @@ import { safeRequest } from "../components/utils/base44SafeRequest";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, BookOpen, Shield, Edit2, Trash2, FileText, Languages, Filter, Search, ChevronDown, ChevronUp, RefreshCw, Loader2 } from "lucide-react";
+import { Plus, Users, BookOpen, Shield, Edit2, Trash2, FileText, Languages, Filter, Search, ChevronDown, ChevronUp, RefreshCw, Loader2, GraduationCap } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,7 +21,7 @@ import DeleteConfirmDialog from "../components/admin/DeleteConfirmDialog";
 import LessonCard from "../components/lessons/LessonCard";
 import LessonStudentsList from "../components/admin/LessonStudentsList";
 import GroupManagement from "../components/admin/GroupManagement";
-import TeacherManagement from "../components/admin/TeacherManagement";
+import TeachersPanel from "../components/admin/TeachersPanel";
 import QuizQuestionsManager from "../components/admin/QuizQuestionsManager";
 import VocabularyManager from "../components/admin/VocabularyManager";
 import VocabSuggestionsManager from "../components/admin/VocabSuggestionsManager";
@@ -1341,7 +1341,14 @@ export default function Admin() {
               <Users className="w-4 h-4 ml-1" />
               <span className="hidden sm:inline">קבוצות</span>
             </TabsTrigger>
-            <TabsTrigger 
+            <TabsTrigger
+              value="teachers"
+              className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white whitespace-nowrap px-3 py-2"
+            >
+              <GraduationCap className="w-4 h-4 ml-1" />
+              <span className="hidden sm:inline">מורים</span>
+            </TabsTrigger>
+            <TabsTrigger
               value="vocabulary"
               className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white whitespace-nowrap px-3 py-2"
             >
@@ -2050,6 +2057,10 @@ export default function Admin() {
 
         <TabsContent value="groups">
           <GroupManagement onRefresh={refreshCurrentTab} />
+        </TabsContent>
+
+        <TabsContent value="teachers">
+          <TeachersPanel />
         </TabsContent>
 
         <TabsContent value="vocabulary">
