@@ -41,6 +41,11 @@ function isRateLimitError(err) {
   return status === 429 || msg.includes("Rate limit exceeded") || msg.includes("429");
 }
 
+function isPermanentError(err) {
+  const status = err?.status || err?.response?.status;
+  return status === 404 || status === 401 || status === 403;
+}
+
 export async function safeRequest(fn, {
   key,
   ttlMs = 0,
@@ -82,8 +87,11 @@ export async function safeRequest(fn, {
           }
         }
 
-        if (attempt >= retries) {
-          console.error(`❌ Request failed after ${attempt + 1} attempts for key: ${key}`);
+        // Don't retry permanent errors (404, 401, 403)
+        if (isPermanentError(err) || attempt >= retries) {
+          if (attempt > 0) {
+            console.error(`❌ Request failed after ${attempt + 1} attempts for key: ${key}`);
+          }
           throw err;
         }
 
