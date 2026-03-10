@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea"; // Added Textarea import
-import { ChevronLeft, ChevronRight, Plus, X, Edit2, Calendar as CalendarIcon, Loader2, Trash2, Ban, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, X, Edit2, Calendar as CalendarIcon, Loader2, Trash2, Ban, RotateCcw, UserPlus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -34,7 +34,7 @@ export default function GroupScheduleManager({ group }) {
   const [showNoClassDialog, setShowNoClassDialog] = useState(false);
   const [noClassTarget, setNoClassTarget] = useState(null); // { scheduledLesson } or { date }
   const [noClassReason, setNoClassReason] = useState("");
-  const [isEnrollingAll, setIsEnrollingAll] = useState(false);
+  const [enrollingLessonId, setEnrollingLessonId] = useState(null);
   const [enrollSummary, setEnrollSummary] = useState(null);
 
   const dayNames = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
