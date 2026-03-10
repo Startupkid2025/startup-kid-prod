@@ -47,15 +47,17 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import Admin1 from './pages/Admin1';
-import Home1 from './pages/Home1';
-import Investments1 from './pages/Investments1';
-import Leaderboard1 from './pages/Leaderboard1';
-import Lessons1 from './pages/Lessons1';
-import MathGames1 from './pages/MathGames1';
-import Profile1 from './pages/Profile1';
-import Progress1 from './pages/Progress1';
-import Vocabulary1 from './pages/Vocabulary1';
+import { lazy } from 'react';
+
+const Admin1 = lazy(() => import('./pages/Admin1'));
+const Home1 = lazy(() => import('./pages/Home1'));
+const Investments1 = lazy(() => import('./pages/Investments1'));
+const Leaderboard1 = lazy(() => import('./pages/Leaderboard1'));
+const Lessons1 = lazy(() => import('./pages/Lessons1'));
+const MathGames1 = lazy(() => import('./pages/MathGames1'));
+const Profile1 = lazy(() => import('./pages/Profile1'));
+const Progress1 = lazy(() => import('./pages/Progress1'));
+const Vocabulary1 = lazy(() => import('./pages/Vocabulary1'));
 import __Layout from './Layout.jsx';
 
 

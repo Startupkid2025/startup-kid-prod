@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev/startupkid]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests (includes production safety checks)
+        run: npm test
+
+  build:
+    name: Build & Bundle Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Production build
+        run: npm run build
+
+      - name: Bundle size check (must be under 5MB for Base44)
+        run: |
+          TOTAL_KB=$(du -sk dist/ | cut -f1)
+          TOTAL_MB=$((TOTAL_KB / 1024))
+          echo "Total dist size: ${TOTAL_KB}KB (${TOTAL_MB}MB)"
+
+          if [ "$TOTAL_KB" -gt 5120 ]; then
+            echo "::error::dist/ is ${TOTAL_MB}MB — exceeds Base44's 5MB site upload limit"
+            exit 1
+          fi
+
+      - name: No sourcemaps in production build
+        run: |
+          MAP_COUNT=$(find dist -name "*.map" | wc -l)
+          echo "Sourcemap files: $MAP_COUNT"
+          if [ "$MAP_COUNT" -gt 0 ]; then
+            echo "::error::Production build contains $MAP_COUNT sourcemap files — will exceed 5MB limit"
+            exit 1
+          fi
+
+      - name: Verify BUILD_ENV is production
+        run: |
+          if grep -q '"development"' dist/assets/index-*.js; then
+            # Check if it's the BUILD_ENV value (not just any string)
+            # The version module logs BUILD_ENV, so check the console.log pattern
+            if grep -oP '__BUILD_ENV__.*?development' dist/assets/index-*.js 2>/dev/null; then
+              echo "::error::BUILD_ENV is 'development' in production build"
+              exit 1
+            fi
+          fi
+          echo "BUILD_ENV check passed"
