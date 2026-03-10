@@ -633,6 +633,7 @@ export default function GroupScheduleManager({ group }) {
               <select
                 value={editingLesson?.lesson_id || ""}
                 onChange={(e) => setEditingLesson({...editingLesson, lesson_id: e.target.value})}
+                dir="rtl"
                 className="w-full border-2 border-purple-200 rounded-md p-2"
               >
                 <option value="">בחר שיעור (אופציונלי)</option>
