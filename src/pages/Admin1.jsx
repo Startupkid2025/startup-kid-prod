@@ -111,20 +111,18 @@ export default function Admin() {
       console.log(`Loading ${tab} data...`);
       
       if (tab === "students") {
-        // Stagger in batches of 3 to avoid rate limits
-        const [allUsers, allLessons, allGroups] = await Promise.all([
-          safeRequest(() => base44.entities.User.list(), { key: "admin-users" }),
-          safeRequest(() => base44.entities.Lesson.list("-lesson_date"), { key: "admin-lessons" }),
-          safeRequest(() => base44.entities.Group.list(), { key: "admin-groups" }),
+        // Load in 2 batches of 4 with 30s cache for repeat visits
+        const [allUsers, allLessons, allGroups, allParticipations] = await Promise.all([
+          safeRequest(() => base44.entities.User.list(), { key: "admin-users", ttlMs: 30000 }),
+          safeRequest(() => base44.entities.Lesson.list("-lesson_date"), { key: "admin-lessons", ttlMs: 30000 }),
+          safeRequest(() => base44.entities.Group.list(), { key: "admin-groups", ttlMs: 30000 }),
+          safeRequest(() => base44.entities.LessonParticipation.list(), { key: "admin-participations", ttlMs: 30000 }),
         ]);
-        const [allParticipations, allScheduledLessons, allWordProgress] = await Promise.all([
-          safeRequest(() => base44.entities.LessonParticipation.list(), { key: "admin-participations" }),
-          safeRequest(() => base44.entities.ScheduledLesson.list(), { key: "admin-scheduled" }),
-          safeRequest(() => base44.entities.WordProgress.list(), { key: "admin-wordprogress" }),
-        ]);
-        const [allMathProgress, allQuizProgress] = await Promise.all([
-          safeRequest(() => base44.entities.MathProgress.list(), { key: "admin-mathprogress" }),
-          safeRequest(() => base44.entities.QuizProgress.list(), { key: "admin-quizprogress" }),
+        const [allScheduledLessons, allWordProgress, allMathProgress, allQuizProgress] = await Promise.all([
+          safeRequest(() => base44.entities.ScheduledLesson.list(), { key: "admin-scheduled", ttlMs: 30000 }),
+          safeRequest(() => base44.entities.WordProgress.list(), { key: "admin-wordprogress", ttlMs: 30000 }),
+          safeRequest(() => base44.entities.MathProgress.list(), { key: "admin-mathprogress", ttlMs: 30000 }),
+          safeRequest(() => base44.entities.QuizProgress.list(), { key: "admin-quizprogress", ttlMs: 30000 }),
         ]);
         
         setStudents(allUsers);
