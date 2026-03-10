@@ -191,6 +191,74 @@ export default function GroupScheduleManager({ group }) {
     }
   };
 
+  const handleMarkNoClass = (scheduledLesson, date) => {
+    setNoClassTarget({ scheduledLesson, date });
+    setNoClassReason(scheduledLesson?.no_class_reason || "");
+    setShowNoClassDialog(true);
+  };
+
+  const handleSaveNoClass = async () => {
+    try {
+      const user = await base44.auth.me();
+      const now = new Date().toISOString();
+
+      if (noClassTarget.scheduledLesson) {
+        // Update existing record
+        await base44.entities.ScheduledLesson.update(noClassTarget.scheduledLesson.id, {
+          no_class: true,
+          no_class_reason: noClassReason,
+          no_class_marked_by: user.email,
+          no_class_marked_at: now
+        });
+      } else {
+        // Create a new record just to mark no-class on this date
+        const year = noClassTarget.date.getFullYear();
+        const month = String(noClassTarget.date.getMonth() + 1).padStart(2, '0');
+        const day = String(noClassTarget.date.getDate()).padStart(2, '0');
+        await base44.entities.ScheduledLesson.create({
+          group_id: group.id,
+          scheduled_date: `${year}-${month}-${day}`,
+          start_time: group.hour || "",
+          no_class: true,
+          no_class_reason: noClassReason,
+          no_class_marked_by: user.email,
+          no_class_marked_at: now
+        });
+      }
+
+      toast.success("התאריך סומן כ'לא התקיים שיעור'");
+      setShowNoClassDialog(false);
+      setNoClassTarget(null);
+      setNoClassReason("");
+      await loadData();
+    } catch (error) {
+      console.error("Error marking no class:", error);
+      toast.error("שגיאה בסימון");
+    }
+  };
+
+  const handleUnmarkNoClass = async (scheduledLesson) => {
+    try {
+      if (scheduledLesson.lesson_id || scheduledLesson.notes || scheduledLesson.start_time) {
+        // Has other data — just clear the no_class fields
+        await base44.entities.ScheduledLesson.update(scheduledLesson.id, {
+          no_class: false,
+          no_class_reason: "",
+          no_class_marked_by: "",
+          no_class_marked_at: null
+        });
+      } else {
+        // Was created only for no_class — delete it
+        await base44.entities.ScheduledLesson.delete(scheduledLesson.id);
+      }
+      toast.success("הסימון בוטל, היום חזר למצב רגיל");
+      await loadData();
+    } catch (error) {
+      console.error("Error unmarking no class:", error);
+      toast.error("שגיאה בביטול הסימון");
+    }
+  };
+
   const handleDeleteLesson = async (scheduledLesson) => {
     if (!confirm("האם אתה בטוח שברצונך למחוק שיעור זה מהיומן?")) return;
     
