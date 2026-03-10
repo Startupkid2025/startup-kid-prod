@@ -673,7 +673,7 @@ export default function GroupScheduleManager({ group }) {
               <div className="border-t border-gray-200 pt-4 space-y-3">
                 <Button
                   onClick={() => { setEnrollSummary(null); handleEnrollAllStudents(editingLesson); }}
-                  disabled={isEnrollingAll}
+                  disabled={!!enrollingLessonId}
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {isEnrollingAll ? (
