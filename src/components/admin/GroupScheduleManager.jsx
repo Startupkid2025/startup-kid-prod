@@ -603,7 +603,8 @@ export default function GroupScheduleManager({ group }) {
               </Button>
               <Button
                 onClick={handleSaveLesson}
-                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                disabled={!!editingLesson?.no_class}
+                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:opacity-50"
               >
                 שמור
               </Button>
