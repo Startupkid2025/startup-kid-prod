@@ -31,6 +31,9 @@ export default function GroupScheduleManager({ group }) {
   const [editingLesson, setEditingLesson] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showNoClassDialog, setShowNoClassDialog] = useState(false);
+  const [noClassTarget, setNoClassTarget] = useState(null); // { scheduledLesson } or { date }
+  const [noClassReason, setNoClassReason] = useState("");
 
   const dayNames = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
   const monthNames = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
