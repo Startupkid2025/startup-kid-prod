@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { ExternalLink, AlertCircle, Star, Play, Award } from "lucide-react";
@@ -162,13 +162,17 @@ export default function Lessons() {
     setIsLoading(false);
   };
 
-  const getParticipationForLesson = (lessonId) => {
-    return participations.find(p => p.lesson_id === lessonId);
-  };
+  const participationMap = useMemo(() => {
+    const m = new Map();
+    participations.forEach(p => m.set(p.lesson_id, p));
+    return m;
+  }, [participations]);
 
-  const getQuizProgressForLesson = (lessonId) => {
-    return quizProgress.find(q => q.lesson_id === lessonId);
-  };
+  const quizProgressMap = useMemo(() => {
+    const m = new Map();
+    quizProgress.forEach(q => m.set(q.lesson_id, q));
+    return m;
+  }, [quizProgress]);
 
   const handleOpenSurvey = (lesson, participation) => {
     setSurveyLesson(lesson);
@@ -306,8 +310,8 @@ export default function Lessons() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {lessons.map((lesson) => {
-            const participation = getParticipationForLesson(lesson.id);
-            const quizProg = getQuizProgressForLesson(lesson.id);
+            const participation = participationMap.get(lesson.id);
+            const quizProg = quizProgressMap.get(lesson.id);
             const wasAttended = participation?.attended !== false;
             const hasSurvey = participation?.survey_completed;
             const hasQuiz = quizProg?.completed;
@@ -321,10 +325,8 @@ export default function Lessons() {
             const thumbnailUrl = getGoogleDriveThumbnail(lesson.thumbnail_url);
             
             return (
-              <motion.div
+              <div
                 key={lesson.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
                 className="group"
               >
                 <div className={`bg-white/10 backdrop-blur-md rounded-2xl border overflow-hidden hover:scale-[1.02] transition-all ${
@@ -480,7 +482,7 @@ export default function Lessons() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>
