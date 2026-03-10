@@ -660,8 +660,40 @@ export default function GroupScheduleManager({ group }) {
                 שמור
               </Button>
             </div>
-            {/* The delete button in the dialog was removed as per the outline.
-                Deletion is now primarily handled via the trash icon on the calendar day itself. */}
+
+            {/* Enroll all students button — shown only when editing an existing lesson with a lesson_id */}
+            {editingLesson?.id && editingLesson?.lesson_id && !editingLesson?.no_class && (
+              <div className="border-t border-gray-200 pt-4 space-y-3">
+                <Button
+                  onClick={() => { setEnrollSummary(null); handleEnrollAllStudents(editingLesson); }}
+                  disabled={isEnrollingAll}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {isEnrollingAll ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      מעבד...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      הוסף את כל תלמידי הקבוצה לשיעור זה
+                    </>
+                  )}
+                </Button>
+
+                {enrollSummary && (
+                  <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-sm text-right space-y-1">
+                    <p className="font-bold text-indigo-700">סיכום שיוך תלמידים:</p>
+                    <p className="text-green-700">✅ נוספו: {enrollSummary.added.length} תלמידים</p>
+                    <p className="text-gray-600">⏭️ דולגו (כבר קיימים): {enrollSummary.skipped.length} תלמידים</p>
+                    {enrollSummary.skipped.length > 0 && (
+                      <p className="text-gray-500 text-xs">{enrollSummary.skipped.join(", ")}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
