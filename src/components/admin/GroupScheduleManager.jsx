@@ -432,11 +432,19 @@ export default function GroupScheduleManager({ group }) {
                       <>
                         {isNoClass ? (
                           <div>
-                            <div className="bg-gray-500/40 rounded px-1 py-0.5 text-[9px] text-gray-200 font-bold">
+                            <div
+                              dir="rtl"
+                              style={{ unicodeBidi: 'isolate' }}
+                              className="bg-gray-500/40 rounded px-1 py-0.5 text-[10.5px] text-gray-200 font-bold break-words leading-tight"
+                            >
                               ❌ לא התקיים
                             </div>
                             {scheduledLesson.no_class_reason && (
-                              <div className="text-[8px] text-gray-300 mt-0.5 line-clamp-2 leading-tight">
+                              <div
+                                dir="rtl"
+                                style={{ unicodeBidi: 'isolate' }}
+                                className="text-[10px] text-gray-300 mt-0.5 break-words leading-tight"
+                              >
                                 {scheduledLesson.no_class_reason}
                               </div>
                             )}
