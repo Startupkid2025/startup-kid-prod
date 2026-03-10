@@ -267,7 +267,7 @@ export default function GroupScheduleManager({ group }) {
       toast.error("לא ניתן לשייך תלמידים — לשיעור זה אין שיעור מוגדר (lesson_id)");
       return;
     }
-    setIsEnrollingAll(true);
+    setEnrollingLessonId(scheduledLesson.id);
     setEnrollSummary(null);
     try {
       // Fetch group students
@@ -308,7 +308,7 @@ export default function GroupScheduleManager({ group }) {
       console.error("Error enrolling students:", error);
       toast.error("שגיאה בשיוך תלמידים: " + (error.message || ""));
     }
-    setIsEnrollingAll(false);
+    setEnrollingLessonId(null);
   };
 
   const handleDeleteLesson = async (scheduledLesson) => {
