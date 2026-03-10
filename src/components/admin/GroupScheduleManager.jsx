@@ -150,6 +150,7 @@ export default function GroupScheduleManager({ group }) {
 
   const handleEditLesson = (scheduledLesson) => {
     setEditingLesson(scheduledLesson);
+    setEnrollSummary(null);
     setShowAddDialog(true);
   };
 
