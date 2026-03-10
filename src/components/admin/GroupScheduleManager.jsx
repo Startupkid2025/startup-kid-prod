@@ -639,6 +639,7 @@ export default function GroupScheduleManager({ group }) {
                 {allLessons.map(lesson => (
                   <option key={lesson.id} value={lesson.id} dir="rtl">{lesson.lesson_name}</option>
                 ))}
+
               </select>
             </div>
 
