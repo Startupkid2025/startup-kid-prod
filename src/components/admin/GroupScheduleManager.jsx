@@ -473,8 +473,8 @@ export default function GroupScheduleManager({ group }) {
                             <Trash2 className="w-3 h-3 text-white" />
                           </button>
                         )}
-                        {/* No-class toggle button */}
-                        {isNoClass ? (
+                        {/* No-class toggle — only for "no class" entries */}
+                        {isNoClass && (
                           <button
                             onClick={(e) => { e.stopPropagation(); handleUnmarkNoClass(scheduledLesson); }}
                             className="w-5 h-5 rounded bg-green-600/70 hover:bg-green-600 flex items-center justify-center"
@@ -482,13 +482,19 @@ export default function GroupScheduleManager({ group }) {
                           >
                             <RotateCcw className="w-3 h-3 text-white" />
                           </button>
-                        ) : (
+                        )}
+                        {/* Enroll all students — only for active lessons with a lesson_id */}
+                        {!isNoClass && scheduledLesson.lesson_id && !scheduledLesson.is_cancelled && (
                           <button
-                            onClick={(e) => { e.stopPropagation(); handleMarkNoClass(scheduledLesson, date); }}
-                            className="w-5 h-5 rounded bg-gray-500/60 hover:bg-gray-500 flex items-center justify-center"
-                            title="סמן כ'לא התקיים שיעור'"
+                            onClick={(e) => { e.stopPropagation(); setEnrollSummary(null); handleEnrollAllStudents(scheduledLesson); }}
+                            disabled={enrollingLessonId === scheduledLesson.id}
+                            className="w-5 h-5 rounded bg-indigo-500/60 hover:bg-indigo-500 flex items-center justify-center disabled:opacity-50"
+                            title="הוסף את כל תלמידי הקבוצה לשיעור"
                           >
-                            <Ban className="w-3 h-3 text-white" />
+                            {enrollingLessonId === scheduledLesson.id
+                              ? <Loader2 className="w-3 h-3 text-white animate-spin" />
+                              : <UserPlus className="w-3 h-3 text-white" />
+                            }
                           </button>
                         )}
                       </div>
