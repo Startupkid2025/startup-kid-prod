@@ -28,4 +28,9 @@ export default defineConfig({
     // Target modern browsers for smaller bundles
     target: 'es2020',
   },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/test/setup.js',
+  },
 });

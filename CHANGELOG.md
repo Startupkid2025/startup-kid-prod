@@ -9,6 +9,26 @@ be merged to main.
 
 ---
 
+## [0.1.0-dev.3] - 2026-03-10
+
+### Added
+- **Sentry error monitoring**: Crash reporting with error boundary and Hebrew fallback UI (`src/lib/sentry.js`, `src/App.jsx`, `src/main.jsx`)
+- **Vitest test suite**: 12 smoke tests covering version tracking, pages config, and React Query settings (`src/test/`)
+- **CI test step**: Tests now run in GitHub Actions before build (`.github/workflows/ci.yml`)
+
+### Infrastructure
+- **Branch protection**: Needs repo owner to enable on `main` (see instructions below)
+
+### Branch Protection Setup (for repo owner)
+Go to `github.com/Startupkid2025/startup-kid-app/settings/branches`:
+1. Add rule for branch `main`
+2. Enable "Require a pull request before merging"
+3. Enable "Require approvals" (1 reviewer)
+4. Enable "Require status checks to pass" → add "quality" check
+5. Enable "Do not allow bypassing the above settings"
+
+---
+
 ## [0.1.0-dev.2] - 2026-03-10
 
 ### Added
@@ -41,6 +61,9 @@ into this section, remove dev-only changes, and assign a production version
 - [ ] Vite build optimization (vite.config.js) — but change sourcemap/version defines for prod
 - [ ] CI pipeline (ci.yml)
 - [ ] Version tracking (version.js, Layout.jsx) — set BUILD_ENV=production to hide badge
+- [ ] Sentry error monitoring (sentry.js, main.jsx, App.jsx) — add VITE_SENTRY_DSN to prod env
+- [ ] Error boundary with Hebrew fallback UI (App.jsx)
+- [ ] Vitest tests and test config (src/test/, vite.config.js test section)
 
 ### To exclude from production
 - [ ] Dev deploy script (scripts/deploy-dev.sh)

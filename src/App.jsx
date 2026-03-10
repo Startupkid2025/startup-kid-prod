@@ -10,6 +10,9 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import { Sentry } from '@/lib/sentry';
+
+const SentryErrorBoundary = Sentry.ErrorBoundary ?? (({ children }) => children);
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -76,16 +79,29 @@ const AuthenticatedApp = () => {
 function App() {
 
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <NavigationTracker />
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-        <VisualEditAgent />
-      </QueryClientProvider>
-    </AuthProvider>
+    <SentryErrorBoundary fallback={
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-[#4C6EF5] via-[#7B5EF5] to-[#9B6EF5] text-white" dir="rtl">
+        <div className="text-center p-8">
+          <div className="text-4xl mb-4">😵</div>
+          <h1 className="text-2xl font-bold mb-2">משהו השתבש</h1>
+          <p className="text-white/70 mb-4">אנחנו עובדים על זה!</p>
+          <button onClick={() => window.location.reload()} className="bg-white/20 px-6 py-2 rounded-lg hover:bg-white/30">
+            נסה שוב
+          </button>
+        </div>
+      </div>
+    }>
+      <AuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <NavigationTracker />
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+          <VisualEditAgent />
+        </QueryClientProvider>
+      </AuthProvider>
+    </SentryErrorBoundary>
   )
 }
 

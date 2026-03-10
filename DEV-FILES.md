@@ -31,7 +31,11 @@ These files improve performance, stability, and developer workflow.
 | `src/lib/version.js` | Version/build info module | Set `BUILD_ENV=production` to hide dev badge |
 | `src/Layout.jsx` | Version badge (auto-hidden in prod) | Badge only shows when `BUILD_ENV !== 'production'` |
 | `.github/workflows/ci.yml` | CI pipeline | Lint, typecheck, build checks |
-| `package.json` | Version field | Change from `x.x.x-dev.N` to `x.x.x` for release |
+| `src/lib/sentry.js` | Sentry error monitoring init | Add `VITE_SENTRY_DSN` to production env |
+| `src/main.jsx` | Sentry initialization on startup | Works with or without DSN |
+| `src/App.jsx` | Sentry error boundary + Hebrew fallback | Catches crashes, shows user-friendly error |
+| `src/test/` | Vitest smoke tests | Run with `npm test` |
+| `package.json` | Version field + test scripts | Change from `x.x.x-dev.N` to `x.x.x` for release |
 
 ## How to Create a Production PR
 
