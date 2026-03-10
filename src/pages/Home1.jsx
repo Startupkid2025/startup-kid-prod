@@ -441,7 +441,6 @@ export default function Home() {
 
     // Try to use pre-calculated total_networth from User entity first
     if (user.total_networth !== undefined && user.total_networth !== null) {
-      console.log(`\n💎 HOME1 - Using pre-calculated net worth for ${user.email}: ${user.total_networth}\n`);
       return user.total_networth;
     }
 
@@ -460,12 +459,6 @@ export default function Home() {
     // Use cached investments value if provided, otherwise use from user
     const investmentsValue = cachedInvestmentsValue !== null ? cachedInvestmentsValue : (user.investments_value || 0);
     const netWorth = currentCoins + itemsValue + investmentsValue;
-    
-    console.log(`\n💎 HOME1 - Net Worth Calculation (fallback) for ${user.email}:`);
-    console.log(`  coins: ${currentCoins}`);
-    console.log(`  items: ${itemsValue}`);
-    console.log(`  investments: ${investmentsValue}`);
-    console.log(`  ✅ NET WORTH: ${netWorth}\n`);
     
     return netWorth;
   };
@@ -612,14 +605,6 @@ export default function Home() {
                         creditInterest = Math.floor(Math.abs(currentCoins) * 0.10);
                       }
                       
-                      console.log(`\n💸 HOME1 - Expected Daily Losses for ${userData?.email}:`);
-                      console.log(`  currentCoins: ${currentCoins}`);
-                      console.log(`  netWorth: ${netWorth}`);
-                      console.log(`  inflationLoss (3% on cash): ${inflationLoss}`);
-                      console.log(`  incomeTax (${(incomeTaxRate * 100).toFixed(2)}% on netWorth): ${incomeTax}`);
-                      console.log(`  creditInterest (10% on negative): ${creditInterest}`);
-                      console.log(`  ✅ TOTAL EXPECTED DAILY LOSS: ${inflationLoss + incomeTax + creditInterest}\n`);
-
                       return (
                         <>
                           {inflationLoss > 0 && (

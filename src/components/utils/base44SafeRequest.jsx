@@ -59,16 +59,10 @@ export async function safeRequest(fn, {
 
   // Cache hit
   const cached = ttlMs ? getCache(key) : null;
-  if (cached != null) {
-    console.log(`✅ Cache hit for key: ${key}`);
-    return cached;
-  }
+  if (cached != null) return cached;
 
   // Single-flight
-  if (inflight.has(key)) {
-    console.log(`🔄 Reusing in-flight request for key: ${key}`);
-    return inflight.get(key);
-  }
+  if (inflight.has(key)) return inflight.get(key);
 
   const p = (async () => {
     let attempt = 0;
@@ -81,10 +75,7 @@ export async function safeRequest(fn, {
         // אם 429 ויש קאש, חוזרים לקאש במקום להמשיך להפציץ
         if (isRateLimitError(err)) {
           const fallback = ttlMs ? getCache(key) : null;
-          if (fallback != null) {
-            console.log(`⚠️ Rate limit but using cached fallback for key: ${key}`);
-            return fallback;
-          }
+          if (fallback != null) return fallback;
         }
 
         // Don't retry permanent errors (404, 401, 403)

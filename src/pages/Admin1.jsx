@@ -108,21 +108,19 @@ export default function Admin() {
     if (loadedTabs[tab]) return; // Already loaded
     
     try {
-      console.log(`Loading ${tab} data...`);
       
       if (tab === "students") {
-        // Load in 2 batches of 4 with 30s cache for repeat visits
-        const [allUsers, allLessons, allGroups, allParticipations] = await Promise.all([
-          safeRequest(() => base44.entities.User.list(), { key: "admin-users", ttlMs: 30000 }),
-          safeRequest(() => base44.entities.Lesson.list("-lesson_date"), { key: "admin-lessons", ttlMs: 30000 }),
-          safeRequest(() => base44.entities.Group.list(), { key: "admin-groups", ttlMs: 30000 }),
-          safeRequest(() => base44.entities.LessonParticipation.list(), { key: "admin-participations", ttlMs: 30000 }),
-        ]);
-        const [allScheduledLessons, allWordProgress, allMathProgress, allQuizProgress] = await Promise.all([
-          safeRequest(() => base44.entities.ScheduledLesson.list(), { key: "admin-scheduled", ttlMs: 30000 }),
-          safeRequest(() => base44.entities.WordProgress.list(), { key: "admin-wordprogress", ttlMs: 30000 }),
-          safeRequest(() => base44.entities.MathProgress.list(), { key: "admin-mathprogress", ttlMs: 30000 }),
-          safeRequest(() => base44.entities.QuizProgress.list(), { key: "admin-quizprogress", ttlMs: 30000 }),
+        // All 8 calls in parallel — safeRequest handles concurrency (max 6)
+        const TTL = 120000; // 2 min cache
+        const [allUsers, allLessons, allGroups, allParticipations, allScheduledLessons, allWordProgress, allMathProgress, allQuizProgress] = await Promise.all([
+          safeRequest(() => base44.entities.User.list(), { key: "admin-users", ttlMs: TTL }),
+          safeRequest(() => base44.entities.Lesson.list("-lesson_date"), { key: "admin-lessons", ttlMs: TTL }),
+          safeRequest(() => base44.entities.Group.list(), { key: "admin-groups", ttlMs: TTL }),
+          safeRequest(() => base44.entities.LessonParticipation.list(), { key: "admin-participations", ttlMs: TTL }),
+          safeRequest(() => base44.entities.ScheduledLesson.list(), { key: "admin-scheduled", ttlMs: TTL }),
+          safeRequest(() => base44.entities.WordProgress.list(), { key: "admin-wordprogress", ttlMs: TTL }),
+          safeRequest(() => base44.entities.MathProgress.list(), { key: "admin-mathprogress", ttlMs: TTL }),
+          safeRequest(() => base44.entities.QuizProgress.list(), { key: "admin-quizprogress", ttlMs: TTL }),
         ]);
         
         setStudents(allUsers);
