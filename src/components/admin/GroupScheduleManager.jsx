@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea"; // Added Textarea import
-import { ChevronLeft, ChevronRight, Plus, X, Edit2, Calendar as CalendarIcon, Loader2, Trash2 } from "lucide-react"; // Added Trash2 import
+import { ChevronLeft, ChevronRight, Plus, X, Edit2, Calendar as CalendarIcon, Loader2, Trash2, Ban, RotateCcw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
