@@ -637,7 +637,7 @@ export default function GroupScheduleManager({ group }) {
               >
                 <option value="">בחר שיעור (אופציונלי)</option>
                 {allLessons.map(lesson => (
-                  <option key={lesson.id} value={lesson.id}>{lesson.lesson_name}</option>
+                  <option key={lesson.id} value={lesson.id} dir="rtl">{lesson.lesson_name}</option>
                 ))}
               </select>
             </div>
