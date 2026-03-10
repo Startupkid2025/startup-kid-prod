@@ -28,7 +28,6 @@ export default function GroupScheduleManager({ group }) {
   const [allLessons, setAllLessons] = useState([]);
   const [allTeachers, setAllTeachers] = useState([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
-
   const [editingLesson, setEditingLesson] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
