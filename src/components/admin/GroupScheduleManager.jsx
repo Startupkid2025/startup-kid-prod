@@ -676,7 +676,7 @@ export default function GroupScheduleManager({ group }) {
                   disabled={!!enrollingLessonId}
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-60 flex items-center justify-center gap-2"
                 >
-                  {isEnrollingAll ? (
+                  {!!enrollingLessonId ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       מעבד...
