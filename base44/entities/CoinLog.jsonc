@@ -1,0 +1,12 @@
+{
+  "name": "CoinLog",
+  "type": "object",
+  "properties": {
+    "student_email": { "type": "string" },
+    "amount": { "type": "number" },
+    "reason": { "type": "string" },
+    "previous_balance": { "type": "number" },
+    "new_balance": { "type": "number" },
+    "metadata": { "type": "object" }
+  }
+}

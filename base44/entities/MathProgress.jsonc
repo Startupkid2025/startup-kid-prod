@@ -1,0 +1,10 @@
+{
+  "name": "MathProgress",
+  "type": "object",
+  "properties": {
+    "student_email": { "type": "string" },
+    "current_level": { "type": "number", "default": 1 },
+    "correct_answers": { "type": "number", "default": 0 },
+    "total_attempts": { "type": "number", "default": 0 }
+  }
+}

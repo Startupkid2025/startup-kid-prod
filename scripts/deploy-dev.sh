@@ -10,7 +10,7 @@
 set -e
 
 echo "=== Deploying to DEV instance ==="
-echo "Target: startup-kid-app-copy-d0e832ae.base44.app"
+echo "Target: startup-kid-app-dev-c3f6f8f6.base44.app"
 echo ""
 
 # 0. Auto-bump dev version (e.g., 0.1.0-dev.1 → 0.1.0-dev.2)
@@ -68,4 +68,4 @@ FINAL_VERSION=$(node -p "require('./package.json').version")
 echo ""
 echo "=== Dev deploy complete ==="
 echo "Version: $FINAL_VERSION"
-echo "URL: https://startup-kid-app-copy-d0e832ae.base44.app"
+echo "URL: https://startup-kid-app-dev-c3f6f8f6.base44.app"

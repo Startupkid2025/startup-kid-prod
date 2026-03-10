@@ -1,0 +1,12 @@
+{
+  "name": "QuizProgress",
+  "type": "object",
+  "properties": {
+    "student_email": { "type": "string" },
+    "lesson_id": { "type": "string" },
+    "score": { "type": "number", "default": 0 },
+    "total_questions": { "type": "number", "default": 0 },
+    "completed": { "type": "boolean", "default": false },
+    "answers": { "type": "object" }
+  }
+}

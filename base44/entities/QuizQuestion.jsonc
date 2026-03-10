@@ -1,0 +1,11 @@
+{
+  "name": "QuizQuestion",
+  "type": "object",
+  "properties": {
+    "lesson_id": { "type": "string" },
+    "order": { "type": "number" },
+    "question_text": { "type": "string" },
+    "answer_options": { "type": "array", "items": { "type": "string" } },
+    "correct_answer_index": { "type": "number" }
+  }
+}

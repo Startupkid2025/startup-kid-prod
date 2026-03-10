@@ -1,0 +1,9 @@
+{
+  "name": "MaintenanceMode",
+  "type": "object",
+  "properties": {
+    "is_active": { "type": "boolean", "default": false },
+    "message": { "type": "string" },
+    "updated_by": { "type": "string" }
+  }
+}
