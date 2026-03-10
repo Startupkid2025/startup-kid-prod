@@ -501,7 +501,7 @@ export default function GroupScheduleManager({ group }) {
                     </div>
                   )}
 
-                  {/* Allow marking no-class even on days without a scheduled lesson (group day) */}
+                  {/* Empty group day — show add + no-class options */}
                   {canAddLesson && isCorrectDay && (
                     <div className="absolute bottom-1 left-1 flex gap-1">
                       <Plus className="w-4 h-4 text-green-400" />
