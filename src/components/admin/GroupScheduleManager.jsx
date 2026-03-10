@@ -345,26 +345,29 @@ export default function GroupScheduleManager({ group }) {
               const lesson = scheduledLesson && allLessons.find(l => l.id === scheduledLesson.lesson_id);
               const isToday = date.toDateString() === new Date().toDateString();
               const isCorrectDay = isGroupDay(date);
-              const canAddLesson = !scheduledLesson; // Allow adding lesson on any day without an existing lesson
+              const isNoClass = scheduledLesson?.no_class;
+              const canAddLesson = !scheduledLesson;
 
               return (
                 <motion.div
                   key={date.toISOString()}
-                  whileHover={canAddLesson ? { scale: 1.05 } : {}} // Apply hover effect only if canAddLesson
+                  whileHover={canAddLesson ? { scale: 1.05 } : {}}
                   className={`aspect-square p-2 rounded-lg border-2 transition-all relative ${
-                    isToday
+                    isNoClass
+                      ? 'bg-gray-500/20 border-gray-400/50'
+                      : isToday
                       ? 'bg-yellow-500/30 border-yellow-400'
                       : scheduledLesson
                       ? scheduledLesson.is_cancelled
                         ? 'bg-red-500/20 border-red-400/50'
                         : 'bg-green-500/30 border-green-400'
-                      : canAddLesson && isCorrectDay // If can add and it's the group's day
+                      : canAddLesson && isCorrectDay
                       ? 'bg-green-500/10 border-green-400/30 hover:bg-green-500/20 cursor-pointer'
-                      : canAddLesson // If can add but it's NOT the group's day
+                      : canAddLesson
                       ? 'bg-blue-500/5 border-blue-400/20 hover:bg-blue-500/15 cursor-pointer'
-                      : 'bg-white/5 border-white/10' // Days with existing scheduled lessons
+                      : 'bg-white/5 border-white/10'
                   }`}
-                  onClick={() => canAddLesson && handleAddLesson(date)} // Allow adding lesson if canAddLesson is true
+                  onClick={() => canAddLesson && handleAddLesson(date)}
                 >
                   <div className="text-white font-bold text-sm">
                     {date.getDate()}
@@ -372,7 +375,11 @@ export default function GroupScheduleManager({ group }) {
                   
                   {scheduledLesson && (
                     <div className="mt-1">
-                      {scheduledLesson.is_cancelled ? (
+                      {isNoClass ? (
+                        <div className="bg-gray-500/40 rounded px-1 py-0.5 text-[10px] text-gray-200 font-bold">
+                          ❌ לא התקיים
+                        </div>
+                      ) : scheduledLesson.is_cancelled ? (
                         <div className="bg-red-500/30 rounded px-1 py-0.5 text-[10px] text-red-200">
                           בוטל
                         </div>
@@ -386,43 +393,72 @@ export default function GroupScheduleManager({ group }) {
                         </div>
                       )}
                       
-                      <div className="absolute top-1 left-1 flex gap-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditLesson(scheduledLesson);
-                          }}
-                          className="w-5 h-5 rounded bg-blue-500/50 hover:bg-blue-500 flex items-center justify-center"
-                        >
-                          <Edit2 className="w-3 h-3 text-white" />
-                        </button>
-                        {!scheduledLesson.is_cancelled && (
+                      <div className="absolute top-1 left-1 flex gap-1 flex-wrap">
+                        {!isNoClass && (
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCancelLesson(scheduledLesson);
-                            }}
+                            onClick={(e) => { e.stopPropagation(); handleEditLesson(scheduledLesson); }}
+                            className="w-5 h-5 rounded bg-blue-500/50 hover:bg-blue-500 flex items-center justify-center"
+                            title="ערוך"
+                          >
+                            <Edit2 className="w-3 h-3 text-white" />
+                          </button>
+                        )}
+                        {!isNoClass && !scheduledLesson.is_cancelled && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleCancelLesson(scheduledLesson); }}
                             className="w-5 h-5 rounded bg-orange-500/50 hover:bg-orange-500 flex items-center justify-center"
+                            title="בטל שיעור"
                           >
                             <X className="w-3 h-3 text-white" />
                           </button>
                         )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteLesson(scheduledLesson);
-                          }}
-                          className="w-5 h-5 rounded bg-red-500/50 hover:bg-red-500 flex items-center justify-center"
-                        >
-                          <Trash2 className="w-3 h-3 text-white" />
-                        </button>
+                        {!isNoClass && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteLesson(scheduledLesson); }}
+                            className="w-5 h-5 rounded bg-red-500/50 hover:bg-red-500 flex items-center justify-center"
+                            title="מחק"
+                          >
+                            <Trash2 className="w-3 h-3 text-white" />
+                          </button>
+                        )}
+                        {/* No-class toggle button */}
+                        {isNoClass ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleUnmarkNoClass(scheduledLesson); }}
+                            className="w-5 h-5 rounded bg-green-600/70 hover:bg-green-600 flex items-center justify-center"
+                            title="בטל סימון 'לא התקיים'"
+                          >
+                            <RotateCcw className="w-3 h-3 text-white" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleMarkNoClass(scheduledLesson, date); }}
+                            className="w-5 h-5 rounded bg-gray-500/60 hover:bg-gray-500 flex items-center justify-center"
+                            title="סמן כ'לא התקיים שיעור'"
+                          >
+                            <Ban className="w-3 h-3 text-white" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
 
-                  {canAddLesson && ( // Show plus icon if a lesson can be added
+                  {/* Allow marking no-class even on days without a scheduled lesson (group day) */}
+                  {canAddLesson && isCorrectDay && (
+                    <div className="absolute bottom-1 left-1 flex gap-1">
+                      <Plus className="w-4 h-4 text-green-400" />
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleMarkNoClass(null, date); }}
+                        className="w-4 h-4 rounded bg-gray-500/50 hover:bg-gray-500 flex items-center justify-center"
+                        title="סמן כ'לא התקיים שיעור'"
+                      >
+                        <Ban className="w-2.5 h-2.5 text-white" />
+                      </button>
+                    </div>
+                  )}
+                  {canAddLesson && !isCorrectDay && (
                     <div className="absolute bottom-1 left-1">
-                      <Plus className={`w-4 h-4 ${isCorrectDay ? 'text-green-400' : 'text-blue-400 opacity-70'}`} />
+                      <Plus className="w-4 h-4 text-blue-400 opacity-70" />
                     </div>
                   )}
                 </motion.div>
