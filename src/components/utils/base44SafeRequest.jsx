@@ -3,7 +3,7 @@ const inflight = new Map(); // key -> Promise
 const cache = new Map();    // key -> { ts, ttlMs, data }
 const queue = [];
 let active = 0;
-const MAX_CONCURRENCY = 2;
+const MAX_CONCURRENCY = 6;
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
@@ -44,8 +44,8 @@ function isRateLimitError(err) {
 export async function safeRequest(fn, {
   key,
   ttlMs = 0,
-  retries = 1,         // חשוב: לא 4
-  baseDelayMs = 1500,  // דיליי ארוך יותר
+  retries = 2,
+  baseDelayMs = 500,
 } = {}) {
   if (!key) {
     // בלי key אין דה-דופליקציה, עדיין נריץ בתור כדי לא לעשות burst

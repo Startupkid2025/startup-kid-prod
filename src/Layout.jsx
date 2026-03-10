@@ -31,26 +31,28 @@ export default function Layout({ children }) {
 
   const initializeApp = async () => {
     try {
-      // Step 1: Check maintenance mode
-      try {
-        const modes = await base44.entities.MaintenanceMode.list();
-        if (modes.length > 0) {
-          setMaintenanceMode(modes[0]);
-        } else {
-          const newMode = await base44.entities.MaintenanceMode.create({
-            is_active: false,
-            message: "האפליקציה במצב תחזוקה. נחזור בקרוב!"
-          });
-          setMaintenanceMode(newMode);
-        }
-      } catch (error) {
-        console.error("Error loading maintenance mode:", error);
-      } finally {
-        setIsLoadingMaintenance(false);
-      }
-
-      // Step 2: Load user and update login streak in one go
-      await loadUserAndUpdateStreak();
+      // Run maintenance check and user load in PARALLEL
+      const [maintenanceResult] = await Promise.allSettled([
+        (async () => {
+          try {
+            const modes = await base44.entities.MaintenanceMode.list();
+            if (modes.length > 0) {
+              setMaintenanceMode(modes[0]);
+            } else {
+              const newMode = await base44.entities.MaintenanceMode.create({
+                is_active: false,
+                message: "האפליקציה במצב תחזוקה. נחזור בקרוב!"
+              });
+              setMaintenanceMode(newMode);
+            }
+          } catch (error) {
+            console.error("Error loading maintenance mode:", error);
+          } finally {
+            setIsLoadingMaintenance(false);
+          }
+        })(),
+        loadUserAndUpdateStreak(),
+      ]);
     } catch (error) {
       console.error("Error initializing app:", error);
       setIsLoadingMaintenance(false);

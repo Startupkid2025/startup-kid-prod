@@ -300,9 +300,9 @@ async function listAll(entityHandler, sort = "-created_date", pageSize = 100) {
       skip += pageSize;
       retries = 0; // Reset retries on success
       
-      // Add longer delay between pages to avoid rate limits
+      // Brief delay between pages to avoid rate limits
       if (skip > 0) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     } catch (error) {
       // Handle rate limit errors with exponential backoff

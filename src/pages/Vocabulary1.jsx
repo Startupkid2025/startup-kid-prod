@@ -172,8 +172,10 @@ export default function Vocabulary() {
       }
 
       const user = await base44.auth.me();
-      const progress = await base44.entities.WordProgress.filter({ student_email: user.email });
-      const allVocabWords = await base44.entities.VocabularyWord.list();
+      const [progress, allVocabWords] = await Promise.all([
+        base44.entities.WordProgress.filter({ student_email: user.email }),
+        base44.entities.VocabularyWord.list(),
+      ]);
 
       const now = new Date();
       const expectedDayKey = getVocabDayKey(now);
