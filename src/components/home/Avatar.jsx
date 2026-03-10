@@ -8,6 +8,7 @@ import TamagotchiAvatar from "../avatar/TamagotchiAvatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { base44 } from "@/api/base44Client";
+import { safeRequest } from "../utils/base44SafeRequest";
 import { AVATAR_ITEMS } from "../avatar/TamagotchiAvatar";
 import { toast } from "sonner";
 import { updateNetWorth } from "../utils/networthCalculator";
@@ -60,11 +61,11 @@ const generateSmartTip = async (user, equippedItems) => {
   try {
     // Get additional data
     const [investments, participations, wordProgress, mathProgress, allLeaderboardEntries] = await Promise.all([
-      base44.entities.Investment.filter({ student_email: user.email }).catch(() => []),
-      base44.entities.LessonParticipation.filter({ student_email: user.email }).catch(() => []),
-      base44.entities.WordProgress.filter({ student_email: user.email }).catch(() => []),
-      base44.entities.MathProgress.filter({ student_email: user.email }).catch(() => []),
-      base44.entities.LeaderboardEntry.list().catch(() => [])
+      safeRequest(() => base44.entities.Investment.filter({ student_email: user.email }), { key: `tip-inv:${user.email}`, ttlMs: 60000 }).catch(() => []),
+      safeRequest(() => base44.entities.LessonParticipation.filter({ student_email: user.email }), { key: `tip-lp:${user.email}`, ttlMs: 60000 }).catch(() => []),
+      safeRequest(() => base44.entities.WordProgress.filter({ student_email: user.email }), { key: `tip-wp:${user.email}`, ttlMs: 60000 }).catch(() => []),
+      safeRequest(() => base44.entities.MathProgress.filter({ student_email: user.email }), { key: `tip-mp:${user.email}`, ttlMs: 60000 }).catch(() => []),
+      safeRequest(() => base44.entities.LeaderboardEntry.list(), { key: "tip-leaderboard", ttlMs: 60000 }).catch(() => [])
     ]);
 
     const tips = [];
@@ -87,39 +88,10 @@ const generateSmartTip = async (user, equippedItems) => {
     // 1. LEADERBOARD POSITION - Based on NETWORTH (not coins!)
     if (user.user_type === 'student') {
       const studentEntries = allLeaderboardEntries.filter(e => e.user_type === 'student');
-      
-      // Calculate networth for each student
-      const leaderboardWithNetworth = await Promise.all(
-        studentEntries.map(async (entry) => {
-          try {
-            const studentInvestments = await base44.entities.Investment.filter({ 
-              student_email: entry.student_email 
-            }).catch(() => []);
-            
-            const studentCash = entry.coins || 0;
-            const studentItems = (entry.purchased_items || []).reduce((sum, itemId) => {
-              const item = AVATAR_ITEMS[itemId];
-              return sum + (item?.price || 0);
-            }, 0);
-            const studentInvValue = studentInvestments.reduce((sum, inv) => sum + inv.current_value, 0);
-            
-            return {
-              ...entry,
-              networth: studentCash + studentItems + studentInvValue
-            };
-          } catch (error) {
-            console.error(`Error calculating networth for ${entry.student_email}:`, error);
-            return {
-              ...entry,
-              networth: entry.coins || 0
-            };
-          }
-        })
-      );
-      
-      // Sort by networth
-      leaderboardWithNetworth.sort((a, b) => b.networth - a.networth);
-      const myPosition = leaderboardWithNetworth.findIndex(e => e.student_email === user.email) + 1;
+
+      // Use pre-calculated total_networth from leaderboard entries (no per-student API calls!)
+      const sorted = [...studentEntries].sort((a, b) => (b.total_networth || 0) - (a.total_networth || 0));
+      const myPosition = sorted.findIndex(e => e.student_email === user.email) + 1;
       
       if (myPosition === 1) {
         tips.push(`🥇 אנחנו במקום הראשון! בוא נשמור על התואר! 👑`);
