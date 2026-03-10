@@ -11,6 +11,7 @@ import TamagotchiAvatar from "../components/avatar/TamagotchiAvatar";
 import StudentProfileDialog from "../components/leaderboard/StudentProfileDialog";
 import { toast } from "sonner";
 import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
+import { safeRequest } from "../components/utils/base44SafeRequest";
 
 // 3️⃣ Memoized LeaderboardRow to prevent unnecessary re-renders
 const LeaderboardRow = React.memo(({ 
@@ -31,7 +32,7 @@ const LeaderboardRow = React.memo(({
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.05 }}
+      transition={{ delay: Math.min(index * 0.02, 0.3) }}
     >
       <Card
         className={`overflow-hidden ${
@@ -312,7 +313,7 @@ async function listAll(entityHandler, sort = "-created_date", pageSize = 100) {
         }
         retries++;
         const delay = Math.min(2000 * Math.pow(2, retries), 10000);
-        console.log(`Rate limit hit, waiting ${delay}ms before retry ${retries}/${maxRetries}`);
+        console.warn(`Rate limit hit, retrying in ${delay}ms (${retries}/${maxRetries})`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
@@ -354,14 +355,20 @@ export default function Leaderboard() {
   // Fetch leaderboard entries with react-query (use listAll for pagination safety)
   const { data: leaderboardEntries = [], isLoading } = useQuery({
     queryKey: ['leaderboardEntries'],
-    queryFn: () => listAll(base44.entities.LeaderboardEntry, "-total_networth", 100),
+    queryFn: () => safeRequest(
+      () => listAll(base44.entities.LeaderboardEntry, "-total_networth", 100),
+      { key: "leaderboard-entries", ttlMs: 120000 }
+    ),
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
   // Fetch groups with react-query
   const { data: allGroups = [] } = useQuery({
     queryKey: ['groups'],
-    queryFn: () => base44.entities.Group.list(),
+    queryFn: () => safeRequest(
+      () => base44.entities.Group.list(),
+      { key: "leaderboard-groups", ttlMs: 120000 }
+    ),
     staleTime: 5 * 60 * 1000,
   });
 
