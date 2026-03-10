@@ -345,9 +345,7 @@ export default function Lessons() {
                           console.error("Failed to load image:", thumbnailUrl, "Original:", lesson.thumbnail_url);
                           e.target.style.display = 'none';
                         }}
-                        onLoad={() => {
-                          console.log("Successfully loaded image:", thumbnailUrl);
-                        }}
+                        loading="lazy"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
