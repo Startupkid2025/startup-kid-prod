@@ -468,6 +468,57 @@ export default function GroupScheduleManager({ group }) {
         </CardContent>
       </Card>
 
+      {/* No-Class Dialog */}
+      <Dialog open={showNoClassDialog} onOpenChange={setShowNoClassDialog}>
+        <DialogContent className="bg-white/95 backdrop-blur-xl border-2 border-gray-400 max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-700 flex items-center gap-2">
+              <Ban className="w-5 h-5 text-gray-500" />
+              סימון "לא התקיים שיעור"
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-gray-100 rounded-lg p-3 text-sm text-gray-600">
+              <p className="font-bold mb-1">
+                {noClassTarget?.scheduledLesson
+                  ? `תאריך: ${noClassTarget.scheduledLesson.scheduled_date}`
+                  : noClassTarget?.date
+                  ? `תאריך: ${noClassTarget.date.toLocaleDateString('he-IL')}`
+                  : ""}
+              </p>
+              <p>סימון זה יציין שהשיעור לא התקיים ביום זה. ניתן לבטל בכל עת.</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-gray-700 font-medium">סיבה (אופציונלי)</Label>
+              <Input
+                value={noClassReason}
+                onChange={(e) => setNoClassReason(e.target.value)}
+                placeholder="למשל: חג, מחלה, מזג אוויר..."
+                className="border-2 border-gray-300"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => { setShowNoClassDialog(false); setNoClassTarget(null); setNoClassReason(""); }}
+                variant="outline"
+                className="flex-1"
+              >
+                ביטול
+              </Button>
+              <Button
+                onClick={handleSaveNoClass}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white"
+              >
+                <Ban className="w-4 h-4 ml-2" />
+                סמן כ"לא התקיים"
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Add/Edit Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="bg-white/95 backdrop-blur-xl border-2 border-purple-300 max-w-md">
