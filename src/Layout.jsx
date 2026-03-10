@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Home, BookOpen, TrendingUp, User, Shield, Trophy } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { APP_VERSION, BUILD_ENV } from "@/lib/version";
 import { toast } from "sonner";
 import { AVATAR_ITEMS } from "./components/avatar/TamagotchiAvatar";
 import { syncLeaderboardEntry } from "./components/utils/leaderboardSync";
@@ -442,6 +443,13 @@ export default function Layout({ children }) {
           padding-bottom: env(safe-area-inset-bottom, 0px);
         }
       `}</style>
+
+      {/* Dev Version Badge */}
+      {BUILD_ENV !== 'production' && (
+        <div className="fixed top-1 left-1 z-[100] bg-black/50 text-white/70 text-[9px] px-1.5 py-0.5 rounded font-mono">
+          v{APP_VERSION}
+        </div>
+      )}
 
       {/* Main Content Area */}
       <main className="pb-24 sm:pb-20 min-h-screen">
