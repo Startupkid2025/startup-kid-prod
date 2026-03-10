@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { safeRequest } from "../components/utils/base44SafeRequest";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -65,11 +66,15 @@ export default function Admin() {
   const [currentPage, setCurrentPage] = useState(1);
   const STUDENTS_PER_PAGE = 20;
 
+  const initialLoadDone = useRef(false);
+
   useEffect(() => {
     loadInitialData();
   }, []);
 
   useEffect(() => {
+    // Skip if initial load hasn't completed yet (it will call loadTabData itself)
+    if (!initialLoadDone.current) return;
     if (!loadedTabs[activeTab]) {
       loadTabData(activeTab);
     }
@@ -89,11 +94,13 @@ export default function Admin() {
 
       setIsLoading(false);
       // Load first tab data
-      loadTabData("students");
+      await loadTabData("students");
+      initialLoadDone.current = true;
     } catch (error) {
       console.error("Error loading user:", error);
       toast.error("שגיאה בטעינת נתונים");
       setIsLoading(false);
+      initialLoadDone.current = true;
     }
   };
 
@@ -104,25 +111,20 @@ export default function Admin() {
       console.log(`Loading ${tab} data...`);
       
       if (tab === "students") {
-        // Load all data in parallel for faster loading
-        const [
-          allUsers,
-          allLessons,
-          allParticipations,
-          allGroups,
-          allScheduledLessons,
-          allWordProgress,
-          allMathProgress,
-          allQuizProgress
-        ] = await Promise.all([
-          retryWithBackoff(() => base44.entities.User.list()),
-          retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date")),
-          retryWithBackoff(() => base44.entities.LessonParticipation.list()),
-          retryWithBackoff(() => base44.entities.Group.list()),
-          retryWithBackoff(() => base44.entities.ScheduledLesson.list()),
-          retryWithBackoff(() => base44.entities.WordProgress.list()),
-          retryWithBackoff(() => base44.entities.MathProgress.list()),
-          retryWithBackoff(() => base44.entities.QuizProgress.list())
+        // Stagger in batches of 3 to avoid rate limits
+        const [allUsers, allLessons, allGroups] = await Promise.all([
+          safeRequest(() => base44.entities.User.list(), { key: "admin-users" }),
+          safeRequest(() => base44.entities.Lesson.list("-lesson_date"), { key: "admin-lessons" }),
+          safeRequest(() => base44.entities.Group.list(), { key: "admin-groups" }),
+        ]);
+        const [allParticipations, allScheduledLessons, allWordProgress] = await Promise.all([
+          safeRequest(() => base44.entities.LessonParticipation.list(), { key: "admin-participations" }),
+          safeRequest(() => base44.entities.ScheduledLesson.list(), { key: "admin-scheduled" }),
+          safeRequest(() => base44.entities.WordProgress.list(), { key: "admin-wordprogress" }),
+        ]);
+        const [allMathProgress, allQuizProgress] = await Promise.all([
+          safeRequest(() => base44.entities.MathProgress.list(), { key: "admin-mathprogress" }),
+          safeRequest(() => base44.entities.QuizProgress.list(), { key: "admin-quizprogress" }),
         ]);
         
         setStudents(allUsers);
@@ -136,9 +138,9 @@ export default function Admin() {
         setInvestments([]);
       } else if (tab === "lessons") {
         const [allLessons, allParticipations, allUsers] = await Promise.all([
-          retryWithBackoff(() => base44.entities.Lesson.list("-lesson_date")),
-          retryWithBackoff(() => base44.entities.LessonParticipation.list()),
-          retryWithBackoff(() => base44.entities.User.list())
+          safeRequest(() => base44.entities.Lesson.list("-lesson_date"), { key: "admin-lessons" }),
+          safeRequest(() => base44.entities.LessonParticipation.list(), { key: "admin-participations" }),
+          safeRequest(() => base44.entities.User.list(), { key: "admin-users" }),
         ]);
         
         setLessons(allLessons);
@@ -196,19 +198,15 @@ export default function Admin() {
     
     try {
       console.log(`\n💰 ${previewOnly ? 'PREVIEW' : '🚨 APPLYING'} Coins Recalculation\n`);
-      
-      const [
-        allUsers,
-        allWordProgress,
-        allMathProgress,
-        allParticipations,
-        allQuizProgress
-      ] = await Promise.all([
-        base44.entities.User.list(),
-        base44.entities.WordProgress.list(),
-        base44.entities.MathProgress.list(),
-        base44.entities.LessonParticipation.list(),
-        base44.entities.QuizProgress.list()
+
+      const [allUsers, allWordProgress, allMathProgress] = await Promise.all([
+        safeRequest(() => base44.entities.User.list(), { key: "recalc-users" }),
+        safeRequest(() => base44.entities.WordProgress.list(), { key: "recalc-wp" }),
+        safeRequest(() => base44.entities.MathProgress.list(), { key: "recalc-mp" }),
+      ]);
+      const [allParticipations, allQuizProgress] = await Promise.all([
+        safeRequest(() => base44.entities.LessonParticipation.list(), { key: "recalc-lp" }),
+        safeRequest(() => base44.entities.QuizProgress.list(), { key: "recalc-qp" }),
       ]);
 
       const students = allUsers.filter(u => u.user_type === 'student');
@@ -412,20 +410,16 @@ export default function Admin() {
 
   const fixAdminCoins = async () => {
     setIsRecalculatingCoins(true);
-    
+
     try {
-      const [
-        allUsers,
-        allWordProgress,
-        allMathProgress,
-        allParticipations,
-        allQuizProgress
-      ] = await Promise.all([
-        base44.entities.User.list(),
-        base44.entities.WordProgress.list(),
-        base44.entities.MathProgress.list(),
-        base44.entities.LessonParticipation.list(),
-        base44.entities.QuizProgress.list()
+      const [allUsers, allWordProgress, allMathProgress] = await Promise.all([
+        safeRequest(() => base44.entities.User.list(), { key: "fix-users" }),
+        safeRequest(() => base44.entities.WordProgress.list(), { key: "fix-wp" }),
+        safeRequest(() => base44.entities.MathProgress.list(), { key: "fix-mp" }),
+      ]);
+      const [allParticipations, allQuizProgress] = await Promise.all([
+        safeRequest(() => base44.entities.LessonParticipation.list(), { key: "fix-lp" }),
+        safeRequest(() => base44.entities.QuizProgress.list(), { key: "fix-qp" }),
       ]);
 
       const students = allUsers.filter(u => u.user_type === 'student');
@@ -657,19 +651,15 @@ export default function Admin() {
     
     try {
       console.log(`\n💰 ${dryRun ? 'DRY RUN' : '🚨 APPLYING'} - Recompute Cash Balance\n`);
-      
-      const [
-        allUsers,
-        allWordProgress,
-        allMathProgress,
-        allParticipations,
-        allQuizProgress
-      ] = await Promise.all([
-        base44.entities.User.list(),
-        base44.entities.WordProgress.list(),
-        base44.entities.MathProgress.list(),
-        base44.entities.LessonParticipation.list(),
-        base44.entities.QuizProgress.list()
+
+      const [allUsers, allWordProgress, allMathProgress] = await Promise.all([
+        safeRequest(() => base44.entities.User.list(), { key: "recomp-users" }),
+        safeRequest(() => base44.entities.WordProgress.list(), { key: "recomp-wp" }),
+        safeRequest(() => base44.entities.MathProgress.list(), { key: "recomp-mp" }),
+      ]);
+      const [allParticipations, allQuizProgress] = await Promise.all([
+        safeRequest(() => base44.entities.LessonParticipation.list(), { key: "recomp-lp" }),
+        safeRequest(() => base44.entities.QuizProgress.list(), { key: "recomp-qp" }),
       ]);
 
       const students = allUsers.filter(u => u.user_type === 'student');
