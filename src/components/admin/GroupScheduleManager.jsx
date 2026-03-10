@@ -404,7 +404,7 @@ export default function GroupScheduleManager({ group }) {
                 <motion.div
                   key={date.toISOString()}
                   whileHover={canAddLesson ? { scale: 1.05 } : {}}
-                  className={`aspect-square p-2 rounded-lg border-2 transition-all relative ${
+                  className={`aspect-square p-1.5 rounded-lg border-2 transition-all flex flex-col ${
                     isNoClass
                       ? 'bg-gray-500/20 border-gray-400/50'
                       : isToday
@@ -421,31 +421,47 @@ export default function GroupScheduleManager({ group }) {
                   }`}
                   onClick={() => canAddLesson && handleAddLesson(date)}
                 >
-                  <div className="text-white font-bold text-sm">
+                  {/* Date number — always at top, never hidden */}
+                  <div className="text-white font-bold text-sm leading-none mb-1">
                     {date.getDate()}
                   </div>
-                  
-                  {scheduledLesson && (
-                    <div className="mt-1">
-                      {isNoClass ? (
-                        <div className="bg-gray-500/40 rounded px-1 py-0.5 text-[10px] text-gray-200 font-bold">
-                          ❌ לא התקיים
-                        </div>
-                      ) : scheduledLesson.is_cancelled ? (
-                        <div className="bg-red-500/30 rounded px-1 py-0.5 text-[10px] text-red-200">
-                          בוטל
-                        </div>
-                      ) : lesson ? (
-                        <div className="bg-green-500/30 rounded px-1 py-0.5 text-[10px] text-green-200 line-clamp-2">
-                          {lesson.lesson_name}
-                        </div>
-                      ) : (
-                        <div className="bg-blue-500/30 rounded px-1 py-0.5 text-[10px] text-blue-200">
-                          שיעור
-                        </div>
-                      )}
-                      
-                      <div className="absolute top-1 left-1 flex gap-1 flex-wrap">
+
+                  {/* Middle content */}
+                  <div className="flex-1 overflow-hidden">
+                    {scheduledLesson && (
+                      <>
+                        {isNoClass ? (
+                          <div>
+                            <div className="bg-gray-500/40 rounded px-1 py-0.5 text-[9px] text-gray-200 font-bold">
+                              ❌ לא התקיים
+                            </div>
+                            {scheduledLesson.no_class_reason && (
+                              <div className="text-[8px] text-gray-300 mt-0.5 line-clamp-2 leading-tight">
+                                {scheduledLesson.no_class_reason}
+                              </div>
+                            )}
+                          </div>
+                        ) : scheduledLesson.is_cancelled ? (
+                          <div className="bg-red-500/30 rounded px-1 py-0.5 text-[9px] text-red-200">
+                            בוטל
+                          </div>
+                        ) : lesson ? (
+                          <div className="bg-green-500/30 rounded px-1 py-0.5 text-[9px] text-green-200 line-clamp-2">
+                            {lesson.lesson_name}
+                          </div>
+                        ) : (
+                          <div className="bg-blue-500/30 rounded px-1 py-0.5 text-[9px] text-blue-200">
+                            שיעור
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Buttons — always at bottom */}
+                  <div className="flex gap-0.5 flex-wrap mt-1" onClick={e => e.stopPropagation()}>
+                    {scheduledLesson && (
+                      <>
                         {!isNoClass && (
                           <button
                             onClick={(e) => { e.stopPropagation(); handleEditLesson(scheduledLesson); }}
@@ -473,7 +489,6 @@ export default function GroupScheduleManager({ group }) {
                             <Trash2 className="w-3 h-3 text-white" />
                           </button>
                         )}
-                        {/* No-class toggle — only for "no class" entries */}
                         {isNoClass && (
                           <button
                             onClick={(e) => { e.stopPropagation(); handleUnmarkNoClass(scheduledLesson); }}
@@ -483,7 +498,6 @@ export default function GroupScheduleManager({ group }) {
                             <RotateCcw className="w-3 h-3 text-white" />
                           </button>
                         )}
-                        {/* Enroll all students — only for active lessons with a lesson_id */}
                         {!isNoClass && scheduledLesson.lesson_id && !scheduledLesson.is_cancelled && (
                           <button
                             onClick={(e) => { e.stopPropagation(); setEnrollSummary(null); handleEnrollAllStudents(scheduledLesson); }}
@@ -497,28 +511,25 @@ export default function GroupScheduleManager({ group }) {
                             }
                           </button>
                         )}
-                      </div>
-                    </div>
-                  )}
+                      </>
+                    )}
 
-                  {/* Empty group day — show add + no-class options */}
-                  {canAddLesson && isCorrectDay && (
-                    <div className="absolute bottom-1 left-1 flex gap-1">
-                      <Plus className="w-4 h-4 text-green-400" />
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleMarkNoClass(null, date); }}
-                        className="w-4 h-4 rounded bg-gray-500/50 hover:bg-gray-500 flex items-center justify-center"
-                        title="סמן כ'לא התקיים שיעור'"
-                      >
-                        <Ban className="w-2.5 h-2.5 text-white" />
-                      </button>
-                    </div>
-                  )}
-                  {canAddLesson && !isCorrectDay && (
-                    <div className="absolute bottom-1 left-1">
+                    {canAddLesson && isCorrectDay && (
+                      <>
+                        <Plus className="w-4 h-4 text-green-400" />
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleMarkNoClass(null, date); }}
+                          className="w-4 h-4 rounded bg-gray-500/50 hover:bg-gray-500 flex items-center justify-center"
+                          title="סמן כ'לא התקיים שיעור'"
+                        >
+                          <Ban className="w-2.5 h-2.5 text-white" />
+                        </button>
+                      </>
+                    )}
+                    {canAddLesson && !isCorrectDay && (
                       <Plus className="w-4 h-4 text-blue-400 opacity-70" />
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </motion.div>
               );
             })}
