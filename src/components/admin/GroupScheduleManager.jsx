@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea"; // Added Textarea import
-import { ChevronLeft, ChevronRight, Plus, X, Edit2, Calendar as CalendarIcon, Loader2, Trash2 } from "lucide-react"; // Added Trash2 import
+import { ChevronLeft, ChevronRight, Plus, X, Edit2, Calendar as CalendarIcon, Loader2, Trash2, Ban, RotateCcw, UserPlus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +31,11 @@ export default function GroupScheduleManager({ group }) {
   const [editingLesson, setEditingLesson] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showNoClassDialog, setShowNoClassDialog] = useState(false);
+  const [noClassTarget, setNoClassTarget] = useState(null); // { scheduledLesson } or { date }
+  const [noClassReason, setNoClassReason] = useState("");
+  const [enrollingLessonId, setEnrollingLessonId] = useState(null);
+  const [enrollSummary, setEnrollSummary] = useState(null);
 
   const dayNames = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
   const monthNames = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
@@ -145,6 +150,7 @@ export default function GroupScheduleManager({ group }) {
 
   const handleEditLesson = (scheduledLesson) => {
     setEditingLesson(scheduledLesson);
+    setEnrollSummary(null);
     setShowAddDialog(true);
   };
 
@@ -186,6 +192,123 @@ export default function GroupScheduleManager({ group }) {
       console.error("Error cancelling lesson:", error);
       toast.error("שגיאה בביטול השיעור");
     }
+  };
+
+  const handleMarkNoClass = (scheduledLesson, date) => {
+    setNoClassTarget({ scheduledLesson, date });
+    setNoClassReason(scheduledLesson?.no_class_reason || "");
+    setShowNoClassDialog(true);
+  };
+
+  const handleSaveNoClass = async () => {
+    try {
+      const user = await base44.auth.me();
+      const now = new Date().toISOString();
+
+      if (noClassTarget.scheduledLesson) {
+        // Update existing record
+        await base44.entities.ScheduledLesson.update(noClassTarget.scheduledLesson.id, {
+          no_class: true,
+          no_class_reason: noClassReason,
+          no_class_marked_by: user.email,
+          no_class_marked_at: now
+        });
+      } else {
+        // Create a new record just to mark no-class on this date
+        const year = noClassTarget.date.getFullYear();
+        const month = String(noClassTarget.date.getMonth() + 1).padStart(2, '0');
+        const day = String(noClassTarget.date.getDate()).padStart(2, '0');
+        await base44.entities.ScheduledLesson.create({
+          group_id: group.id,
+          scheduled_date: `${year}-${month}-${day}`,
+          start_time: group.hour || "",
+          no_class: true,
+          no_class_reason: noClassReason,
+          no_class_marked_by: user.email,
+          no_class_marked_at: now
+        });
+      }
+
+      toast.success("התאריך סומן כ'לא התקיים שיעור'");
+      setShowNoClassDialog(false);
+      setNoClassTarget(null);
+      setNoClassReason("");
+      await loadData();
+    } catch (error) {
+      console.error("Error marking no class:", error);
+      toast.error("שגיאה בסימון");
+    }
+  };
+
+  const handleUnmarkNoClass = async (scheduledLesson) => {
+    try {
+      if (scheduledLesson.lesson_id || scheduledLesson.notes || scheduledLesson.start_time) {
+        // Has other data — just clear the no_class fields
+        await base44.entities.ScheduledLesson.update(scheduledLesson.id, {
+          no_class: false,
+          no_class_reason: "",
+          no_class_marked_by: "",
+          no_class_marked_at: null
+        });
+      } else {
+        // Was created only for no_class — delete it
+        await base44.entities.ScheduledLesson.delete(scheduledLesson.id);
+      }
+      toast.success("הסימון בוטל, היום חזר למצב רגיל");
+      await loadData();
+    } catch (error) {
+      console.error("Error unmarking no class:", error);
+      toast.error("שגיאה בביטול הסימון");
+    }
+  };
+
+  const handleEnrollAllStudents = async (scheduledLesson) => {
+    if (!scheduledLesson.lesson_id) {
+      toast.error("לא ניתן לשייך תלמידים — לשיעור זה אין שיעור מוגדר (lesson_id)");
+      return;
+    }
+    setEnrollingLessonId(scheduledLesson.id);
+    setEnrollSummary(null);
+    try {
+      // Fetch group students
+      const groupData = await base44.entities.Group.filter({ id: scheduledLesson.group_id });
+      const studentEmails = groupData?.[0]?.student_emails || group.student_emails || [];
+
+      if (studentEmails.length === 0) {
+        toast.error("אין תלמידים בקבוצה");
+        setIsEnrollingAll(false);
+        return;
+      }
+
+      // Fetch existing participations for this lesson+date
+      const existing = await base44.entities.LessonParticipation.filter({
+        lesson_id: scheduledLesson.lesson_id,
+        lesson_date: scheduledLesson.scheduled_date,
+      });
+      const alreadyEnrolled = new Set((existing || []).map(p => p.student_email));
+
+      const toCreate = studentEmails.filter(email => !alreadyEnrolled.has(email));
+      const skipped = studentEmails.filter(email => alreadyEnrolled.has(email));
+
+      if (toCreate.length > 0) {
+        const records = toCreate.map(email => ({
+          lesson_id: scheduledLesson.lesson_id,
+          student_email: email,
+          lesson_date: scheduledLesson.scheduled_date,
+          attended: false,
+          watched_recording: false,
+          survey_completed: false,
+        }));
+        await base44.entities.LessonParticipation.bulkCreate(records);
+      }
+
+      setEnrollSummary({ added: toCreate, skipped });
+      toast.success(`נוספו ${toCreate.length} תלמידים, דולגו ${skipped.length}`);
+    } catch (error) {
+      console.error("Error enrolling students:", error);
+      toast.error("שגיאה בשיוך תלמידים: " + (error.message || ""));
+    }
+    setEnrollingLessonId(null);
   };
 
   const handleDeleteLesson = async (scheduledLesson) => {
@@ -234,9 +357,10 @@ export default function GroupScheduleManager({ group }) {
                 onClick={handlePrevMonth}
                 size="sm"
                 variant="outline"
-                className="bg-white/10 border-white/20 hover:bg-white/20 text-white"
+                className="bg-white/10 border-white/20 hover:bg-white/20 text-white gap-1"
               >
                 <ChevronLeft className="w-4 h-4" />
+                <span>קודם</span>
               </Button>
               <span className="text-lg font-bold">
                 {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
@@ -245,8 +369,9 @@ export default function GroupScheduleManager({ group }) {
                 onClick={handleNextMonth}
                 size="sm"
                 variant="outline"
-                className="bg-white/10 border-white/20 hover:bg-white/20 text-white"
+                className="bg-white/10 border-white/20 hover:bg-white/20 text-white gap-1"
               >
+                <span>הבא</span>
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
@@ -272,86 +397,151 @@ export default function GroupScheduleManager({ group }) {
               const lesson = scheduledLesson && allLessons.find(l => l.id === scheduledLesson.lesson_id);
               const isToday = date.toDateString() === new Date().toDateString();
               const isCorrectDay = isGroupDay(date);
-              const canAddLesson = !scheduledLesson; // Allow adding lesson on any day without an existing lesson
+              const isNoClass = scheduledLesson?.no_class;
+              const canAddLesson = !scheduledLesson;
 
               return (
                 <motion.div
                   key={date.toISOString()}
-                  whileHover={canAddLesson ? { scale: 1.05 } : {}} // Apply hover effect only if canAddLesson
-                  className={`aspect-square p-2 rounded-lg border-2 transition-all relative ${
-                    isToday
+                  whileHover={canAddLesson ? { scale: 1.05 } : {}}
+                  className={`aspect-square p-1.5 rounded-lg border-2 transition-all flex flex-col ${
+                    isNoClass
+                      ? 'bg-gray-500/20 border-gray-400/50'
+                      : isToday
                       ? 'bg-yellow-500/30 border-yellow-400'
                       : scheduledLesson
                       ? scheduledLesson.is_cancelled
                         ? 'bg-red-500/20 border-red-400/50'
                         : 'bg-green-500/30 border-green-400'
-                      : canAddLesson && isCorrectDay // If can add and it's the group's day
+                      : canAddLesson && isCorrectDay
                       ? 'bg-green-500/10 border-green-400/30 hover:bg-green-500/20 cursor-pointer'
-                      : canAddLesson // If can add but it's NOT the group's day
+                      : canAddLesson
                       ? 'bg-blue-500/5 border-blue-400/20 hover:bg-blue-500/15 cursor-pointer'
-                      : 'bg-white/5 border-white/10' // Days with existing scheduled lessons
+                      : 'bg-white/5 border-white/10'
                   }`}
-                  onClick={() => canAddLesson && handleAddLesson(date)} // Allow adding lesson if canAddLesson is true
+                  onClick={() => canAddLesson && handleAddLesson(date)}
                 >
-                  <div className="text-white font-bold text-sm">
+                  {/* Date number — always at top, never hidden */}
+                  <div className="text-white font-bold text-sm leading-none mb-1">
                     {date.getDate()}
                   </div>
-                  
-                  {scheduledLesson && (
-                    <div className="mt-1">
-                      {scheduledLesson.is_cancelled ? (
-                        <div className="bg-red-500/30 rounded px-1 py-0.5 text-[10px] text-red-200">
-                          בוטל
-                        </div>
-                      ) : lesson ? (
-                        <div className="bg-green-500/30 rounded px-1 py-0.5 text-[10px] text-green-200 line-clamp-2">
-                          {lesson.lesson_name}
-                        </div>
-                      ) : (
-                        <div className="bg-blue-500/30 rounded px-1 py-0.5 text-[10px] text-blue-200">
-                          שיעור
-                        </div>
-                      )}
-                      
-                      <div className="absolute top-1 left-1 flex gap-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditLesson(scheduledLesson);
-                          }}
-                          className="w-5 h-5 rounded bg-blue-500/50 hover:bg-blue-500 flex items-center justify-center"
-                        >
-                          <Edit2 className="w-3 h-3 text-white" />
-                        </button>
-                        {!scheduledLesson.is_cancelled && (
+
+                  {/* Middle content */}
+                  <div className="flex-1 overflow-hidden">
+                    {scheduledLesson && (
+                      <>
+                        {isNoClass ? (
+                          <div>
+                            <div
+                              dir="rtl"
+                              style={{ unicodeBidi: 'isolate' }}
+                              className="bg-gray-500/40 rounded px-1 py-0.5 text-[10.5px] text-gray-200 font-bold break-words leading-tight"
+                            >
+                              ❌ לא התקיים
+                            </div>
+                            {scheduledLesson.no_class_reason && (
+                              <div
+                                dir="rtl"
+                                style={{ unicodeBidi: 'isolate' }}
+                                className="text-[10px] text-gray-300 mt-0.5 break-words leading-tight"
+                              >
+                                {scheduledLesson.no_class_reason}
+                              </div>
+                            )}
+                          </div>
+                        ) : scheduledLesson.is_cancelled ? (
+                          <div className="bg-red-500/30 rounded px-1 py-0.5 text-[9px] text-red-200">
+                            בוטל
+                          </div>
+                        ) : lesson ? (
+                          <div
+                            dir="rtl"
+                            style={{ unicodeBidi: 'isolate' }}
+                            className="bg-green-500/30 rounded px-1 py-0.5 text-[10.5px] text-green-200 break-words leading-tight"
+                          >
+                            {lesson.lesson_name}
+                          </div>
+                        ) : (
+                          <div className="bg-blue-500/30 rounded px-1 py-0.5 text-[9px] text-blue-200">
+                            שיעור
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Buttons — always at bottom */}
+                  <div className="flex gap-0.5 flex-wrap mt-1" onClick={e => e.stopPropagation()}>
+                    {scheduledLesson && (
+                      <>
+                        {!isNoClass && (
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCancelLesson(scheduledLesson);
-                            }}
+                            onClick={(e) => { e.stopPropagation(); handleEditLesson(scheduledLesson); }}
+                            className="w-5 h-5 rounded bg-blue-500/50 hover:bg-blue-500 flex items-center justify-center"
+                            title="ערוך"
+                          >
+                            <Edit2 className="w-3 h-3 text-white" />
+                          </button>
+                        )}
+                        {!isNoClass && !scheduledLesson.is_cancelled && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleCancelLesson(scheduledLesson); }}
                             className="w-5 h-5 rounded bg-orange-500/50 hover:bg-orange-500 flex items-center justify-center"
+                            title="בטל שיעור"
                           >
                             <X className="w-3 h-3 text-white" />
                           </button>
                         )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteLesson(scheduledLesson);
-                          }}
-                          className="w-5 h-5 rounded bg-red-500/50 hover:bg-red-500 flex items-center justify-center"
-                        >
-                          <Trash2 className="w-3 h-3 text-white" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                        {!isNoClass && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteLesson(scheduledLesson); }}
+                            className="w-5 h-5 rounded bg-red-500/50 hover:bg-red-500 flex items-center justify-center"
+                            title="מחק"
+                          >
+                            <Trash2 className="w-3 h-3 text-white" />
+                          </button>
+                        )}
+                        {isNoClass && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleUnmarkNoClass(scheduledLesson); }}
+                            className="w-5 h-5 rounded bg-green-600/70 hover:bg-green-600 flex items-center justify-center"
+                            title="בטל סימון 'לא התקיים'"
+                          >
+                            <RotateCcw className="w-3 h-3 text-white" />
+                          </button>
+                        )}
+                        {!isNoClass && scheduledLesson.lesson_id && !scheduledLesson.is_cancelled && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setEnrollSummary(null); handleEnrollAllStudents(scheduledLesson); }}
+                            disabled={enrollingLessonId === scheduledLesson.id}
+                            className="w-5 h-5 rounded bg-indigo-500/60 hover:bg-indigo-500 flex items-center justify-center disabled:opacity-50"
+                            title="הוסף את כל תלמידי הקבוצה לשיעור"
+                          >
+                            {enrollingLessonId === scheduledLesson.id
+                              ? <Loader2 className="w-3 h-3 text-white animate-spin" />
+                              : <UserPlus className="w-3 h-3 text-white" />
+                            }
+                          </button>
+                        )}
+                      </>
+                    )}
 
-                  {canAddLesson && ( // Show plus icon if a lesson can be added
-                    <div className="absolute bottom-1 left-1">
-                      <Plus className={`w-4 h-4 ${isCorrectDay ? 'text-green-400' : 'text-blue-400 opacity-70'}`} />
-                    </div>
-                  )}
+                    {canAddLesson && isCorrectDay && (
+                      <>
+                        <Plus className="w-4 h-4 text-green-400" />
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleMarkNoClass(null, date); }}
+                          className="w-4 h-4 rounded bg-gray-500/50 hover:bg-gray-500 flex items-center justify-center"
+                          title="סמן כ'לא התקיים שיעור'"
+                        >
+                          <Ban className="w-2.5 h-2.5 text-white" />
+                        </button>
+                      </>
+                    )}
+                    {canAddLesson && !isCorrectDay && (
+                      <Plus className="w-4 h-4 text-blue-400 opacity-70" />
+                    )}
+                  </div>
                 </motion.div>
               );
             })}
@@ -359,14 +549,71 @@ export default function GroupScheduleManager({ group }) {
         </CardContent>
       </Card>
 
+      {/* No-Class Dialog */}
+      <Dialog open={showNoClassDialog} onOpenChange={setShowNoClassDialog}>
+        <DialogContent className="bg-white/95 backdrop-blur-xl border-2 border-gray-400 max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-700 flex items-center gap-2">
+              <Ban className="w-5 h-5 text-gray-500" />
+              סימון "לא התקיים שיעור"
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-gray-100 rounded-lg p-3 text-sm text-gray-600">
+              <p className="font-bold mb-1">
+                {noClassTarget?.scheduledLesson
+                  ? `תאריך: ${noClassTarget.scheduledLesson.scheduled_date}`
+                  : noClassTarget?.date
+                  ? `תאריך: ${noClassTarget.date.toLocaleDateString('he-IL')}`
+                  : ""}
+              </p>
+              <p>סימון זה יציין שהשיעור לא התקיים ביום זה. ניתן לבטל בכל עת.</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-gray-700 font-medium">סיבה (אופציונלי)</Label>
+              <Input
+                value={noClassReason}
+                onChange={(e) => setNoClassReason(e.target.value)}
+                placeholder="למשל: חג, מחלה, מזג אוויר..."
+                className="border-2 border-gray-300"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => { setShowNoClassDialog(false); setNoClassTarget(null); setNoClassReason(""); }}
+                variant="outline"
+                className="flex-1"
+              >
+                ביטול
+              </Button>
+              <Button
+                onClick={handleSaveNoClass}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white"
+              >
+                <Ban className="w-4 h-4 ml-2" />
+                סמן כ"לא התקיים"
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Add/Edit Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="bg-white/95 backdrop-blur-xl border-2 border-purple-300 max-w-md">
+        <DialogContent className="bg-white/95 backdrop-blur-xl border-2 border-purple-300 max-w-md" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-purple-600">
               {editingLesson?.id ? "ערוך שיעור" : "הוסף שיעור ליומן"}
             </DialogTitle>
           </DialogHeader>
+          {editingLesson?.no_class && (
+            <div className="bg-gray-100 border border-gray-300 rounded-lg p-3 text-sm text-gray-600 flex items-center gap-2">
+              <Ban className="w-4 h-4 text-gray-500 shrink-0" />
+              <span>יום זה מסומן כ"לא התקיים שיעור"{editingLesson.no_class_reason ? ` — ${editingLesson.no_class_reason}` : ""}. עריכה חסומה.</span>
+            </div>
+          )}
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -394,12 +641,14 @@ export default function GroupScheduleManager({ group }) {
               <select
                 value={editingLesson?.lesson_id || ""}
                 onChange={(e) => setEditingLesson({...editingLesson, lesson_id: e.target.value})}
+                dir="rtl"
                 className="w-full border-2 border-purple-200 rounded-md p-2"
               >
                 <option value="">בחר שיעור (אופציונלי)</option>
                 {allLessons.map(lesson => (
-                  <option key={lesson.id} value={lesson.id}>{lesson.lesson_name}</option>
+                  <option key={lesson.id} value={lesson.id} dir="rtl">{lesson.lesson_name}</option>
                 ))}
+
               </select>
             </div>
 
@@ -437,13 +686,46 @@ export default function GroupScheduleManager({ group }) {
               </Button>
               <Button
                 onClick={handleSaveLesson}
-                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                disabled={!!editingLesson?.no_class}
+                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:opacity-50"
               >
                 שמור
               </Button>
             </div>
-            {/* The delete button in the dialog was removed as per the outline.
-                Deletion is now primarily handled via the trash icon on the calendar day itself. */}
+
+            {/* Enroll all students button — shown only when editing an existing lesson with a lesson_id */}
+            {editingLesson?.id && editingLesson?.lesson_id && !editingLesson?.no_class && (
+              <div className="border-t border-gray-200 pt-4 space-y-3">
+                <Button
+                  onClick={() => { setEnrollSummary(null); handleEnrollAllStudents(editingLesson); }}
+                  disabled={!!enrollingLessonId}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {!!enrollingLessonId ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      מעבד...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      הוסף את כל תלמידי הקבוצה לשיעור זה
+                    </>
+                  )}
+                </Button>
+
+                {enrollSummary && (
+                  <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-sm text-right space-y-1">
+                    <p className="font-bold text-indigo-700">סיכום שיוך תלמידים:</p>
+                    <p className="text-green-700">✅ נוספו: {enrollSummary.added.length} תלמידים</p>
+                    <p className="text-gray-600">⏭️ דולגו (כבר קיימים): {enrollSummary.skipped.length} תלמידים</p>
+                    {enrollSummary.skipped.length > 0 && (
+                      <p className="text-gray-500 text-xs">{enrollSummary.skipped.join(", ")}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
