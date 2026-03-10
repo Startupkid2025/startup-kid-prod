@@ -10,8 +10,8 @@ export default defineConfig({
   logLevel: 'error', // Suppress warnings, only show errors
   plugins: [
     base44({
-      // Support for legacy code that imports the base44 SDK with @/integrations, @/entities, etc.
-      // can be removed if the code has been updated to use the new SDK imports from @base44/sdk
+      // Base44 Publish sets this to route @/entities, @/functions, @/integrations through SDK.
+      // Locally, real files in src/entities/ etc. are used instead (SDK pass-throughs).
       legacySDKImports: process.env.BASE44_LEGACY_SDK_IMPORTS === 'true'
     }),
     react(),
@@ -19,12 +19,12 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
-    __BUILD_ENV__: JSON.stringify(process.env.BUILD_ENV || 'development'),
+    __BUILD_ENV__: JSON.stringify(process.env.BUILD_ENV || (process.env.NODE_ENV === 'production' ? 'production' : 'development')),
   },
   build: {
     chunkSizeWarningLimit: 500,
-    // Enable source maps for error tracking
-    sourcemap: true,
+    // Source maps for dev deploys only (production via Base44 Publish has 5MB limit)
+    sourcemap: process.env.BUILD_ENV === 'dev',
     // Target modern browsers for smaller bundles
     target: 'es2020',
   },

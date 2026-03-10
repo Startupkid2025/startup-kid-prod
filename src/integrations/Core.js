@@ -1,4 +1,4 @@
-export const InvokeLLM = async ({ prompt, response_json_schema } = {}) => {
-  console.warn("InvokeLLM: stub - no Base44 backend connected");
-  return response_json_schema ? {} : "";
-};
+import { base44 } from '@/api/base44Client';
+
+// SDK pass-through — mirrors Base44 compat layer behavior
+export const InvokeLLM = base44.integrations.Core?.InvokeLLM;

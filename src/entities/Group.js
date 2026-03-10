@@ -1,10 +1,4 @@
 import { base44 } from '@/api/base44Client';
 
-export const Group = {
-  list: async () => [],
-  get: async (id) => null,
-  create: async (data) => data,
-  update: async (id, data) => data,
-  delete: async (id) => null,
-  filter: async (query) => [],
-};
+// SDK pass-through — mirrors Base44 compat layer behavior
+export const Group = base44.entities.Group;
