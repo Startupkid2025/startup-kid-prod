@@ -12,5 +12,12 @@ export default defineConfig({
       legacySDKImports: process.env.BASE44_LEGACY_SDK_IMPORTS === 'true'
     }),
     react(),
-  ]
+  ],
+  build: {
+    chunkSizeWarningLimit: 500,
+    // Enable source maps for error tracking
+    sourcemap: true,
+    // Target modern browsers for smaller bundles
+    target: 'es2020',
+  },
 });
