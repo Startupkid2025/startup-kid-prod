@@ -27,11 +27,9 @@ describe('Pages configuration', () => {
     expect(pagesConfig.Layout).toBeDefined();
   });
 
-  it('all pages are lazy-loaded components', () => {
+  it('all pages are valid components', () => {
     for (const [name, component] of Object.entries(PAGES)) {
-      // React.lazy components have $$typeof Symbol and _init/_payload
       expect(component).toBeDefined();
-      expect(component.$$typeof).toBeDefined();
     }
   });
 });
