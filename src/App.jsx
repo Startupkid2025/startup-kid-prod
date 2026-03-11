@@ -1,5 +1,5 @@
 import './App.css'
-import { Suspense } from 'react'
+import { Suspense, useEffect } from 'react'
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -11,6 +11,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { Sentry } from '@/lib/sentry';
+import { logCrash, setUser } from '@/lib/crashLogger';
 
 const SentryErrorBoundary = Sentry.ErrorBoundary ?? (({ children }) => children);
 
@@ -23,7 +24,14 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin, user } = useAuth();
+
+  // Set user context for crash logging once auth resolves
+  useEffect(() => {
+    if (user) {
+      setUser({ id: user.id, email: user.email, full_name: user.full_name });
+    }
+  }, [user]);
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -77,6 +85,18 @@ const AuthenticatedApp = () => {
 
 
 function App() {
+  // Catch unhandled promise rejections globally
+  useEffect(() => {
+    const handler = (event) => {
+      logCrash(event.reason || "Unhandled promise rejection", {
+        page: window.location.pathname.replace("/", "") || "Home1",
+        action: "unhandledRejection",
+        severity: "error",
+      });
+    };
+    window.addEventListener("unhandledrejection", handler);
+    return () => window.removeEventListener("unhandledrejection", handler);
+  }, []);
 
   return (
     <SentryErrorBoundary fallback={
