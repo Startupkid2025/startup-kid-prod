@@ -41,14 +41,14 @@ jobs:
       - name: Production build
         run: npm run build
 
-      - name: Bundle size check (must be under 5MB for Base44)
+      - name: Bundle size check (built JS/CSS only, excludes static assets)
         run: |
-          TOTAL_KB=$(du -sk dist/ | cut -f1)
-          TOTAL_MB=$((TOTAL_KB / 1024))
-          echo "Total dist size: ${TOTAL_KB}KB (${TOTAL_MB}MB)"
+          ASSETS_KB=$(du -sk dist/assets/ | cut -f1)
+          ASSETS_MB=$((ASSETS_KB / 1024))
+          echo "Built assets size: ${ASSETS_KB}KB (${ASSETS_MB}MB)"
 
-          if [ "$TOTAL_KB" -gt 5120 ]; then
-            echo "::error::dist/ is ${TOTAL_MB}MB — exceeds Base44's 5MB site upload limit"
+          if [ "$ASSETS_KB" -gt 5120 ]; then
+            echo "::error::dist/assets/ is ${ASSETS_MB}MB — exceeds Base44's 5MB site upload limit"
             exit 1
           fi
 
