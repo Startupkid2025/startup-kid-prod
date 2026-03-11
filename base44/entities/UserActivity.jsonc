@@ -1,0 +1,12 @@
+{
+  "name": "UserActivity",
+  "type": "object",
+  "properties": {
+    "user_email": { "type": "string" },
+    "user_name": { "type": "string" },
+    "event_type": { "type": "string" },
+    "page": { "type": "string" },
+    "session_id": { "type": "string" },
+    "metadata": { "type": "object" }
+  }
+}
