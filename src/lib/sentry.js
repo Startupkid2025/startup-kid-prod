@@ -35,7 +35,7 @@ export function initSentry() {
       }),
       Sentry.browserTracingIntegration(),
       // Capture console.warn and console.error as Sentry Logs
-      Sentry.consoleLoggingIntegration({ levels: ["warn", "error"] }),
+      Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
     ],
 
     beforeSend(event) {
