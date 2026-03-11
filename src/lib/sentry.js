@@ -23,6 +23,9 @@ export function initSentry() {
     replaysSessionSampleRate: isProd ? 0.1 : 1.0,
     replaysOnErrorSampleRate: 1.0,
 
+    // Structured Logs
+    enableLogs: true,
+
     integrations: [
       Sentry.replayIntegration({
         // Mask all text/inputs by default for kid privacy
@@ -31,12 +34,9 @@ export function initSentry() {
         blockAllMedia: false,
       }),
       Sentry.browserTracingIntegration(),
+      // Capture console.warn and console.error as Sentry Logs
+      Sentry.consoleLoggingIntegration({ levels: ["warn", "error"] }),
     ],
-
-    // Enable Sentry Logs (structured logging)
-    _experiments: {
-      enableLogs: true,
-    },
 
     beforeSend(event) {
       // Scrub any sensitive user data
@@ -45,6 +45,18 @@ export function initSentry() {
       }
       return event;
     },
+
+    // Drop debug logs in production
+    beforeSendLog(log) {
+      if (isProd && log.level === "debug") return null;
+      return log;
+    },
+  });
+
+  // Set global attributes on all logs
+  Sentry.getGlobalScope().setAttributes({
+    "app.version": APP_VERSION,
+    "app.environment": BUILD_ENV,
   });
 }
 

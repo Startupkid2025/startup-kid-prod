@@ -66,7 +66,7 @@ export function logCrash(error, { page, action, severity = "error", extra = {} }
     (BUILD_ENV !== "production" && errorObj?.stack ? `  Stack:   ${errorObj.stack}\n` : "")
   );
 
-  // Sentry reporting
+  // Sentry error reporting (appears in Issues)
   Sentry.withScope((scope) => {
     scope.setLevel(severity);
     scope.setTag("page", page || "unknown");
@@ -74,6 +74,13 @@ export function logCrash(error, { page, action, severity = "error", extra = {} }
     scope.setTag("build_env", BUILD_ENV);
     scope.setExtras({ ...extra, page, action, timestamp });
     Sentry.captureException(errorObj);
+  });
+
+  // Also emit structured log (appears in Logs tab, linked to trace)
+  log(severity === "warning" ? "warn" : "error", message, {
+    page: page || "unknown",
+    action: action || "unknown",
+    ...extra,
   });
 }
 
