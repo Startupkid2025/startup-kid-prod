@@ -296,7 +296,7 @@ export default function Home() {
 
     // Sync to leaderboard
     try {
-      const { syncLeaderboardEntry } = await import("../components/utils/leaderboardSync");
+      const { syncLeaderboardEntry } = await import("@/components/utils/leaderboardSync");
       await syncLeaderboardEntry(userData, { equipped_items: newEquipped });
     } catch (error) {
       console.error("Error syncing leaderboard:", error);
@@ -349,7 +349,7 @@ export default function Home() {
 
     // Sync to leaderboard
     try {
-      const { syncLeaderboardEntry } = await import("../components/utils/leaderboardSync");
+      const { syncLeaderboardEntry } = await import("@/components/utils/leaderboardSync");
       await syncLeaderboardEntry({...userData, coins: newCoins, total_networth: totalNetworth}, {
         purchased_items: newPurchasedItems,
         investments_value: investmentsValue,
