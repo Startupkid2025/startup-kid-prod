@@ -1,4 +1,4 @@
-import { onCLS, onFID, onLCP, onFCP, onTTFB } from "web-vitals";
+import { onCLS, onINP, onLCP, onFCP, onTTFB } from "web-vitals";
 import { reportMetricToSentry } from "./sentry";
 import { BUILD_ENV } from "./version";
 
@@ -8,7 +8,7 @@ import { BUILD_ENV } from "./version";
  *
  * Metrics:
  *   LCP  - Largest Contentful Paint (loading speed)
- *   FID  - First Input Delay (interactivity)
+ *   INP  - Interaction to Next Paint (interactivity, replaces FID)
  *   CLS  - Cumulative Layout Shift (visual stability)
  *   FCP  - First Contentful Paint (initial render)
  *   TTFB - Time to First Byte (server response)
@@ -27,7 +27,7 @@ function handleMetric(metric) {
 export function initWebVitals() {
   try {
     onLCP(handleMetric);
-    onFID(handleMetric);
+    onINP(handleMetric);
     onCLS(handleMetric);
     onFCP(handleMetric);
     onTTFB(handleMetric);
