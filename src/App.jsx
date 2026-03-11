@@ -13,8 +13,6 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { Sentry } from '@/lib/sentry';
 import { logCrash, setUser } from '@/lib/crashLogger';
 import { initWebVitals } from '@/lib/webVitals';
-import { initSession, setActivityUser, trackSessionStart, trackPageView } from '@/lib/activityTracker';
-import { startHealthCheck, stopHealthCheck } from '@/lib/healthCheck';
 
 const SentryErrorBoundary = Sentry.ErrorBoundary ?? (({ children }) => children);
 
@@ -29,12 +27,10 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin, user } = useAuth();
 
-  // Set user context for crash logging + analytics once auth resolves
+  // Set user context for crash logging once auth resolves
   useEffect(() => {
     if (user) {
       setUser({ id: user.id, email: user.email, full_name: user.full_name });
-      setActivityUser(user);
-      trackSessionStart();
     }
   }, [user]);
 
@@ -90,12 +86,9 @@ const AuthenticatedApp = () => {
 
 
 function App() {
-  // Initialize monitoring on mount
+  // Initialize performance monitoring on mount
   useEffect(() => {
-    initSession();
     initWebVitals();
-    startHealthCheck();
-    return () => stopHealthCheck();
   }, []);
 
   // Catch unhandled promise rejections globally
