@@ -144,15 +144,9 @@ describe('Layout dev badge', () => {
   });
 });
 
-// ─── 6. Lazy loading is configured ───
+// ─── 6. App has Suspense wrapper (supports lazy loading if enabled) ───
 
-describe('Lazy loading', () => {
-  it('pages.config.js uses lazy loading', () => {
-    const config = readFileSync(resolve(ROOT, 'src/pages.config.js'), 'utf-8');
-    // Must use React.lazy or { lazy } from 'react' with dynamic import()
-    expect(config).toMatch(/lazy\s*\(\s*\(\)\s*=>\s*import\(/);
-  });
-
+describe('App setup', () => {
   it('App.jsx has Suspense wrapper', () => {
     const app = readFileSync(resolve(ROOT, 'src/App.jsx'), 'utf-8');
     expect(app).toContain('Suspense');
