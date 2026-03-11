@@ -12,6 +12,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { Sentry } from '@/lib/sentry';
 import { logCrash, setUser } from '@/lib/crashLogger';
+import { initWebVitals } from '@/lib/webVitals';
 
 const SentryErrorBoundary = Sentry.ErrorBoundary ?? (({ children }) => children);
 
@@ -85,6 +86,11 @@ const AuthenticatedApp = () => {
 
 
 function App() {
+  // Initialize performance monitoring on mount
+  useEffect(() => {
+    initWebVitals();
+  }, []);
+
   // Catch unhandled promise rejections globally
   useEffect(() => {
     const handler = (event) => {
