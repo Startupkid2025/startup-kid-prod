@@ -33,6 +33,11 @@ export function initSentry() {
       Sentry.browserTracingIntegration(),
     ],
 
+    // Enable Sentry Logs (structured logging)
+    _experiments: {
+      enableLogs: true,
+    },
+
     beforeSend(event) {
       // Scrub any sensitive user data
       if (event.user) {
