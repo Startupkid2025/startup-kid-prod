@@ -7,15 +7,15 @@ import { Sparkles, ShoppingBag, Shirt, Coins, TrendingUp, Clock, DollarSign, Use
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
-import TamagotchiAvatar, { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
-import TamagotchiWardrobe from "../components/avatar/TamagotchiWardrobe";
-import AvatarShop from "../components/avatar/AvatarShop";
-import Avatar from "../components/home/Avatar";
-import SkillBar from "../components/home/SkillBar";
-import CommunityFeed from "../components/home/CommunityFeed";
-import { safeRequest } from "../components/utils/base44SafeRequest";
+import TamagotchiAvatar, { AVATAR_ITEMS } from "@/components/avatar/TamagotchiAvatar";
+import TamagotchiWardrobe from "@/components/avatar/TamagotchiWardrobe";
+import AvatarShop from "@/components/avatar/AvatarShop";
+import Avatar from "@/components/home/Avatar";
+import SkillBar from "@/components/home/SkillBar";
+import CommunityFeed from "@/components/home/CommunityFeed";
+import { safeRequest } from "@/components/utils/base44SafeRequest";
 
-import GroupSelectionDialog from "../components/home/GroupSelectionDialog";
+import GroupSelectionDialog from "@/components/home/GroupSelectionDialog";
 import { toast } from "sonner";
 
 const SKILLS = [
@@ -296,7 +296,7 @@ export default function Home() {
 
     // Sync to leaderboard
     try {
-      const { syncLeaderboardEntry } = await import("../components/utils/leaderboardSync");
+      const { syncLeaderboardEntry } = await import("@/components/utils/leaderboardSync");
       await syncLeaderboardEntry(userData, { equipped_items: newEquipped });
     } catch (error) {
       console.error("Error syncing leaderboard:", error);
@@ -349,7 +349,7 @@ export default function Home() {
 
     // Sync to leaderboard
     try {
-      const { syncLeaderboardEntry } = await import("../components/utils/leaderboardSync");
+      const { syncLeaderboardEntry } = await import("@/components/utils/leaderboardSync");
       await syncLeaderboardEntry({...userData, coins: newCoins, total_networth: totalNetworth}, {
         purchased_items: newPurchasedItems,
         investments_value: investmentsValue,
