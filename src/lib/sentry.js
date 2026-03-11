@@ -30,6 +30,7 @@ export function initSentry() {
         maskAllInputs: true,
         blockAllMedia: false,
       }),
+      Sentry.browserTracingIntegration(),
     ],
 
     beforeSend(event) {
@@ -38,20 +39,6 @@ export function initSentry() {
         delete event.user.ip_address;
       }
       return event;
-    },
-  });
-}
-
-/**
- * Send a Web Vitals metric to Sentry.
- * Called from src/lib/webVitals.js for each CWV metric.
- */
-export function reportMetricToSentry(metric) {
-  Sentry.metrics?.distribution(metric.name, metric.value, {
-    unit: "millisecond",
-    tags: {
-      rating: metric.rating, // "good" | "needs-improvement" | "poor"
-      page: window.location.pathname.replace("/", "") || "Home1",
     },
   });
 }
