@@ -7,20 +7,51 @@ export function initSentry() {
   const dsn = import.meta.env.VITE_SENTRY_DSN || DEFAULT_DSN;
   if (!dsn) return;
 
+  const isProd = BUILD_ENV === "production";
+
   Sentry.init({
     dsn,
     environment: BUILD_ENV,
     release: `startup-kid-app@${APP_VERSION}`,
-    // Only send 20% of transactions in production to stay within free tier
-    tracesSampleRate: BUILD_ENV === "production" ? 0.2 : 1.0,
     // Don't send errors in local development
     enabled: BUILD_ENV !== "development",
+
+    // Performance: 20% in prod, 100% in dev/staging
+    tracesSampleRate: isProd ? 0.2 : 1.0,
+
+    // Session Replay: record 10% of sessions, 100% of sessions with errors
+    replaysSessionSampleRate: isProd ? 0.1 : 1.0,
+    replaysOnErrorSampleRate: 1.0,
+
+    integrations: [
+      Sentry.replayIntegration({
+        // Mask all text/inputs by default for kid privacy
+        maskAllText: false,
+        maskAllInputs: true,
+        blockAllMedia: false,
+      }),
+    ],
+
     beforeSend(event) {
       // Scrub any sensitive user data
       if (event.user) {
         delete event.user.ip_address;
       }
       return event;
+    },
+  });
+}
+
+/**
+ * Send a Web Vitals metric to Sentry.
+ * Called from src/lib/webVitals.js for each CWV metric.
+ */
+export function reportMetricToSentry(metric) {
+  Sentry.metrics?.distribution(metric.name, metric.value, {
+    unit: "millisecond",
+    tags: {
+      rating: metric.rating, // "good" | "needs-improvement" | "poor"
+      page: window.location.pathname.replace("/", "") || "Home1",
     },
   });
 }
