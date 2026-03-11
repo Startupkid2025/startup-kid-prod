@@ -19,6 +19,10 @@ import { BUILD_ENV } from "./version";
  *
  *   // Add breadcrumb before risky operations
  *   addBreadcrumb("Fetching investments", { count: 5 });
+ *
+ *   // Structured logs (appear in Sentry → Logs)
+ *   log("info", "Lesson completed", { page: "Lessons1", lessonId: 5 });
+ *   log("warn", "Slow API response", { page: "Home1", duration: 3200 });
  */
 
 let currentUser = null;
@@ -87,4 +91,33 @@ export function addBreadcrumb(message, data = {}) {
     level: "info",
     timestamp: Date.now() / 1000,
   });
+}
+
+/**
+ * Send a structured log to Sentry Logs.
+ * Shows up in Sentry → Logs tab as a searchable stream.
+ *
+ * @param {"trace"|"debug"|"info"|"warn"|"error"|"fatal"} level
+ * @param {string} message - Log message
+ * @param {Object} [attrs] - Structured attributes (page, action, userId, etc.)
+ */
+export function log(level, message, attrs = {}) {
+  const logger = Sentry.logger;
+  if (!logger) return;
+
+  const enriched = {
+    ...attrs,
+    user: currentUser?.email || "anonymous",
+    page: attrs.page || window.location.pathname.replace("/", "") || "unknown",
+  };
+
+  switch (level) {
+    case "trace": logger.trace(message, enriched); break;
+    case "debug": logger.debug(message, enriched); break;
+    case "info":  logger.info(message, enriched); break;
+    case "warn":  logger.warn(message, enriched); break;
+    case "error": logger.error(message, enriched); break;
+    case "fatal": logger.fatal(message, enriched); break;
+    default:      logger.info(message, enriched);
+  }
 }
