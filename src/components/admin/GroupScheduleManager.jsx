@@ -13,13 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select, // Retained Select for other potential uses if any, though replaced in dialog
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { toast } from "sonner";
 
 export default function GroupScheduleManager({ group }) {
@@ -638,32 +632,28 @@ export default function GroupScheduleManager({ group }) {
 
             <div className="space-y-2">
               <Label className="text-gray-700 font-medium">שיעור</Label>
-              <select
+              <SearchableSelect
+                options={allLessons.map(lesson => ({ value: lesson.id, label: lesson.lesson_name }))}
                 value={editingLesson?.lesson_id || ""}
-                onChange={(e) => setEditingLesson({...editingLesson, lesson_id: e.target.value})}
-                dir="rtl"
-                className="w-full border-2 border-purple-200 rounded-md p-2"
-              >
-                <option value="">בחר שיעור (אופציונלי)</option>
-                {allLessons.map(lesson => (
-                  <option key={lesson.id} value={lesson.id} dir="rtl">{lesson.lesson_name}</option>
-                ))}
-
-              </select>
+                onValueChange={(value) => setEditingLesson({...editingLesson, lesson_id: value})}
+                placeholder="בחר שיעור (אופציונלי)"
+                searchPlaceholder="חפש שיעור..."
+                emptyText="לא נמצאו שיעורים"
+                className="border-2 border-purple-200"
+              />
             </div>
 
             <div className="space-y-2">
               <Label className="text-gray-700 font-medium">מורה</Label>
-              <select
+              <SearchableSelect
+                options={allTeachers.map(teacher => ({ value: teacher.email, label: teacher.full_name }))}
                 value={editingLesson?.teacher_email || ""}
-                onChange={(e) => setEditingLesson({...editingLesson, teacher_email: e.target.value})}
-                className="w-full border-2 border-purple-200 rounded-md p-2"
-              >
-                <option value="">בחר מורה (אופציונלי)</option>
-                {allTeachers.map(teacher => (
-                  <option key={teacher.id} value={teacher.email}>{teacher.full_name}</option>
-                ))}
-              </select>
+                onValueChange={(value) => setEditingLesson({...editingLesson, teacher_email: value})}
+                placeholder="בחר מורה (אופציונלי)"
+                searchPlaceholder="חפש מורה..."
+                emptyText="לא נמצאו מורים"
+                className="border-2 border-purple-200"
+              />
             </div>
 
             <div className="space-y-2">
