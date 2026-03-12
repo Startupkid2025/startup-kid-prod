@@ -352,13 +352,17 @@ export default function Leaderboard() {
     base44.auth.me().then(setCurrentUser).catch(console.error);
   }, []);
 
-  // Fetch leaderboard entries with react-query (use listAll for pagination safety)
+  // Fetch leaderboard entries with react-query - filter to ONLY students at query level for backend safety
   const { data: leaderboardEntries = [], isLoading } = useQuery({
     queryKey: ['leaderboardEntries'],
-    queryFn: () => safeRequest(
-      () => listAll(base44.entities.LeaderboardEntry, "-total_networth", 100),
-      { key: "leaderboard-entries", ttlMs: 120000 }
-    ),
+    queryFn: async () => {
+      const allEntries = await safeRequest(
+        () => listAll(base44.entities.LeaderboardEntry, "-total_networth", 100),
+        { key: "leaderboard-entries", ttlMs: 120000 }
+      );
+      // Backend safety filter: ONLY allow students, exclude all other user types
+      return allEntries.filter(entry => entry.user_type === 'student');
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
@@ -394,10 +398,10 @@ export default function Leaderboard() {
     return () => clearInterval(timer);
   }, []);
 
-  // Filter to show only students (exclude demo, parent, admin, and any other non-student types)
+  // Filter to show ONLY students (strictly exclude demo, parent, teacher, admin, and any other non-student types)
   const filteredEntries = useMemo(() => {
     return leaderboardEntries.filter(entry => 
-      entry.user_type === 'student' || !entry.user_type
+      entry.user_type === 'student'
     );
   }, [leaderboardEntries]);
 
@@ -414,10 +418,9 @@ export default function Leaderboard() {
     });
   }, [filteredEntries, searchTerm]);
 
-  // Calculate kings from ALL students (memoized)
+  // Calculate kings from ALL students (memoized) - filteredEntries already contains ONLY students
   const kings = useMemo(() => {
     const allStudents = filteredEntries
-      .filter(u => u.user_type === 'student')
       .map(entry => ({
         student_email: entry.student_email,
         masteredWords: entry.mastered_words || 0,
