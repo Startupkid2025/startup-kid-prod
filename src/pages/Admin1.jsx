@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Plus, Users, BookOpen, Shield, Edit2, Trash2, FileText, Languages, Filter, Search, ChevronDown, ChevronUp, RefreshCw, Loader2, GraduationCap } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -2278,49 +2279,45 @@ export default function Admin() {
           <div className="space-y-4 mt-4">
             <div>
               <label className="text-sm font-bold mb-2 block">בחר שיעור:</label>
-              <Select value={bulkAddLesson} onValueChange={setBulkAddLesson}>
-                <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                  <SelectValue placeholder="בחר שיעור..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {(() => {
-                    // Group lessons by category
-                    const categoryNames = {
-                      ai_tech: "🤖 AI & Tech",
-                      personal_skills: "💪 מיומנויות אישיות",
-                      money_business: "💰 כסף ועסקים"
-                    };
+              <SearchableSelect
+                options={(() => {
+                  const categoryNames = {
+                    ai_tech: "🤖 AI & Tech",
+                    personal_skills: "💪 מיומנויות אישיות",
+                    money_business: "💰 כסף ועסקים"
+                  };
 
-                    const lessonsByCategory = {};
-                    lessons.forEach(lesson => {
-                      const cat = lesson.category || 'uncategorized';
-                      if (!lessonsByCategory[cat]) lessonsByCategory[cat] = [];
-                      lessonsByCategory[cat].push(lesson);
-                    });
+                  const lessonsByCategory = {};
+                  lessons.forEach(lesson => {
+                    const cat = lesson.category || 'uncategorized';
+                    if (!lessonsByCategory[cat]) lessonsByCategory[cat] = [];
+                    lessonsByCategory[cat].push(lesson);
+                  });
 
-                    // Check for duplicates
-                    const categoriesWithDuplicates = Object.keys(lessonsByCategory).filter(
-                      cat => lessonsByCategory[cat].length > 1
-                    );
+                  const categoriesWithDuplicates = Object.keys(lessonsByCategory).filter(
+                    cat => lessonsByCategory[cat].length > 1
+                  );
 
-                    return lessons.map(lesson => {
-                      const cat = lesson.category || 'uncategorized';
-                      const categoryLabel = categoryNames[cat] || cat;
-                      const isDuplicate = categoriesWithDuplicates.includes(cat);
-                      const duplicateIndex = isDuplicate 
-                        ? lessonsByCategory[cat].findIndex(l => l.id === lesson.id) + 1
-                        : null;
+                  return lessons.map(lesson => {
+                    const cat = lesson.category || 'uncategorized';
+                    const categoryLabel = categoryNames[cat] || cat;
+                    const isDuplicate = categoriesWithDuplicates.includes(cat);
+                    const duplicateIndex = isDuplicate 
+                      ? lessonsByCategory[cat].findIndex(l => l.id === lesson.id) + 1
+                      : null;
 
-                      return (
-                        <SelectItem key={lesson.id} value={lesson.id}>
-                          {isDuplicate && `(${duplicateIndex}/${lessonsByCategory[cat].length}) `}
-                          {lesson.lesson_name} - {categoryLabel} - {lesson.lesson_date || 'ללא תאריך'}
-                        </SelectItem>
-                      );
-                    });
-                  })()}
-                </SelectContent>
-              </Select>
+                    const label = `${isDuplicate ? `(${duplicateIndex}/${lessonsByCategory[cat].length}) ` : ''}${lesson.lesson_name} - ${categoryLabel} - ${lesson.lesson_date || 'ללא תאריך'}`;
+
+                    return { value: lesson.id, label };
+                  });
+                })()}
+                value={bulkAddLesson}
+                onValueChange={setBulkAddLesson}
+                placeholder="בחר שיעור..."
+                searchPlaceholder="חפש שיעור..."
+                emptyText="לא נמצאו שיעורים"
+                className="bg-white/10 border-white/20 text-white"
+              />
             </div>
             <div>
               <label className="text-sm font-bold mb-2 block">תאריך השיעור:</label>
