@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
   Select,
   SelectContent,
@@ -100,15 +101,18 @@ export default function AddGroupDialog({ isOpen, onClose, lessons, onSubmit }) {
 
           <div className="space-y-2">
             <Label className="text-gray-700 font-medium">מורה (אופציונלי)</Label>
-            <Select value={groupData.teacher_id} onValueChange={(value) => setGroupData({ ...groupData, teacher_id: value === "none" ? "" : value })}>
-              <SelectTrigger className="border-2 border-purple-200"><SelectValue placeholder="בחר מורה" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">ללא מורה</SelectItem>
-                {teachers.map(t => (
-                  <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={[
+                { value: "none", label: "ללא מורה" },
+                ...teachers.map(t => ({ value: t.id, label: t.full_name }))
+              ]}
+              value={groupData.teacher_id || "none"}
+              onValueChange={(value) => setGroupData({ ...groupData, teacher_id: value === "none" ? "" : value })}
+              placeholder="בחר מורה"
+              searchPlaceholder="חפש מורה..."
+              emptyText="לא נמצאו מורים"
+              className="border-2 border-purple-200"
+            />
           </div>
 
           {conflictWarning && (
@@ -120,15 +124,18 @@ export default function AddGroupDialog({ isOpen, onClose, lessons, onSubmit }) {
 
           <div className="space-y-2">
             <Label className="text-gray-700 font-medium">שיעור הבא (אופציונלי)</Label>
-            <Select value={groupData.next_lesson_id} onValueChange={(value) => setGroupData({ ...groupData, next_lesson_id: value })}>
-              <SelectTrigger className="border-2 border-purple-200"><SelectValue placeholder="בחר שיעור" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={null}>ללא שיעור</SelectItem>
-                {lessons.map((lesson) => (
-                  <SelectItem key={lesson.id} value={lesson.id}>{lesson.lesson_name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={[
+                { value: "", label: "ללא שיעור" },
+                ...lessons.map((lesson) => ({ value: lesson.id, label: lesson.lesson_name }))
+              ]}
+              value={groupData.next_lesson_id || ""}
+              onValueChange={(value) => setGroupData({ ...groupData, next_lesson_id: value })}
+              placeholder="בחר שיעור"
+              searchPlaceholder="חפש שיעור..."
+              emptyText="לא נמצאו שיעורים"
+              className="border-2 border-purple-200"
+            />
           </div>
 
           <Button onClick={handleSubmit} className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-6 text-lg" disabled={!groupData.group_name || !groupData.hour}>

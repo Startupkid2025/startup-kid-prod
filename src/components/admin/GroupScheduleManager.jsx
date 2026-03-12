@@ -13,13 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select, // Retained Select for other potential uses if any, though replaced in dialog
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { toast } from "sonner";
 
 export default function GroupScheduleManager({ group }) {
@@ -36,6 +30,7 @@ export default function GroupScheduleManager({ group }) {
   const [noClassReason, setNoClassReason] = useState("");
   const [enrollingLessonId, setEnrollingLessonId] = useState(null);
   const [enrollSummary, setEnrollSummary] = useState(null);
+  const [showEnrollSummaryDialog, setShowEnrollSummaryDialog] = useState(false);
 
   const dayNames = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
   const monthNames = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
@@ -269,44 +264,101 @@ export default function GroupScheduleManager({ group }) {
     }
     setEnrollingLessonId(scheduledLesson.id);
     setEnrollSummary(null);
+    
     try {
       // Fetch group students
       const groupData = await base44.entities.Group.filter({ id: scheduledLesson.group_id });
       const studentEmails = groupData?.[0]?.student_emails || group.student_emails || [];
 
       if (studentEmails.length === 0) {
-        toast.error("אין תלמידים בקבוצה");
-        setIsEnrollingAll(false);
+        setEnrollSummary({ 
+          added: [], 
+          addedNames: [],
+          skippedAlreadyTook: 0, 
+          skippedRegisteredAfter: 0 
+        });
+        setEnrollingLessonId(null);
         return;
       }
 
-      // Fetch existing participations for this lesson+date
-      const existing = await base44.entities.LessonParticipation.filter({
-        lesson_id: scheduledLesson.lesson_id,
-        lesson_date: scheduledLesson.scheduled_date,
+      // Fetch all users in one call for efficiency
+      const allUsers = await base44.entities.User.filter({
+        email: { $in: studentEmails }
       });
-      const alreadyEnrolled = new Set((existing || []).map(p => p.student_email));
+      const userMap = Object.fromEntries(allUsers.map(u => [u.email, u]));
 
-      const toCreate = studentEmails.filter(email => !alreadyEnrolled.has(email));
-      const skipped = studentEmails.filter(email => alreadyEnrolled.has(email));
+      // Fetch ALL existing participations for this lesson (any date) to check duplicates
+      const allParticipations = await base44.entities.LessonParticipation.filter({
+        lesson_id: scheduledLesson.lesson_id
+      });
+      const alreadyTookLesson = new Set(allParticipations.map(p => p.student_email));
 
+      // Parse lesson date in Jerusalem timezone
+      const lessonDateStr = scheduledLesson.scheduled_date.includes('T') 
+        ? scheduledLesson.scheduled_date.split('T')[0] 
+        : scheduledLesson.scheduled_date;
+
+      const toCreate = [];
+      const addedNames = [];
+      let skippedAlreadyTook = 0;
+      let skippedRegisteredAfter = 0;
+
+      for (const email of studentEmails) {
+        const user = userMap[email];
+        
+        // Check 1: Already took this lesson (any date)
+        if (alreadyTookLesson.has(email)) {
+          skippedAlreadyTook++;
+          continue;
+        }
+
+        // Check 2: User registered after lesson date
+        if (user?.created_date) {
+          const userCreatedDateStr = user.created_date.split('T')[0]; // YYYY-MM-DD in UTC
+          if (userCreatedDateStr > lessonDateStr) {
+            skippedRegisteredAfter++;
+            continue;
+          }
+        }
+
+        // Passed all checks - add to list
+        toCreate.push(email);
+        addedNames.push(user?.full_name || user?.first_name && user?.last_name 
+          ? `${user.first_name} ${user.last_name}` 
+          : email);
+      }
+
+      // Create participation records
       if (toCreate.length > 0) {
         const records = toCreate.map(email => ({
           lesson_id: scheduledLesson.lesson_id,
           student_email: email,
           lesson_date: scheduledLesson.scheduled_date,
-          attended: false,
+          attended: true,
           watched_recording: false,
           survey_completed: false,
         }));
         await base44.entities.LessonParticipation.bulkCreate(records);
       }
 
-      setEnrollSummary({ added: toCreate, skipped });
-      toast.success(`נוספו ${toCreate.length} תלמידים, דולגו ${skipped.length}`);
+      // Show summary popup
+      setEnrollSummary({ 
+        added: toCreate, 
+        addedNames,
+        skippedAlreadyTook, 
+        skippedRegisteredAfter 
+      });
+      setShowEnrollSummaryDialog(true);
     } catch (error) {
       console.error("Error enrolling students:", error);
       toast.error("שגיאה בשיוך תלמידים: " + (error.message || ""));
+      setEnrollSummary({ 
+        added: [], 
+        addedNames: [],
+        skippedAlreadyTook: 0, 
+        skippedRegisteredAfter: 0 
+      });
+      setShowEnrollSummaryDialog(true);
     }
     setEnrollingLessonId(null);
   };
@@ -600,6 +652,86 @@ export default function GroupScheduleManager({ group }) {
         </DialogContent>
       </Dialog>
 
+      {/* Enrollment Summary Dialog */}
+      <Dialog open={showEnrollSummaryDialog} onOpenChange={setShowEnrollSummaryDialog}>
+        <DialogContent className="bg-white/95 backdrop-blur-xl border-2 border-indigo-400 max-w-lg" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-indigo-800 text-center">
+              📊 סיכום שיוך תלמידים
+            </DialogTitle>
+          </DialogHeader>
+          
+          {enrollSummary && (
+            <div className="space-y-4 py-4">
+              {enrollSummary.added.length > 0 ? (
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-400 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-4xl">✅</span>
+                    <p className="text-green-800 font-black text-xl">נוספו בהצלחה!</p>
+                  </div>
+                  <p className="text-green-700 font-bold text-center text-lg">
+                    {enrollSummary.added.length} תלמידים נוספו לשיעור
+                  </p>
+                  <div className="bg-white/80 rounded-lg p-3 max-h-48 overflow-y-auto space-y-1.5">
+                    {enrollSummary.addedNames.map((name, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-gray-800">
+                        <span className="text-green-600 font-bold">•</span>
+                        <span className="text-sm">{name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-400 rounded-xl p-4">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <span className="text-4xl">⚠️</span>
+                    <p className="text-yellow-900 font-black text-xl">לא נוספו תלמידים</p>
+                  </div>
+                  <p className="text-yellow-800 text-center text-sm">
+                    כל התלמידים דולגו מסיבות שונות
+                  </p>
+                </div>
+              )}
+
+              {(enrollSummary.skippedAlreadyTook > 0 || enrollSummary.skippedRegisteredAfter > 0) && (
+                <div className="bg-gradient-to-br from-gray-50 to-slate-50 border-2 border-gray-300 rounded-xl p-4 space-y-2">
+                  <p className="text-gray-800 font-bold text-center text-base mb-3">
+                    📋 סיבות לדילוג
+                  </p>
+                  {enrollSummary.skippedAlreadyTook > 0 && (
+                    <div className="bg-orange-100 border border-orange-300 rounded-lg p-3">
+                      <p className="text-orange-800 font-bold text-sm">
+                        🔄 {enrollSummary.skippedAlreadyTook} תלמידים כבר עברו את השיעור בעבר
+                      </p>
+                      <p className="text-orange-700 text-xs mt-1">
+                        תלמידים אלו כבר השתתפו בשיעור זה בתאריך אחר
+                      </p>
+                    </div>
+                  )}
+                  {enrollSummary.skippedRegisteredAfter > 0 && (
+                    <div className="bg-red-100 border border-red-300 rounded-lg p-3">
+                      <p className="text-red-800 font-bold text-sm">
+                        📅 {enrollSummary.skippedRegisteredAfter} תלמידים נרשמו אחרי תאריך השיעור
+                      </p>
+                      <p className="text-red-700 text-xs mt-1">
+                        תלמידים אלו הצטרפו לאפליקציה לאחר מועד השיעור
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <Button
+                onClick={() => setShowEnrollSummaryDialog(false)}
+                className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-bold py-3"
+              >
+                סגור
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Add/Edit Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="bg-white/95 backdrop-blur-xl border-2 border-purple-300 max-w-md" dir="rtl">
@@ -638,32 +770,28 @@ export default function GroupScheduleManager({ group }) {
 
             <div className="space-y-2">
               <Label className="text-gray-700 font-medium">שיעור</Label>
-              <select
+              <SearchableSelect
+                options={allLessons.map(lesson => ({ value: lesson.id, label: lesson.lesson_name }))}
                 value={editingLesson?.lesson_id || ""}
-                onChange={(e) => setEditingLesson({...editingLesson, lesson_id: e.target.value})}
-                dir="rtl"
-                className="w-full border-2 border-purple-200 rounded-md p-2"
-              >
-                <option value="">בחר שיעור (אופציונלי)</option>
-                {allLessons.map(lesson => (
-                  <option key={lesson.id} value={lesson.id} dir="rtl">{lesson.lesson_name}</option>
-                ))}
-
-              </select>
+                onValueChange={(value) => setEditingLesson({...editingLesson, lesson_id: value})}
+                placeholder="בחר שיעור (אופציונלי)"
+                searchPlaceholder="חפש שיעור..."
+                emptyText="לא נמצאו שיעורים"
+                className="border-2 border-purple-200"
+              />
             </div>
 
             <div className="space-y-2">
               <Label className="text-gray-700 font-medium">מורה</Label>
-              <select
+              <SearchableSelect
+                options={allTeachers.map(teacher => ({ value: teacher.email, label: teacher.full_name }))}
                 value={editingLesson?.teacher_email || ""}
-                onChange={(e) => setEditingLesson({...editingLesson, teacher_email: e.target.value})}
-                className="w-full border-2 border-purple-200 rounded-md p-2"
-              >
-                <option value="">בחר מורה (אופציונלי)</option>
-                {allTeachers.map(teacher => (
-                  <option key={teacher.id} value={teacher.email}>{teacher.full_name}</option>
-                ))}
-              </select>
+                onValueChange={(value) => setEditingLesson({...editingLesson, teacher_email: value})}
+                placeholder="בחר מורה (אופציונלי)"
+                searchPlaceholder="חפש מורה..."
+                emptyText="לא נמצאו מורים"
+                className="border-2 border-purple-200"
+              />
             </div>
 
             <div className="space-y-2">
@@ -695,7 +823,7 @@ export default function GroupScheduleManager({ group }) {
 
             {/* Enroll all students button — shown only when editing an existing lesson with a lesson_id */}
             {editingLesson?.id && editingLesson?.lesson_id && !editingLesson?.no_class && (
-              <div className="border-t border-gray-200 pt-4 space-y-3">
+              <div className="border-t border-gray-200 pt-4">
                 <Button
                   onClick={() => { setEnrollSummary(null); handleEnrollAllStudents(editingLesson); }}
                   disabled={!!enrollingLessonId}
@@ -713,17 +841,6 @@ export default function GroupScheduleManager({ group }) {
                     </>
                   )}
                 </Button>
-
-                {enrollSummary && (
-                  <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-sm text-right space-y-1">
-                    <p className="font-bold text-indigo-700">סיכום שיוך תלמידים:</p>
-                    <p className="text-green-700">✅ נוספו: {enrollSummary.added.length} תלמידים</p>
-                    <p className="text-gray-600">⏭️ דולגו (כבר קיימים): {enrollSummary.skipped.length} תלמידים</p>
-                    {enrollSummary.skipped.length > 0 && (
-                      <p className="text-gray-500 text-xs">{enrollSummary.skipped.join(", ")}</p>
-                    )}
-                  </div>
-                )}
               </div>
             )}
           </div>
