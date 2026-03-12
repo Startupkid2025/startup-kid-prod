@@ -30,6 +30,7 @@ export default function GroupScheduleManager({ group }) {
   const [noClassReason, setNoClassReason] = useState("");
   const [enrollingLessonId, setEnrollingLessonId] = useState(null);
   const [enrollSummary, setEnrollSummary] = useState(null);
+  const [showEnrollSummaryDialog, setShowEnrollSummaryDialog] = useState(false);
 
   const dayNames = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
   const monthNames = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
@@ -347,9 +348,17 @@ export default function GroupScheduleManager({ group }) {
         skippedAlreadyTook, 
         skippedRegisteredAfter 
       });
+      setShowEnrollSummaryDialog(true);
     } catch (error) {
       console.error("Error enrolling students:", error);
       toast.error("שגיאה בשיוך תלמידים: " + (error.message || ""));
+      setEnrollSummary({ 
+        added: [], 
+        addedNames: [],
+        skippedAlreadyTook: 0, 
+        skippedRegisteredAfter: 0 
+      });
+      setShowEnrollSummaryDialog(true);
     }
     setEnrollingLessonId(null);
   };
@@ -643,6 +652,86 @@ export default function GroupScheduleManager({ group }) {
         </DialogContent>
       </Dialog>
 
+      {/* Enrollment Summary Dialog */}
+      <Dialog open={showEnrollSummaryDialog} onOpenChange={setShowEnrollSummaryDialog}>
+        <DialogContent className="bg-white/95 backdrop-blur-xl border-2 border-indigo-400 max-w-lg" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-indigo-800 text-center">
+              📊 סיכום שיוך תלמידים
+            </DialogTitle>
+          </DialogHeader>
+          
+          {enrollSummary && (
+            <div className="space-y-4 py-4">
+              {enrollSummary.added.length > 0 ? (
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-400 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-4xl">✅</span>
+                    <p className="text-green-800 font-black text-xl">נוספו בהצלחה!</p>
+                  </div>
+                  <p className="text-green-700 font-bold text-center text-lg">
+                    {enrollSummary.added.length} תלמידים נוספו לשיעור
+                  </p>
+                  <div className="bg-white/80 rounded-lg p-3 max-h-48 overflow-y-auto space-y-1.5">
+                    {enrollSummary.addedNames.map((name, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-gray-800">
+                        <span className="text-green-600 font-bold">•</span>
+                        <span className="text-sm">{name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-400 rounded-xl p-4">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <span className="text-4xl">⚠️</span>
+                    <p className="text-yellow-900 font-black text-xl">לא נוספו תלמידים</p>
+                  </div>
+                  <p className="text-yellow-800 text-center text-sm">
+                    כל התלמידים דולגו מסיבות שונות
+                  </p>
+                </div>
+              )}
+
+              {(enrollSummary.skippedAlreadyTook > 0 || enrollSummary.skippedRegisteredAfter > 0) && (
+                <div className="bg-gradient-to-br from-gray-50 to-slate-50 border-2 border-gray-300 rounded-xl p-4 space-y-2">
+                  <p className="text-gray-800 font-bold text-center text-base mb-3">
+                    📋 סיבות לדילוג
+                  </p>
+                  {enrollSummary.skippedAlreadyTook > 0 && (
+                    <div className="bg-orange-100 border border-orange-300 rounded-lg p-3">
+                      <p className="text-orange-800 font-bold text-sm">
+                        🔄 {enrollSummary.skippedAlreadyTook} תלמידים כבר עברו את השיעור בעבר
+                      </p>
+                      <p className="text-orange-700 text-xs mt-1">
+                        תלמידים אלו כבר השתתפו בשיעור זה בתאריך אחר
+                      </p>
+                    </div>
+                  )}
+                  {enrollSummary.skippedRegisteredAfter > 0 && (
+                    <div className="bg-red-100 border border-red-300 rounded-lg p-3">
+                      <p className="text-red-800 font-bold text-sm">
+                        📅 {enrollSummary.skippedRegisteredAfter} תלמידים נרשמו אחרי תאריך השיעור
+                      </p>
+                      <p className="text-red-700 text-xs mt-1">
+                        תלמידים אלו הצטרפו לאפליקציה לאחר מועד השיעור
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <Button
+                onClick={() => setShowEnrollSummaryDialog(false)}
+                className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-bold py-3"
+              >
+                סגור
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Add/Edit Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="bg-white/95 backdrop-blur-xl border-2 border-purple-300 max-w-md" dir="rtl">
@@ -734,7 +823,7 @@ export default function GroupScheduleManager({ group }) {
 
             {/* Enroll all students button — shown only when editing an existing lesson with a lesson_id */}
             {editingLesson?.id && editingLesson?.lesson_id && !editingLesson?.no_class && (
-              <div className="border-t border-gray-200 pt-4 space-y-3">
+              <div className="border-t border-gray-200 pt-4">
                 <Button
                   onClick={() => { setEnrollSummary(null); handleEnrollAllStudents(editingLesson); }}
                   disabled={!!enrollingLessonId}
@@ -752,46 +841,6 @@ export default function GroupScheduleManager({ group }) {
                     </>
                   )}
                 </Button>
-
-                {enrollSummary && (
-                  <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-300 rounded-xl p-4 text-sm text-right space-y-3">
-                    <p className="font-black text-indigo-800 text-base">📊 סיכום שיוך תלמידים</p>
-                    
-                    {enrollSummary.added.length > 0 ? (
-                      <div className="bg-white/80 rounded-lg p-3 space-y-2">
-                        <p className="text-green-700 font-bold text-base">✅ נוספו בהצלחה: {enrollSummary.added.length} תלמידים</p>
-                        <div className="text-gray-700 text-xs space-y-1 max-h-32 overflow-y-auto">
-                          {enrollSummary.addedNames.map((name, idx) => (
-                            <div key={idx} className="flex items-center gap-2">
-                              <span className="text-green-600">•</span>
-                              <span>{name}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3">
-                        <p className="text-yellow-800 font-bold">⚠️ לא נוספו תלמידים</p>
-                      </div>
-                    )}
-
-                    {(enrollSummary.skippedAlreadyTook > 0 || enrollSummary.skippedRegisteredAfter > 0) && (
-                      <div className="bg-white/80 rounded-lg p-3 space-y-1.5">
-                        <p className="text-gray-700 font-bold text-sm">סיבות לדילוג:</p>
-                        {enrollSummary.skippedAlreadyTook > 0 && (
-                          <p className="text-orange-700 text-xs">
-                            🔄 {enrollSummary.skippedAlreadyTook} תלמידים כבר עברו את השיעור בעבר
-                          </p>
-                        )}
-                        {enrollSummary.skippedRegisteredAfter > 0 && (
-                          <p className="text-red-700 text-xs">
-                            📅 {enrollSummary.skippedRegisteredAfter} תלמידים נרשמו אחרי תאריך השיעור
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             )}
           </div>
