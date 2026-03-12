@@ -263,27 +263,71 @@ export default function GroupScheduleManager({ group }) {
     }
     setEnrollingLessonId(scheduledLesson.id);
     setEnrollSummary(null);
+    
     try {
       // Fetch group students
       const groupData = await base44.entities.Group.filter({ id: scheduledLesson.group_id });
       const studentEmails = groupData?.[0]?.student_emails || group.student_emails || [];
 
       if (studentEmails.length === 0) {
-        toast.error("אין תלמידים בקבוצה");
-        setIsEnrollingAll(false);
+        setEnrollSummary({ 
+          added: [], 
+          addedNames: [],
+          skippedAlreadyTook: 0, 
+          skippedRegisteredAfter: 0 
+        });
+        setEnrollingLessonId(null);
         return;
       }
 
-      // Fetch existing participations for this lesson+date
-      const existing = await base44.entities.LessonParticipation.filter({
-        lesson_id: scheduledLesson.lesson_id,
-        lesson_date: scheduledLesson.scheduled_date,
+      // Fetch all users in one call for efficiency
+      const allUsers = await base44.entities.User.filter({
+        email: { $in: studentEmails }
       });
-      const alreadyEnrolled = new Set((existing || []).map(p => p.student_email));
+      const userMap = Object.fromEntries(allUsers.map(u => [u.email, u]));
 
-      const toCreate = studentEmails.filter(email => !alreadyEnrolled.has(email));
-      const skipped = studentEmails.filter(email => alreadyEnrolled.has(email));
+      // Fetch ALL existing participations for this lesson (any date) to check duplicates
+      const allParticipations = await base44.entities.LessonParticipation.filter({
+        lesson_id: scheduledLesson.lesson_id
+      });
+      const alreadyTookLesson = new Set(allParticipations.map(p => p.student_email));
 
+      // Parse lesson date in Jerusalem timezone
+      const lessonDateStr = scheduledLesson.scheduled_date.includes('T') 
+        ? scheduledLesson.scheduled_date.split('T')[0] 
+        : scheduledLesson.scheduled_date;
+
+      const toCreate = [];
+      const addedNames = [];
+      let skippedAlreadyTook = 0;
+      let skippedRegisteredAfter = 0;
+
+      for (const email of studentEmails) {
+        const user = userMap[email];
+        
+        // Check 1: Already took this lesson (any date)
+        if (alreadyTookLesson.has(email)) {
+          skippedAlreadyTook++;
+          continue;
+        }
+
+        // Check 2: User registered after lesson date
+        if (user?.created_date) {
+          const userCreatedDateStr = user.created_date.split('T')[0]; // YYYY-MM-DD in UTC
+          if (userCreatedDateStr > lessonDateStr) {
+            skippedRegisteredAfter++;
+            continue;
+          }
+        }
+
+        // Passed all checks - add to list
+        toCreate.push(email);
+        addedNames.push(user?.full_name || user?.first_name && user?.last_name 
+          ? `${user.first_name} ${user.last_name}` 
+          : email);
+      }
+
+      // Create participation records
       if (toCreate.length > 0) {
         const records = toCreate.map(email => ({
           lesson_id: scheduledLesson.lesson_id,
@@ -296,8 +340,13 @@ export default function GroupScheduleManager({ group }) {
         await base44.entities.LessonParticipation.bulkCreate(records);
       }
 
-      setEnrollSummary({ added: toCreate, skipped });
-      toast.success(`נוספו ${toCreate.length} תלמידים, דולגו ${skipped.length}`);
+      // Show summary popup
+      setEnrollSummary({ 
+        added: toCreate, 
+        addedNames,
+        skippedAlreadyTook, 
+        skippedRegisteredAfter 
+      });
     } catch (error) {
       console.error("Error enrolling students:", error);
       toast.error("שגיאה בשיוך תלמידים: " + (error.message || ""));
@@ -705,12 +754,41 @@ export default function GroupScheduleManager({ group }) {
                 </Button>
 
                 {enrollSummary && (
-                  <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-sm text-right space-y-1">
-                    <p className="font-bold text-indigo-700">סיכום שיוך תלמידים:</p>
-                    <p className="text-green-700">✅ נוספו: {enrollSummary.added.length} תלמידים</p>
-                    <p className="text-gray-600">⏭️ דולגו (כבר קיימים): {enrollSummary.skipped.length} תלמידים</p>
-                    {enrollSummary.skipped.length > 0 && (
-                      <p className="text-gray-500 text-xs">{enrollSummary.skipped.join(", ")}</p>
+                  <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-300 rounded-xl p-4 text-sm text-right space-y-3">
+                    <p className="font-black text-indigo-800 text-base">📊 סיכום שיוך תלמידים</p>
+                    
+                    {enrollSummary.added.length > 0 ? (
+                      <div className="bg-white/80 rounded-lg p-3 space-y-2">
+                        <p className="text-green-700 font-bold text-base">✅ נוספו בהצלחה: {enrollSummary.added.length} תלמידים</p>
+                        <div className="text-gray-700 text-xs space-y-1 max-h-32 overflow-y-auto">
+                          {enrollSummary.addedNames.map((name, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <span className="text-green-600">•</span>
+                              <span>{name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3">
+                        <p className="text-yellow-800 font-bold">⚠️ לא נוספו תלמידים</p>
+                      </div>
+                    )}
+
+                    {(enrollSummary.skippedAlreadyTook > 0 || enrollSummary.skippedRegisteredAfter > 0) && (
+                      <div className="bg-white/80 rounded-lg p-3 space-y-1.5">
+                        <p className="text-gray-700 font-bold text-sm">סיבות לדילוג:</p>
+                        {enrollSummary.skippedAlreadyTook > 0 && (
+                          <p className="text-orange-700 text-xs">
+                            🔄 {enrollSummary.skippedAlreadyTook} תלמידים כבר עברו את השיעור בעבר
+                          </p>
+                        )}
+                        {enrollSummary.skippedRegisteredAfter > 0 && (
+                          <p className="text-red-700 text-xs">
+                            📅 {enrollSummary.skippedRegisteredAfter} תלמידים נרשמו אחרי תאריך השיעור
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
