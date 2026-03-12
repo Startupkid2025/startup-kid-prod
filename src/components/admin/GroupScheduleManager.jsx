@@ -334,7 +334,7 @@ export default function GroupScheduleManager({ group }) {
           lesson_id: scheduledLesson.lesson_id,
           student_email: email,
           lesson_date: scheduledLesson.scheduled_date,
-          attended: false,
+          attended: true,
           watched_recording: false,
           survey_completed: false,
         }));
