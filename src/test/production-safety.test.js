@@ -217,6 +217,43 @@ describe('Branch sync check', () => {
     // Warn but don't fail — orphans are suspicious but not always bugs
   });
 
+// ─── 8. Null-safety: userData access must use optional chaining ───
+
+describe('userData null-safety', () => {
+  const pagesToCheck = [
+    'src/pages/Home1.jsx',
+    'src/pages/Progress1.jsx',
+    'src/pages/Profile1.jsx',
+    'src/pages/Leaderboard1.jsx',
+  ];
+
+  for (const file of pagesToCheck) {
+    const name = file.split('/').pop();
+
+    it(`${name} does not use unguarded userData[...] bracket access`, () => {
+      const fullPath = resolve(ROOT, file);
+      if (!existsSync(fullPath)) return;
+      const content = readFileSync(fullPath, 'utf-8');
+      // Match userData[`...`] or userData[expr] WITHOUT optional chaining
+      // Allowed: userData?.[...], userData?.prop
+      // Disallowed: userData[...] (crashes when userData is null)
+      const unsafeBracket = /\buserData\s*\[/g;
+      const matches = [...content.matchAll(unsafeBracket)];
+      if (matches.length > 0) {
+        const lines = content.split('\n');
+        const locations = matches.map(m => {
+          const lineNum = content.substring(0, m.index).split('\n').length;
+          return `  line ${lineNum}: ${lines[lineNum - 1].trim()}`;
+        });
+        throw new Error(
+          `${name} has unguarded userData[...] access (crashes when userData is null):\n${locations.join('\n')}\n` +
+          `Fix: use userData?.[...] instead`
+        );
+      }
+    });
+  }
+});
+
   it('no source file drift between dev and main', () => {
     if (!isGitRepo) return;
     try {

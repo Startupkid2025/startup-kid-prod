@@ -1,0 +1,269 @@
+name: Sentry Auto-Fix
+
+on:
+  # Triggered by Sentry webhook relay or external caller
+  repository_dispatch:
+    types: [sentry-bug]
+
+  # Manual trigger with Sentry issue URL
+  workflow_dispatch:
+    inputs:
+      sentry_issue_url:
+        description: "Sentry issue URL (e.g. https://startupkid.sentry.io/issues/12345)"
+        required: true
+      severity:
+        description: "Override severity (low/medium/high/critical)"
+        required: false
+        default: ""
+
+  # Poll Sentry for new unresolved issues every 30 minutes
+  schedule:
+    - cron: "*/30 * * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # On schedule: poll Sentry for new unresolved issues, then dispatch one workflow per issue
+  poll:
+    name: Poll Sentry for new issues
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check for new unresolved issues
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SENTRY_ORG="startupkid"
+          SENTRY_PROJECT="startup-kid-app"
+
+          # Fetch unresolved issues from the last 30 minutes
+          SINCE=$(date -u -d '30 minutes ago' '+%Y-%m-%dT%H:%M:%S' 2>/dev/null || date -u -v-30M '+%Y-%m-%dT%H:%M:%S')
+
+          ISSUES=$(curl -sf \
+            -H "Authorization: Bearer $SENTRY_AUTH_TOKEN" \
+            "https://sentry.io/api/0/projects/$SENTRY_ORG/$SENTRY_PROJECT/issues/?query=is:unresolved+firstSeen:>$SINCE&limit=5" \
+            2>/dev/null || echo "[]")
+
+          COUNT=$(echo "$ISSUES" | jq 'length')
+          echo "Found $COUNT new unresolved issues since $SINCE"
+
+          if [ "$COUNT" = "0" ] || [ "$COUNT" = "null" ]; then
+            echo "No new issues. Exiting."
+            exit 0
+          fi
+
+          # Trigger a workflow for each new issue (max 3 to avoid runaway)
+          echo "$ISSUES" | jq -r '.[:3][] | "\(.id) \(.permalink // "https://startupkid.sentry.io/issues/\(.id)") \(.level // "error")"' | \
+          while read -r ISSUE_ID ISSUE_URL LEVEL; do
+            echo "Dispatching autofix for issue $ISSUE_ID ($LEVEL)"
+            gh api repos/${{ github.repository }}/dispatches \
+              -f event_type=sentry-bug \
+              -f "client_payload[issue_id]=$ISSUE_ID" \
+              -f "client_payload[issue_url]=$ISSUE_URL" \
+              -f "client_payload[severity]=$LEVEL"
+          done
+
+  autofix:
+    name: Investigate & Fix
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev/startupkid
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Extract Sentry issue details
+        id: sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          # Determine issue ID from dispatch type
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ISSUE_URL="${{ github.event.inputs.sentry_issue_url }}"
+            ISSUE_ID=$(echo "$ISSUE_URL" | grep -oP 'issues/\K[0-9]+')
+            SEVERITY="${{ github.event.inputs.severity }}"
+          else
+            ISSUE_ID="${{ github.event.client_payload.issue_id }}"
+            ISSUE_URL="${{ github.event.client_payload.issue_url }}"
+            SEVERITY="${{ github.event.client_payload.severity }}"
+          fi
+
+          echo "issue_id=$ISSUE_ID" >> "$GITHUB_OUTPUT"
+          echo "issue_url=$ISSUE_URL" >> "$GITHUB_OUTPUT"
+
+          # Fetch issue details from Sentry API
+          SENTRY_ORG="startupkid"
+          SENTRY_PROJECT="startup-kid-app"
+
+          ISSUE_JSON=$(curl -sf \
+            -H "Authorization: Bearer $SENTRY_AUTH_TOKEN" \
+            "https://sentry.io/api/0/organizations/$SENTRY_ORG/issues/$ISSUE_ID/" 2>/dev/null || echo "{}")
+
+          if [ "$ISSUE_JSON" = "{}" ]; then
+            echo "::warning::Could not fetch Sentry issue details. Proceeding with URL only."
+            echo "title=Sentry Issue $ISSUE_ID" >> "$GITHUB_OUTPUT"
+            echo "details=See $ISSUE_URL" >> "$GITHUB_OUTPUT"
+            echo "severity=${SEVERITY:-unknown}" >> "$GITHUB_OUTPUT"
+          else
+            TITLE=$(echo "$ISSUE_JSON" | jq -r '.title // "Unknown error"')
+            CULPRIT=$(echo "$ISSUE_JSON" | jq -r '.culprit // "unknown"')
+            ERROR_TYPE=$(echo "$ISSUE_JSON" | jq -r '.type // "error"')
+            EVENT_COUNT=$(echo "$ISSUE_JSON" | jq -r '.count // "0"')
+            FIRST_SEEN=$(echo "$ISSUE_JSON" | jq -r '.firstSeen // "unknown"')
+            LEVEL=$(echo "$ISSUE_JSON" | jq -r '.level // "error"')
+
+            echo "title=$TITLE" >> "$GITHUB_OUTPUT"
+            echo "severity=${SEVERITY:-$LEVEL}" >> "$GITHUB_OUTPUT"
+
+            # Fetch latest event for stack trace
+            EVENT_JSON=$(curl -sf \
+              -H "Authorization: Bearer $SENTRY_AUTH_TOKEN" \
+              "https://sentry.io/api/0/organizations/$SENTRY_ORG/issues/$ISSUE_ID/events/latest/" 2>/dev/null || echo "{}")
+
+            STACKTRACE=""
+            if [ "$EVENT_JSON" != "{}" ]; then
+              STACKTRACE=$(echo "$EVENT_JSON" | jq -r '
+                .entries[]? | select(.type == "exception") |
+                .data.values[]? |
+                "\(.type): \(.value)\n\(.stacktrace.frames[-5:][]? | "  \(.filename):\(.lineNo) in \(.function // "?")")"
+              ' 2>/dev/null || echo "")
+            fi
+
+            DETAILS=$(cat <<DETAILS_EOF
+          Error: $TITLE
+          Type: $ERROR_TYPE
+          Culprit: $CULPRIT
+          Level: $LEVEL
+          Event count: $EVENT_COUNT
+          First seen: $FIRST_SEEN
+          Stack trace:
+          $STACKTRACE
+          DETAILS_EOF
+            )
+            # Write multiline to output
+            {
+              echo "details<<GHEOF"
+              echo "$DETAILS"
+              echo "GHEOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create fix branch
+        id: branch
+        run: |
+          BRANCH="autofix/sentry-${{ steps.sentry.outputs.issue_id }}"
+          git checkout -b "$BRANCH"
+          echo "name=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Run Claude Code
+        id: claude
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # Build the prompt with Sentry context
+          PROMPT=$(cat <<'PROMPT_EOF'
+          You are fixing a production bug detected by Sentry in a Hebrew educational app (React + Vite + Base44).
+
+          ## Sentry Issue
+          URL: ${{ steps.sentry.outputs.issue_url }}
+          ${{ steps.sentry.outputs.details }}
+
+          ## Instructions
+          1. Investigate the error by reading relevant source files.
+          2. Identify the root cause — focus on null-safety, network error handling, and missing data guards.
+          3. Apply a minimal, targeted fix. Do NOT refactor unrelated code.
+          4. If the fix touches a pattern that could repeat elsewhere, check other files for the same pattern.
+          5. Run `npx vitest run src/test/production-safety.test.js` to verify tests still pass.
+          6. Summarize what you changed and why in a file called AUTOFIX_SUMMARY.md (will be used for the PR body).
+
+          ## Constraints
+          - NEVER add new npm dependencies (Base44 Publish won't install them).
+          - Use optional chaining (?.) for all user data access.
+          - Keep fixes minimal — this will be reviewed by a human.
+          PROMPT_EOF
+          )
+
+          npx @anthropic-ai/claude-code@latest -p "$PROMPT" \
+            --allowedTools "Read,Edit,Write,Glob,Grep,Bash" \
+            --max-turns 20 \
+            2>&1 | tee claude-output.log
+
+          # Check if any files were changed
+          if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create PR
+        if: steps.claude.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          git commit -m "$(cat <<'EOF'
+          fix: auto-fix Sentry issue #${{ steps.sentry.outputs.issue_id }}
+
+          ${{ steps.sentry.outputs.title }}
+
+          Sentry: ${{ steps.sentry.outputs.issue_url }}
+
+          Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+          EOF
+          )"
+
+          git push origin "${{ steps.branch.outputs.name }}"
+
+          # Build PR body
+          if [ -f AUTOFIX_SUMMARY.md ]; then
+            SUMMARY=$(cat AUTOFIX_SUMMARY.md)
+          else
+            SUMMARY="Claude Code investigated and applied a fix. See diff for details."
+          fi
+
+          gh pr create \
+            --base dev/startupkid \
+            --head "${{ steps.branch.outputs.name }}" \
+            --draft \
+            --title "fix: Sentry #${{ steps.sentry.outputs.issue_id }} — ${{ steps.sentry.outputs.title }}" \
+            --body "$(cat <<PR_EOF
+          ## Sentry Auto-Fix
+
+          **Issue:** ${{ steps.sentry.outputs.issue_url }}
+          **Severity:** ${{ steps.sentry.outputs.severity }}
+          **Error:** ${{ steps.sentry.outputs.title }}
+
+          ## Summary
+          $SUMMARY
+
+          ## Review Checklist
+          - [ ] Fix is correct and minimal
+          - [ ] No new dependencies added
+          - [ ] Tests pass
+          - [ ] Safe to cherry-pick to main
+
+          🤖 Generated with [Claude Code](https://claude.com/claude-code) via Sentry Auto-Fix pipeline
+          PR_EOF
+          )"
+
+      - name: No changes needed
+        if: steps.claude.outputs.changed != 'true'
+        run: |
+          echo "::notice::Claude Code investigated but found no code changes needed for Sentry issue #${{ steps.sentry.outputs.issue_id }}"
