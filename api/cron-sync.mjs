@@ -5,7 +5,8 @@ import { syncClockifyMonday } from '../scripts/sync-clockify-monday.mjs';
  * Vercel serverless cron endpoint — runs all periodic syncs:
  * 1. מנויים → סיכום קבוצות (group subscriber counts)
  * 2. Backfill "עבר שיעור ניסיון" checkbox for trial subscribers
- * 3. Clockify hours/subscriber ratio (monthly)
+ * 3. Calculate days-to-close for items missing it
+ * 4. Clockify hours/subscriber ratio (monthly)
  *
  * Called every 5 minutes via GitHub Actions.
  * Protected by CRON_SECRET to prevent unauthorized access.
@@ -15,15 +16,8 @@ const MONDAY_API = 'https://api.monday.com/v2';
 const SUBSCRIBERS_BOARD_ID = 5092549262;
 const COL_SUB_STATUS = 'deal_stage';
 const COL_CHECKBOX = 'boolean_mm1ddfmv';
-<<<<<<< Updated upstream
-
-// Status index 2 = "נרשם לשיעור ראשון"
-const TRIAL_STATUS_INDEX = 2;
-=======
 const COL_CLOSE_DATE = 'date_mm13smd7';       // תאריך סגירת ליד
-const COL_INTRO_DATE = 'date_mm14r0vp';       // פולואפ - שיחת היכרות
 const COL_DAYS_TO_CLOSE = 'numeric_mm1d3q3z'; // ימים עד סגירה
->>>>>>> Stashed changes
 
 async function mondayQuery(token, query) {
   const res = await fetch(MONDAY_API, {
@@ -45,7 +39,6 @@ async function mondayQuery(token, query) {
  * and check them.
  */
 async function backfillTrialCheckbox(token) {
-  // Get items with status = נרשם לשיעור ראשון
   const query = `query {
     boards(ids: ${SUBSCRIBERS_BOARD_ID}) {
       items_page(limit: 500, query_params: {rules: [
@@ -66,7 +59,6 @@ async function backfillTrialCheckbox(token) {
   const data = await mondayQuery(token, query);
   const items = data.boards[0].items_page.items;
 
-  // Filter to only unchecked items
   const unchecked = items.filter(item => {
     const cb = item.column_values.find(c => c.id === COL_CHECKBOX);
     return !cb || cb.text !== 'v';
@@ -76,7 +68,6 @@ async function backfillTrialCheckbox(token) {
     return { checked: 0, total: items.length };
   }
 
-  // Update unchecked items
   const colValues = JSON.stringify({ [COL_CHECKBOX]: { checked: 'true' } });
   const updates = unchecked.map(item =>
     mondayQuery(token, `mutation {
@@ -92,17 +83,14 @@ async function backfillTrialCheckbox(token) {
   return { checked: unchecked.length, total: items.length };
 }
 
-<<<<<<< Updated upstream
-=======
 /**
- * Calculate days between שיחת היכרות and סגירת ליד for items
- * that have both dates but no value in ימים עד סגירה.
+ * Calculate days between item creation and סגירת ליד for items
+ * that have a close date but no value in ימים עד סגירה.
  */
 async function calcDaysToClose(token) {
   let cursor = null;
   const toUpdate = [];
 
-  // First page
   const firstQuery = `query {
     boards(ids: ${SUBSCRIBERS_BOARD_ID}) {
       items_page(limit: 500) {
@@ -148,7 +136,6 @@ async function calcDaysToClose(token) {
     return { updated: 0 };
   }
 
-  // Update in parallel
   const updates = toUpdate.map(({ id, days }) => {
     const colValues = JSON.stringify({ [COL_DAYS_TO_CLOSE]: String(days) });
     return mondayQuery(token, `mutation {
@@ -169,7 +156,6 @@ function processItems(items, toUpdate) {
     const closeCol = item.column_values.find(c => c.id === COL_CLOSE_DATE);
     const daysCol = item.column_values.find(c => c.id === COL_DAYS_TO_CLOSE);
 
-    // Skip if already calculated or missing dates
     if (daysCol?.text) continue;
     if (!closeCol?.text || !item.created_at) continue;
 
@@ -183,13 +169,10 @@ function processItems(items, toUpdate) {
   }
 }
 
->>>>>>> Stashed changes
 export default async function handler(req, res) {
-  // Verify cron secret
   const secret = req.headers['x-cron-secret'] || req.query.secret;
   const expected = (process.env.CRON_SECRET || '').trim();
   if (!expected) {
-    console.error('CRON_SECRET env var not set');
     return res.status(500).json({ error: 'CRON_SECRET not configured' });
   }
   if (secret.trim() !== expected) {
@@ -204,7 +187,6 @@ export default async function handler(req, res) {
   const results = {};
 
   try {
-    // 1. Sync group subscriber counts
     results.groups = await syncGroups(token);
   } catch (err) {
     console.error('Group sync failed:', err);
@@ -212,7 +194,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 2. Backfill trial checkboxes
     results.trial = await backfillTrialCheckbox(token);
   } catch (err) {
     console.error('Trial backfill failed:', err);
@@ -220,10 +201,6 @@ export default async function handler(req, res) {
   }
 
   try {
-<<<<<<< Updated upstream
-    // 3. Clockify hours/subscriber ratio
-=======
-    // 3. Calculate days-to-close for items missing it
     results.daysToClose = await calcDaysToClose(token);
   } catch (err) {
     console.error('Days-to-close calc failed:', err);
@@ -231,8 +208,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 4. Clockify hours/subscriber ratio
->>>>>>> Stashed changes
     const clockifyKey = process.env.CLOCKIFY_API_KEY;
     if (clockifyKey) {
       results.clockify = await syncClockifyMonday({ clockifyKey, mondayToken: token });
