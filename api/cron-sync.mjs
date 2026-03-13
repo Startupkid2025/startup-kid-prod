@@ -15,9 +15,15 @@ const MONDAY_API = 'https://api.monday.com/v2';
 const SUBSCRIBERS_BOARD_ID = 5092549262;
 const COL_SUB_STATUS = 'deal_stage';
 const COL_CHECKBOX = 'boolean_mm1ddfmv';
+<<<<<<< Updated upstream
 
 // Status index 2 = "נרשם לשיעור ראשון"
 const TRIAL_STATUS_INDEX = 2;
+=======
+const COL_CLOSE_DATE = 'date_mm13smd7';       // תאריך סגירת ליד
+const COL_INTRO_DATE = 'date_mm14r0vp';       // פולואפ - שיחת היכרות
+const COL_DAYS_TO_CLOSE = 'numeric_mm1d3q3z'; // ימים עד סגירה
+>>>>>>> Stashed changes
 
 async function mondayQuery(token, query) {
   const res = await fetch(MONDAY_API, {
@@ -86,6 +92,98 @@ async function backfillTrialCheckbox(token) {
   return { checked: unchecked.length, total: items.length };
 }
 
+<<<<<<< Updated upstream
+=======
+/**
+ * Calculate days between שיחת היכרות and סגירת ליד for items
+ * that have both dates but no value in ימים עד סגירה.
+ */
+async function calcDaysToClose(token) {
+  let cursor = null;
+  const toUpdate = [];
+
+  // First page
+  const firstQuery = `query {
+    boards(ids: ${SUBSCRIBERS_BOARD_ID}) {
+      items_page(limit: 500) {
+        cursor
+        items {
+          id
+          created_at
+          column_values(ids: ["${COL_CLOSE_DATE}", "${COL_DAYS_TO_CLOSE}"]) {
+            id
+            text
+          }
+        }
+      }
+    }
+  }`;
+
+  const firstData = await mondayQuery(token, firstQuery);
+  const firstPage = firstData.boards[0].items_page;
+  processItems(firstPage.items, toUpdate);
+  cursor = firstPage.cursor;
+
+  while (cursor) {
+    const nextQuery = `query {
+      next_items_page(limit: 500, cursor: "${cursor}") {
+        cursor
+        items {
+          id
+          created_at
+          column_values(ids: ["${COL_CLOSE_DATE}", "${COL_DAYS_TO_CLOSE}"]) {
+            id
+            text
+          }
+        }
+      }
+    }`;
+    const nextData = await mondayQuery(token, nextQuery);
+    const nextPage = nextData.next_items_page;
+    processItems(nextPage.items, toUpdate);
+    cursor = nextPage.cursor;
+  }
+
+  if (toUpdate.length === 0) {
+    return { updated: 0 };
+  }
+
+  // Update in parallel
+  const updates = toUpdate.map(({ id, days }) => {
+    const colValues = JSON.stringify({ [COL_DAYS_TO_CLOSE]: String(days) });
+    return mondayQuery(token, `mutation {
+      change_multiple_column_values(
+        board_id: ${SUBSCRIBERS_BOARD_ID},
+        item_id: ${id},
+        column_values: ${JSON.stringify(colValues)}
+      ) { id }
+    }`);
+  });
+
+  await Promise.all(updates);
+  return { updated: toUpdate.length };
+}
+
+function processItems(items, toUpdate) {
+  for (const item of items) {
+    const closeCol = item.column_values.find(c => c.id === COL_CLOSE_DATE);
+    const daysCol = item.column_values.find(c => c.id === COL_DAYS_TO_CLOSE);
+
+    // Skip if already calculated or missing dates
+    if (daysCol?.text) continue;
+    if (!closeCol?.text || !item.created_at) continue;
+
+    const closeDate = new Date(closeCol.text);
+    const createdDate = new Date(item.created_at);
+    const days = Math.round((closeDate - createdDate) / (1000 * 60 * 60 * 24));
+
+    if (!isNaN(days) && days >= 0) {
+      toUpdate.push({ id: item.id, days });
+    }
+  }
+}
+
+>>>>>>> Stashed changes
 export default async function handler(req, res) {
   // Verify cron secret
   const secret = req.headers['x-cron-secret'] || req.query.secret;
@@ -122,7 +220,19 @@ export default async function handler(req, res) {
   }
 
   try {
+<<<<<<< Updated upstream
     // 3. Clockify hours/subscriber ratio
+=======
+    // 3. Calculate days-to-close for items missing it
+    results.daysToClose = await calcDaysToClose(token);
+  } catch (err) {
+    console.error('Days-to-close calc failed:', err);
+    results.daysToClose = { error: err.message };
+  }
+
+  try {
+    // 4. Clockify hours/subscriber ratio
+>>>>>>> Stashed changes
     const clockifyKey = process.env.CLOCKIFY_API_KEY;
     if (clockifyKey) {
       results.clockify = await syncClockifyMonday({ clockifyKey, mondayToken: token });
