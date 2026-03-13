@@ -37,27 +37,36 @@ export default function Profile() {
   }, []);
 
   const loadUserData = async () => {
-    const user = await base44.auth.me();
-    setUserData(user);
-    setEditData({
-      age: user.age || "",
-      bio: user.bio || "",
-      phone_number: user.phone_number || ""
-    });
-
-    // Calculate actual attended lessons
     try {
-      const participations = await base44.entities.LessonParticipation.filter({
-        student_email: user.email,
-        attended: true
+      const user = await base44.auth.me();
+      setUserData(user);
+      setEditData({
+        age: user.age || "",
+        bio: user.bio || "",
+        phone_number: user.phone_number || ""
       });
-      setActualLessonsCount(participations.length);
-    } catch (error) {
-      console.error("Error loading participations:", error);
-      setActualLessonsCount(0);
-    }
 
-    setIsLoading(false);
+      // Calculate actual attended lessons
+      try {
+        const participations = await base44.entities.LessonParticipation.filter({
+          student_email: user.email,
+          attended: true
+        });
+        setActualLessonsCount(participations.length);
+      } catch (error) {
+        console.error("Error loading participations:", error);
+        setActualLessonsCount(0);
+      }
+
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error loading user data:", error);
+      if (error.response?.status === 404 || error.response?.status === 401 || error.response?.status === 403 ||
+          (error.message && error.message.includes("Authentication required"))) {
+        await base44.auth.redirectToLogin();
+      }
+      setIsLoading(false);
+    }
   };
 
   const handleSave = async () => {
