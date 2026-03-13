@@ -27,11 +27,6 @@ export default defineConfig({
     sourcemap: process.env.BUILD_ENV === 'dev',
     // Target modern browsers for smaller bundles
     target: 'es2020',
-    rollupOptions: {
-      // web-vitals is loaded via dynamic import at runtime; mark external so Rollup
-      // doesn't fail when the package isn't installed (Base44 Publish environment).
-      external: ['web-vitals'],
-    },
   },
   test: {
     environment: 'jsdom',
