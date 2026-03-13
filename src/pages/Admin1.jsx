@@ -4,7 +4,7 @@ import { safeRequest } from "../components/utils/base44SafeRequest";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, BookOpen, Shield, Edit2, Trash2, FileText, Languages, Filter, Search, ChevronDown, ChevronUp, RefreshCw, Loader2, GraduationCap } from "lucide-react";
+import { Plus, Users, BookOpen, Shield, Edit2, Trash2, FileText, Languages, Filter, Search, ChevronDown, ChevronUp, RefreshCw, Loader2, GraduationCap, BarChart3 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,7 @@ import EconomyAdminPanel from "../components/admin/EconomyAdminPanel";
 import InvestmentsManager from "../components/admin/InvestmentsManager";
 import ScheduledTasksPanel from "../components/admin/ScheduledTasksPanel";
 import CoinLogsPanel from "../components/admin/CoinLogsPanel";
+import ActivityDashboard from "../components/admin/ActivityDashboard";
 import { AVATAR_ITEMS } from '../components/avatar/TamagotchiAvatar';
 
 export default function Admin() {
@@ -1321,8 +1322,15 @@ export default function Admin() {
       <Tabs defaultValue="students" value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="mb-8 overflow-x-auto">
           <TabsList className="inline-flex w-auto min-w-full bg-white/5 backdrop-blur-md border border-white/10 p-1 rounded-xl">
-            <TabsTrigger 
-              value="students" 
+            <TabsTrigger
+              value="activity"
+              className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white whitespace-nowrap px-3 py-2"
+            >
+              <BarChart3 className="w-4 h-4 ml-1" />
+              <span className="hidden sm:inline">פעילות</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="students"
               className="data-[state=active]:bg-white/20 data-[state=active]:shadow-lg rounded-lg transition-all text-white/70 data-[state=active]:text-white whitespace-nowrap px-3 py-2"
             >
               <Users className="w-4 h-4 ml-1" />
@@ -1386,6 +1394,10 @@ export default function Admin() {
             </TabsTrigger>
           </TabsList>
         </div>
+
+        <TabsContent value="activity">
+          <ActivityDashboard />
+        </TabsContent>
 
         <TabsContent value="students">
           {/* Bulk Actions Bar */}
