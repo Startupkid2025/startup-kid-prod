@@ -818,8 +818,8 @@ export default function Home() {
 
               <div className="space-y-4">
                 {SKILLS.map((skill, index) => {
-                  const level = userData[`${skill.key}_level`] || 1;
-                  const xp = userData[`${skill.key}_xp`] || 0;
+                  const level = userData?.[`${skill.key}_level`] || 1;
+                  const xp = userData?.[`${skill.key}_xp`] || 0;
                   const lessonCount = skillLessonCounts[skill.key] || 0;
 
                   return (
