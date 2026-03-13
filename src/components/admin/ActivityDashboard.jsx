@@ -388,7 +388,8 @@ export default function ActivityDashboard() {
 
   const syncToMonday = async () => {
     if (!metrics) return;
-    const token = import.meta.env.VITE_MONDAY_API_TOKEN;
+    const token = import.meta.env.VITE_MONDAY_API_TOKEN
+      || "eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjYzMjg0ODQ0NywiYWFpIjoxMSwidWlkIjo5NzE5MTA1OCwiaWFkIjoiMjAyNi0wMy0xM1QxNDo1ODozMi40NzZaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6MzI4NDY3MzUsInJnbiI6ImV1YzEifQ.LPUVmeRscSwlDXCL2XCaEjMVeQ7tuEp7zP49oE9tfC8";
     if (!token) {
       toast.error("חסר VITE_MONDAY_API_TOKEN בהגדרות");
       return;
