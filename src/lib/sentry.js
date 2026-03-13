@@ -60,4 +60,20 @@ export function initSentry() {
   });
 }
 
+/**
+ * Report a web-vitals metric to Sentry via custom measurement.
+ */
+export function reportMetricToSentry(metric) {
+  // Attach as a Sentry measurement on the current transaction
+  const transaction = Sentry.getActiveSpan();
+  if (transaction) {
+    transaction.setAttribute(`web_vital.${metric.name}`, metric.value);
+  }
+  // Also send as a Sentry metric
+  Sentry.metrics?.distribution(metric.name, metric.value, {
+    unit: "millisecond",
+    tags: { rating: metric.rating },
+  });
+}
+
 export { Sentry };
