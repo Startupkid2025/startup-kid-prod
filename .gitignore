@@ -33,3 +33,6 @@ dist-ssr
 .env.local
 startup-kid-app-dev/
 base44/.app.jsonc
+.claude/
+.vercel/
+fider/

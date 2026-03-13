@@ -1,0 +1,17 @@
+{
+  "name": "GroupAutoEnrollTask",
+  "type": "object",
+  "properties": {
+    "group_id": { "type": "string" },
+    "group_name": { "type": "string" },
+    "day_of_week": { "type": "number" },
+    "check_time": { "type": "string" },
+    "next_check_date": { "type": "string" },
+    "status": { "type": "string" },
+    "retry_count": { "type": "number" },
+    "last_check_at": { "type": "string" },
+    "last_result": { "type": "string" },
+    "enrolled_count": { "type": "number" },
+    "error_message": { "type": "string" }
+  }
+}
