@@ -28,13 +28,13 @@ function KpiCard({ title, value, subtitle, trend, color = "purple", icon }) {
     cyan: "from-cyan-500/20 to-cyan-600/10 border-cyan-500/30",
   };
   return (
-    <div className={`bg-gradient-to-br ${colors[color]} border rounded-xl p-4`}>
+    <div className={`bg-gradient-to-br ${colors[color]} border rounded-xl p-4`} dir="rtl">
       <div className="flex items-center justify-between mb-1">
         <span className="text-white/60 text-sm">{title}</span>
         {icon && <span className="text-xl">{icon}</span>}
       </div>
       <div className="text-3xl font-bold text-white">{value}</div>
-      <div className="flex items-center gap-1 mt-1">
+      <div className="flex items-center gap-1 mt-1 flex-wrap">
         {trend !== undefined && (
           <span className={`text-xs font-medium ${trend >= 0 ? "text-green-400" : "text-red-400"}`}>
             {trend >= 0 ? "▲" : "▼"} {Math.abs(trend)}%
@@ -53,7 +53,7 @@ function BarChart({ data, maxVal, labelKey, valueKey, colorFn }) {
     <div className="space-y-1.5">
       {data.map((d, i) => (
         <div key={i} className="flex items-center gap-2">
-          <span className="text-white/50 text-xs w-12 text-left shrink-0">{d[labelKey]}</span>
+          <span className="text-white/50 text-xs w-12 text-right shrink-0">{d[labelKey]}</span>
           <div className="flex-1 bg-white/5 rounded-full h-5 overflow-hidden">
             <div
               className={`h-full rounded-full ${colorFn ? colorFn(d, i) : "bg-purple-500/60"}`}
@@ -366,7 +366,7 @@ export default function ActivityDashboard() {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 text-white animate-spin" />
-        <span className="text-white/60 mr-3">טוען נתוני פעילות...</span>
+        <span className="text-white/60 mr-3" dir="rtl">טוען נתוני פעילות...</span>
       </div>
     );
   }
@@ -456,7 +456,7 @@ export default function ActivityDashboard() {
   const m = metrics;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir="rtl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -480,7 +480,7 @@ export default function ActivityDashboard() {
           </Button>
           <Button size="sm" variant="ghost" onClick={syncToMonday} disabled={syncing || !metrics} className="text-white/50">
             {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <TrendingUp className="w-4 h-4" />}
-            <span className="text-xs mr-1">Monday</span>
+            <span className="text-xs ml-1">Monday</span>
           </Button>
         </div>
       </div>
@@ -497,8 +497,8 @@ export default function ActivityDashboard() {
             value={m.healthScore} max={100} size={70}
             color={m.healthScore >= 70 ? "#4ade80" : m.healthScore >= 40 ? "#fbbf24" : "#f87171"}
           />
-          <div className="text-white/30 text-[10px] text-center leading-tight mt-1 max-w-[120px]">
-            ציון משוקלל: כניסות יומיות, שימור, דביקות, משתמשים פעילים ולא רדומים
+          <div className="text-white/30 text-[10px] text-center leading-tight mt-1 max-w-[140px]" dir="rtl">
+            ציון משוקלל: כניסות יומיות, שימור, חזרו שוב, משתמשים פעילים ולא רדומים
           </div>
         </div>
         <KpiCard title="משתמשים היום (DAU)" value={m.dau} icon="👥"
@@ -635,13 +635,13 @@ export default function ActivityDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm" dir="rtl">
                 <span className="text-white/60">הוכנסו</span>
-                <span className="text-green-400 font-bold">{m.coinsEarned.toLocaleString()} 🪙</span>
+                <span className="text-green-400 font-bold">🪙 {m.coinsEarned.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm" dir="rtl">
                 <span className="text-white/60">הוצאו</span>
-                <span className="text-red-400 font-bold">{m.coinsSpent.toLocaleString()} 🪙</span>
+                <span className="text-red-400 font-bold">🪙 {m.coinsSpent.toLocaleString()}</span>
               </div>
               <div className="border-t border-white/10 pt-2 mt-2">
                 <div className="text-white/40 text-xs mb-1">מקורות הכנסה עיקריים</div>
