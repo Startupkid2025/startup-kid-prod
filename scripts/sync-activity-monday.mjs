@@ -18,8 +18,8 @@ const MONDAY_API = "https://api.monday.com/v2";
 const CRM_WORKSPACE_ID = 5906908;
 const BOARD_NAME = "דשבורד פעילות יומית";
 
-// Column IDs — set after board creation
-let BOARD_ID = null;
+// Board created 2026-03-13 in CRM workspace
+let BOARD_ID = 5093150109;
 
 function getToken() {
   const token = process.env.MONDAY_API_TOKEN;
@@ -44,6 +44,9 @@ async function mondayQuery(token, query, variables = {}) {
 
 // ── Find or create the board ─────────────────────────────
 async function findOrCreateBoard(token) {
+  // Board already exists (hardcoded)
+  if (BOARD_ID) return BOARD_ID;
+
   // Search for existing board
   const searchData = await mondayQuery(token, `{
     boards(limit: 50, workspace_ids: [${CRM_WORKSPACE_ID}]) {
@@ -61,7 +64,7 @@ async function findOrCreateBoard(token) {
   const createData = await mondayQuery(token, `mutation {
     create_board(
       board_name: "${BOARD_NAME}",
-      board_kind: public_board,
+      board_kind: public,
       workspace_id: ${CRM_WORKSPACE_ID}
     ) { id }
   }`);
@@ -163,13 +166,13 @@ export async function pushActivityMetrics(metrics) {
     total_students: String(metrics.totalStudents || 0),
     lessons: String(metrics.totalLessonsAttended || 0),
     math_answers: String(metrics.totalMathCorrect || 0),
-    words_mastered: String(metrics.totalMasteredWords || 0),
+    words: String(metrics.totalMasteredWords || 0),
     quizzes: String(metrics.totalQuizCompleted || 0),
-    coins_earned: String(metrics.coinsEarned || 0),
-    coins_spent: String(metrics.coinsSpent || 0),
-    avg_streak: String(metrics.avgStreak || 0),
+    coinsin: String(metrics.coinsEarned || 0),
+    coinsout: String(metrics.coinsSpent || 0),
+    streak: String(metrics.avgStreak || 0),
     retention: String(metrics.retentionRate || 0),
-    at_risk: String(metrics.atRiskCount || 0),
+    atrisk: String(metrics.atRiskCount || 0),
     dormant: String(metrics.dormantCount || 0),
     health: String(metrics.healthScore || 0),
   });
