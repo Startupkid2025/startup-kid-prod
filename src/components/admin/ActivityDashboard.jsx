@@ -371,44 +371,79 @@ export default function ActivityDashboard() {
     );
   }
 
-  // ── Push to Monday ──────────────────────────────────────
+  // ── Push to Monday (direct API call) ────────────────────
+  const MONDAY_BOARD_ID = 5093150109;
+  const MONDAY_API = "https://api.monday.com/v2";
+
+  const mondayQuery = async (token, query) => {
+    const res = await fetch(MONDAY_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: token, "API-Version": "2024-10" },
+      body: JSON.stringify({ query }),
+    });
+    const json = await res.json();
+    if (json.errors) throw new Error(json.errors[0].message);
+    return json.data;
+  };
+
   const syncToMonday = async () => {
     if (!metrics) return;
+    const token = import.meta.env.VITE_MONDAY_API_TOKEN;
+    if (!token) {
+      toast.error("חסר VITE_MONDAY_API_TOKEN בהגדרות");
+      return;
+    }
     setSyncing(true);
     try {
-      const payload = {
-        date: today(),
-        dau: metrics.dau,
-        wau: metrics.wau,
-        mau: metrics.mau,
-        stickiness: metrics.stickiness,
-        newUsersCount: metrics.newUsersCount,
-        totalStudents: metrics.totalStudents,
-        totalLessonsAttended: metrics.totalLessonsAttended,
-        totalMathCorrect: metrics.totalMathCorrect,
-        totalMasteredWords: metrics.totalMasteredWords,
-        totalQuizCompleted: metrics.totalQuizCompleted,
-        coinsEarned: metrics.coinsEarned,
-        coinsSpent: metrics.coinsSpent,
-        avgStreak: metrics.avgStreak,
-        retentionRate: metrics.retentionRate,
-        atRiskCount: metrics.atRiskUsers.length,
-        dormantCount: metrics.dormantUsers.length,
-        healthScore: metrics.healthScore,
-      };
+      const dateStr = today();
 
-      const endpoint = import.meta.env.VITE_CRON_ENDPOINT?.replace("/api/cron-sync", "/api/save-activity-metrics")
-        || "/api/save-activity-metrics";
-      const secret = import.meta.env.VITE_CRON_SECRET || "";
+      // Find existing item for today
+      const boardData = await mondayQuery(token, `{
+        boards(ids: [${MONDAY_BOARD_ID}]) {
+          items_page(limit: 50) {
+            items { id name column_values(ids: ["date_col"]) { id value } }
+          }
+        }
+      }`);
+      const items = boardData.boards[0]?.items_page?.items || [];
+      let itemId = null;
+      for (const item of items) {
+        const dateCol = item.column_values.find((c) => c.id === "date_col");
+        try { if (JSON.parse(dateCol?.value)?.date === dateStr) { itemId = item.id; break; } } catch {}
+      }
 
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-cron-secret": secret },
-        body: JSON.stringify(payload),
+      const colVals = JSON.stringify({
+        date_col: { date: dateStr },
+        dau: String(metrics.dau || 0),
+        wau: String(metrics.wau || 0),
+        mau: String(metrics.mau || 0),
+        stickiness: String(metrics.stickiness || 0),
+        new_users: String(metrics.newUsersCount || 0),
+        total_students: String(metrics.totalStudents || 0),
+        lessons: String(metrics.totalLessonsAttended || 0),
+        math_answers: String(metrics.totalMathCorrect || 0),
+        words: String(metrics.totalMasteredWords || 0),
+        quizzes: String(metrics.totalQuizCompleted || 0),
+        coinsin: String(metrics.coinsEarned || 0),
+        coinsout: String(metrics.coinsSpent || 0),
+        streak: String(metrics.avgStreak || 0),
+        retention: String(metrics.retentionRate || 0),
+        atrisk: String(metrics.atRiskUsers.length || 0),
+        dormant: String(metrics.dormantUsers.length || 0),
+        health: String(metrics.healthScore || 0),
       });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Failed");
-      toast.success(`סונכרן ל-Monday בהצלחה (${result.dateStr})`);
+
+      if (itemId) {
+        await mondayQuery(token, `mutation {
+          change_multiple_column_values(board_id: ${MONDAY_BOARD_ID}, item_id: ${itemId}, column_values: ${JSON.stringify(colVals)}) { id }
+        }`);
+      } else {
+        await mondayQuery(token, `mutation {
+          create_item(board_id: ${MONDAY_BOARD_ID}, item_name: "${dateStr}", column_values: ${JSON.stringify(colVals)}) { id }
+        }`);
+      }
+
+      toast.success(`סונכרן ל-Monday בהצלחה (${dateStr})`);
     } catch (err) {
       console.error("Monday sync error:", err);
       toast.error("שגיאה בסנכרון ל-Monday: " + err.message);
