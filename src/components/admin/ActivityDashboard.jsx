@@ -497,17 +497,20 @@ export default function ActivityDashboard() {
             value={m.healthScore} max={100} size={70}
             color={m.healthScore >= 70 ? "#4ade80" : m.healthScore >= 40 ? "#fbbf24" : "#f87171"}
           />
+          <div className="text-white/30 text-[10px] text-center leading-tight mt-1 max-w-[120px]">
+            ציון משוקלל: כניסות יומיות, שימור, דביקות, משתמשים פעילים ולא רדומים
+          </div>
         </div>
-        <KpiCard title="משתמשים היום" value={m.dau} icon="👥"
-          subtitle={`מתוך ${m.totalStudents}`}
+        <KpiCard title="משתמשים היום (DAU)" value={m.dau} icon="👥"
+          subtitle={`מתוך ${m.totalStudents} — כמה נכנסו היום`}
           trend={m.yesterdayDAU > 0 ? Math.round(((m.dau - m.yesterdayDAU) / m.yesterdayDAU) * 100) : undefined}
           color="purple" />
         <KpiCard title="שבועי (WAU)" value={m.wau} icon="📅"
-          subtitle={`${pct(m.wau, m.totalStudents)}% מהתלמידים`} color="blue" />
+          subtitle={`${pct(m.wau, m.totalStudents)}% — נכנסו ב-7 ימים אחרונים`} color="blue" />
         <KpiCard title="חודשי (MAU)" value={m.mau} icon="📆"
-          subtitle={`${pct(m.mau, m.totalStudents)}% מהתלמידים`} color="cyan" />
-        <KpiCard title="דביקות" value={`${m.stickiness}%`} icon="🧲"
-          subtitle="DAU/MAU" color={m.stickiness >= 20 ? "green" : "amber"} />
+          subtitle={`${pct(m.mau, m.totalStudents)}% — נכנסו ב-30 יום אחרונים`} color="cyan" />
+        <KpiCard title="חזרו שוב" value={`${m.stickiness}%`} icon="🧲"
+          subtitle="מהפעילים החודשיים — כמה חוזרים כל יום" color={m.stickiness >= 20 ? "green" : "amber"} />
         <KpiCard title="תלמידים חדשים" value={m.newUsersCount} icon="🆕"
           trend={m.newUsersTrend} subtitle={`ב-${range} ימים`} color="green" />
       </div>
