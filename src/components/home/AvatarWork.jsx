@@ -157,7 +157,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
 
     // Update leaderboard with work hours
     try {
-      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData?.email });
       if (leaderboardEntries.length > 0) {
         await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
           total_work_hours: currentWorkHours + 1
@@ -198,7 +198,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
         }
       });
       
-      if (workKingEmail === userData.email && maxWorkEarnings > 0) {
+      if (workKingEmail === userData?.email && maxWorkEarnings > 0) {
         coinsToAdd += 5; // Work king bonus!
       }
     } catch (error) {
@@ -220,7 +220,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     // Get leaderboard networth
     let leaderboardNetworth = 0;
     try {
-      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData?.email });
       if (leaderboardEntries.length > 0) {
         leaderboardNetworth = leaderboardEntries[0].total_networth || 0;
       }
@@ -231,7 +231,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     // Log work earnings
     try {
       const { logCoinChange } = await import("../utils/coinLogger");
-      await logCoinChange(userData.email, oldCoins, oldCoins + coinsToAdd, "השלמת עבודה", {
+      await logCoinChange(userData?.email, oldCoins, oldCoins + coinsToAdd, "השלמת עבודה", {
         source: 'AvatarWork',
         job: workStatus.jobName,
         coinsEarned: coinsToAdd,
@@ -249,7 +249,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     if (incomeTax > 0) {
       try {
         const { logCoinChange } = await import("../utils/coinLogger");
-        await logCoinChange(userData.email, currentCoins, currentCoins - incomeTax, "מס הכנסה", {
+        await logCoinChange(userData?.email, currentCoins, currentCoins - incomeTax, "מס הכנסה", {
           source: 'AvatarWork',
           job: workStatus.jobName,
           taxRate: "10%",
@@ -276,10 +276,10 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     });
 
     // Update net worth
-    const newNetWorth = await updateNetWorth(userData.email);
+    const newNetWorth = await updateNetWorth(userData?.email);
 
     // Sync to LeaderboardEntry (including total_work_hours)
-    await syncLeaderboardEntry(userData.email, {
+    await syncLeaderboardEntry(userData?.email, {
       coins: finalCoins,
       total_work_earnings: totalWorkEarnings,
       total_income_tax: (userData.total_income_tax || 0) + incomeTax,

@@ -23,8 +23,8 @@ export default function CommunityFeed({ userData, onRefresh }) {
   const [likesUserData, setLikesUserData] = useState({}); // { email: { name, equipped_items } }
 
   useEffect(() => {
-    loadPosts();
-  }, []);
+    if (userData) loadPosts();
+  }, [userData]);
 
   const loadPosts = async () => {
     try {
@@ -59,7 +59,7 @@ export default function CommunityFeed({ userData, onRefresh }) {
       } catch (userError) {
         console.log("Could not load leaderboard data:", userError);
         // For current user, use their own data
-        if (userData) {
+        if (userData?.email) {
           usersMap[userData.email] = {
             equipped_items: userData.equipped_items || {},
             first_name: userData.first_name,
@@ -92,12 +92,12 @@ export default function CommunityFeed({ userData, onRefresh }) {
 
     setIsPosting(true);
     try {
-      const authorName = currentUser.first_name && currentUser.last_name
+      const authorName = currentUser?.first_name && currentUser?.last_name
         ? `${currentUser.first_name} ${currentUser.last_name}`
-        : currentUser.full_name;
+        : currentUser?.full_name || '';
 
       await base44.entities.Post.create({
-        author_email: currentUser.email,
+        author_email: currentUser?.email,
         author_name: authorName,
         content: newPostContent
       });
@@ -115,11 +115,11 @@ export default function CommunityFeed({ userData, onRefresh }) {
   const handleLike = async (post) => {
     try {
       const likes = post.likes || [];
-      const hasLiked = likes.includes(currentUser.email);
+      const hasLiked = currentUser?.email ? likes.includes(currentUser.email) : false;
 
       const updatedLikes = hasLiked
-        ? likes.filter(email => email !== currentUser.email)
-        : [...likes, currentUser.email];
+        ? likes.filter(email => email !== currentUser?.email)
+        : [...likes, currentUser?.email].filter(Boolean);
 
       await base44.entities.Post.update(post.id, {
         likes: updatedLikes
@@ -140,13 +140,13 @@ export default function CommunityFeed({ userData, onRefresh }) {
     }
 
     try {
-      const authorName = currentUser.first_name && currentUser.last_name
+      const authorName = currentUser?.first_name && currentUser?.last_name
         ? `${currentUser.first_name} ${currentUser.last_name}`
-        : currentUser.full_name;
+        : currentUser?.full_name || '';
 
       const comments = post.comments || [];
       const newComment = {
-        author_email: currentUser.email,
+        author_email: currentUser?.email,
         author_name: authorName,
         content: commentText,
         created_at: new Date().toISOString()
@@ -265,9 +265,9 @@ export default function CommunityFeed({ userData, onRefresh }) {
           <AnimatePresence>
             {posts.map((post) => {
               const likes = post.likes || [];
-              const hasLiked = likes.includes(currentUser.email);
+              const hasLiked = currentUser?.email ? likes.includes(currentUser.email) : false;
               const comments = post.comments || [];
-              const isOwnPost = post.author_email === currentUser.email;
+              const isOwnPost = currentUser?.email ? post.author_email === currentUser.email : false;
 
               return (
                 <motion.div
@@ -386,7 +386,7 @@ export default function CommunityFeed({ userData, onRefresh }) {
                   {comments.length > 0 && (
                     <div className="space-y-2 mb-3 pl-4 border-r-2 border-white/10">
                       {comments.map((comment, idx) => {
-                        const isOwnComment = comment.author_email === currentUser.email;
+                        const isOwnComment = currentUser?.email ? comment.author_email === currentUser.email : false;
                         const isEditing = editingComment?.postId === post.id && editingComment?.commentIndex === idx;
                         
                         return (

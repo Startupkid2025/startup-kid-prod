@@ -45,14 +45,14 @@ export default function AvatarChat({ userData, equippedItems }) {
     try {
       // Fetch user's groups
       const allGroups = await Group.list();
-      const userGroups = allGroups.filter(g => g.student_emails?.includes(userData.email));
-      
+      const userGroups = allGroups.filter(g => g.student_emails?.includes(userData?.email));
+
       // Fetch user's word progress
-      const wordProgress = await WordProgress.filter({ student_email: userData.email });
+      const wordProgress = userData?.email ? await WordProgress.filter({ student_email: userData.email }) : [];
       const masteredWords = wordProgress.filter(w => w.mastered).length;
-      
+
       // Fetch lesson participations
-      const participations = await LessonParticipation.filter({ student_email: userData.email });
+      const participations = userData?.email ? await LessonParticipation.filter({ student_email: userData.email }) : [];
       const completedSurveys = participations.filter(p => p.survey_completed).length;
       const totalParticipations = participations.filter(p => p.attended !== false).length;
       const pendingSurveys = totalParticipations - completedSurveys;
