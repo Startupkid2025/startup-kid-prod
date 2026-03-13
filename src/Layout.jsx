@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { AVATAR_ITEMS } from "./components/avatar/TamagotchiAvatar";
 import { syncLeaderboardEntry } from "./components/utils/leaderboardSync";
 import MaintenancePage from "./components/MaintenancePage";
+import { cachedAuthMe, invalidateAuthCache } from "@/lib/cachedAuthMe";
 import {
   Dialog,
   DialogContent,
@@ -62,15 +63,16 @@ export default function Layout({ children }) {
 
   const loadUserAndUpdateStreak = async () => {
     try {
-      let user = await base44.auth.me();
+      let user = await cachedAuthMe();
       if (!user) return;
-      
+
       // Initialize new user with starting coins FIRST
       if (user.coins === undefined || user.coins === null) {
         await base44.auth.updateMe({
           coins: 500
         });
-        user = await base44.auth.me();
+        invalidateAuthCache();
+        user = await cachedAuthMe({ force: true });
       }
       
       setCurrentUser(user);
