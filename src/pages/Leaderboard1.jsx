@@ -867,75 +867,56 @@ export default function Leaderboard() {
             </p>
 
             {/* Shop Items */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { emoji: "🖱️", name: "Razer Basilisk V3 X", desc: "עכבר גיימינג אלחוטי", price: "₪250", isCoins: false },
+                { emoji: "⌨️", name: "Razer Ornata V3", desc: "מקלדת גיימינג", price: "₪350", isCoins: false },
+                { emoji: "🎧", name: "Razer BlackShark V2", desc: "אוזניות גיימינג אלחוטיות", price: "₪500", isCoins: false },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/551aea0fb_image.png", name: "400 רובקס", desc: "מטבע Roblox", price: "10,000", isCoins: true },
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  whileHover={{ scale: 1.03, y: -3 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="relative bg-white/5 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/15 shadow-xl flex flex-col"
+                >
+                  {/* Top colored accent bar */}
+                  <div className="h-1 w-full bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500" />
 
-              {/* Razer Mouse */}
-              <motion.div whileHover={{ scale: 1.03 }} className="bg-gradient-to-br from-green-900/60 to-emerald-900/60 rounded-xl p-4 border-2 border-green-500/50 shadow-xl">
-                <div className="text-center mb-3">
-                  <div className="text-5xl mb-2">🖱️</div>
-                  <h3 className="text-xl font-black text-green-100">Razer Basilisk V3 X</h3>
-                  <p className="text-green-200/70 text-sm">עכבר גיימינג אלחוטי - שחור</p>
-                </div>
-                <div className="flex items-center justify-between bg-black/30 rounded-lg px-4 py-3 border border-green-500/30">
-                  <span className="text-white/80 text-sm">מחיר:</span>
-                  <span className="text-green-300 font-black text-lg">₪250</span>
-                </div>
-                <Button onClick={() => toast.info("⏳ החנות עדיין לא נפתחה! העונה 2 מתחילה ב-01.04.2026", { duration: 4000 })} className="w-full mt-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-black py-5">
-                  <ShoppingBag className="w-4 h-4 ml-2" />
-                  קנה
-                </Button>
-              </motion.div>
+                  <div className="p-4 flex flex-col flex-1">
+                    {/* Icon / Image */}
+                    <div className="flex items-center justify-center h-16 mb-3">
+                      {item.image
+                        ? <img src={item.image} alt={item.name} className="h-14 w-14 object-contain drop-shadow-lg" />
+                        : <span className="text-5xl drop-shadow-lg">{item.emoji}</span>
+                      }
+                    </div>
 
-              {/* Razer Keyboard */}
-              <motion.div whileHover={{ scale: 1.03 }} className="bg-gradient-to-br from-green-900/60 to-teal-900/60 rounded-xl p-4 border-2 border-green-500/50 shadow-xl">
-                <div className="text-center mb-3">
-                  <div className="text-5xl mb-2">⌨️</div>
-                  <h3 className="text-xl font-black text-green-100">Razer Ornata V3</h3>
-                  <p className="text-green-200/70 text-sm">מקלדת גיימינג - מתג היברידי</p>
-                </div>
-                <div className="flex items-center justify-between bg-black/30 rounded-lg px-4 py-3 border border-green-500/30">
-                  <span className="text-white/80 text-sm">מחיר:</span>
-                  <span className="text-green-300 font-black text-lg">₪350</span>
-                </div>
-                <Button onClick={() => toast.info("⏳ החנות עדיין לא נפתחה! העונה 2 מתחילה ב-01.04.2026", { duration: 4000 })} className="w-full mt-3 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-black py-5">
-                  <ShoppingBag className="w-4 h-4 ml-2" />
-                  קנה
-                </Button>
-              </motion.div>
+                    {/* Name & desc */}
+                    <div className="text-center mb-3 flex-1">
+                      <h3 className="font-black text-white text-sm leading-tight mb-1">{item.name}</h3>
+                      <p className="text-white/50 text-xs">{item.desc}</p>
+                    </div>
 
-              {/* Razer Headset */}
-              <motion.div whileHover={{ scale: 1.03 }} className="bg-gradient-to-br from-green-900/60 to-cyan-900/60 rounded-xl p-4 border-2 border-green-500/50 shadow-xl">
-                <div className="text-center mb-3">
-                  <div className="text-5xl mb-2">🎧</div>
-                  <h3 className="text-xl font-black text-green-100">Razer BlackShark V2</h3>
-                  <p className="text-green-200/70 text-sm">אוזניות גיימינג אלחוטיות - שחור</p>
-                </div>
-                <div className="flex items-center justify-between bg-black/30 rounded-lg px-4 py-3 border border-green-500/30">
-                  <span className="text-white/80 text-sm">מחיר:</span>
-                  <span className="text-green-300 font-black text-lg">₪500</span>
-                </div>
-                <Button onClick={() => toast.info("⏳ החנות עדיין לא נפתחה! העונה 2 מתחילה ב-01.04.2026", { duration: 4000 })} className="w-full mt-3 bg-gradient-to-r from-green-600 to-cyan-600 hover:from-green-700 hover:to-cyan-700 text-white font-black py-5">
-                  <ShoppingBag className="w-4 h-4 ml-2" />
-                  קנה
-                </Button>
-              </motion.div>
+                    {/* Price badge */}
+                    <div className="bg-white/10 rounded-xl px-3 py-2 text-center mb-3 border border-white/10">
+                      <span className="text-xs text-white/60 block mb-0.5">מחיר</span>
+                      <span className="font-black text-base text-white">
+                        {item.isCoins ? <>{item.price} 🪙</> : item.price}
+                      </span>
+                    </div>
 
-              {/* Robux */}
-              <motion.div whileHover={{ scale: 1.03 }} className="bg-gradient-to-br from-yellow-900/60 to-amber-900/60 rounded-xl p-4 border-2 border-yellow-500/50 shadow-xl">
-                <div className="text-center mb-3">
-                  <img src="https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/551aea0fb_image.png" alt="Robux" className="w-20 h-20 object-contain mx-auto mb-2" />
-                  <h3 className="text-xl font-black text-yellow-100">400 רובקס</h3>
-                  <p className="text-yellow-200/70 text-sm">מטבע Roblox</p>
-                </div>
-                <div className="flex items-center justify-between bg-black/30 rounded-lg px-4 py-3 border border-yellow-500/30">
-                  <span className="text-white/80 text-sm">מחיר:</span>
-                  <span className="text-yellow-300 font-black text-lg">10,000 🪙</span>
-                </div>
-                <Button onClick={() => toast.info("⏳ החנות עדיין לא נפתחה! העונה 2 מתחילה ב-01.04.2026", { duration: 4000 })} className="w-full mt-3 bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-700 hover:to-amber-700 text-white font-black py-5">
-                  <ShoppingBag className="w-4 h-4 ml-2" />
-                  קנה
-                </Button>
-              </motion.div>
+                    {/* Buy button */}
+                    <Button
+                      onClick={() => toast.info("⏳ החנות עדיין לא נפתחה! העונה 2 מתחילה ב-01.04.2026", { duration: 4000 })}
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-black py-5 rounded-xl shadow-lg text-sm"
+                    >
+                      <ShoppingBag className="w-3.5 h-3.5 ml-1.5" />
+                      קנה
+                    </Button>
+                  </div>
+                </motion.div>
+              ))}
             </div>
 
             <div className="text-center mt-5 bg-gradient-to-r from-purple-600/30 to-indigo-600/30 rounded-lg p-3 border border-purple-500/40">
