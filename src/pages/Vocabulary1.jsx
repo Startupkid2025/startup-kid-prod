@@ -264,7 +264,7 @@ export default function Vocabulary() {
       setWordProgress(progress);
 
       // Generate first word
-      const firstWord = await generateNextWord(progress, todaysVocabWords);
+      const firstWord = generateNextWord(progress, todaysVocabWords);
       setCurrentWord(firstWord);
       // אם זו מילה ראשונה - הכן multi-choice
       if (firstWord?.isFirstTime) {
@@ -274,7 +274,7 @@ export default function Vocabulary() {
       }
 
       // Preload next word
-      const nextWordPreload = await generateNextWord(progress, todaysVocabWords, firstWord);
+      const nextWordPreload = generateNextWord(progress, todaysVocabWords, firstWord);
       setNextWord(nextWordPreload);
       // אין צורך לאפס multiChoiceOptions כאן - כבר טופל למעלה
 
