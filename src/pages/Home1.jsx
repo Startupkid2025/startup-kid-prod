@@ -526,6 +526,24 @@ export default function Home() {
     );
   }
 
+  const getIncomeBreakdown = () => {
+    if (!userData) return {};
+    
+    return {
+      base: userData.base_coins || 500,
+      lessons: userData.total_lessons_coins || 0,
+      surveys: userData.survey_coins || userData.total_survey_coins || 0,
+      vocabulary: userData.vocabulary_coins || 0,
+      math: userData.math_coins || 0,
+      quizzes: userData.total_quiz_coins || 0,
+      workEarnings: userData.total_work_earnings || 0,
+      loginStreak: userData.total_login_streak_coins || 0,
+      collaboration: userData.total_collaboration_coins || 0,
+      passiveIncome: userData.total_passive_income || 0,
+      adminCoins: userData.total_admin_coins || 0
+    };
+  };
+
   return (
     <div className="px-4 py-8 pb-24 max-w-6xl mx-auto space-y-8">
       {/* Greeting */}
