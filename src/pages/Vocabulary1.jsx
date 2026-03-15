@@ -385,13 +385,16 @@ export default function Vocabulary() {
       setNextWord(newNext);
     }
     
-    // הכן multi-choice אם זו מילה ראשונה
+    // הכן multi-choice אם זו מילה ראשונה (לפי הפרוגרס הנוכחי)
+    // נבדוק לפי wordProgress (state) - isFirstTime כבר חושב ב-generateNextWord
     if (next?.isFirstTime) {
       setMultiChoiceOptions(generateMultiChoiceOptions(next, availableVocabWords));
     } else {
       setMultiChoiceOptions(null);
     }
   };
+
+  const resetMultiChoice = () => setMultiChoiceOptions(null);
 
   useEffect(() => {
     if (currentWord && !feedback) {
