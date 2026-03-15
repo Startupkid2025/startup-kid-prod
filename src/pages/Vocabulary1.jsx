@@ -10,9 +10,9 @@ import { toast } from "sonner";
 import { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
 
 // קבועים
-const DAILY_WORDS_COUNT = 150;
+const DAILY_WORDS_COUNT = 75;
 const RESET_HOUR = 0;
-const VOCAB_SCHEME_VERSION = 3;
+const VOCAB_SCHEME_VERSION = 4;
 
 // פונקציות עזר לתאריך לוקאלי
 const pad2 = (n) => String(n).padStart(2, '0');
