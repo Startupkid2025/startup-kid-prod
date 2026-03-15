@@ -921,11 +921,11 @@ export default function Leaderboard() {
               </motion.div>
 
               {/* Robux */}
-              <motion.div whileHover={{ scale: 1.03 }} className="bg-gradient-to-br from-red-900/60 to-orange-900/60 rounded-xl p-4 border-2 border-red-500/50 shadow-xl">
+              <motion.div whileHover={{ scale: 1.03 }} className="bg-gradient-to-br from-yellow-900/60 to-amber-900/60 rounded-xl p-4 border-2 border-yellow-500/50 shadow-xl">
                 <div className="text-center mb-3">
-                  <div className="text-5xl mb-2">🎮</div>
-                  <h3 className="text-xl font-black text-red-100">Robux</h3>
-                  <p className="text-red-200/70 text-sm">מטבע Roblox - 400 Robux</p>
+                  <img src="https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/551aea0fb_image.png" alt="Robux" className="w-20 h-20 object-contain mx-auto mb-2" />
+                  <h3 className="text-xl font-black text-yellow-100">400 רובקס</h3>
+                  <p className="text-yellow-200/70 text-sm">מטבע Roblox</p>
                 </div>
                 <div className="flex items-center justify-between bg-black/30 rounded-lg px-4 py-3 border border-red-500/30">
                   <span className="text-white/80 text-sm">מחיר:</span>
