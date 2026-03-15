@@ -865,24 +865,24 @@ export default function Vocabulary() {
               </span>
             </div>
             <div className="h-3 bg-black/20 rounded-full overflow-hidden relative">
-              {/* פעם אחת נכון - ירוק */}
+              {/* פעם אחת נכון - צהוב */}
               <motion.div
-                className="absolute top-0 right-0 h-full bg-gradient-to-r from-green-400 to-emerald-400"
+                className="absolute top-0 right-0 h-full bg-gradient-to-r from-yellow-400 to-amber-400"
                 initial={{ width: 0 }}
                 animate={{ width: `${maxWords > 0 ? ((completedTodayCount + wordsOneCorrectToday) / maxWords) * 100 : 0}%` }}
                 transition={{ duration: 0.5 }}
               />
-              {/* פעמיים נכון (mastered) - זהב */}
+              {/* שלטת (mastered) - ירוק */}
               <motion.div
-                className="absolute top-0 right-0 h-full bg-gradient-to-r from-yellow-400 to-amber-400"
+                className="absolute top-0 right-0 h-full bg-gradient-to-r from-green-400 to-emerald-400"
                 initial={{ width: 0 }}
                 animate={{ width: `${maxWords > 0 ? (completedTodayCount / maxWords) * 100 : 0}%` }}
                 transition={{ duration: 0.5 }}
               />
             </div>
             <div className="flex items-center gap-4 mt-2 text-xs text-white/60">
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-400 inline-block"></span>נכון פעם אחת: {wordsOneCorrectToday}</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span>שלטת: {completedTodayCount}</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span>נכון פעם אחת: {wordsOneCorrectToday}</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-400 inline-block"></span>שלטת: {completedTodayCount}</span>
             </div>
           </CardContent>
         </Card>
