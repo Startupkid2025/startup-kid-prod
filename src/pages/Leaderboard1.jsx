@@ -937,7 +937,7 @@ export default function Leaderboard() {
 
                     {/* Buy button */}
                     <Button
-                      onClick={() => toast.info("⏳ החנות עדיין לא נפתחה! העונה 2 מתחילה ב-01.04.2026", { duration: 4000 })}
+                      onClick={() => setShowShopClosed(true)}
                       className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-black py-5 rounded-xl shadow-lg text-sm"
                     >
                       <ShoppingBag className="w-3.5 h-3.5 ml-1.5" />
