@@ -276,6 +276,7 @@ export default function Vocabulary() {
       // Preload next word
       const nextWordPreload = await generateNextWord(progress, todaysVocabWords, firstWord);
       setNextWord(nextWordPreload);
+      // אין צורך לאפס multiChoiceOptions כאן - כבר טופל למעלה
 
       if (!silent) {
         setIsLoading(false);
