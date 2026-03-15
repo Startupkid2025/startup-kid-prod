@@ -32,6 +32,7 @@ export default function Home() {
   const [showShop, setShowShop] = useState(false);
   const [showWork, setShowWork] = useState(false);
   const [showGroupSelection, setShowGroupSelection] = useState(false);
+  const [showBirthdayDialog, setShowBirthdayDialog] = useState(false);
   const [userGroup, setUserGroup] = useState(null);
   const [nextLesson, setNextLesson] = useState(null);
   const [netWorth, setNetWorth] = useState(0);
