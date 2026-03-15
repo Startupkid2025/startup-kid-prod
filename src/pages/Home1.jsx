@@ -658,8 +658,8 @@ export default function Home() {
                                 </motion.div>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="bg-slate-900 text-white border-slate-700">
-                                <p className="text-xs">מס הכנסה: {(incomeTaxRate * 100).toFixed(1)}% ביום על שווי כולל</p>
-                                <p className="text-xs text-slate-400 mt-1">ניתן להפחית עם צבעי גוף שונים</p>
+                                <p className="text-xs">מס הכנסה: 25% מסך ההכנסות היומיות</p>
+                                <p className="text-xs text-slate-400 mt-1">מחושב על בסיס כל ההכנסות שצברת היום</p>
                               </TooltipContent>
                             </Tooltip>
                           )}
