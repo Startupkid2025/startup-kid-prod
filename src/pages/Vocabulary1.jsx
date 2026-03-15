@@ -646,17 +646,8 @@ export default function Vocabulary() {
           coins_earned: coinsEarned
         });
 
-        // Update user coins and remove word from daily list if earned coins
+        // Update user coins if earned coins
         if (coinsEarned > 0) {
-          const updatedDailyWords = (userData.daily_vocabulary_words || []).filter(
-            w => w.toLowerCase() !== currentWord.english.toLowerCase()
-          );
-
-          const updatedAvailableWords = availableVocabWords.filter(
-            w => w.word_english.toLowerCase() !== currentWord.english.toLowerCase()
-          );
-          setAvailableVocabWords(updatedAvailableWords);
-
           const oldCoins = userData.coins || 0;
           const newCoinsTotal = oldCoins + coinsEarned;
 
