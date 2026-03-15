@@ -928,24 +928,11 @@ export default function Vocabulary() {
                         {multiChoiceOptions.options.map((option, idx) => (
                           <Button
                             key={idx}
-                            onClick={() => {
+                            onClick={async () => {
+                              if (isChecking) return;
                               setUserAnswer(option);
-                              // הגש אוטומטית
-                              const syntheticEvent = { preventDefault: () => {} };
-                              const fakeTarget = option;
-                              // קרא ל-handleSubmit עם התשובה הנבחרת
-                              const normalizeText = (text) => text.trim().toLowerCase().replace(/[\s-]/g, '');
-                              const correctAnswers = currentWord.hebrew
-                                .split(/[,،;\/]/)
-                                .map(a => normalizeText(a))
-                                .filter(a => a.length > 0);
-                              const isCorrect = correctAnswers.some(ca => normalizeText(option) === ca);
-                              
-                              // simulate submit with chosen answer
-                              setUserAnswer(option);
-                              setTimeout(() => {
-                                document.getElementById('multi-choice-submit')?.click();
-                              }, 0);
+                              // הגש עם התשובה הנבחרת
+                              await handleSubmitWithAnswer(option);
                             }}
                             disabled={isChecking}
                             className="bg-white/15 hover:bg-white/30 text-white border-2 border-white/20 hover:border-white/40 font-bold py-6 text-base transition-all"
@@ -954,10 +941,6 @@ export default function Vocabulary() {
                           </Button>
                         ))}
                       </div>
-                      {/* כפתור נסתר לביצוע הגשה */}
-                      <form onSubmit={handleSubmit} className="hidden">
-                        <button id="multi-choice-submit" type="submit" />
-                      </form>
                     </div>
                   ) : (
                   <form onSubmit={handleSubmit} className="max-w-md mx-auto">
