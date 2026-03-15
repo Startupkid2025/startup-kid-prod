@@ -599,13 +599,6 @@ export default function Home() {
                       <span>💰</span>
                       <span className="font-medium">סטארטקוין זמינים</span>
                     </div>
-                    <Button
-                      onClick={() => setShowIncomeReport(true)}
-                      size="sm"
-                      className="bg-white/20 hover:bg-white/30 text-white font-bold border border-white/30"
-                    >
-                      📊 ממה הכנסתי?
-                    </Button>
                   </motion.div>
 
                 <TooltipProvider>
