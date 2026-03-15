@@ -345,6 +345,7 @@ export default function Leaderboard() {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeSeason, setActiveSeason] = useState(1);
   const USERS_PER_PAGE = 20;
 
   // Load current user once
