@@ -346,6 +346,7 @@ export default function Leaderboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeSeason, setActiveSeason] = useState(1);
+  const [showShopClosed, setShowShopClosed] = useState(false);
   const USERS_PER_PAGE = 20;
 
   // Load current user once
