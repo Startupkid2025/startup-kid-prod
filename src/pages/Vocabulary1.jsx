@@ -562,7 +562,6 @@ export default function Vocabulary() {
             base44.auth.updateMe({
               coins: newCoinsTotal,
               total_networth: totalNetworth,
-              daily_vocabulary_words: updatedDailyWords,
               mastered_words: newMasteredCount
             }),
             base44.entities.WordProgress.update(existingWordProg.id, {
