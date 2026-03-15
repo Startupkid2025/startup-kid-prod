@@ -380,7 +380,7 @@ export default function Vocabulary() {
     setUserAnswer("");
     setFeedback(null);
     
-    const progressToUse = freshProgress || wordProgress;
+    const progressToUse = Array.isArray(freshProgress) ? freshProgress : wordProgress;
     
     let next;
     if (nextWord) {
