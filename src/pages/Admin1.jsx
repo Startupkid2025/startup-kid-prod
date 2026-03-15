@@ -1147,32 +1147,32 @@ export default function Admin() {
                   quizProgress={quizProgress}
                   investments={investments}
                   onToggleParticipation={async (student, lesson, lessonDate, participationId, wasAttended) => {
-                    try {
-                      if (participationId) {
-                        await base44.entities.LessonParticipation.delete(participationId);
-                        toast.success("ההשתתפות הוסרה");
-                      } else if (lessonDate) {
-                        const existingParticipation = participations.find(
-                          p => p.student_email === student.email && p.lesson_id === lesson.id
-                        );
+                  try {
+                  if (participationId) {
+                    await base44.entities.LessonParticipation.delete(participationId);
+                    toast.success("ההשתתפות הוסרה");
+                  } else if (lessonDate) {
+                    // Always fetch fresh from DB to avoid stale state duplicates
+                    const freshParticipations = await base44.entities.LessonParticipation.filter({
+                      student_email: student.email,
+                      lesson_id: lesson.id
+                    });
 
-                        if (existingParticipation) {
-                          await base44.entities.LessonParticipation.update(existingParticipation.id, {
-                            lesson_date: lessonDate,
-                            attended: wasAttended
-                          });
-                          toast.success("ההשתתפות עודכנה");
-                        } else {
-                          await base44.entities.LessonParticipation.create({
-                            student_email: student.email,
-                            lesson_id: lesson.id,
-                            lesson_date: lessonDate,
-                            attended: wasAttended
-                          });
-                          toast.success("השתתפות נוספה");
-                        }
-                      }
+                    if (freshParticipations.length > 0) {
+                      toast.warning("התלמיד כבר רשום לשיעור זה - לא נוצרה כפילות");
                       await refreshCurrentTab();
+                      return;
+                    }
+
+                    await base44.entities.LessonParticipation.create({
+                      student_email: student.email,
+                      lesson_id: lesson.id,
+                      lesson_date: lessonDate,
+                      attended: wasAttended
+                    });
+                    toast.success("השתתפות נוספה");
+                  }
+                  await refreshCurrentTab();
                     } catch (error) {
                       console.error("Error toggling participation:", error);
                       toast.error("שגיאה");
