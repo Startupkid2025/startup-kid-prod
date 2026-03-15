@@ -846,11 +846,29 @@ export default function Leaderboard() {
         <Card className="bg-gradient-to-br from-indigo-900/95 via-purple-900/95 to-indigo-900/95 backdrop-blur-md border-2 border-purple-400/60 shadow-2xl">
           <CardContent className="p-6">
             <div className="text-center mb-4">
-              <h2 className="text-3xl font-black text-white mb-2 flex items-center justify-center gap-2">
-                <ShoppingBag className="w-7 h-7 text-purple-300" />
-                עונה 2 - חנות פרסים!
-                <ShoppingBag className="w-7 h-7 text-purple-300" />
-              </h2>
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <Button
+                  onClick={() => setActiveSeason(1)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-white/60 hover:text-white"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </Button>
+                <h2 className="text-3xl font-black text-white flex items-center gap-2">
+                  <ShoppingBag className="w-7 h-7 text-purple-300" />
+                  עונה 2 - חנות פרסים!
+                  <ShoppingBag className="w-7 h-7 text-purple-300" />
+                </h2>
+                <Button
+                  onClick={() => setActiveSeason(1)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-white/60 hover:text-white"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </Button>
+              </div>
 
               {/* Season 2 Countdown - starts April 1 */}
               <div className="bg-gradient-to-r from-purple-600/30 to-indigo-600/30 rounded-xl p-4 border border-purple-500/40 mb-6">
