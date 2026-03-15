@@ -28,8 +28,10 @@ export default function GroupLessonStatus({ group, students, allGroups = [], onG
     setIsLoading(false);
   };
 
+  const currentGroup = selectedGroupId ? allGroups.find(g => g.id === selectedGroupId) || group : group;
+
   // Get only actual students in this group (not admins/teachers/parents)
-  const groupStudentEmails = (group.student_emails || []).filter(email => {
+  const groupStudentEmails = (currentGroup.student_emails || []).filter(email => {
     const user = students.find(s => s.email === email);
     return user && user.user_type === 'student' && user.role !== 'admin';
   });
