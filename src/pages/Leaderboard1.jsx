@@ -1086,6 +1086,53 @@ export default function Leaderboard() {
         onClose={() => setShowProfileDialog(false)}
         student={selectedStudent}
       />
+
+      {/* Shop Closed Dialog */}
+      <Dialog open={showShopClosed} onOpenChange={setShowShopClosed}>
+        <DialogContent className="bg-gradient-to-br from-purple-600 to-pink-600 border-2 border-white/30 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-white text-center">
+              🛒 החנות סגורה
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-center space-y-4 py-6">
+            <div className="text-6xl mb-4">⏳</div>
+            <p className="text-white font-bold text-lg">
+              החנות עדיין לא נפתחה!
+            </p>
+            <p className="text-white/90 text-base">
+              העונה 2 מתחילה ב-01.04.2026
+            </p>
+            <div className="bg-white/20 rounded-xl p-4 space-y-2">
+              <p className="text-white/80 text-sm">זמן עד לפתיחה:</p>
+              <div className="flex items-center justify-center gap-2 text-white font-bold">
+                <div className="bg-white/30 rounded-lg px-2 py-1">
+                  <div className="text-lg">{timeLeft.days}</div>
+                  <div className="text-xs opacity-80">ימים</div>
+                </div>
+                <span>:</span>
+                <div className="bg-white/30 rounded-lg px-2 py-1">
+                  <div className="text-lg">{timeLeft.hours}</div>
+                  <div className="text-xs opacity-80">שעות</div>
+                </div>
+                <span>:</span>
+                <div className="bg-white/30 rounded-lg px-2 py-1">
+                  <div className="text-lg">{timeLeft.minutes}</div>
+                  <div className="text-xs opacity-80">דקות</div>
+                </div>
+                <span>:</span>
+                <div className="bg-white/30 rounded-lg px-2 py-1">
+                  <div className="text-lg">{timeLeft.seconds}</div>
+                  <div className="text-xs opacity-80">שניות</div>
+                </div>
+              </div>
+            </div>
+            <p className="text-white/70 text-sm">
+              צבור סטארטקוין וחזור בעונה 2! 💰
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
       </div>
     </TooltipProvider>
   );
