@@ -480,7 +480,6 @@ export default function Home() {
   const calculateExpectedDailyLoss = () => {
     if (!userData) return 0;
 
-    const netWorth = calculateNetWorth();
     const currentCoins = userData.coins || 0;
 
     let inflationLoss = 0;
@@ -491,17 +490,16 @@ export default function Home() {
       inflationLoss = Math.floor(currentCoins * 0.03);
     }
 
-    const purchasedItems = userData.purchased_items || [];
-    let incomeTaxRate = 0.015;
-
-    for (const itemId of purchasedItems) {
-      const item = AVATAR_ITEMS[itemId];
-      if (item && item.category === 'body' && item.taxReduction) {
-        incomeTaxRate = Math.max(0, incomeTaxRate - (item.taxReduction / 100));
-      }
-    }
-
-    incomeTax = Math.floor(netWorth * incomeTaxRate);
+    // Income tax: 25% of total daily income
+    // Daily income sources: lessons (100), surveys (50), vocabulary, math, quizzes, work, passive income, etc.
+    // For now, calculate based on total income accumulated (can be refined to track daily income separately)
+    const totalDailyIncome = (userData.total_lessons_coins || 0) + 
+                             (userData.survey_coins || userData.total_survey_coins || 0) +
+                             (userData.coins || 0) + // Note: This is accumulated coins, not just today's income
+                             (userData.total_work_earnings || 0) +
+                             (userData.total_passive_income || 0);
+    
+    incomeTax = Math.floor(totalDailyIncome * 0.25);
 
     if (currentCoins < 0) {
       creditInterest = Math.floor(Math.abs(currentCoins) * 0.10);
