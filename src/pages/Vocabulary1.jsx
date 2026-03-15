@@ -428,9 +428,19 @@ export default function Vocabulary() {
     }
   }, [feedback]);
 
+  const handleSubmitWithAnswer = async (answer) => {
+    setUserAnswer(answer);
+    await handleSubmitCore(answer);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!userAnswer.trim() || isChecking) return;
+    await handleSubmitCore(userAnswer);
+  };
+
+  const handleSubmitCore = async (answerToCheck) => {
+    if (!answerToCheck?.trim() || isChecking) return;
     if (!currentWord) {
       toast.error("אין מילה ללמוד כרגע.");
       return;
