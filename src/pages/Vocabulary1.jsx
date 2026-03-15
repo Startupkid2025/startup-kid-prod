@@ -988,7 +988,7 @@ export default function Vocabulary() {
                       </Button>
                     </div>
                   </form>
-                  ))
+                  )
                 ) : (
                   <div className="py-4">
                     {feedback.isCorrect ? (
