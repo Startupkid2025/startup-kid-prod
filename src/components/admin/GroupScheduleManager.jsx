@@ -44,7 +44,8 @@ export default function GroupScheduleManager({ group, allGroups = [], onGroupCha
     setIsLoading(true);
     try {
       const allScheduled = await base44.entities.ScheduledLesson.list();
-      const scheduled = allScheduled.filter(sl => sl.group_id === group.id);
+      const currentGroupId = selectedGroupId || group.id;
+      const scheduled = allScheduled.filter(sl => sl.group_id === currentGroupId);
       console.log("Loaded scheduled lessons for group:", group.id, scheduled);
       setScheduledLessons(scheduled);
 
