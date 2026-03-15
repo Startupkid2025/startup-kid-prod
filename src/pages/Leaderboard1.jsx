@@ -701,14 +701,12 @@ export default function Leaderboard() {
         <Card className="bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-gray-900/95 backdrop-blur-md border-2 border-yellow-400/60 shadow-2xl">
           <CardContent className="p-6">
             <div className="text-center mb-4">
-              <div className="flex items-center justify-center gap-3 mb-2">
+              <div className="flex items-center justify-center gap-2 mb-2">
                 <Button
                   onClick={() => setActiveSeason(2)}
-                  variant="ghost"
-                  size="sm"
-                  className="text-white/60 hover:text-white"
+                  className="bg-white/30 hover:bg-white/50 text-white p-3 rounded-full animate-pulse"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-8 h-8" />
                 </Button>
                 <h2 className="text-3xl font-black text-white flex items-center gap-2">
                   <Trophy className="w-7 h-7 text-yellow-400" />
@@ -717,11 +715,9 @@ export default function Leaderboard() {
                 </h2>
                 <Button
                   onClick={() => setActiveSeason(2)}
-                  variant="ghost"
-                  size="sm"
-                  className="text-white/60 hover:text-white"
+                  className="bg-white/30 hover:bg-white/50 text-white p-3 rounded-full animate-pulse"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-8 h-8" />
                 </Button>
               </div>
               
