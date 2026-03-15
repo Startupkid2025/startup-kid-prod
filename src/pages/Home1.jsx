@@ -510,8 +510,6 @@ export default function Home() {
     return inflationLoss + incomeTax + creditInterest;
   };
 
-  const [showIncomeReport, setShowIncomeReport] = useState(false);
-
   const expectedDailyLoss = calculateExpectedDailyLoss();
 
   if (isLoading) {
