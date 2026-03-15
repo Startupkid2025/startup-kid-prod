@@ -754,12 +754,33 @@ export default function Vocabulary() {
         });
       }
 
-      // Update local state
-      const latestProgress = await base44.entities.WordProgress.filter({ student_email: userData.email });
-      setWordProgress(latestProgress);
+      // עדכן את wordProgress אופטימיסטית מיד (לפני fetch מהשרת)
+      setWordProgress(prev => {
+        const existing = prev.find(w => w.word_english.toLowerCase() === currentWord.english.toLowerCase());
+        if (existing) {
+          return prev.map(w => w.word_english.toLowerCase() === currentWord.english.toLowerCase()
+            ? { ...w, correct_streak: isCorrect ? w.correct_streak + 1 : 0, total_attempts: w.total_attempts + 1, mastered: isCorrect && w.correct_streak + 1 >= 2 }
+            : w
+          );
+        } else {
+          return [...prev, {
+            id: 'optimistic-' + currentWord.english,
+            word_english: currentWord.english,
+            word_hebrew: currentWord.hebrew,
+            correct_streak: isCorrect ? 1 : 0,
+            total_attempts: 1,
+            mastered: false,
+            coins_earned: 0
+          }];
+        }
+      });
 
       // אפס multi-choice אחרי תשובה
       setMultiChoiceOptions(null);
+
+      // fetch מהשרת ברקע לסנכרון אמיתי
+      const latestProgress = await base44.entities.WordProgress.filter({ student_email: userData.email });
+      setWordProgress(latestProgress);
 
       // Auto-continue only if correct - pass fresh progress to avoid stale closure
       if (isCorrect) {
