@@ -782,14 +782,10 @@ export default function Vocabulary() {
       // אפס multi-choice אחרי תשובה
       setMultiChoiceOptions(null);
 
-      // fetch מהשרת ברקע לסנכרון אמיתי
-      const latestProgress = await base44.entities.WordProgress.filter({ student_email: userData.email });
-      setWordProgress(latestProgress);
-
-      // Auto-continue only if correct - pass fresh progress to avoid stale closure
+      // Auto-continue only if correct - use optimistic progress (DB sync happens in background above)
       if (isCorrect) {
         setTimeout(() => {
-          handleContinue(latestProgress);
+          handleContinue();
         }, 1500);
       }
 
