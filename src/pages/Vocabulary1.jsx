@@ -370,16 +370,24 @@ export default function Vocabulary() {
     setUserAnswer("");
     setFeedback(null);
     
+    let next;
     if (nextWord) {
+      next = nextWord;
       setCurrentWord(nextWord);
-      // Preload new next word
       const newNext = await generateNextWord(wordProgress, availableVocabWords, nextWord);
       setNextWord(newNext);
     } else {
-      const next = await generateNextWord(wordProgress, availableVocabWords);
+      next = await generateNextWord(wordProgress, availableVocabWords);
       setCurrentWord(next);
       const newNext = await generateNextWord(wordProgress, availableVocabWords, next);
       setNextWord(newNext);
+    }
+    
+    // הכן multi-choice אם זו מילה ראשונה
+    if (next?.isFirstTime) {
+      setMultiChoiceOptions(generateMultiChoiceOptions(next, availableVocabWords));
+    } else {
+      setMultiChoiceOptions(null);
     }
   };
 
