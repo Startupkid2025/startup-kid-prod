@@ -751,10 +751,10 @@ export default function Vocabulary() {
       // אפס multi-choice אחרי תשובה
       setMultiChoiceOptions(null);
 
-      // Auto-continue only if correct
+      // Auto-continue only if correct - pass fresh progress to avoid stale closure
       if (isCorrect) {
         setTimeout(() => {
-          handleContinue();
+          handleContinue(latestProgress);
         }, 1500);
       }
 
