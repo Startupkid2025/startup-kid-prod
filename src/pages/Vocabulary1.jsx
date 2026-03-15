@@ -362,6 +362,10 @@ export default function Vocabulary() {
     return baseCoins + vocabBonus;
   };
 
+  const wordsOneCorrectToday = wordProgress.filter(w => 
+    w.correct_streak === 1 && 
+    availableVocabWords.some(v => v.word_english.toLowerCase() === w.word_english.toLowerCase())
+  ).length;
   const completedTodayCount = wordProgress.filter(w => 
     (w.mastered || w.correct_streak >= 2) && 
     availableVocabWords.some(v => v.word_english.toLowerCase() === w.word_english.toLowerCase())
