@@ -191,6 +191,11 @@ export default function Home() {
       if (needsOnboarding) {
         setShowGroupSelection(true);
       }
+
+      // Check if user needs to enter birth date
+      if (!user.birth_date) {
+        setShowBirthdayDialog(true);
+      }
       
       // Initialize intro lesson if needed
       if (!user.tutorial_initialized) {
