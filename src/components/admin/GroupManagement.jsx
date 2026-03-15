@@ -328,6 +328,11 @@ export default function GroupManagement() {
           group={managingGroup}
           allStudents={students}
           onSubmit={(newEmails) => handleUpdateStudents(managingGroup.id, newEmails)}
+          allGroups={groups}
+          onGroupChange={(groupId) => {
+            const newGroup = groups.find(g => g.id === groupId);
+            if (newGroup) setManagingGroup(newGroup);
+          }}
         />
       )}
     </div>
