@@ -851,8 +851,8 @@ export default function Vocabulary() {
         <Card className="bg-white/10 backdrop-blur-md border-white/20">
           <CardContent className="pt-6 text-center">
             <BookOpen className="w-8 h-8 text-blue-300 mx-auto mb-2" />
-            <p className="text-2xl font-black text-white">{maxWords}</p>
-            <p className="text-white/70 text-sm">מילים זמינות</p>
+            <p className="text-2xl font-black text-white">{completedTodayCount}/{maxWords}</p>
+            <p className="text-white/70 text-sm">מילים היום</p>
           </CardContent>
         </Card>
 
