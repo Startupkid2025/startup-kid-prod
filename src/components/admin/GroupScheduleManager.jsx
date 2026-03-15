@@ -110,9 +110,8 @@ export default function GroupScheduleManager({ group, allGroups = [], onGroupCha
 
   const isGroupDay = (date) => {
     if (!date) return false;
-    // Assuming group.day_of_week is 0 for Sunday, 1 for Monday, etc.
-    // JavaScript's getDay() also returns 0 for Sunday, 1 for Monday.
-    return date.getDay() === group.day_of_week;
+    const currentGroupData = allGroups.find(g => g.id === (selectedGroupId || group.id)) || group;
+    return date.getDay() === currentGroupData.day_of_week;
   };
 
   const handlePrevMonth = () => {
