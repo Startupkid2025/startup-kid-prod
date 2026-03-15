@@ -408,6 +408,23 @@ export default function GroupScheduleManager({ group, allGroups = [], onGroupCha
               <span>יומן שיעורים - {currentGroup.group_name}</span>
             </div>
             <div className="flex items-center gap-3">
+              {allGroups.length > 1 && (
+                <select
+                  value={selectedGroupId || group.id}
+                  onChange={(e) => {
+                    const newGroupId = e.target.value;
+                    setSelectedGroupId(newGroupId);
+                    onGroupChange?.(newGroupId);
+                  }}
+                  className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm hover:bg-white/20 transition-colors"
+                >
+                  {allGroups.map(g => (
+                    <option key={g.id} value={g.id} className="bg-gray-800">
+                      {g.group_name}
+                    </option>
+                  ))}
+                </select>
+              )}
               <Button
                 onClick={handlePrevMonth}
                 size="sm"
