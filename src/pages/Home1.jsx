@@ -918,6 +918,74 @@ export default function Home() {
         onComplete={() => setShowBirthdayDialog(false)}
       />
 
+      {/* Income Report Dialog */}
+      <Dialog open={showIncomeReport} onOpenChange={setShowIncomeReport}>
+        <DialogContent className="bg-gradient-to-br from-blue-600 to-purple-600 border-2 border-white/30 max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-white text-center">
+              📊 דו"ח הכנסות
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3 py-4">
+            {(() => {
+              const income = getIncomeBreakdown();
+              const totalIncome = Object.values(income).reduce((sum, val) => sum + (val || 0), 0);
+
+              const items = [
+                { label: '🎯 התחלה', value: income.base, icon: '🎁' },
+                { label: '📚 שיעורים', value: income.lessons, icon: '📖' },
+                { label: '📝 סקרים', value: income.surveys, icon: '📋' },
+                { label: '🔤 אנגלית', value: income.vocabulary, icon: '🔤' },
+                { label: '🔢 חשבון', value: income.math, icon: '🔢' },
+                { label: '❓ חידונים', value: income.quizzes, icon: '❓' },
+                { label: '💼 הכנסות מעבודה', value: income.workEarnings, icon: '💼' },
+                { label: '🔥 רצף כניסות', value: income.loginStreak, icon: '🔥' },
+                { label: '🤝 שיתופי פעולה', value: income.collaboration, icon: '🤝' },
+                { label: '🏠 הכנסה פסיבית', value: income.passiveIncome, icon: '🏠' },
+                { label: '👑 עדכוני מנהל', value: income.adminCoins, icon: '👑' }
+              ];
+
+              return (
+                <>
+                  {items.map((item) => (
+                    item.value > 0 && (
+                      <motion.div
+                        key={item.label}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="bg-white/15 rounded-lg p-3 border border-white/20 backdrop-blur-sm"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">{item.icon}</span>
+                            <span className="text-white font-medium text-sm">{item.label}</span>
+                          </div>
+                          <span className="text-white font-black text-lg">
+                            {item.value.toLocaleString('he-IL')} 🪙
+                          </span>
+                        </div>
+                      </motion.div>
+                    )
+                  ))}
+
+                  <div className="border-t-2 border-white/20 pt-4 mt-4">
+                    <div className="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-white font-black text-lg">סה"כ הכנסות:</span>
+                        <span className="text-white font-black text-2xl">
+                          {totalIncome.toLocaleString('he-IL')} 🪙
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* How to Earn Money Guide */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
