@@ -649,7 +649,7 @@ export default function Home() {
                                 >
                                   <span className="text-white/90 text-sm font-medium flex items-center gap-1">
                                     📊 מס הכנסה
-                                    <span className="text-white/60 text-[10px]">({(incomeTaxRate * 100).toFixed(1)}%)</span>
+                                    <span className="text-white/60 text-[10px]">(25%)</span>
                                   </span>
                                   <span className="text-white font-bold flex items-center gap-2">
                                     <span className="text-white">-{incomeTax}</span>
