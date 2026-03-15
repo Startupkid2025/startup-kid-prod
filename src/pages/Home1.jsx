@@ -16,6 +16,7 @@ import CommunityFeed from "@/components/home/CommunityFeed";
 import { safeRequest } from "@/components/utils/base44SafeRequest";
 
 import GroupSelectionDialog from "@/components/home/GroupSelectionDialog";
+import BirthdayDialog from "@/components/home/BirthdayDialog";
 import { toast } from "sonner";
 
 const SKILLS = [
