@@ -376,25 +376,25 @@ export default function Vocabulary() {
   const wordsWithOneCorrect = wordProgress.filter(w => !w.mastered && w.correct_streak === 1).length;
   const totalCoinsEarned = wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
 
-  const handleContinue = async () => {
+  const handleContinue = async (freshProgress = null) => {
     setUserAnswer("");
     setFeedback(null);
+    
+    const progressToUse = freshProgress || wordProgress;
     
     let next;
     if (nextWord) {
       next = nextWord;
       setCurrentWord(nextWord);
-      const newNext = await generateNextWord(wordProgress, availableVocabWords, nextWord);
+      const newNext = await generateNextWord(progressToUse, availableVocabWords, nextWord);
       setNextWord(newNext);
     } else {
-      next = await generateNextWord(wordProgress, availableVocabWords);
+      next = await generateNextWord(progressToUse, availableVocabWords);
       setCurrentWord(next);
-      const newNext = await generateNextWord(wordProgress, availableVocabWords, next);
+      const newNext = await generateNextWord(progressToUse, availableVocabWords, next);
       setNextWord(newNext);
     }
     
-    // הכן multi-choice אם זו מילה ראשונה (לפי הפרוגרס הנוכחי)
-    // נבדוק לפי wordProgress (state) - isFirstTime כבר חושב ב-generateNextWord
     if (next?.isFirstTime) {
       setMultiChoiceOptions(generateMultiChoiceOptions(next, availableVocabWords));
     } else {
