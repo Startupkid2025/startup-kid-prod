@@ -303,7 +303,10 @@ export default function Vocabulary() {
       .filter(w => w.mastered || w.correct_streak >= 2)
       .map(w => w.word_english.toLowerCase());
 
-    // סנן רק מילים תקינות באנגלית (רק תווי a-z, מקף, רווח)
+    // בנה Set של המילים המותרות (75 המילים של היום) לאימות מהיר
+    const allowedWords = new Set(vocabWords.map(w => (w.word_english || '').toLowerCase()));
+
+    // סנן רק מילים תקינות באנגלית (רק תווי a-z, מקף, רווח) שנמצאות ב-75 של היום
     const validWords = vocabWords.filter(w => {
       const word = w.word_english || '';
       return /^[a-zA-Z\s-]+$/.test(word) && !completedWords.includes(word.toLowerCase());
