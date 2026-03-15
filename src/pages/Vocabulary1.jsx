@@ -120,6 +120,7 @@ export default function Vocabulary() {
   const [masteredPage, setMasteredPage] = useState(1);
   const [showSuggestionDialog, setShowSuggestionDialog] = useState(false);
   const [suggestionText, setSuggestionText] = useState("");
+  const [multiChoiceOptions, setMultiChoiceOptions] = useState(null);
   
   const resetInProgressRef = useRef(false);
   const lastResetAttemptRef = useRef(0);
