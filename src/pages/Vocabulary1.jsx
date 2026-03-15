@@ -894,14 +894,6 @@ export default function Vocabulary() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card className="bg-white/10 backdrop-blur-md border-white/20">
           <CardContent className="pt-6 text-center">
-            <BookOpen className="w-8 h-8 text-blue-300 mx-auto mb-2" />
-            <p className="text-2xl font-black text-white">{maxWords}</p>
-            <p className="text-white/70 text-sm">מילים זמינות</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
-          <CardContent className="pt-6 text-center">
             <Trophy className="w-8 h-8 text-yellow-300 mx-auto mb-2" />
             <p className="text-2xl font-black text-white">{masteredWords}</p>
             <p className="text-white/70 text-sm">שלטת בהן</p>
