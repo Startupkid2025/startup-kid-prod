@@ -577,7 +577,6 @@ export default function Vocabulary() {
               ...prev, 
               coins: newCoinsTotal,
               total_networth: totalNetworth,
-              daily_vocabulary_words: updatedDailyWords,
               mastered_words: newMasteredCount
             }));
             
