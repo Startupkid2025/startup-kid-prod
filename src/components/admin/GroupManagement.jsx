@@ -98,7 +98,14 @@ export default function GroupManagement() {
         >
           ← חזור לקבוצות
         </Button>
-        <GroupScheduleManager group={viewingSchedule} />
+        <GroupScheduleManager 
+          group={viewingSchedule} 
+          allGroups={groups}
+          onGroupChange={(groupId) => {
+            const newGroup = groups.find(g => g.id === groupId);
+            if (newGroup) setViewingSchedule(newGroup);
+          }}
+        />
       </div>
     );
   }
@@ -113,7 +120,15 @@ export default function GroupManagement() {
         >
           ← חזור לקבוצות
         </Button>
-        <GroupLessonStatus group={viewingLessonStatus} students={students} />
+        <GroupLessonStatus 
+          group={viewingLessonStatus} 
+          students={students}
+          allGroups={groups}
+          onGroupChange={(groupId) => {
+            const newGroup = groups.find(g => g.id === groupId);
+            if (newGroup) setViewingLessonStatus(newGroup);
+          }}
+        />
       </div>
     );
   }
