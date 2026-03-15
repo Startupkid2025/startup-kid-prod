@@ -388,7 +388,12 @@ export default function Vocabulary() {
     const progressToUse = Array.isArray(freshProgress) ? freshProgress : wordProgress;
     
     let next;
-    if (nextWord) {
+    // ודא שה-nextWord אכן שייך לרשימת 75 המילים של היום
+    const nextWordIsValid = nextWord && availableVocabWords.some(
+      w => w.word_english.toLowerCase() === nextWord.english?.toLowerCase()
+    );
+
+    if (nextWordIsValid) {
       // Recalculate isFirstTime using fresh progress (nextWord may have stale isFirstTime)
       const existingProg = progressToUse.find(w => w.word_english.toLowerCase() === nextWord.english?.toLowerCase());
       const freshIsFirstTime = !existingProg || existingProg.correct_streak === 0;
