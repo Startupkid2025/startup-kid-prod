@@ -912,7 +912,7 @@ export default function Home() {
       />
 
       {/* Income Report Dialog */}
-      <Dialog open={showIncomeReport} onOpenChange={setShowIncomeReport}>
+      <Dialog open={false} onOpenChange={setShowIncomeReport}>
         <DialogContent className="bg-gradient-to-br from-blue-600 to-purple-600 border-2 border-white/30 max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-white text-center">
