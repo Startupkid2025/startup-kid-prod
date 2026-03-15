@@ -846,6 +846,32 @@ export default function Vocabulary() {
         </p>
       </motion.div>
 
+      {/* Daily Progress Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6"
+      >
+        <Card className="bg-white/10 backdrop-blur-md border-white/20">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-white font-bold">מילים היום:</span>
+              <span className="text-2xl font-black text-white">
+                {completedTodayCount} / {maxWords}
+              </span>
+            </div>
+            <div className="h-3 bg-black/20 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                initial={{ width: 0 }}
+                animate={{ width: `${maxWords > 0 ? (completedTodayCount / maxWords) * 100 : 0}%` }}
+                transition={{ duration: 0.5 }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card className="bg-white/10 backdrop-blur-md border-white/20">
