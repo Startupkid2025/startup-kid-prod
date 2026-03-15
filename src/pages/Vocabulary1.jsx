@@ -388,15 +388,15 @@ export default function Vocabulary() {
     if (nextWord) {
       // Recalculate isFirstTime using fresh progress (nextWord may have stale isFirstTime)
       const existingProg = progressToUse.find(w => w.word_english.toLowerCase() === nextWord.english?.toLowerCase());
-      const freshIsFirstTime = !existingProg || existingProg.total_attempts === 0;
+      const freshIsFirstTime = !existingProg || existingProg.correct_streak === 0;
       next = { ...nextWord, isFirstTime: freshIsFirstTime };
       setCurrentWord(next);
-      const newNext = await generateNextWord(progressToUse, availableVocabWords, nextWord);
+      const newNext = generateNextWord(progressToUse, availableVocabWords, nextWord);
       setNextWord(newNext);
     } else {
-      next = await generateNextWord(progressToUse, availableVocabWords);
+      next = generateNextWord(progressToUse, availableVocabWords);
       setCurrentWord(next);
-      const newNext = await generateNextWord(progressToUse, availableVocabWords, next);
+      const newNext = generateNextWord(progressToUse, availableVocabWords, next);
       setNextWord(newNext);
     }
     
