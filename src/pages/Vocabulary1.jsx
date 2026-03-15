@@ -493,7 +493,7 @@ export default function Vocabulary() {
       );
 
       if (existingWordProg) {
-        const newStreak = isCorrect ? (existingWordProg.correct_streak + 1) : 0;
+        const newStreak = isCorrect ? (existingWordProg.correct_streak + 1) : existingWordProg.correct_streak;
         const isMastered = newStreak >= 2;
         const isFirstCorrect = newStreak === 1 && existingWordProg.correct_streak === 0;
 
