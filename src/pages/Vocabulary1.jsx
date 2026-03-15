@@ -536,14 +536,7 @@ export default function Vocabulary() {
 
         // Update data in background (don't wait)
         if (coinsEarned > 0 && ((isMastered && !existingWordProg.mastered) || isFirstCorrect)) {
-          const updatedDailyWords = (userData.daily_vocabulary_words || []).filter(
-            w => w.toLowerCase() !== currentWord.english.toLowerCase()
-          );
-
-          const updatedAvailableWords = availableVocabWords.filter(
-            w => w.word_english.toLowerCase() !== currentWord.english.toLowerCase()
-          );
-          setAvailableVocabWords(updatedAvailableWords);
+          // אין הסרת מילים מהרשימה - אותן 75 מילים חוזרות כל היום
 
           // Calculate new mastered_words count
           const currentMasteredCount = wordProgress.filter(w => w.mastered).length;
