@@ -889,6 +889,11 @@ export default function Home() {
         }}
       />
 
+      <BirthdayDialog
+        isOpen={showBirthdayDialog && !showGroupSelection}
+        onComplete={() => setShowBirthdayDialog(false)}
+      />
+
       {/* How to Earn Money Guide */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
