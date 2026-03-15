@@ -766,7 +766,7 @@ export default function Vocabulary() {
         const existing = prev.find(w => w.word_english.toLowerCase() === currentWord.english.toLowerCase());
         if (existing) {
           return prev.map(w => w.word_english.toLowerCase() === currentWord.english.toLowerCase()
-            ? { ...w, correct_streak: isCorrect ? w.correct_streak + 1 : 0, total_attempts: w.total_attempts + 1, mastered: isCorrect && w.correct_streak + 1 >= 2 }
+            ? { ...w, correct_streak: isCorrect ? w.correct_streak + 1 : w.correct_streak, total_attempts: w.total_attempts + 1, mastered: isCorrect && w.correct_streak + 1 >= 2 }
             : w
           );
         } else {
