@@ -315,14 +315,30 @@ export default function Vocabulary() {
     }
 
     const existingProgress = currentProgress.find(w => w.word_english.toLowerCase() === randomWord.word_english.toLowerCase());
+    const isFirstTime = !existingProgress; // מילה שלא נראתה מעולם
 
     return {
       english: randomWord.word_english,
       hebrew: randomWord.word_hebrew,
       difficulty: randomWord.difficulty_level || 1,
       isReview: !!existingProgress,
-      correctStreak: existingProgress?.correct_streak || 0
+      correctStreak: existingProgress?.correct_streak || 0,
+      isFirstTime
     };
+  };
+
+  // מייצר 4 אפשרויות בחירה (multiple choice) מתוך רשימת המילים הזמינות
+  const generateMultiChoiceOptions = (correctWord, vocabWords) => {
+    const correct = correctWord.hebrew.split(/[,،;\/]/)[0].trim(); // ניקח רק פירוש ראשון
+    // אסוף מילים שונות לאפשרויות
+    const others = vocabWords.filter(w =>
+      w.word_english.toLowerCase() !== correctWord.english.toLowerCase() &&
+      w.word_hebrew && w.word_hebrew.trim().length > 0
+    );
+    const shuffledOthers = shuffle(others).slice(0, 3);
+    const wrongOptions = shuffledOthers.map(w => w.word_hebrew.split(/[,،;\/]/)[0].trim());
+    const options = shuffle([correct, ...wrongOptions]);
+    return { options, correct };
   };
 
   const getCoinsForDifficulty = (difficulty) => {
