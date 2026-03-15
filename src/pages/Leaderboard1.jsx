@@ -871,7 +871,7 @@ export default function Leaderboard() {
               {[
                 { emoji: "🖱️", name: "Razer Basilisk V3 X", desc: "עכבר גיימינג אלחוטי", price: "250,000", isCoins: true },
                 { emoji: "⌨️", name: "Razer Ornata V3", desc: "מקלדת גיימינג", price: "350,000", isCoins: true },
-                { emoji: "🎧", name: "Razer BlackShark V2", desc: "אוזניות גיימינג אלחוטיות", price: "500,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/2855fca09_l_1.jpg", name: "Razer BlackShark V2", desc: "אוזניות גיימינג אלחוטיות", price: "500,000", isCoins: true },
                 { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/551aea0fb_image.png", name: "400 רובקס", desc: "מטבע Roblox", price: "35,000", isCoins: true },
               ].map((item, i) => (
                 <motion.div
