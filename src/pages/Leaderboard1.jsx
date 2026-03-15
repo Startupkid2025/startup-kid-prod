@@ -847,7 +847,7 @@ export default function Leaderboard() {
                   onClick={() => setActiveSeason(1)}
                   className="bg-white/30 hover:bg-white/50 text-white p-3 rounded-full animate-pulse"
                 >
-                  <ChevronLeft className="w-8 h-8" />
+                  <ChevronRight className="w-8 h-8" />
                 </Button>
                 <h2 className="text-3xl font-black text-white flex items-center gap-2">
                   <ShoppingBag className="w-7 h-7 text-purple-300" />
@@ -858,7 +858,7 @@ export default function Leaderboard() {
                   onClick={() => setActiveSeason(1)}
                   className="bg-white/30 hover:bg-white/50 text-white p-3 rounded-full animate-pulse"
                 >
-                  <ChevronRight className="w-8 h-8" />
+                  <ChevronLeft className="w-8 h-8" />
                 </Button>
               </div>
 
