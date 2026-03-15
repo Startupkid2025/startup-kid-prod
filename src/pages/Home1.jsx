@@ -602,7 +602,7 @@ export default function Home() {
                   </motion.div>
 
                 <TooltipProvider>
-                  <div className="space-y-2 mb-6 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-xl p-4 backdrop-blur-sm border border-orange-400/30">
+                  <div className="space-y-2 mb-6 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-xl p-4 backdrop-blur-sm border border-orange-400/30 hidden">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-white font-bold text-sm">💸 הפסדים צפויים</span>
                       <motion.div
