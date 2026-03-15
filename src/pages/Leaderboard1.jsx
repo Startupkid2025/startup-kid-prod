@@ -706,7 +706,7 @@ export default function Leaderboard() {
                   onClick={() => setActiveSeason(2)}
                   className="bg-white/30 hover:bg-white/50 text-white p-3 rounded-full animate-pulse"
                 >
-                  <ChevronLeft className="w-8 h-8" />
+                  <ChevronRight className="w-8 h-8" />
                 </Button>
                 <h2 className="text-3xl font-black text-white flex items-center gap-2">
                   <Trophy className="w-7 h-7 text-yellow-400" />
@@ -717,7 +717,7 @@ export default function Leaderboard() {
                   onClick={() => setActiveSeason(2)}
                   className="bg-white/30 hover:bg-white/50 text-white p-3 rounded-full animate-pulse"
                 >
-                  <ChevronRight className="w-8 h-8" />
+                  <ChevronLeft className="w-8 h-8" />
                 </Button>
               </div>
               
