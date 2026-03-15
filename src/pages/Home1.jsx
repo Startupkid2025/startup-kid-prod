@@ -595,10 +595,17 @@ export default function Home() {
                     <p className="text-6xl font-black text-white drop-shadow-lg mb-2">
                       {(userData?.coins || 0).toLocaleString('he-IL')}
                     </p>
-                    <div className="flex items-center justify-center gap-2 text-white/80 text-sm">
+                    <div className="flex items-center justify-center gap-2 text-white/80 text-sm mb-3">
                       <span>💰</span>
                       <span className="font-medium">סטארטקוין זמינים</span>
                     </div>
+                    <Button
+                      onClick={() => setShowIncomeReport(true)}
+                      size="sm"
+                      className="bg-white/20 hover:bg-white/30 text-white font-bold border border-white/30"
+                    >
+                      📊 ממה הכנסתי?
+                    </Button>
                   </motion.div>
 
                 <TooltipProvider>
