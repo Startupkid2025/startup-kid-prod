@@ -660,29 +660,7 @@ export default function Home() {
                               </TooltipContent>
                             </Tooltip>
                           )}
-                          {incomeTax > 0 && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <motion.div 
-                                  className="flex items-center justify-between bg-white/15 rounded-lg px-3 py-2.5 cursor-help hover:bg-white/25 transition-all border border-white/10"
-                                  whileHover={{ x: 5 }}
-                                >
-                                  <span className="text-white/90 text-sm font-medium flex items-center gap-1">
-                                    📊 מס הכנסה
-                                    <span className="text-white/60 text-[10px]">(25%)</span>
-                                  </span>
-                                  <span className="text-white font-bold flex items-center gap-2">
-                                    <span className="text-white">-{incomeTax}</span>
-                                    <span className="text-xs">🪙</span>
-                                  </span>
-                                </motion.div>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="bg-slate-900 text-white border-slate-700">
-                                <p className="text-xs">מס הכנסה: 25% מסך ההכנסות היומיות</p>
-                                <p className="text-xs text-slate-400 mt-1">מחושב על בסיס כל ההכנסות שצברת היום</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
+
                           {creditInterest > 0 && (
                             <Tooltip>
                               <TooltipTrigger asChild>
