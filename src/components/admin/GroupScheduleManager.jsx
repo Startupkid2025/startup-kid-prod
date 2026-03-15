@@ -38,7 +38,7 @@ export default function GroupScheduleManager({ group, allGroups = [], onGroupCha
 
   useEffect(() => {
     loadData();
-  }, [group, currentMonth]);
+  }, [group, selectedGroupId, currentMonth]);
 
   const loadData = async () => {
     setIsLoading(true);
