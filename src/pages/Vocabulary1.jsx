@@ -451,7 +451,7 @@ export default function Vocabulary() {
     try {
       const normalizeText = (text) => text.trim().toLowerCase().replace(/[\s-]/g, '');
       
-      const normalizedAnswer = normalizeText(userAnswer);
+      const normalizedAnswer = normalizeText(answerToCheck);
       // Split by comma, semicolon, or slash to get all possible translations
       const correctAnswers = currentWord.hebrew
         .split(/[,،;\/]/)
