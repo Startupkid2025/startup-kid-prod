@@ -11,7 +11,7 @@ export default function GroupLessonStatus({ group, students, allGroups = [], onG
 
   useEffect(() => {
     loadData();
-  }, [group]);
+  }, [group, selectedGroupId]);
 
   const loadData = async () => {
     setIsLoading(true);
