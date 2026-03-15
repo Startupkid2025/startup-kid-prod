@@ -321,7 +321,8 @@ export default function Vocabulary() {
     }
 
     const existingProgress = currentProgress.find(w => w.word_english.toLowerCase() === randomWord.word_english.toLowerCase());
-    const isFirstTime = !existingProgress; // מילה שלא נראתה מעולם
+    // isFirstTime = מילה שלא נראתה מעולם (אף ניסיון)
+    const isFirstTime = !existingProgress || existingProgress.total_attempts === 0;
 
     return {
       english: randomWord.word_english,
