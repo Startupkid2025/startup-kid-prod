@@ -740,6 +740,9 @@ export default function Vocabulary() {
       const latestProgress = await base44.entities.WordProgress.filter({ student_email: userData.email });
       setWordProgress(latestProgress);
 
+      // אפס multi-choice אחרי תשובה
+      setMultiChoiceOptions(null);
+
       // Auto-continue only if correct
       if (isCorrect) {
         setTimeout(() => {
