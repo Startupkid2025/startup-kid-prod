@@ -668,15 +668,13 @@ export default function Vocabulary() {
           Promise.all([
             base44.auth.updateMe({
               coins: newCoinsTotal,
-              total_networth: totalNetworth,
-              daily_vocabulary_words: updatedDailyWords
+              total_networth: totalNetworth
             })
           ]).then(async () => {
             setUserData(prev => ({ 
               ...prev, 
               coins: newCoinsTotal,
-              total_networth: totalNetworth,
-              daily_vocabulary_words: updatedDailyWords
+              total_networth: totalNetworth
             }));
             
             // Update leaderboard and get actual value
