@@ -784,6 +784,8 @@ export default function Vocabulary() {
 
       if (existingWordProg) {
         await base44.entities.WordProgress.update(existingWordProg.id, {
+          correct_streak: 0,
+          total_attempts: existingWordProg.total_attempts + 1,
           last_seen: now,
           difficulty_level: currentWord.difficulty
         });
