@@ -132,12 +132,15 @@ export default function GroupScheduleManager({ group, allGroups = [], onGroupCha
     const day = String(date.getDate()).padStart(2, '0');
     const formattedDate = `${year}-${month}-${day}`;
     
+    const currentGroupId = selectedGroupId || group.id;
+    const currentGroupData = allGroups.find(g => g.id === currentGroupId) || group;
+    
     console.log("Creating new lesson for date:", formattedDate);
     
     setEditingLesson({
-      group_id: group.id,
+      group_id: currentGroupId,
       scheduled_date: formattedDate,
-      start_time: group.hour,
+      start_time: currentGroupData.hour,
       lesson_id: "",
       teacher_email: "",
       notes: ""
