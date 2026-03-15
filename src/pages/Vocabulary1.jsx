@@ -590,7 +590,7 @@ export default function Vocabulary() {
           
           const totalNetworth = newCoinsTotal + itemsValue + investmentsValue;
 
-          // Update in background
+          // Update in background — fetch fresh progress ONLY after DB is updated
           Promise.all([
             base44.auth.updateMe({
               coins: newCoinsTotal,
@@ -612,6 +612,10 @@ export default function Vocabulary() {
               total_networth: totalNetworth,
               mastered_words: newMasteredCount
             }));
+
+            // Sync progress from DB only after write is confirmed
+            const confirmedProgress = await base44.entities.WordProgress.filter({ student_email: userData.email });
+            setWordProgress(confirmedProgress);
             
             // Update leaderboard and get actual value
             let actualLeaderboardNetworth = null;
