@@ -298,9 +298,9 @@ export default function Vocabulary() {
   };
 
   const generateNextWord = async (currentProgress, vocabWords, excludeWord = null) => {
-    // מילים ששלטתי בהן בלבד
+    // מילים ששלטתי בהן - mastered או correct_streak >= 2
     const completedWords = currentProgress
-      .filter(w => w.mastered)
+      .filter(w => w.mastered || w.correct_streak >= 2)
       .map(w => w.word_english.toLowerCase());
 
     // סנן רק מילים תקינות באנגלית (רק תווי a-z, מקף, רווח)
