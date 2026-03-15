@@ -264,6 +264,13 @@ export default function Home() {
           });
         }
         setSkillLessonCounts(counts);
+
+        // Update total_lessons from actual participations if it doesn't match
+        const actualTotalLessons = uniqueIds.length;
+        if (actualTotalLessons !== (user.total_lessons || 0)) {
+          await base44.auth.updateMe({ total_lessons: actualTotalLessons });
+          setUserData(prev => ({ ...prev, total_lessons: actualTotalLessons }));
+        }
       } catch (e) {
         console.error("Error counting skill lessons:", e);
       }
