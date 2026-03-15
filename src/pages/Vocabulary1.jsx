@@ -852,70 +852,63 @@ export default function Vocabulary() {
         </p>
       </motion.div>
 
-      {/* Daily Progress Bar */}
+      {/* Daily Progress + Stats unified card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-white font-bold">מילים היום:</span>
-              <span className="text-2xl font-black text-white">
-                {completedTodayCount} / {maxWords}
-              </span>
+        <Card className="bg-white/10 backdrop-blur-md border-white/20 overflow-hidden">
+          <CardContent className="p-5">
+            {/* Progress section */}
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-white/70 text-sm font-semibold">מילים היום</span>
+              <div className="flex items-center gap-2">
+                <span className="text-white font-black text-xl">{completedTodayCount}</span>
+                <span className="text-white/40 font-bold">/</span>
+                <span className="text-white/60 font-bold">{maxWords}</span>
+              </div>
             </div>
-            <div className="h-3 bg-black/20 rounded-full overflow-hidden relative">
-              {/* פעם אחת נכון - צהוב */}
+            <div className="h-4 bg-black/20 rounded-full overflow-hidden relative mb-2">
               <motion.div
-                className="absolute top-0 right-0 h-full bg-gradient-to-r from-yellow-400 to-amber-400"
+                className="absolute top-0 right-0 h-full rounded-full bg-gradient-to-r from-yellow-400 to-amber-400"
                 initial={{ width: 0 }}
                 animate={{ width: `${maxWords > 0 ? ((completedTodayCount + wordsOneCorrectToday) / maxWords) * 100 : 0}%` }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
               />
-              {/* שלטת (mastered) - ירוק */}
               <motion.div
-                className="absolute top-0 right-0 h-full bg-gradient-to-r from-green-400 to-emerald-400"
+                className="absolute top-0 right-0 h-full rounded-full bg-gradient-to-r from-green-400 to-emerald-400"
                 initial={{ width: 0 }}
                 animate={{ width: `${maxWords > 0 ? (completedTodayCount / maxWords) * 100 : 0}%` }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
               />
             </div>
-            <div className="flex items-center gap-4 mt-2 text-xs text-white/60">
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span>נכון פעם אחת: {wordsOneCorrectToday}</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-400 inline-block"></span>שלטת: {completedTodayCount}</span>
+            <div className="flex items-center justify-end gap-4 mb-5 text-xs text-white/50">
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block"></span>נכון פעם אחת: <span className="text-white/80 font-bold">{wordsOneCorrectToday}</span></span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green-400 inline-block"></span>שלטת: <span className="text-white/80 font-bold">{completedTodayCount}</span></span>
+            </div>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/10">
+                <Trophy className="w-6 h-6 text-yellow-300 mx-auto mb-1.5" />
+                <p className="text-2xl font-black text-white leading-none mb-1">{masteredWords}</p>
+                <p className="text-white/50 text-xs">שלטת בהן</p>
+              </div>
+              <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/10">
+                <div className="text-green-300 text-xl font-black mb-1.5">✓</div>
+                <p className="text-2xl font-black text-white leading-none mb-1">{wordsWithOneCorrect}</p>
+                <p className="text-white/50 text-xs">נכון פעם אחת</p>
+              </div>
+              <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/10">
+                <Coins className="w-6 h-6 text-amber-300 mx-auto mb-1.5" />
+                <p className="text-2xl font-black text-white leading-none mb-1">{totalCoinsEarned}</p>
+                <p className="text-white/50 text-xs">סטארטקוין</p>
+              </div>
             </div>
           </CardContent>
         </Card>
       </motion.div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
-          <CardContent className="pt-6 text-center">
-            <Trophy className="w-8 h-8 text-yellow-300 mx-auto mb-2" />
-            <p className="text-2xl font-black text-white">{masteredWords}</p>
-            <p className="text-white/70 text-sm">שלטת בהן</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
-          <CardContent className="pt-6 text-center">
-            <div className="text-3xl font-black text-green-300 mb-2">✓</div>
-            <p className="text-2xl font-black text-white">{wordsWithOneCorrect}</p>
-            <p className="text-white/70 text-sm">נכון פעם אחת</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
-          <CardContent className="pt-6 text-center">
-            <Coins className="w-8 h-8 text-amber-300 mx-auto mb-2" />
-            <p className="text-2xl font-black text-white">{totalCoinsEarned}</p>
-            <p className="text-white/70 text-sm">סטארטקוין צברת</p>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Game Area */}
       <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-8">
