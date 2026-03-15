@@ -660,13 +660,44 @@ export default function Leaderboard() {
           </p>
         </motion.div>
 
+      {/* Season Toggle */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-center gap-3 mb-6"
+      >
+        <Button
+          onClick={() => setActiveSeason(1)}
+          variant="ghost"
+          size="sm"
+          disabled={activeSeason === 1}
+          className="text-white/60 hover:text-white disabled:opacity-30"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </Button>
+        <div className="text-white font-black text-xl">
+          {activeSeason === 1 ? "🏆 עונה 1" : "🌟 עונה 2"}
+        </div>
+        <Button
+          onClick={() => setActiveSeason(2)}
+          variant="ghost"
+          size="sm"
+          disabled={activeSeason === 2}
+          className="text-white/60 hover:text-white disabled:opacity-30"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </Button>
+      </motion.div>
+
       {/* Prizes Section */}
       <motion.div
+        key={`season-${activeSeason}`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.1 }}
         className="mb-8"
       >
+        {activeSeason === 1 ? (
         <Card className="bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-gray-900/95 backdrop-blur-md border-2 border-yellow-400/60 shadow-2xl">
           <CardContent className="p-6">
             <div className="text-center mb-4">
@@ -704,11 +735,11 @@ export default function Leaderboard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                          {/* 2nd Place - Left */}
-                          <motion.div
-                            whileHover={{ scale: 1.05 }}
-                            className="bg-gradient-to-br from-gray-600/60 to-gray-800/60 rounded-xl p-4 border-2 border-gray-400/70 shadow-xl order-2 md:order-1"
-                          >
+              {/* 2nd Place - Left */}
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="bg-gradient-to-br from-gray-600/60 to-gray-800/60 rounded-xl p-4 border-2 border-gray-400/70 shadow-xl order-2 md:order-1"
+              >
                 <div className="text-center mb-3">
                   <div className="text-5xl mb-2">🥈</div>
                   <h3 className="text-2xl font-black text-gray-100">מקום 2</h3>
@@ -735,14 +766,8 @@ export default function Leaderboard() {
               >
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-yellow-400/30 to-orange-400/30"
-                  animate={{
-                    opacity: [0.4, 0.7, 0.4],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
+                  animate={{ opacity: [0.4, 0.7, 0.4] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <div className="relative text-center mb-3">
                   <div className="text-5xl mb-2">🥇</div>
@@ -798,6 +823,132 @@ export default function Leaderboard() {
             </div>
           </CardContent>
         </Card>
+        ) : (
+        /* Season 2 */
+        <Card className="bg-gradient-to-br from-indigo-900/95 via-purple-900/95 to-indigo-900/95 backdrop-blur-md border-2 border-purple-400/60 shadow-2xl">
+          <CardContent className="p-6">
+            <div className="text-center mb-4">
+              <h2 className="text-3xl font-black text-white mb-2 flex items-center justify-center gap-2">
+                <ShoppingBag className="w-7 h-7 text-purple-300" />
+                עונה 2 - חנות פרסים!
+                <ShoppingBag className="w-7 h-7 text-purple-300" />
+              </h2>
+
+              {/* Season 2 Countdown - starts April 1 */}
+              <div className="bg-gradient-to-r from-purple-600/30 to-indigo-600/30 rounded-xl p-4 border border-purple-500/40 mb-6">
+                <p className="text-white/90 text-sm mb-2 font-bold">🗓️ העונה מתחילה ב-01.04.2026</p>
+                <div className="flex items-center justify-center gap-1 sm:gap-3 text-white">
+                  <div className="bg-white/10 rounded-lg px-1.5 sm:px-3 py-1.5 sm:py-2">
+                    <div className="text-sm sm:text-2xl font-black">{timeLeft.seconds}</div>
+                    <div className="text-[8px] sm:text-xs opacity-80">שניות</div>
+                  </div>
+                  <div className="text-sm sm:text-2xl font-black">:</div>
+                  <div className="bg-white/10 rounded-lg px-1.5 sm:px-3 py-1.5 sm:py-2">
+                    <div className="text-sm sm:text-2xl font-black">{timeLeft.minutes}</div>
+                    <div className="text-[8px] sm:text-xs opacity-80">דקות</div>
+                  </div>
+                  <div className="text-sm sm:text-2xl font-black">:</div>
+                  <div className="bg-white/10 rounded-lg px-1.5 sm:px-3 py-1.5 sm:py-2">
+                    <div className="text-sm sm:text-2xl font-black">{timeLeft.hours}</div>
+                    <div className="text-[8px] sm:text-xs opacity-80">שעות</div>
+                  </div>
+                  <div className="text-sm sm:text-2xl font-black">:</div>
+                  <div className="bg-white/10 rounded-lg px-1.5 sm:px-3 py-1.5 sm:py-2">
+                    <div className="text-sm sm:text-2xl font-black">{timeLeft.days}</div>
+                    <div className="text-[8px] sm:text-xs opacity-80">ימים</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-white/80 text-center text-sm mb-5">
+              🎮 בעונה 2 תוכלו לממש את הסטארטקוין שלכם בחנות הפרסים!<br/>
+              <span className="text-purple-300 font-bold">צברו כמה שיותר סטארטקוין כדי לקנות פרסים מגניבים</span>
+            </p>
+
+            {/* Shop Items */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              {/* Razer Mouse */}
+              <motion.div whileHover={{ scale: 1.03 }} className="bg-gradient-to-br from-green-900/60 to-emerald-900/60 rounded-xl p-4 border-2 border-green-500/50 shadow-xl">
+                <div className="text-center mb-3">
+                  <div className="text-5xl mb-2">🖱️</div>
+                  <h3 className="text-xl font-black text-green-100">Razer Basilisk V3 X</h3>
+                  <p className="text-green-200/70 text-sm">עכבר גיימינג אלחוטי - שחור</p>
+                </div>
+                <div className="flex items-center justify-between bg-black/30 rounded-lg px-4 py-3 border border-green-500/30">
+                  <span className="text-white/80 text-sm">מחיר:</span>
+                  <span className="text-green-300 font-black text-lg">₪250</span>
+                </div>
+                <Button className="w-full mt-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-black py-5">
+                  <ShoppingBag className="w-4 h-4 ml-2" />
+                  רכישה בעונה 2
+                </Button>
+              </motion.div>
+
+              {/* Razer Keyboard */}
+              <motion.div whileHover={{ scale: 1.03 }} className="bg-gradient-to-br from-green-900/60 to-teal-900/60 rounded-xl p-4 border-2 border-green-500/50 shadow-xl">
+                <div className="text-center mb-3">
+                  <div className="text-5xl mb-2">⌨️</div>
+                  <h3 className="text-xl font-black text-green-100">Razer Ornata V3</h3>
+                  <p className="text-green-200/70 text-sm">מקלדת גיימינג - מתג היברידי</p>
+                </div>
+                <div className="flex items-center justify-between bg-black/30 rounded-lg px-4 py-3 border border-green-500/30">
+                  <span className="text-white/80 text-sm">מחיר:</span>
+                  <span className="text-green-300 font-black text-lg">₪350</span>
+                </div>
+                <Button className="w-full mt-3 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-black py-5">
+                  <ShoppingBag className="w-4 h-4 ml-2" />
+                  רכישה בעונה 2
+                </Button>
+              </motion.div>
+
+              {/* Razer Headset */}
+              <motion.div whileHover={{ scale: 1.03 }} className="bg-gradient-to-br from-green-900/60 to-cyan-900/60 rounded-xl p-4 border-2 border-green-500/50 shadow-xl">
+                <div className="text-center mb-3">
+                  <div className="text-5xl mb-2">🎧</div>
+                  <h3 className="text-xl font-black text-green-100">Razer BlackShark V2</h3>
+                  <p className="text-green-200/70 text-sm">אוזניות גיימינג אלחוטיות - שחור</p>
+                </div>
+                <div className="flex items-center justify-between bg-black/30 rounded-lg px-4 py-3 border border-green-500/30">
+                  <span className="text-white/80 text-sm">מחיר:</span>
+                  <span className="text-green-300 font-black text-lg">₪500</span>
+                </div>
+                <Button className="w-full mt-3 bg-gradient-to-r from-green-600 to-cyan-600 hover:from-green-700 hover:to-cyan-700 text-white font-black py-5">
+                  <ShoppingBag className="w-4 h-4 ml-2" />
+                  רכישה בעונה 2
+                </Button>
+              </motion.div>
+
+              {/* Robux */}
+              <motion.div whileHover={{ scale: 1.03 }} className="bg-gradient-to-br from-red-900/60 to-orange-900/60 rounded-xl p-4 border-2 border-red-500/50 shadow-xl">
+                <div className="text-center mb-3">
+                  <div className="text-5xl mb-2">🎮</div>
+                  <h3 className="text-xl font-black text-red-100">Robux</h3>
+                  <p className="text-red-200/70 text-sm">מטבע Roblox - 800 Robux</p>
+                </div>
+                <div className="flex items-center justify-between bg-black/30 rounded-lg px-4 py-3 border border-red-500/30">
+                  <span className="text-white/80 text-sm">מחיר:</span>
+                  <span className="text-red-300 font-black text-lg">₪100</span>
+                </div>
+                <Button className="w-full mt-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-black py-5">
+                  <ShoppingBag className="w-4 h-4 ml-2" />
+                  רכישה בעונה 2
+                </Button>
+              </motion.div>
+            </div>
+
+            <div className="text-center mt-5 bg-gradient-to-r from-purple-600/30 to-indigo-600/30 rounded-lg p-3 border border-purple-500/40">
+              <p className="text-white font-bold text-base">
+                🛒 החנות תיפתח רשמית ב-01.04.2026 עם תחילת עונה 2!
+              </p>
+              <p className="text-white/70 text-sm mt-1">
+                הסטארטקוין שצברתם בעונה 1 יועברו לעונה 2
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        )}
       </motion.div>
 
       {/* Search Bar */}
