@@ -927,11 +927,11 @@ export default function Leaderboard() {
                   <h3 className="text-xl font-black text-yellow-100">400 רובקס</h3>
                   <p className="text-yellow-200/70 text-sm">מטבע Roblox</p>
                 </div>
-                <div className="flex items-center justify-between bg-black/30 rounded-lg px-4 py-3 border border-red-500/30">
+                <div className="flex items-center justify-between bg-black/30 rounded-lg px-4 py-3 border border-yellow-500/30">
                   <span className="text-white/80 text-sm">מחיר:</span>
-                  <span className="text-red-300 font-black text-lg">10,000 🪙</span>
+                  <span className="text-yellow-300 font-black text-lg">10,000 🪙</span>
                 </div>
-                <Button onClick={() => toast.info("⏳ החנות עדיין לא נפתחה! העונה 2 מתחילה ב-01.04.2026", { duration: 4000 })} className="w-full mt-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-black py-5">
+                <Button onClick={() => toast.info("⏳ החנות עדיין לא נפתחה! העונה 2 מתחילה ב-01.04.2026", { duration: 4000 })} className="w-full mt-3 bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-700 hover:to-amber-700 text-white font-black py-5">
                   <ShoppingBag className="w-4 h-4 ml-2" />
                   קנה
                 </Button>
