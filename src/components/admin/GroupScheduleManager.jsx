@@ -16,7 +16,7 @@ import {
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { toast } from "sonner";
 
-export default function GroupScheduleManager({ group }) {
+export default function GroupScheduleManager({ group, allGroups = [], onGroupChange }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [scheduledLessons, setScheduledLessons] = useState([]);
   const [allLessons, setAllLessons] = useState([]);
@@ -31,6 +31,7 @@ export default function GroupScheduleManager({ group }) {
   const [enrollingLessonId, setEnrollingLessonId] = useState(null);
   const [enrollSummary, setEnrollSummary] = useState(null);
   const [showEnrollSummaryDialog, setShowEnrollSummaryDialog] = useState(false);
+  const [selectedGroupId, setSelectedGroupId] = useState(group?.id);
 
   const dayNames = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
   const monthNames = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
