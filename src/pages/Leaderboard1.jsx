@@ -880,9 +880,9 @@ export default function Leaderboard() {
                   <span className="text-white/80 text-sm">מחיר:</span>
                   <span className="text-green-300 font-black text-lg">₪250</span>
                 </div>
-                <Button className="w-full mt-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-black py-5">
+                <Button onClick={() => toast.info("⏳ החנות עדיין לא נפתחה! העונה 2 מתחילה ב-01.04.2026", { duration: 4000 })} className="w-full mt-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-black py-5">
                   <ShoppingBag className="w-4 h-4 ml-2" />
-                  רכישה בעונה 2
+                  קנה
                 </Button>
               </motion.div>
 
@@ -897,9 +897,9 @@ export default function Leaderboard() {
                   <span className="text-white/80 text-sm">מחיר:</span>
                   <span className="text-green-300 font-black text-lg">₪350</span>
                 </div>
-                <Button className="w-full mt-3 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-black py-5">
+                <Button onClick={() => toast.info("⏳ החנות עדיין לא נפתחה! העונה 2 מתחילה ב-01.04.2026", { duration: 4000 })} className="w-full mt-3 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-black py-5">
                   <ShoppingBag className="w-4 h-4 ml-2" />
-                  רכישה בעונה 2
+                  קנה
                 </Button>
               </motion.div>
 
@@ -914,9 +914,9 @@ export default function Leaderboard() {
                   <span className="text-white/80 text-sm">מחיר:</span>
                   <span className="text-green-300 font-black text-lg">₪500</span>
                 </div>
-                <Button className="w-full mt-3 bg-gradient-to-r from-green-600 to-cyan-600 hover:from-green-700 hover:to-cyan-700 text-white font-black py-5">
+                <Button onClick={() => toast.info("⏳ החנות עדיין לא נפתחה! העונה 2 מתחילה ב-01.04.2026", { duration: 4000 })} className="w-full mt-3 bg-gradient-to-r from-green-600 to-cyan-600 hover:from-green-700 hover:to-cyan-700 text-white font-black py-5">
                   <ShoppingBag className="w-4 h-4 ml-2" />
-                  רכישה בעונה 2
+                  קנה
                 </Button>
               </motion.div>
 
@@ -931,9 +931,9 @@ export default function Leaderboard() {
                   <span className="text-white/80 text-sm">מחיר:</span>
                   <span className="text-red-300 font-black text-lg">₪100</span>
                 </div>
-                <Button className="w-full mt-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-black py-5">
+                <Button onClick={() => toast.info("⏳ החנות עדיין לא נפתחה! העונה 2 מתחילה ב-01.04.2026", { duration: 4000 })} className="w-full mt-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-black py-5">
                   <ShoppingBag className="w-4 h-4 ml-2" />
-                  רכישה בעונה 2
+                  קנה
                 </Button>
               </motion.div>
             </div>
