@@ -10,8 +10,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Users } from "lucide-react";
 
-export default function ManageGroupStudentsDialog({ isOpen, onClose, group, allStudents, onSubmit }) {
+export default function ManageGroupStudentsDialog({ isOpen, onClose, group, allStudents, onSubmit, allGroups = [], onGroupChange }) {
   const [selectedEmails, setSelectedEmails] = useState([]);
+  const [selectedGroupId, setSelectedGroupId] = useState(group?.id);
 
   useEffect(() => {
     if (group) {
