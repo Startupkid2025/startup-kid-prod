@@ -395,15 +395,17 @@ export default function GroupScheduleManager({ group, allGroups = [], onGroupCha
     );
   }
 
+  const currentGroup = selectedGroupId ? allGroups.find(g => g.id === selectedGroupId) || group : group;
+
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with Group Selector */}
       <Card className="bg-white/10 backdrop-blur-md border-white/20">
         <CardHeader>
           <CardTitle className="text-white flex items-center justify-between">
             <div className="flex items-center gap-3">
               <CalendarIcon className="w-6 h-6" />
-              <span>יומן שיעורים - {group.group_name}</span>
+              <span>יומן שיעורים - {currentGroup.group_name}</span>
             </div>
             <div className="flex items-center gap-3">
               <Button
