@@ -258,7 +258,7 @@ export default function Vocabulary() {
         setUserData(user);
       }
 
-      // טען את המילים של היום (ללא כפילויות)
+      // טען את המילים של היום (ללא כפילויות) - 75 מילים קבועות ליום
       const todaysVocabWords = buildTodaysVocabWords(allVocabWords, dailyWords);
       setAvailableVocabWords(todaysVocabWords);
       setWordProgress(progress);
@@ -266,6 +266,12 @@ export default function Vocabulary() {
       // Generate first word
       const firstWord = await generateNextWord(progress, todaysVocabWords);
       setCurrentWord(firstWord);
+      // אם זו מילה ראשונה - הכן multi-choice
+      if (firstWord?.isFirstTime) {
+        setMultiChoiceOptions(generateMultiChoiceOptions(firstWord, todaysVocabWords));
+      } else {
+        setMultiChoiceOptions(null);
+      }
 
       // Preload next word
       const nextWordPreload = await generateNextWord(progress, todaysVocabWords, firstWord);
