@@ -17,8 +17,11 @@ export default function ManageGroupStudentsDialog({ isOpen, onClose, group, allS
   useEffect(() => {
     if (group) {
       setSelectedEmails(group.student_emails || []);
+      setSelectedGroupId(group.id);
     }
   }, [group]);
+
+  const currentGroup = selectedGroupId ? allGroups.find(g => g.id === selectedGroupId) || group : group;
 
   const handleToggleStudent = (email) => {
     if (selectedEmails.includes(email)) {
