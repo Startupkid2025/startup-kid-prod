@@ -887,7 +887,7 @@ export default function Leaderboard() {
                     {/* Icon / Image */}
                     <div className="flex items-center justify-center h-16 mb-3">
                       {item.image
-                        ? <img src={item.image} alt={item.name} className="h-14 w-14 object-contain drop-shadow-lg" />
+                        ? <img src={item.image} alt={item.name} className="h-20 w-20 object-contain drop-shadow-lg" style={{ mixBlendMode: 'multiply' }} />
                         : <span className="text-5xl drop-shadow-lg">{item.emoji}</span>
                       }
                     </div>
