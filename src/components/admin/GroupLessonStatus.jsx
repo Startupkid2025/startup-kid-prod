@@ -83,10 +83,29 @@ export default function GroupLessonStatus({ group, students, allGroups = [], onG
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-bold text-white flex items-center gap-2">
-        <BookOpen className="w-5 h-5" />
-        סטטוס שיעורים לקבוצה ({groupStudentEmails.length} תלמידים)
-      </h3>
+      <div className="flex items-center gap-3 mb-4">
+        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+          <BookOpen className="w-5 h-5" />
+          סטטוס שיעורים ({groupStudentEmails.length} תלמידים)
+        </h3>
+        {allGroups.length > 1 && (
+          <select
+            value={selectedGroupId || group.id}
+            onChange={(e) => {
+              const newGroupId = e.target.value;
+              setSelectedGroupId(newGroupId);
+              onGroupChange?.(newGroupId);
+            }}
+            className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm hover:bg-white/20 transition-colors"
+          >
+            {allGroups.map(g => (
+              <option key={g.id} value={g.id} className="bg-gray-800">
+                {g.group_name}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
 
       {/* Available Lessons */}
       <Card className="bg-green-500/20 backdrop-blur-md border-green-500/30">
