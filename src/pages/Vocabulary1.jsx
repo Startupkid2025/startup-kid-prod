@@ -297,7 +297,7 @@ export default function Vocabulary() {
     }
   };
 
-  const generateNextWord = async (currentProgress, vocabWords, excludeWord = null) => {
+  const generateNextWord = (currentProgress, vocabWords, excludeWord = null) => {
     // מילים ששלטתי בהן - mastered או correct_streak >= 2
     const completedWords = currentProgress
       .filter(w => w.mastered || w.correct_streak >= 2)
@@ -322,8 +322,10 @@ export default function Vocabulary() {
     }
 
     const existingProgress = currentProgress.find(w => w.word_english.toLowerCase() === randomWord.word_english.toLowerCase());
-    // isFirstTime = מילה שלא נראתה מעולם (אף ניסיון)
-    const isFirstTime = !existingProgress || existingProgress.total_attempts === 0;
+    // isFirstTime = מילה שלא נכונה עדיין אפילו פעם אחת (correct_streak === 0 ולא היה ניסיון נכון)
+    // מילה שנכשלה (total_attempts > 0, correct_streak === 0) → עדיין multi-choice
+    // מילה שנכונה פעם אחת (correct_streak === 1) → text input
+    const isFirstTime = !existingProgress || existingProgress.correct_streak === 0;
 
     return {
       english: randomWord.word_english,
