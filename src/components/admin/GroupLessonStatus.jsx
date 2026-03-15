@@ -3,10 +3,11 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, XCircle, Loader2, BookOpen } from "lucide-react";
 
-export default function GroupLessonStatus({ group, students }) {
+export default function GroupLessonStatus({ group, students, allGroups = [], onGroupChange }) {
   const [lessons, setLessons] = useState([]);
   const [participations, setParticipations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedGroupId, setSelectedGroupId] = useState(group?.id);
 
   useEffect(() => {
     loadData();
