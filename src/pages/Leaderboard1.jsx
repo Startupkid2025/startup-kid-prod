@@ -904,7 +904,6 @@ export default function Leaderboard() {
                 { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/2855fca09_l_1.jpg", name: "Razer BlackShark V2", desc: "אוזניות גיימינג אלחוטיות", price: "250,000", isCoins: true },
                 { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/551aea0fb_image.png", name: "400 רובקס", desc: "מטבע Roblox", price: "32,000", isCoins: true },
                 { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/dd93b9783_image.png", name: "1,000 V-Bucks", desc: "מטבע פורטנייט", price: "32,000", isCoins: true },
-                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/dd93b9783_image.png", name: "2,800 V-Bucks", desc: "מטבע פורטנייט", price: "89,000", isCoins: true },
                 { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/83d46d84b_image.png", name: "ג'וייסטיק PS5", desc: "בקר DualSense", price: "300,000", isCoins: true },
                 { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/59255690a_image.png", name: "PlayStation 5", desc: "קונסולת גיימינג חדישה", price: "1,000,000", isCoins: true },
               ].map((item, i) => (
