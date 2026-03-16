@@ -662,34 +662,7 @@ export default function Leaderboard() {
           </p>
         </motion.div>
 
-      {/* Season Toggle */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-center gap-3 mb-6"
-      >
-        <Button
-          onClick={() => setActiveSeason(1)}
-          variant="ghost"
-          size="sm"
-          disabled={activeSeason === 1}
-          className="text-white/60 hover:text-white disabled:opacity-30"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </Button>
-        <div className="text-white font-black text-xl">
-          {activeSeason === 1 ? "🏆 עונה 1" : "🌟 עונה 2"}
-        </div>
-        <Button
-          onClick={() => setActiveSeason(2)}
-          variant="ghost"
-          size="sm"
-          disabled={activeSeason === 2}
-          className="text-white/60 hover:text-white disabled:opacity-30"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </Button>
-      </motion.div>
+
 
       {/* Prizes Section */}
       <motion.div
