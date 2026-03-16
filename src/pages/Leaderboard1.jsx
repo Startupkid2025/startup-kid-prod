@@ -899,13 +899,14 @@ export default function Leaderboard() {
             {/* Shop Items */}
             <div className="grid grid-cols-2 gap-3">
               {[
-                { emoji: "🖱️", name: "Razer Basilisk V3 X", desc: "עכבר גיימינג אלחוטי (₪125)", price: "125,000", isCoins: true },
-                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/a20a14671_image.png", name: "Razer Ornata V3", desc: "מקלדת גיימינג (₪175)", price: "175,000", isCoins: true },
-                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/2855fca09_l_1.jpg", name: "Razer BlackShark V2", desc: "אוזניות גיימינג אלחוטיות (₪250)", price: "250,000", isCoins: true },
-                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/551aea0fb_image.png", name: "400 רובקס", desc: "מטבע Roblox (₪32)", price: "32,000", isCoins: true },
-                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/dd93b9783_image.png", name: "1,000 V-Bucks", desc: "מטבע פורטנייט (₪32)", price: "32,000", isCoins: true },
-                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/dd93b9783_image.png", name: "2,800 V-Bucks", desc: "מטבע פורטנייט (₪89)", price: "89,000", isCoins: true },
-                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/59255690a_image.png", name: "PlayStation 5", desc: "קונסולת גיימינג חדישה (₪1,000)", price: "1,000,000", isCoins: true },
+                { emoji: "🖱️", name: "Razer Basilisk V3 X", desc: "עכבר גיימינג אלחוטי", price: "125,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/a20a14671_image.png", name: "Razer Ornata V3", desc: "מקלדת גיימינג", price: "175,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/2855fca09_l_1.jpg", name: "Razer BlackShark V2", desc: "אוזניות גיימינג אלחוטיות", price: "250,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/551aea0fb_image.png", name: "400 רובקס", desc: "מטבע Roblox", price: "32,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/dd93b9783_image.png", name: "1,000 V-Bucks", desc: "מטבע פורטנייט", price: "32,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/dd93b9783_image.png", name: "2,800 V-Bucks", desc: "מטבע פורטנייט", price: "89,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/fc52b5e6e_image.png", name: "ג'וייסטיק PS5", desc: "בקר DualSense", price: "300,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/59255690a_image.png", name: "PlayStation 5", desc: "קונסולת גיימינג חדישה", price: "1,000,000", isCoins: true },
               ].map((item, i) => (
                 <motion.div
                   key={i}
