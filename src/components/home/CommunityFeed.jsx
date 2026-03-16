@@ -302,15 +302,20 @@ export default function CommunityFeed({ userData, onRefresh }) {
                           <p className="text-white font-bold text-sm">{post.author_name}</p>
                           {(() => {
                             const leaderboardEntry = leaderboardCache.get(post.author_email);
-                            if (!leaderboardEntry) return null;
-                            
+                            if (!leaderboardEntry || leaderboardCache.size === 0) {
+                              console.log("No leaderboard data for:", post.author_email);
+                              return null;
+                            }
+
                             // Find rank
                             const allEntries = Array.from(leaderboardCache.values());
                             const sortedEntries = allEntries
                               .filter(e => e.user_type === 'student')
                               .sort((a, b) => (b.total_networth || 0) - (a.total_networth || 0));
                             const rank = sortedEntries.findIndex(e => e.student_email === post.author_email) + 1;
-                            
+
+                            console.log("Showing for", post.author_email, "rank:", rank, "group:", leaderboardEntry.group_name);
+
                             return (
                               <>
                                 {rank > 0 && (
