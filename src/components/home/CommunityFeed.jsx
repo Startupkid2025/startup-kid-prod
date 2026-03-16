@@ -33,6 +33,8 @@ export default function CommunityFeed({ userData, onRefresh }) {
       
       // Use LeaderboardEntry instead of User entity (better RLS support)
       let usersMap = {};
+      const lbCache = new Map();
+      
       try {
         // Check cache first
         const cacheKey = 'community_feed_users';
@@ -50,8 +52,7 @@ export default function CommunityFeed({ userData, onRefresh }) {
           sessionStorage.setItem(cacheKey + '_time', Date.now().toString());
         }
         
-        // Build leaderboard cache
-        const lbCache = new Map();
+        // Build leaderboard cache and usersMap
         allLeaderboardEntries.forEach(u => {
           usersMap[u.student_email] = {
             equipped_items: u.equipped_items || {},
@@ -60,7 +61,6 @@ export default function CommunityFeed({ userData, onRefresh }) {
           };
           lbCache.set(u.student_email, u);
         });
-        setLeaderboardCache(lbCache);
       } catch (userError) {
         console.log("Could not load leaderboard data:", userError);
         // For current user, use their own data
@@ -72,6 +72,8 @@ export default function CommunityFeed({ userData, onRefresh }) {
           };
         }
       }
+      
+      setLeaderboardCache(lbCache);
       
       // Store user data for likes dialog
       setLikesUserData(usersMap);
