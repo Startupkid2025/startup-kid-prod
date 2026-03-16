@@ -879,6 +879,12 @@ export default function Leaderboard() {
                 { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/dd93b9783_image.png", name: "1,000 V-Bucks", desc: "מטבע פורטנייט", price: "32,000", isCoins: true },
                 { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/83d46d84b_image.png", name: "ג'וייסטיק PS5", desc: "בקר DualSense", price: "300,000", isCoins: true },
                 { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/59255690a_image.png", name: "PlayStation 5", desc: "קונסולת גיימינג חדישה", price: "2,000,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/19275660a_image.png", name: "ספרים בסטימצקי", desc: "שובר ספרים 200₪", price: "120,000", isCoins: true },
+                { emoji: "💎", name: "Brawl Stars GEMS", desc: "170 ג'מס בBrawl Stars", price: "32,000", isCoins: true },
+                { emoji: "🪑", name: "כיסא גיימינג", desc: "כיסא גיימינג ארגונומי", price: "600,000", isCoins: true },
+                { emoji: "📷", name: "מצלמת אינטרנט", desc: "מצלמת HD לשידורים", price: "150,000", isCoins: true },
+                { emoji: "🎙️", name: "מיקרופון", desc: "מיקרופון איכותי לגיימינג", price: "200,000", isCoins: true },
+                { emoji: "🎮", name: "גיפט קארד Steam", desc: "שובר Steam 50₪", price: "50,000", isCoins: true },
               ].map((item, i) => (
                 <motion.div
                   key={i}
