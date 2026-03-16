@@ -21,6 +21,7 @@ export default function CommunityFeed({ userData, onRefresh }) {
   const [editingPost, setEditingPost] = useState(null); // { postId, text }
   const [showLikesDialog, setShowLikesDialog] = useState(null); // postId or null
   const [likesUserData, setLikesUserData] = useState({}); // { email: { name, equipped_items } }
+  const [leaderboardCache, setLeaderboardCache] = useState(new Map()); // Cache leaderboard data
 
   useEffect(() => {
     loadPosts();
@@ -49,13 +50,17 @@ export default function CommunityFeed({ userData, onRefresh }) {
           sessionStorage.setItem(cacheKey + '_time', Date.now().toString());
         }
         
+        // Build leaderboard cache
+        const lbCache = new Map();
         allLeaderboardEntries.forEach(u => {
           usersMap[u.student_email] = {
             equipped_items: u.equipped_items || {},
             first_name: u.first_name,
             last_name: u.last_name
           };
+          lbCache.set(u.student_email, u);
         });
+        setLeaderboardCache(lbCache);
       } catch (userError) {
         console.log("Could not load leaderboard data:", userError);
         // For current user, use their own data
@@ -293,7 +298,35 @@ export default function CommunityFeed({ userData, onRefresh }) {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <p className="text-white font-bold text-sm">{post.author_name}</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-white font-bold text-sm">{post.author_name}</p>
+                          {(() => {
+                            const leaderboardEntry = leaderboardCache.get(post.author_email);
+                            if (!leaderboardEntry) return null;
+                            
+                            // Find rank
+                            const allEntries = Array.from(leaderboardCache.values());
+                            const sortedEntries = allEntries
+                              .filter(e => e.user_type === 'student')
+                              .sort((a, b) => (b.total_networth || 0) - (a.total_networth || 0));
+                            const rank = sortedEntries.findIndex(e => e.student_email === post.author_email) + 1;
+                            
+                            return (
+                              <>
+                                {rank > 0 && (
+                                  <span className="text-[10px] bg-yellow-500/30 text-yellow-200 px-2 py-0.5 rounded-full font-bold border border-yellow-400/50">
+                                    #{rank}
+                                  </span>
+                                )}
+                                {leaderboardEntry.group_name && (
+                                  <span className="text-[10px] bg-indigo-500/30 text-indigo-200 px-2 py-0.5 rounded-full font-bold border border-indigo-400/50">
+                                    {leaderboardEntry.group_name}
+                                  </span>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </div>
                         {isOwnPost && editingPost?.postId !== post.id && (
                           <div className="flex gap-1">
                             <Button
