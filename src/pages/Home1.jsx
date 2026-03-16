@@ -625,11 +625,11 @@ export default function Home() {
                       }
 
                       // Income tax: 25% of total daily income
-                      const totalDailyIncome = (userData.total_lessons_coins || 0) + 
-                                               (userData.survey_coins || userData.total_survey_coins || 0) +
-                                               (userData.coins || 0) +
-                                               (userData.total_work_earnings || 0) +
-                                               (userData.total_passive_income || 0);
+                      const totalDailyIncome = (userData?.total_lessons_coins || 0) + 
+                                               (userData?.survey_coins || userData?.total_survey_coins || 0) +
+                                               (userData?.coins || 0) +
+                                               (userData?.total_work_earnings || 0) +
+                                               (userData?.total_passive_income || 0);
                       incomeTax = Math.floor(totalDailyIncome * 0.25);
 
                       if (currentCoins < 0) {
