@@ -792,6 +792,7 @@ export default function Leaderboard() {
                   <h3 className="text-2xl font-black text-amber-200">מקום 3</h3>
                   <div className="bg-amber-500/30 rounded-full px-3 py-1 mt-2 inline-block">
                     <p className="text-amber-100 font-black text-sm">שווי: ₪250</p>
+
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -915,7 +916,7 @@ export default function Leaderboard() {
                     <div className="bg-white/10 rounded-xl px-3 py-2 text-center mb-3 border border-white/10">
                       <span className="text-xs text-white/60 block mb-0.5">מחיר</span>
                       <span className="font-black text-base text-white">
-                        {item.isCoins ? <>{item.price} 🪙</> : item.price}
+                        {item.isCoins ? <span className="flex items-center justify-center gap-1">{item.price} <CoinIcon size={18} /></span> : item.price}
                       </span>
                     </div>
 
