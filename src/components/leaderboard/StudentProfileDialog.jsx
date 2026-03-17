@@ -437,8 +437,8 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                 {/* Net Worth */}
                 <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg p-3 mb-3">
                   <p className="text-white/80 text-sm text-center">💎 שווי כולל</p>
-                  <p className="text-white font-black text-3xl text-center">
-                    {Math.round(financeReport.netWorth)}
+                  <p className="text-white font-black text-3xl text-center flex items-center justify-center gap-2">
+                    {Math.round(financeReport.netWorth)} <CoinIcon size={28} />
                   </p>
                 </div>
 

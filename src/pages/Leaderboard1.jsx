@@ -222,7 +222,7 @@ const LeaderboardRow = React.memo(({
             {/* Total Networth */}
             <div className="text-center">
               <div className={`bg-gradient-to-br ${getRankColor(actualIndex)} text-white font-black px-2 sm:px-4 py-1 sm:py-2 rounded-xl shadow-lg`}>
-                <div className="text-base sm:text-2xl">{player.totalValue}</div>
+                <div className="text-base sm:text-2xl flex items-center gap-1">{player.totalValue} <CoinIcon size={16} /></div>
                 <div className="text-[8px] sm:text-[10px] opacity-80">שווי</div>
               </div>
             </div>
