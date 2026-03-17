@@ -503,9 +503,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                       {financeReport.losses.inflation > 0 && (
                         <div className="flex justify-between"><span className="text-white/70">📉 אינפלציה:</span><span className="text-white font-bold">{Math.round(financeReport.losses.inflation)}</span></div>
                       )}
-                      {financeReport.losses.incomeTax > 0 && (
-                        <div className="flex justify-between"><span className="text-white/70">🏛️ מס הכנסה:</span><span className="text-white font-bold">{Math.round(financeReport.losses.incomeTax)}</span></div>
-                      )}
+
                       {financeReport.losses.capitalGainsTax > 0 && (
                         <div className="flex justify-between"><span className="text-white/70">📈 מס רווחי הון:</span><span className="text-white font-bold">{Math.round(financeReport.losses.capitalGainsTax)}</span></div>
                       )}
