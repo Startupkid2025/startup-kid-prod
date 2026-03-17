@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import CoinIcon from "@/components/ui/CoinIcon";
 
 export default function Layout({ children }) {
   const location = useLocation();
@@ -558,7 +559,7 @@ export default function Layout({ children }) {
                 <span className="text-5xl font-black text-white">
                   {loginRewardData?.reward}
                 </span>
-                <span className="text-3xl">🪙</span>
+                <CoinIcon size={48} />
               </div>
               <p className="text-white/80 text-xs mt-2">סטארטקוין</p>
             </motion.div>
