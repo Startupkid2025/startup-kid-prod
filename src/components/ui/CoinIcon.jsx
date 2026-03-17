@@ -7,7 +7,6 @@ export default function CoinIcon({ size = 38, className = "" }) {
         width: size, 
         height: size, 
         objectFit: "contain",
-        mixBlendMode: "multiply",
         display: "inline-block",
         verticalAlign: "middle"
       }}
