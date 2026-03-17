@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Check, X, Trophy, Coins, Calculator, Star, Clock } from "lucide-react";
+import { Loader2, Check, X, Trophy, Calculator, Star, Clock } from "lucide-react";
+import CoinIcon from "@/components/ui/CoinIcon";
 import { toast } from "sonner";
 import { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
 

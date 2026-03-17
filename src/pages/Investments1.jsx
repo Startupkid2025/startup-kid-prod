@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { TrendingUp, TrendingDown, DollarSign, PieChart, Coins, AlertTriangle } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, PieChart, AlertTriangle } from "lucide-react";
+import CoinIcon from "@/components/ui/CoinIcon";
 import {
   AlertDialog,
   AlertDialogAction,
