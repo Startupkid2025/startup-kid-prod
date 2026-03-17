@@ -801,7 +801,7 @@ ${question} = ${correctAnswer}
 
         <Card className="bg-white/10 backdrop-blur-md border-white/20">
           <CardContent className="pt-6 text-center">
-            <Coins className="w-8 h-8 text-amber-300 mx-auto mb-2" />
+            <CoinIcon size={32} className="mx-auto mb-2" />
             <p className="text-2xl font-black text-white">{totalCoinsEarned}</p>
             <p className="text-white/70 text-sm">סטארטקוין צברת</p>
           </CardContent>
@@ -846,7 +846,7 @@ ${question} = ${correctAnswer}
                       {categoryInfo[currentQuestion.category].name}
                     </span>
                     <span className="bg-amber-500/20 text-amber-200 px-4 py-2 rounded-full text-sm flex items-center gap-2">
-                      <Coins className="w-4 h-4" />
+                      <CoinIcon size={20} />
                       {MATH_COINS_PER_CORRECT_ANSWER} סטארטקוין
                     </span>
                   </div>
@@ -899,7 +899,7 @@ ${question} = ${correctAnswer}
                           </p>
                           {feedback.coinsEarned > 0 && (
                             <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white font-black text-xl py-3 px-6 rounded-2xl inline-block mb-4">
-                              +{feedback.coinsEarned} סטארטקוין! 🪙
+                              +{feedback.coinsEarned} סטארטקוין! <CoinIcon size={22} />
                             </div>
                           )}
                           {feedback.mastered && (

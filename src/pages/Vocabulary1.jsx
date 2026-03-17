@@ -1119,7 +1119,7 @@ export default function Vocabulary() {
                                 animate={{ rotate: [0, 360] }}
                                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                               >
-                                🪙
+                                <CoinIcon size={24} />
                               </motion.div>
                               קיבלת +{feedback.coinsEarned} סטארטקוין!
                             </div>
