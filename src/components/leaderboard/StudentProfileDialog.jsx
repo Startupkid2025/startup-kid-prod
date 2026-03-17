@@ -11,6 +11,7 @@ import TamagotchiAvatar from "../avatar/TamagotchiAvatar";
 import { base44 } from "@/api/base44Client";
 import { AVATAR_ITEMS } from "../avatar/TamagotchiAvatar";
 import { toast } from "sonner";
+import CoinIcon from "@/components/ui/CoinIcon";
 
 const BUSINESSES = {
   "government_bonds": { name: "🏛️ אג\"ח ממשלתיות", color: "from-blue-700 to-blue-900" },

@@ -15,6 +15,7 @@ import Avatar from "@/components/home/Avatar";
 import SkillBar from "@/components/home/SkillBar";
 import CommunityFeed from "@/components/home/CommunityFeed";
 import { safeRequest } from "@/components/utils/base44SafeRequest";
+import CoinIcon from "@/components/ui/CoinIcon";
 
 import GroupSelectionDialog from "@/components/home/GroupSelectionDialog";
 import BirthdayDialog from "@/components/home/BirthdayDialog";

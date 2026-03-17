@@ -12,6 +12,7 @@ import TamagotchiAvatar from "../components/avatar/TamagotchiAvatar";
 import StudentProfileDialog from "../components/leaderboard/StudentProfileDialog";
 import { toast } from "sonner";
 import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
+import CoinIcon from "@/components/ui/CoinIcon";
 import { safeRequest } from "../components/utils/base44SafeRequest";
 
 // 3️⃣ Memoized LeaderboardRow to prevent unnecessary re-renders
