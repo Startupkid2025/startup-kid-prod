@@ -936,7 +936,7 @@ export default function Vocabulary() {
                 <p className="text-white/50 text-xs">נכון פעם אחת</p>
               </div>
               <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/10">
-                <Coins className="w-6 h-6 text-amber-300 mx-auto mb-1.5" />
+                <CoinIcon size={24} className="mx-auto mb-1.5" />
                 <p className="text-2xl font-black text-white leading-none mb-1">{totalCoinsEarned}</p>
                 <p className="text-white/50 text-xs">סטארטקוין</p>
               </div>
@@ -982,8 +982,8 @@ export default function Vocabulary() {
                     {currentWord.difficulty === 1 ? '😊 קל' : currentWord.difficulty === 2 ? '💪 בינוני' : '🔥 קשה'}
                   </span>
                   <span className="bg-amber-500/20 text-amber-200 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2">
-                    <Coins className="w-4 h-4" />
-                    {getCoinsForDifficulty(currentWord.difficulty)} סטארטקוין
+                  <CoinIcon size={20} />
+                  {getCoinsForDifficulty(currentWord.difficulty)} סטארטקוין
                   </span>
                 </div>
 
@@ -1085,7 +1085,7 @@ export default function Vocabulary() {
                                 ))}
                                 <div className="border-t border-white/30 pt-1 mt-1 flex justify-between items-center font-black text-base">
                                   <span>סה"כ:</span>
-                                  <span>+{feedback.coinsEarned} 🪙</span>
+                                  <span className="flex items-center gap-1">+{feedback.coinsEarned} <CoinIcon size={20} /></span>
                                 </div>
                               </div>
                             )}
@@ -1198,7 +1198,7 @@ export default function Vocabulary() {
                       <p className="font-bold text-white" dir="ltr" translate="no" lang="en">{word.word_english}</p>
                       <p className="text-white/60 text-sm">{displayHebrew}</p>
                       <div className="flex items-center justify-center gap-1 mt-2 text-amber-300 text-xs">
-                        <Coins className="w-3 h-3" />
+                        <CoinIcon size={16} />
                         <span>{word.coins_earned}</span>
                       </div>
                     </div>
