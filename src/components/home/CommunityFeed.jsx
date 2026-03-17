@@ -9,6 +9,7 @@ import { Heart, MessageCircle, Send, Trash2, Edit2, Check, X } from "lucide-reac
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import TamagotchiAvatar from "../avatar/TamagotchiAvatar";
+import CoinIcon from "@/components/ui/CoinIcon";
 
 export default function CommunityFeed({ userData, onRefresh }) {
   const currentUser = userData;
