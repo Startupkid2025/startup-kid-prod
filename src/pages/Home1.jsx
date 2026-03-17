@@ -631,7 +631,7 @@ export default function Home() {
                                   </span>
                                   <span className="text-white font-bold flex items-center gap-2">
                                     <span className="text-white">-{inflationLoss}</span>
-                                    <span className="text-xs">🪙</span>
+                                    <CoinIcon size={16} />
                                   </span>
                                 </motion.div>
                               </TooltipTrigger>
@@ -654,7 +654,7 @@ export default function Home() {
                                   </span>
                                   <span className="text-white font-bold flex items-center gap-2">
                                     <span className="text-white">-{creditInterest}</span>
-                                    <span className="text-xs">🪙</span>
+                                    <CoinIcon size={16} />
                                   </span>
                                 </motion.div>
                               </TooltipTrigger>
@@ -913,7 +913,7 @@ export default function Home() {
                             <span className="text-white font-medium text-sm">{item.label}</span>
                           </div>
                           <span className="text-white font-black text-lg">
-                            {item.value.toLocaleString('he-IL')} 🪙
+                            {item.value.toLocaleString('he-IL')} <CoinIcon size={18} />
                           </span>
                         </div>
                       </motion.div>
@@ -925,7 +925,7 @@ export default function Home() {
                       <div className="flex items-center justify-between">
                         <span className="text-white font-black text-lg">סה"כ הכנסות:</span>
                         <span className="text-white font-black text-2xl">
-                          {totalIncome.toLocaleString('he-IL')} 🪙
+                          {totalIncome.toLocaleString('he-IL')} <CoinIcon size={20} />
                         </span>
                       </div>
                     </div>
