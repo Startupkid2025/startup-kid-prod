@@ -485,29 +485,17 @@ export default function Home() {
     const currentCoins = userData.coins || 0;
 
     let inflationLoss = 0;
-    let incomeTax = 0;
     let creditInterest = 0;
 
     if (currentCoins > 0) {
       inflationLoss = Math.floor(currentCoins * 0.03);
     }
 
-    // Income tax: 25% of total daily income
-    // Daily income sources: lessons (100), surveys (50), vocabulary, math, quizzes, work, passive income, etc.
-    // For now, calculate based on total income accumulated (can be refined to track daily income separately)
-    const totalDailyIncome = (userData.total_lessons_coins || 0) + 
-                             (userData.survey_coins || userData.total_survey_coins || 0) +
-                             (userData.coins || 0) + // Note: This is accumulated coins, not just today's income
-                             (userData.total_work_earnings || 0) +
-                             (userData.total_passive_income || 0);
-    
-    incomeTax = Math.floor(totalDailyIncome * 0.25);
-
     if (currentCoins < 0) {
       creditInterest = Math.floor(Math.abs(currentCoins) * 0.10);
     }
 
-    return inflationLoss + incomeTax + creditInterest;
+    return inflationLoss + creditInterest;
   };
 
   const expectedDailyLoss = calculateExpectedDailyLoss();
@@ -617,20 +605,11 @@ export default function Home() {
                       const purchasedItems = userData?.purchased_items || [];
 
                       let inflationLoss = 0;
-                      let incomeTax = 0;
                       let creditInterest = 0;
 
                       if (currentCoins > 0) {
                         inflationLoss = Math.floor(currentCoins * 0.03);
                       }
-
-                      // Income tax: 25% of total daily income
-                      const totalDailyIncome = (userData?.total_lessons_coins || 0) + 
-                                               (userData?.survey_coins || userData?.total_survey_coins || 0) +
-                                               (userData?.coins || 0) +
-                                               (userData?.total_work_earnings || 0) +
-                                               (userData?.total_passive_income || 0);
-                      incomeTax = Math.floor(totalDailyIncome * 0.25);
 
                       if (currentCoins < 0) {
                         creditInterest = Math.floor(Math.abs(currentCoins) * 0.10);
@@ -684,7 +663,7 @@ export default function Home() {
                               </TooltipContent>
                             </Tooltip>
                           )}
-                          {inflationLoss === 0 && incomeTax === 0 && creditInterest === 0 && (
+                          {inflationLoss === 0 && creditInterest === 0 && (
                             <div className="text-center py-3 bg-green-500/20 rounded-lg border border-green-400/30">
                               <p className="text-white font-medium text-sm">🎉 אין הפסדים צפויים!</p>
                             </div>
