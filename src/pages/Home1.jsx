@@ -20,6 +20,7 @@ import CoinIcon from "@/components/ui/CoinIcon";
 import GroupSelectionDialog from "@/components/home/GroupSelectionDialog";
 import BirthdayDialog from "@/components/home/BirthdayDialog";
 import { toast } from "sonner";
+import { cachedAuthMe, invalidateAuthCache } from "@/lib/cachedAuthMe";
 
 const SKILLS = [
   { key: "ai_tech", name: "בינה מלאכותית וטכנולוגיה", icon: "🤖", color: "from-blue-400 to-cyan-400" },
@@ -184,7 +185,7 @@ export default function Home() {
     loadingRef.current = true;
     
     try {
-      const user = await base44.auth.me();
+      const user = await cachedAuthMe();
       
       // Apply passive income FIRST (before any other calculations)
       await applyPassiveIncomeIfNeeded(user);
@@ -786,10 +787,11 @@ export default function Home() {
       {/* Second Row - Avatar + Skills */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Avatar */}
-        <Avatar 
+        <Avatar
           stage={1}
           totalLessons={userData?.total_lessons || 0}
           equippedItems={userData?.equipped_items || {}}
+          userData={userData}
         />
 
         {/* Skills */}

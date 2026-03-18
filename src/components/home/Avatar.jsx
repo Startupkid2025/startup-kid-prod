@@ -184,7 +184,7 @@ const generateSmartTip = async (user, equippedItems) => {
   }
 };
 
-export default function Avatar({ stage, totalLessons, equippedItems }) {
+export default function Avatar({ stage, totalLessons, equippedItems, userData: userDataProp }) {
   const [currentMessage, setCurrentMessage] = React.useState("טוען...");
   const [user, setUser] = React.useState(null);
   const [isEditingName, setIsEditingName] = React.useState(false);
@@ -197,7 +197,12 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
   const [showNoEnergyDialog, setShowNoEnergyDialog] = React.useState(false);
 
   React.useEffect(() => {
-    loadUser();
+    // If userData is passed as prop, use it instead of fetching independently
+    if (userDataProp) {
+      initFromUserData(userDataProp);
+    } else {
+      loadUser();
+    }
   }, []);
 
   React.useEffect(() => {
@@ -232,42 +237,65 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
     }
   }, [workStatus, sleepStatus]);
 
+  const initFromUserData = async (userData) => {
+    try {
+      applyUserState(userData);
+      // Update hunger based on time, then compute final energy/hunger locally
+      const hungerResult = await updateHungerBasedOnTime(userData);
+      const finalEnergy = userData.energy ?? 100;
+      const finalHunger = hungerResult !== undefined ? hungerResult : (userData.hunger ?? 0);
+      setEnergy(finalEnergy);
+      setHunger(finalHunger);
+
+      // Generate smart tip using the data we already have
+      const tip = await generateSmartTip({ ...userData, hunger: finalHunger, energy: finalEnergy }, equippedItems);
+      setCurrentMessage(tip);
+    } catch (error) {
+      console.error("Error initializing avatar from props:", error);
+    }
+  };
+
+  const applyUserState = (userData) => {
+    setUser(userData);
+    setNewAvatarName(userData.avatar_name || "");
+
+    // Check work status
+    const status = userData.work_status || null;
+    if (status && status.isWorking) {
+      setWorkStatus(status);
+      const now = Date.now();
+      setTimeLeft(Math.max(0, status.returnTime - now));
+    } else {
+      setWorkStatus(null);
+    }
+
+    // Check sleep status
+    const sleepStat = userData.sleep_status || null;
+    if (sleepStat && sleepStat.isSleeping) {
+      setSleepStatus(sleepStat);
+      const now = Date.now();
+      setTimeLeft(Math.max(0, sleepStat.returnTime - now));
+    } else {
+      setSleepStatus(null);
+    }
+  };
+
   const loadUser = async () => {
     try {
       const userData = await base44.auth.me();
-      setUser(userData);
-      setNewAvatarName(userData.avatar_name || "");
-
-      // Check work status
-      const status = userData.work_status || null;
-      if (status && status.isWorking) {
-        setWorkStatus(status);
-        const now = Date.now();
-        setTimeLeft(Math.max(0, status.returnTime - now));
-      } else {
-        setWorkStatus(null);
-      }
-
-      // Check sleep status
-      const sleepStat = userData.sleep_status || null;
-      if (sleepStat && sleepStat.isSleeping) {
-        setSleepStatus(sleepStat);
-        const now = Date.now();
-        setTimeLeft(Math.max(0, sleepStat.returnTime - now));
-      } else {
-        setSleepStatus(null);
-      }
+      applyUserState(userData);
 
       // Update hunger based on time passed
-      await updateHungerBasedOnTime(userData);
+      const hungerResult = await updateHungerBasedOnTime(userData);
 
-      // Load energy and hunger after potential update
-      const updatedUser = await base44.auth.me();
-      setEnergy(updatedUser.energy ?? 100);
-      setHunger(updatedUser.hunger ?? 0);
+      // Use locally-computed values instead of re-fetching from API
+      const finalEnergy = userData.energy ?? 100;
+      const finalHunger = hungerResult !== undefined ? hungerResult : (userData.hunger ?? 0);
+      setEnergy(finalEnergy);
+      setHunger(finalHunger);
 
       // Generate smart tip
-      const tip = await generateSmartTip(updatedUser, equippedItems);
+      const tip = await generateSmartTip({ ...userData, hunger: finalHunger, energy: finalEnergy }, equippedItems);
       setCurrentMessage(tip);
     } catch (error) {
       console.error("Error loading user:", error);
@@ -288,9 +316,12 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
           hunger: newHunger,
           last_hunger_update: now
         });
+        return newHunger; // Return so caller can use locally without refetch
       }
+      return undefined; // No update needed
     } catch (error) {
       console.error("Error updating hunger:", error);
+      return undefined;
     }
   };
 
@@ -544,9 +575,11 @@ export default function Avatar({ stage, totalLessons, equippedItems }) {
   const progress = getCurrentLevelProgress(totalLessons);
   const isMaxLevel = currentLevel >= 6;
   
-  // Force re-render when totalLessons changes
+  // When userData prop changes, re-initialize from it
   React.useEffect(() => {
-    if (user) {
+    if (userDataProp && user) {
+      applyUserState(userDataProp);
+    } else if (user && !userDataProp) {
       loadUser();
     }
   }, [totalLessons]);
