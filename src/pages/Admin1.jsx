@@ -2086,7 +2086,6 @@ export default function Admin() {
 
         <TabsContent value="tools">
           <div className="space-y-6">
-            <InvestmentsManager />
             <EconomyAdminPanel />
           </div>
         </TabsContent>
