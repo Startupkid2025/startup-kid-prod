@@ -36,3 +36,5 @@ base44/.app.jsonc
 .claude/
 .vercel/
 fider/
+reports/
+scripts/.sentry-processed-issues

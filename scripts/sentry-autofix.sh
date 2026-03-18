@@ -170,14 +170,16 @@ PROMPT_EOF
   if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
     echo ""
     echo "No code changes needed. Claude found nothing to fix."
-    git checkout "$BASE_BRANCH" 2>/dev/null
+    if [ "${AUTOFIX_NO_CHECKOUT_BACK:-}" != "1" ]; then
+      git checkout "$BASE_BRANCH" 2>/dev/null
+    fi
     git branch -d "$branch" 2>/dev/null || true
-    return 0
+    return 1
   fi
 
-  # Commit and push
+  # Commit changes
   echo ""
-  echo "Committing and creating PR..."
+  echo "Committing changes..."
   git add -A
   git commit -m "$(cat <<EOF
 fix: auto-fix Sentry issue #$issue_id
@@ -189,6 +191,13 @@ Sentry: $issue_url
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 EOF
 )"
+
+  # If orchestrator controls push/PR, stop here
+  if [ "${AUTOFIX_NO_PUSH:-}" = "1" ]; then
+    echo ""
+    echo "✓ Fix committed on branch $branch (push/PR deferred to orchestrator)"
+    return 0
+  fi
 
   git push origin "$branch" -u
 
@@ -222,7 +231,9 @@ PR_EOF
 )"
 
   # Return to base branch
-  git checkout "$BASE_BRANCH" 2>/dev/null
+  if [ "${AUTOFIX_NO_CHECKOUT_BACK:-}" != "1" ]; then
+    git checkout "$BASE_BRANCH" 2>/dev/null
+  fi
 
   echo ""
   echo "✓ Draft PR created on branch $branch"
