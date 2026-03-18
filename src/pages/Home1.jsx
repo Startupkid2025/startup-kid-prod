@@ -262,14 +262,13 @@ export default function Home() {
         const uniqueIds = [...new Set(attendedIds)];
         const counts = { ai_tech: 0, personal_skills: 0, money_business: 0 };
         if (uniqueIds.length > 0) {
-          const lessonDocs = await Promise.all(
-            uniqueIds.map(id => safeRequest(
-              () => base44.entities.Lesson.get(id),
-              { key: `Lesson:${id}`, ttlMs: 120000, retries: 0 }
-            ).catch(() => null))
-          );
-          lessonDocs.forEach(lesson => {
-            if (lesson && counts.hasOwnProperty(lesson.category)) {
+          const allLessons = await safeRequest(
+            () => base44.entities.Lesson.list(),
+            { key: 'Lessons:all', ttlMs: 120000, retries: 0 }
+          ).catch(() => []);
+          const uniqueIdSet = new Set(uniqueIds);
+          allLessons.forEach(lesson => {
+            if (uniqueIdSet.has(lesson.id) && counts.hasOwnProperty(lesson.category)) {
               counts[lesson.category]++;
             }
           });

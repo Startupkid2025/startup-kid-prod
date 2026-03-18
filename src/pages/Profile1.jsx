@@ -31,6 +31,7 @@ export default function Profile() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -70,6 +71,9 @@ export default function Profile() {
   };
 
   const handleSave = async () => {
+    if (isSaving || !userData) return;
+    setIsSaving(true);
+    try {
     const oldUserData = { ...userData };
     
     // Calculate coins for completing profile fields
@@ -126,6 +130,9 @@ export default function Profile() {
     
     setIsEditing(false);
     loadUserData();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -230,6 +237,7 @@ export default function Profile() {
   };
 
   const handleCompleteTask = async (taskId) => {
+    if (!userData) return;
     let coinsToAdd = 0;
     let updates = {};
 
@@ -338,6 +346,7 @@ export default function Profile() {
               ) : (
                 <Button
                   onClick={handleSave}
+                  disabled={isSaving}
                   size="sm"
                   className="bg-green-500 hover:bg-green-600"
                 >

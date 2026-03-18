@@ -325,6 +325,7 @@ export default function Investments() {
   };
 
   const openInvestDialog = (businessId) => {
+    if (!userData) return;
     const business = BUSINESSES.find(b => b.id === businessId);
     const amount = investmentAmounts[businessId] || 0;
 
@@ -362,6 +363,7 @@ export default function Investments() {
     if (isInvesting[businessId]) {
       return;
     }
+    if (!userData) return;
 
     setConfirmInvestDialog({ ...confirmInvestDialog, isOpen: false });
     setIsInvesting({ ...isInvesting, [businessId]: true });
@@ -526,6 +528,7 @@ export default function Investments() {
     if (isSelling[businessId]) {
       return;
     }
+    if (!userData) return;
 
     // Use snapshot to validate
     const totalValue = portfolioSnapshot?.investment_value_by_type?.[businessId] || 0;

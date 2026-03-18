@@ -78,6 +78,7 @@ const JOBS = [
 export default function AvatarWork({ userData, onWorkComplete }) {
   const [workStatus, setWorkStatus] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     loadWorkStatus();
@@ -126,6 +127,9 @@ export default function AvatarWork({ userData, onWorkComplete }) {
   const availableJobs = JOBS.filter(job => job.minStage <= getCurrentStage());
 
   const sendToWork = async (job) => {
+    if (isSending || !userData) return;
+    setIsSending(true);
+    try {
     const returnTime = Date.now() + (60 * 60 * 1000); // 1 hour
 
     // Calculate total earnings including hourly bonuses from items
@@ -177,6 +181,9 @@ export default function AvatarWork({ userData, onWorkComplete }) {
 
     const bonusText = hourlyBonus > 0 ? ` (כולל +${hourlyBonus} מפריטים!)` : '';
     toast.success(`${userData.avatar_name} יצא לעבוד כ${job.name}! 💼${bonusText}`);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const completeWork = async () => {
@@ -400,6 +407,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
 
           <Button
             onClick={() => sendToWork(currentJob)}
+            disabled={isSending}
             className="w-full bg-white/20 hover:bg-white/30 text-white font-black text-xl py-6 shadow-lg backdrop-blur-sm border-2 border-white/40"
           >
             <Briefcase className="w-6 h-6 ml-2" />

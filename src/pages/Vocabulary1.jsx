@@ -469,6 +469,7 @@ export default function Vocabulary() {
       toast.error("אין מילה ללמוד כרגע.");
       return;
     }
+    if (!userData) return;
 
     setIsChecking(true);
 
