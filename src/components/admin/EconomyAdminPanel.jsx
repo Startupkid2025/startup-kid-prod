@@ -365,16 +365,7 @@ export default function EconomyAdminPanel() {
         income.socialMissions = socialMissionsCoins;
         const totalIncome = Object.values(income).reduce((sum, val) => sum + safeNum(val), 0);
 
-        const losses = {
-          inflation: safeNum(user.total_inflation_lost),
-          capitalGainsTax: safeNum(user.total_capital_gains_tax),
-          investmentFees: safeNum(user.total_investment_fees),
-          itemSaleLosses: safeNum(user.total_item_sale_losses),
-          creditInterest: safeNum(user.total_credit_interest)
-        };
-        const totalLossesFixed = Object.values(losses).reduce((sum, val) => sum + safeNum(val), 0);
-
-        const balancedCoins = Math.round(totalIncome - totalLossesFixed - itemsValue - investmentsValue);
+        const balancedCoins = Math.round(totalIncome - totalLosses - itemsValue - investmentsValue);
 
         const total_networth = balancedCoins + investmentsValue + itemsValue;
         
