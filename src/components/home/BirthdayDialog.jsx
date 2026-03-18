@@ -7,14 +7,28 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 
 export default function BirthdayDialog({ isOpen, onComplete }) {
-  const [birthDate, setBirthDate] = useState("");
+  const [day, setDay] = useState("");
+  const [month, setMonth] = useState("");
+  const [year, setYear] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
+  const isValid = () => {
+    const d = parseInt(day);
+    const m = parseInt(month);
+    const y = parseInt(year);
+    if (!d || !m || !y) return false;
+    if (d < 1 || d > 31 || m < 1 || m > 12) return false;
+    if (y < 2000 || y > new Date().getFullYear()) return false;
+    return true;
+  };
+
   const handleSave = async () => {
-    if (!birthDate) {
-      toast.error("נא להזין תאריך לידה");
+    if (!isValid()) {
+      toast.error("נא להזין תאריך לידה תקין");
       return;
     }
+
+    const birthDate = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
     setIsSaving(true);
     try {
@@ -53,18 +67,53 @@ export default function BirthdayDialog({ isOpen, onComplete }) {
 
           <div className="text-center text-5xl mb-2">🎉</div>
 
-          <Input
-            type="date"
-            value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
-            max={new Date().toISOString().split("T")[0]}
-            min="2000-01-01"
-            className="bg-white/20 border-white/30 text-white placeholder:text-white/50 text-center text-lg py-5 [color-scheme:dark]"
-          />
+          <div className="flex gap-2 items-center justify-center">
+            {/* Day */}
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-white/70 text-xs font-bold">יום</span>
+              <Input
+                type="number"
+                min="1"
+                max="31"
+                placeholder="DD"
+                value={day}
+                onChange={(e) => setDay(e.target.value)}
+                className="bg-white/20 border-white/30 text-white placeholder:text-white/40 text-center text-xl py-5 w-20 [color-scheme:dark]"
+              />
+            </div>
+            <span className="text-white text-2xl font-black mt-5">/</span>
+            {/* Month */}
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-white/70 text-xs font-bold">חודש</span>
+              <Input
+                type="number"
+                min="1"
+                max="12"
+                placeholder="MM"
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+                className="bg-white/20 border-white/30 text-white placeholder:text-white/40 text-center text-xl py-5 w-20 [color-scheme:dark]"
+              />
+            </div>
+            <span className="text-white text-2xl font-black mt-5">/</span>
+            {/* Year */}
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-white/70 text-xs font-bold">שנה</span>
+              <Input
+                type="number"
+                min="2000"
+                max={new Date().getFullYear()}
+                placeholder="YYYY"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                className="bg-white/20 border-white/30 text-white placeholder:text-white/40 text-center text-xl py-5 w-24 [color-scheme:dark]"
+              />
+            </div>
+          </div>
 
           <Button
             onClick={handleSave}
-            disabled={!birthDate || isSaving}
+            disabled={!isValid() || isSaving}
             className="w-full bg-white text-purple-700 hover:bg-white/90 font-black text-lg py-6"
           >
             {isSaving ? "שומר..." : "המשך 🚀"}
