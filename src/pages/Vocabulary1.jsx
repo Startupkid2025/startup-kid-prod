@@ -4,15 +4,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Check, X, Trophy, Coins, BookOpen, Star, Send } from "lucide-react";
+import { Loader2, Check, X, Trophy, BookOpen, Star, Send } from "lucide-react";
+import CoinIcon from "@/components/ui/CoinIcon";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { AVATAR_ITEMS } from "../components/avatar/TamagotchiAvatar";
 
 // קבועים
-const DAILY_WORDS_COUNT = 150;
+const DAILY_WORDS_COUNT = 75;
 const RESET_HOUR = 0;
-const VOCAB_SCHEME_VERSION = 3;
+const VOCAB_SCHEME_VERSION = 4;
 
 // פונקציות עזר לתאריך לוקאלי
 const pad2 = (n) => String(n).padStart(2, '0');
@@ -120,6 +121,7 @@ export default function Vocabulary() {
   const [masteredPage, setMasteredPage] = useState(1);
   const [showSuggestionDialog, setShowSuggestionDialog] = useState(false);
   const [suggestionText, setSuggestionText] = useState("");
+  const [multiChoiceOptions, setMultiChoiceOptions] = useState(null);
   
   const resetInProgressRef = useRef(false);
   const lastResetAttemptRef = useRef(0);
@@ -257,18 +259,25 @@ export default function Vocabulary() {
         setUserData(user);
       }
 
-      // טען את המילים של היום (ללא כפילויות)
+      // טען את המילים של היום (ללא כפילויות) - 75 מילים קבועות ליום
       const todaysVocabWords = buildTodaysVocabWords(allVocabWords, dailyWords);
       setAvailableVocabWords(todaysVocabWords);
       setWordProgress(progress);
 
       // Generate first word
-      const firstWord = await generateNextWord(progress, todaysVocabWords);
+      const firstWord = generateNextWord(progress, todaysVocabWords);
       setCurrentWord(firstWord);
+      // אם זו מילה ראשונה - הכן multi-choice
+      if (firstWord?.isFirstTime) {
+        setMultiChoiceOptions(generateMultiChoiceOptions(firstWord, todaysVocabWords));
+      } else {
+        setMultiChoiceOptions(null);
+      }
 
       // Preload next word
-      const nextWordPreload = await generateNextWord(progress, todaysVocabWords, firstWord);
+      const nextWordPreload = generateNextWord(progress, todaysVocabWords, firstWord);
       setNextWord(nextWordPreload);
+      // אין צורך לאפס multiChoiceOptions כאן - כבר טופל למעלה
 
       if (!silent) {
         setIsLoading(false);
@@ -289,13 +298,13 @@ export default function Vocabulary() {
     }
   };
 
-  const generateNextWord = async (currentProgress, vocabWords, excludeWord = null) => {
-    // מילים ששלטתי בהן בלבד
+  const generateNextWord = (currentProgress, vocabWords, excludeWord = null) => {
+    // מילים ששלטתי בהן - mastered או correct_streak >= 2
     const completedWords = currentProgress
-      .filter(w => w.mastered)
+      .filter(w => w.mastered || w.correct_streak >= 2)
       .map(w => w.word_english.toLowerCase());
 
-    // סנן רק מילים תקינות באנגלית (רק תווי a-z, מקף, רווח)
+    // סנן רק מילים תקינות באנגלית (רק תווי a-z, מקף, רווח) שנמצאות ב-75 של היום
     const validWords = vocabWords.filter(w => {
       const word = w.word_english || '';
       return /^[a-zA-Z\s-]+$/.test(word) && !completedWords.includes(word.toLowerCase());
@@ -314,14 +323,33 @@ export default function Vocabulary() {
     }
 
     const existingProgress = currentProgress.find(w => w.word_english.toLowerCase() === randomWord.word_english.toLowerCase());
+    // isFirstTime = מילה שלא נכונה עדיין אפילו פעם אחת (correct_streak === 0 ולא היה ניסיון נכון)
+    // מילה שנכשלה (total_attempts > 0, correct_streak === 0) → עדיין multi-choice
+    // מילה שנכונה פעם אחת (correct_streak === 1) → text input
+    const isFirstTime = !existingProgress || existingProgress.correct_streak === 0;
 
     return {
       english: randomWord.word_english,
       hebrew: randomWord.word_hebrew,
       difficulty: randomWord.difficulty_level || 1,
       isReview: !!existingProgress,
-      correctStreak: existingProgress?.correct_streak || 0
+      correctStreak: existingProgress?.correct_streak || 0,
+      isFirstTime
     };
+  };
+
+  // מייצר 4 אפשרויות בחירה (multiple choice) מתוך רשימת המילים הזמינות
+  const generateMultiChoiceOptions = (correctWord, vocabWords) => {
+    const correct = correctWord.hebrew.split(/[,،;\/]/)[0].trim(); // ניקח רק פירוש ראשון
+    // אסוף מילים שונות לאפשרויות
+    const others = vocabWords.filter(w =>
+      w.word_english.toLowerCase() !== correctWord.english.toLowerCase() &&
+      w.word_hebrew && w.word_hebrew.trim().length > 0
+    );
+    const shuffledOthers = shuffle(others).slice(0, 3);
+    const wrongOptions = shuffledOthers.map(w => w.word_hebrew.split(/[,،;\/]/)[0].trim());
+    const options = shuffle([correct, ...wrongOptions]);
+    return { options, correct };
   };
 
   const getCoinsForDifficulty = (difficulty) => {
@@ -337,28 +365,55 @@ export default function Vocabulary() {
     return baseCoins + vocabBonus;
   };
 
+  const wordsOneCorrectToday = wordProgress.filter(w => 
+    w.correct_streak === 1 && 
+    availableVocabWords.some(v => v.word_english.toLowerCase() === w.word_english.toLowerCase())
+  ).length;
+  const completedTodayCount = wordProgress.filter(w => 
+    (w.mastered || w.correct_streak >= 2) && 
+    availableVocabWords.some(v => v.word_english.toLowerCase() === w.word_english.toLowerCase())
+  ).length;
   const maxWords = availableVocabWords.length;
   const masteredWords = wordProgress.filter(w => w.mastered).length;
   const wordsInProgress = wordProgress.filter(w => !w.mastered && w.correct_streak === 0 && w.total_attempts > 0).length;
   const wordsWithOneCorrect = wordProgress.filter(w => !w.mastered && w.correct_streak === 1).length;
   const totalCoinsEarned = wordProgress.reduce((sum, w) => sum + (w.coins_earned || 0), 0);
 
-  const handleContinue = async () => {
+  const handleContinue = async (freshProgress = null) => {
     setUserAnswer("");
     setFeedback(null);
     
-    if (nextWord) {
-      setCurrentWord(nextWord);
-      // Preload new next word
-      const newNext = await generateNextWord(wordProgress, availableVocabWords, nextWord);
+    const progressToUse = Array.isArray(freshProgress) ? freshProgress : wordProgress;
+    
+    let next;
+    // ודא שה-nextWord אכן שייך לרשימת 75 המילים של היום
+    const nextWordIsValid = nextWord && availableVocabWords.some(
+      w => w.word_english.toLowerCase() === nextWord.english?.toLowerCase()
+    );
+
+    if (nextWordIsValid) {
+      // Recalculate isFirstTime using fresh progress (nextWord may have stale isFirstTime)
+      const existingProg = progressToUse.find(w => w.word_english.toLowerCase() === nextWord.english?.toLowerCase());
+      const freshIsFirstTime = !existingProg || existingProg.correct_streak === 0;
+      next = { ...nextWord, isFirstTime: freshIsFirstTime };
+      setCurrentWord(next);
+      const newNext = generateNextWord(progressToUse, availableVocabWords, nextWord);
       setNextWord(newNext);
     } else {
-      const next = await generateNextWord(wordProgress, availableVocabWords);
+      next = generateNextWord(progressToUse, availableVocabWords);
       setCurrentWord(next);
-      const newNext = await generateNextWord(wordProgress, availableVocabWords, next);
+      const newNext = generateNextWord(progressToUse, availableVocabWords, next);
       setNextWord(newNext);
     }
+    
+    if (next?.isFirstTime) {
+      setMultiChoiceOptions(generateMultiChoiceOptions(next, availableVocabWords));
+    } else {
+      setMultiChoiceOptions(null);
+    }
   };
+
+  const resetMultiChoice = () => setMultiChoiceOptions(null);
 
   useEffect(() => {
     if (currentWord && !feedback) {
@@ -397,9 +452,19 @@ export default function Vocabulary() {
     }
   }, [feedback]);
 
+  const handleSubmitWithAnswer = async (answer) => {
+    setUserAnswer(answer);
+    await handleSubmitCore(answer);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!userAnswer.trim() || isChecking) return;
+    await handleSubmitCore(userAnswer);
+  };
+
+  const handleSubmitCore = async (answerToCheck) => {
+    if (!answerToCheck?.trim() || isChecking) return;
     if (!currentWord) {
       toast.error("אין מילה ללמוד כרגע.");
       return;
@@ -410,7 +475,7 @@ export default function Vocabulary() {
     try {
       const normalizeText = (text) => text.trim().toLowerCase().replace(/[\s-]/g, '');
       
-      const normalizedAnswer = normalizeText(userAnswer);
+      const normalizedAnswer = normalizeText(answerToCheck);
       // Split by comma, semicolon, or slash to get all possible translations
       const correctAnswers = currentWord.hebrew
         .split(/[,،;\/]/)
@@ -429,7 +494,7 @@ export default function Vocabulary() {
       );
 
       if (existingWordProg) {
-        const newStreak = isCorrect ? (existingWordProg.correct_streak + 1) : 0;
+        const newStreak = isCorrect ? (existingWordProg.correct_streak + 1) : existingWordProg.correct_streak;
         const isMastered = newStreak >= 2;
         const isFirstCorrect = newStreak === 1 && existingWordProg.correct_streak === 0;
 
@@ -505,14 +570,7 @@ export default function Vocabulary() {
 
         // Update data in background (don't wait)
         if (coinsEarned > 0 && ((isMastered && !existingWordProg.mastered) || isFirstCorrect)) {
-          const updatedDailyWords = (userData.daily_vocabulary_words || []).filter(
-            w => w.toLowerCase() !== currentWord.english.toLowerCase()
-          );
-
-          const updatedAvailableWords = availableVocabWords.filter(
-            w => w.word_english.toLowerCase() !== currentWord.english.toLowerCase()
-          );
-          setAvailableVocabWords(updatedAvailableWords);
+          // אין הסרת מילים מהרשימה - אותן 75 מילים חוזרות כל היום
 
           // Calculate new mastered_words count
           const currentMasteredCount = wordProgress.filter(w => w.mastered).length;
@@ -533,12 +591,11 @@ export default function Vocabulary() {
           
           const totalNetworth = newCoinsTotal + itemsValue + investmentsValue;
 
-          // Update in background
+          // Update in background — fetch fresh progress ONLY after DB is updated
           Promise.all([
             base44.auth.updateMe({
               coins: newCoinsTotal,
               total_networth: totalNetworth,
-              daily_vocabulary_words: updatedDailyWords,
               mastered_words: newMasteredCount
             }),
             base44.entities.WordProgress.update(existingWordProg.id, {
@@ -554,9 +611,12 @@ export default function Vocabulary() {
               ...prev, 
               coins: newCoinsTotal,
               total_networth: totalNetworth,
-              daily_vocabulary_words: updatedDailyWords,
               mastered_words: newMasteredCount
             }));
+
+            // Sync progress from DB only after write is confirmed
+            const confirmedProgress = await base44.entities.WordProgress.filter({ student_email: userData.email });
+            setWordProgress(confirmedProgress);
             
             // Update leaderboard and get actual value
             let actualLeaderboardNetworth = null;
@@ -624,17 +684,8 @@ export default function Vocabulary() {
           coins_earned: coinsEarned
         });
 
-        // Update user coins and remove word from daily list if earned coins
+        // Update user coins if earned coins
         if (coinsEarned > 0) {
-          const updatedDailyWords = (userData.daily_vocabulary_words || []).filter(
-            w => w.toLowerCase() !== currentWord.english.toLowerCase()
-          );
-
-          const updatedAvailableWords = availableVocabWords.filter(
-            w => w.word_english.toLowerCase() !== currentWord.english.toLowerCase()
-          );
-          setAvailableVocabWords(updatedAvailableWords);
-
           const oldCoins = userData.coins || 0;
           const newCoinsTotal = oldCoins + coinsEarned;
 
@@ -651,20 +702,21 @@ export default function Vocabulary() {
           
           const totalNetworth = newCoinsTotal + itemsValue + investmentsValue;
 
-          // Update in background
+          // Update in background — sync progress after DB write confirmed
           Promise.all([
             base44.auth.updateMe({
               coins: newCoinsTotal,
-              total_networth: totalNetworth,
-              daily_vocabulary_words: updatedDailyWords
+              total_networth: totalNetworth
             })
           ]).then(async () => {
             setUserData(prev => ({ 
               ...prev, 
               coins: newCoinsTotal,
-              total_networth: totalNetworth,
-              daily_vocabulary_words: updatedDailyWords
+              total_networth: totalNetworth
             }));
+
+            const confirmedProgress = await base44.entities.WordProgress.filter({ student_email: userData.email });
+            setWordProgress(confirmedProgress);
             
             // Update leaderboard and get actual value
             let actualLeaderboardNetworth = null;
@@ -710,11 +762,31 @@ export default function Vocabulary() {
         });
       }
 
-      // Update local state
-      const latestProgress = await base44.entities.WordProgress.filter({ student_email: userData.email });
-      setWordProgress(latestProgress);
+      // עדכן את wordProgress אופטימיסטית מיד (לפני fetch מהשרת)
+      setWordProgress(prev => {
+        const existing = prev.find(w => w.word_english.toLowerCase() === currentWord.english.toLowerCase());
+        if (existing) {
+          return prev.map(w => w.word_english.toLowerCase() === currentWord.english.toLowerCase()
+            ? { ...w, correct_streak: isCorrect ? w.correct_streak + 1 : w.correct_streak, total_attempts: w.total_attempts + 1, mastered: isCorrect && w.correct_streak + 1 >= 2 }
+            : w
+          );
+        } else {
+          return [...prev, {
+            id: 'optimistic-' + currentWord.english,
+            word_english: currentWord.english,
+            word_hebrew: currentWord.hebrew,
+            correct_streak: isCorrect ? 1 : 0,
+            total_attempts: 1,
+            mastered: false,
+            coins_earned: 0
+          }];
+        }
+      });
 
-      // Auto-continue only if correct
+      // אפס multi-choice אחרי תשובה
+      setMultiChoiceOptions(null);
+
+      // Auto-continue only if correct - use optimistic progress (DB sync happens in background above)
       if (isCorrect) {
         setTimeout(() => {
           handleContinue();
@@ -747,6 +819,8 @@ export default function Vocabulary() {
 
       if (existingWordProg) {
         await base44.entities.WordProgress.update(existingWordProg.id, {
+          correct_streak: 0,
+          total_attempts: existingWordProg.total_attempts + 1,
           last_seen: now,
           difficulty_level: currentWord.difficulty
         });
@@ -813,40 +887,63 @@ export default function Vocabulary() {
         </p>
       </motion.div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
-          <CardContent className="pt-6 text-center">
-            <BookOpen className="w-8 h-8 text-blue-300 mx-auto mb-2" />
-            <p className="text-2xl font-black text-white">{maxWords}</p>
-            <p className="text-white/70 text-sm">מילים זמינות</p>
-          </CardContent>
-        </Card>
+      {/* Daily Progress + Stats unified card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6"
+      >
+        <Card className="bg-white/10 backdrop-blur-md border-white/20 overflow-hidden">
+          <CardContent className="p-5">
+            {/* Progress section */}
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-white/70 text-sm font-semibold">מילים היום</span>
+              <div className="flex items-center gap-2">
+                <span className="text-white font-black text-xl">{completedTodayCount}</span>
+                <span className="text-white/40 font-bold">/</span>
+                <span className="text-white/60 font-bold">{maxWords}</span>
+              </div>
+            </div>
+            <div className="h-4 bg-black/20 rounded-full overflow-hidden relative mb-2">
+              <motion.div
+                className="absolute top-0 right-0 h-full rounded-full bg-gradient-to-r from-yellow-400 to-amber-400"
+                initial={{ width: 0 }}
+                animate={{ width: `${maxWords > 0 ? ((completedTodayCount + wordsOneCorrectToday) / maxWords) * 100 : 0}%` }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              />
+              <motion.div
+                className="absolute top-0 right-0 h-full rounded-full bg-gradient-to-r from-green-400 to-emerald-400"
+                initial={{ width: 0 }}
+                animate={{ width: `${maxWords > 0 ? (completedTodayCount / maxWords) * 100 : 0}%` }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              />
+            </div>
+            <div className="flex items-center justify-end gap-4 mb-5 text-xs text-white/50">
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block"></span>נכון פעם אחת: <span className="text-white/80 font-bold">{wordsOneCorrectToday}</span></span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green-400 inline-block"></span>שלטת: <span className="text-white/80 font-bold">{completedTodayCount}</span></span>
+            </div>
 
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
-          <CardContent className="pt-6 text-center">
-            <Trophy className="w-8 h-8 text-yellow-300 mx-auto mb-2" />
-            <p className="text-2xl font-black text-white">{masteredWords}</p>
-            <p className="text-white/70 text-sm">שלטת בהן</p>
+            {/* Stats row */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/10">
+                <Trophy className="w-6 h-6 text-yellow-300 mx-auto mb-1.5" />
+                <p className="text-2xl font-black text-white leading-none mb-1">{masteredWords}</p>
+                <p className="text-white/50 text-xs">שלטת בהן</p>
+              </div>
+              <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/10">
+                <div className="text-green-300 text-xl font-black mb-1.5">✓</div>
+                <p className="text-2xl font-black text-white leading-none mb-1">{wordsWithOneCorrect}</p>
+                <p className="text-white/50 text-xs">נכון פעם אחת</p>
+              </div>
+              <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/10">
+                <CoinIcon size={24} className="mx-auto mb-1.5" />
+                <p className="text-2xl font-black text-white leading-none mb-1">{totalCoinsEarned}</p>
+                <p className="text-white/50 text-xs">סטארטקוין</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
-
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
-          <CardContent className="pt-6 text-center">
-            <div className="text-3xl font-black text-green-300 mb-2">✓</div>
-            <p className="text-2xl font-black text-white">{wordsWithOneCorrect}</p>
-            <p className="text-white/70 text-sm">נכון פעם אחת</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/10 backdrop-blur-md border-white/20">
-          <CardContent className="pt-6 text-center">
-            <Coins className="w-8 h-8 text-amber-300 mx-auto mb-2" />
-            <p className="text-2xl font-black text-white">{totalCoinsEarned}</p>
-            <p className="text-white/70 text-sm">סטארטקוין צברת</p>
-          </CardContent>
-        </Card>
-      </div>
+      </motion.div>
 
       {/* Game Area */}
       <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-8">
@@ -885,8 +982,8 @@ export default function Vocabulary() {
                     {currentWord.difficulty === 1 ? '😊 קל' : currentWord.difficulty === 2 ? '💪 בינוני' : '🔥 קשה'}
                   </span>
                   <span className="bg-amber-500/20 text-amber-200 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm flex items-center gap-2">
-                    <Coins className="w-4 h-4" />
-                    {getCoinsForDifficulty(currentWord.difficulty)} סטארטקוין
+                  <CoinIcon size={20} />
+                  {getCoinsForDifficulty(currentWord.difficulty)} סטארטקוין
                   </span>
                 </div>
 
@@ -909,6 +1006,29 @@ export default function Vocabulary() {
                 </div>
 
                 {!feedback ? (
+                  multiChoiceOptions ? (
+                    // שאלה אמריקאית - 4 אפשרויות בחירה
+                    <div className="max-w-md mx-auto">
+                      <p className="text-white/70 text-sm mb-4">מה הפירוש בעברית?</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {multiChoiceOptions.options.map((option, idx) => (
+                          <Button
+                            key={idx}
+                            onClick={async () => {
+                              if (isChecking) return;
+                              setUserAnswer(option);
+                              // הגש עם התשובה הנבחרת
+                              await handleSubmitWithAnswer(option);
+                            }}
+                            disabled={isChecking}
+                            className="bg-white/15 hover:bg-white/30 text-white border-2 border-white/20 hover:border-white/40 font-bold py-6 text-base transition-all"
+                          >
+                            {option}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
                   <form onSubmit={handleSubmit} className="max-w-md mx-auto">
                     <Input
                       value={userAnswer}
@@ -936,6 +1056,7 @@ export default function Vocabulary() {
                       </Button>
                     </div>
                   </form>
+                  )
                 ) : (
                   <div className="py-4">
                     {feedback.isCorrect ? (
@@ -964,7 +1085,7 @@ export default function Vocabulary() {
                                 ))}
                                 <div className="border-t border-white/30 pt-1 mt-1 flex justify-between items-center font-black text-base">
                                   <span>סה"כ:</span>
-                                  <span>+{feedback.coinsEarned} 🪙</span>
+                                  <span className="flex items-center gap-1">+{feedback.coinsEarned} <CoinIcon size={20} /></span>
                                 </div>
                               </div>
                             )}
@@ -998,7 +1119,7 @@ export default function Vocabulary() {
                                 animate={{ rotate: [0, 360] }}
                                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                               >
-                                🪙
+                                <CoinIcon size={24} />
                               </motion.div>
                               קיבלת +{feedback.coinsEarned} סטארטקוין!
                             </div>
@@ -1077,7 +1198,7 @@ export default function Vocabulary() {
                       <p className="font-bold text-white" dir="ltr" translate="no" lang="en">{word.word_english}</p>
                       <p className="text-white/60 text-sm">{displayHebrew}</p>
                       <div className="flex items-center justify-center gap-1 mt-2 text-amber-300 text-xs">
-                        <Coins className="w-3 h-3" />
+                        <CoinIcon size={16} />
                         <span>{word.coins_earned}</span>
                       </div>
                     </div>

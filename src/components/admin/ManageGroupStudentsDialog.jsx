@@ -10,14 +10,18 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Users } from "lucide-react";
 
-export default function ManageGroupStudentsDialog({ isOpen, onClose, group, allStudents, onSubmit }) {
+export default function ManageGroupStudentsDialog({ isOpen, onClose, group, allStudents, onSubmit, allGroups = [], onGroupChange }) {
   const [selectedEmails, setSelectedEmails] = useState([]);
+  const [selectedGroupId, setSelectedGroupId] = useState(group?.id);
 
   useEffect(() => {
     if (group) {
       setSelectedEmails(group.student_emails || []);
+      setSelectedGroupId(group.id);
     }
   }, [group]);
+
+  const currentGroup = selectedGroupId ? allGroups.find(g => g.id === selectedGroupId) || group : group;
 
   const handleToggleStudent = (email) => {
     if (selectedEmails.includes(email)) {
@@ -39,9 +43,32 @@ export default function ManageGroupStudentsDialog({ isOpen, onClose, group, allS
             <Users className="w-6 h-6" />
             ניהול תלמידים בקבוצה
           </DialogTitle>
-          <p className="text-sm text-gray-600 text-center mt-2">
-            {group?.group_name}
-          </p>
+          <div className="flex items-center justify-center gap-3 mt-3">
+            <p className="text-sm text-gray-600">
+              {currentGroup?.group_name}
+            </p>
+            {allGroups.length > 1 && (
+              <select
+                value={selectedGroupId || group.id}
+                onChange={(e) => {
+                  const newGroupId = e.target.value;
+                  setSelectedGroupId(newGroupId);
+                  const targetGroup = allGroups.find(g => g.id === newGroupId);
+                  if (targetGroup) {
+                    setSelectedEmails(targetGroup.student_emails || []);
+                  }
+                  onGroupChange?.(newGroupId);
+                }}
+                className="px-2 py-1 rounded border border-purple-300 text-sm bg-purple-50 text-purple-800"
+              >
+                {allGroups.map(g => (
+                  <option key={g.id} value={g.id}>
+                    {g.group_name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
         </DialogHeader>
 
         <div className="space-y-3 py-4">

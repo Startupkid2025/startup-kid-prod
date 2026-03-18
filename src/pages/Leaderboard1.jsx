@@ -4,13 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Coins, TrendingUp, BookOpen, Star, Crown, Handshake, Check, Heart, Flame, Calculator, MessageSquare, Search } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Trophy, Coins, TrendingUp, BookOpen, Star, Crown, Handshake, Check, Heart, Flame, Calculator, MessageSquare, Search, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import TamagotchiAvatar from "../components/avatar/TamagotchiAvatar";
 import StudentProfileDialog from "../components/leaderboard/StudentProfileDialog";
 import { toast } from "sonner";
 import { syncLeaderboardEntry } from "../components/utils/leaderboardSync";
+import CoinIcon from "@/components/ui/CoinIcon";
 import { safeRequest } from "../components/utils/base44SafeRequest";
 
 // 3️⃣ Memoized LeaderboardRow to prevent unnecessary re-renders
@@ -220,7 +222,7 @@ const LeaderboardRow = React.memo(({
             {/* Total Networth */}
             <div className="text-center">
               <div className={`bg-gradient-to-br ${getRankColor(actualIndex)} text-white font-black px-2 sm:px-4 py-1 sm:py-2 rounded-xl shadow-lg`}>
-                <div className="text-base sm:text-2xl">{player.totalValue}</div>
+                <div className="text-base sm:text-2xl flex items-center gap-1">{player.totalValue} <CoinIcon size={16} /></div>
                 <div className="text-[8px] sm:text-[10px] opacity-80">שווי</div>
               </div>
             </div>
@@ -345,6 +347,8 @@ export default function Leaderboard() {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeSeason, setActiveSeason] = useState(1);
+  const [showShopClosed, setShowShopClosed] = useState(false);
   const USERS_PER_PAGE = 20;
 
   // Load current user once
@@ -659,21 +663,39 @@ export default function Leaderboard() {
           </p>
         </motion.div>
 
+
+
       {/* Prizes Section */}
       <motion.div
+        key={`season-${activeSeason}`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.1 }}
         className="mb-8"
       >
+        {activeSeason === 1 ? (
         <Card className="bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-gray-900/95 backdrop-blur-md border-2 border-yellow-400/60 shadow-2xl">
           <CardContent className="p-6">
             <div className="text-center mb-4">
-              <h2 className="text-3xl font-black text-white mb-2 flex items-center justify-center gap-2">
-                <Trophy className="w-7 h-7 text-yellow-400" />
-                עונה 1 - פרסים!
-                <Trophy className="w-7 h-7 text-yellow-400" />
-              </h2>
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Button
+                  onClick={() => setActiveSeason(2)}
+                  className="bg-white/30 hover:bg-white/50 text-white p-3 rounded-full animate-pulse"
+                >
+                  <ChevronRight className="w-8 h-8" />
+                </Button>
+                <h2 className="text-3xl font-black text-white flex items-center gap-2">
+                  <Trophy className="w-7 h-7 text-yellow-400" />
+                  עונה 1 - פרסים!
+                  <Trophy className="w-7 h-7 text-yellow-400" />
+                </h2>
+                <Button
+                  onClick={() => setActiveSeason(2)}
+                  className="bg-white/30 hover:bg-white/50 text-white p-3 rounded-full animate-pulse"
+                >
+                  <ChevronLeft className="w-8 h-8" />
+                </Button>
+              </div>
               
               {/* Countdown Timer */}
               <div className="bg-gradient-to-r from-red-600/30 to-orange-600/30 rounded-xl p-4 border border-red-500/40 mb-4">
@@ -703,11 +725,11 @@ export default function Leaderboard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                          {/* 2nd Place - Left */}
-                          <motion.div
-                            whileHover={{ scale: 1.05 }}
-                            className="bg-gradient-to-br from-gray-600/60 to-gray-800/60 rounded-xl p-4 border-2 border-gray-400/70 shadow-xl order-2 md:order-1"
-                          >
+              {/* 2nd Place - Left */}
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="bg-gradient-to-br from-gray-600/60 to-gray-800/60 rounded-xl p-4 border-2 border-gray-400/70 shadow-xl order-2 md:order-1"
+              >
                 <div className="text-center mb-3">
                   <div className="text-5xl mb-2">🥈</div>
                   <h3 className="text-2xl font-black text-gray-100">מקום 2</h3>
@@ -734,14 +756,8 @@ export default function Leaderboard() {
               >
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-yellow-400/30 to-orange-400/30"
-                  animate={{
-                    opacity: [0.4, 0.7, 0.4],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
+                  animate={{ opacity: [0.4, 0.7, 0.4] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <div className="relative text-center mb-3">
                   <div className="text-5xl mb-2">🥇</div>
@@ -776,6 +792,7 @@ export default function Leaderboard() {
                   <h3 className="text-2xl font-black text-amber-200">מקום 3</h3>
                   <div className="bg-amber-500/30 rounded-full px-3 py-1 mt-2 inline-block">
                     <p className="text-amber-100 font-black text-sm">שווי: ₪250</p>
+
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -797,6 +814,135 @@ export default function Leaderboard() {
             </div>
           </CardContent>
         </Card>
+        ) : (
+        /* Season 2 */
+        <Card className="bg-gradient-to-br from-indigo-900/95 via-purple-900/95 to-indigo-900/95 backdrop-blur-md border-2 border-purple-400/60 shadow-2xl">
+          <CardContent className="p-6">
+            <div className="text-center mb-4">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Button
+                  onClick={() => setActiveSeason(1)}
+                  className="bg-white/30 hover:bg-white/50 text-white p-3 rounded-full animate-pulse"
+                >
+                  <ChevronRight className="w-8 h-8" />
+                </Button>
+                <h2 className="text-3xl font-black text-white flex items-center gap-2">
+                  <ShoppingBag className="w-7 h-7 text-purple-300" />
+                  עונה 2 - חנות פרסים!
+                  <ShoppingBag className="w-7 h-7 text-purple-300" />
+                </h2>
+                <Button
+                  onClick={() => setActiveSeason(1)}
+                  className="bg-white/30 hover:bg-white/50 text-white p-3 rounded-full animate-pulse"
+                >
+                  <ChevronLeft className="w-8 h-8" />
+                </Button>
+              </div>
+
+              {/* Season 2 Countdown - starts April 1 */}
+              <div className="bg-gradient-to-r from-purple-600/30 to-indigo-600/30 rounded-xl p-4 border border-purple-500/40 mb-6">
+                <p className="text-white/90 text-sm mb-2 font-bold">🗓️ העונה מתחילה ב-01.04.2026</p>
+                <div className="flex items-center justify-center gap-1 sm:gap-3 text-white">
+                  <div className="bg-white/10 rounded-lg px-1.5 sm:px-3 py-1.5 sm:py-2">
+                    <div className="text-sm sm:text-2xl font-black">{timeLeft.seconds}</div>
+                    <div className="text-[8px] sm:text-xs opacity-80">שניות</div>
+                  </div>
+                  <div className="text-sm sm:text-2xl font-black">:</div>
+                  <div className="bg-white/10 rounded-lg px-1.5 sm:px-3 py-1.5 sm:py-2">
+                    <div className="text-sm sm:text-2xl font-black">{timeLeft.minutes}</div>
+                    <div className="text-[8px] sm:text-xs opacity-80">דקות</div>
+                  </div>
+                  <div className="text-sm sm:text-2xl font-black">:</div>
+                  <div className="bg-white/10 rounded-lg px-1.5 sm:px-3 py-1.5 sm:py-2">
+                    <div className="text-sm sm:text-2xl font-black">{timeLeft.hours}</div>
+                    <div className="text-[8px] sm:text-xs opacity-80">שעות</div>
+                  </div>
+                  <div className="text-sm sm:text-2xl font-black">:</div>
+                  <div className="bg-white/10 rounded-lg px-1.5 sm:px-3 py-1.5 sm:py-2">
+                    <div className="text-sm sm:text-2xl font-black">{timeLeft.days}</div>
+                    <div className="text-[8px] sm:text-xs opacity-80">ימים</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-white/80 text-center text-sm mb-5">
+              🎮 בעונה 2 תוכלו לממש את הסטארטקוין שלכם בחנות הפרסים!<br/>
+              <span className="text-purple-300 font-bold">צברו כמה שיותר סטארטקוין כדי לקנות פרסים מגניבים</span>
+            </p>
+
+            {/* Shop Items */}
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/4f177bb9a_image.png", name: "Razer Basilisk V3 X", desc: "עכבר גיימינג אלחוטי", price: "250,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/a20a14671_image.png", name: "Razer Ornata V3", desc: "מקלדת גיימינג", price: "350,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/2855fca09_l_1.jpg", name: "Razer BlackShark V2", desc: "אוזניות גיימינג אלחוטיות", price: "500,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/551aea0fb_image.png", name: "1,000 רובקס", desc: "מטבע Roblox", price: "32,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/dd93b9783_image.png", name: "1,000 V-Bucks", desc: "מטבע פורטנייט", price: "32,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/83d46d84b_image.png", name: "ג'וייסטיק PS5", desc: "בקר DualSense", price: "300,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/59255690a_image.png", name: "PlayStation 5", desc: "קונסולת גיימינג חדישה", price: "2,000,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/19275660a_image.png", name: "ספרים בסטימצקי", desc: "שובר ספרים 200₪", price: "120,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/d079ac2b3_generated_image.png", name: "כיסא גיימינג", desc: "כיסא גיימינג ארגונומי", price: "300,000", isCoins: true },
+                { emoji: "📷", name: "מצלמת אינטרנט", desc: "מצלמת HD לשידורים", price: "150,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/cc8d03062_image.png", name: "Razer Seiren V3 Mini", desc: "מיקרופון קונדנסר לגיימרים - שחור", price: "200,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/556486296_image.png", name: "גיפט קארד Steam 10$", desc: "שובר Steam 10 דולר", price: "32,000", isCoins: true },
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  whileHover={{ scale: 1.03, y: -3 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="relative bg-white/5 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/15 shadow-xl flex flex-col"
+                >
+                  {/* Top colored accent bar */}
+                  <div className="h-1 w-full bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500" />
+
+                  <div className="p-4 flex flex-col flex-1">
+                    {/* Icon / Image */}
+                    <div className="flex items-center justify-center h-16 mb-3">
+                      {item.image
+                        ? <img src={item.image} alt={item.name} className="h-20 w-20 object-contain drop-shadow-lg" style={{ mixBlendMode: 'multiply' }} />
+                        : <span className="text-5xl drop-shadow-lg">{item.emoji}</span>
+                      }
+                    </div>
+
+                    {/* Name & desc */}
+                    <div className="text-center mb-3 flex-1">
+                      <h3 className="font-black text-white text-sm leading-tight mb-1">{item.name}</h3>
+                      <p className="text-white/50 text-xs">{item.desc}</p>
+                    </div>
+
+                    {/* Price badge */}
+                    <div className="bg-white/10 rounded-xl px-3 py-2 text-center mb-3 border border-white/10">
+                      <span className="text-xs text-white/60 block mb-0.5">מחיר</span>
+                      <span className="font-black text-base text-white">
+                        {item.isCoins ? <span className="flex items-center justify-center gap-1">{item.price} <CoinIcon size={18} /></span> : item.price}
+                      </span>
+                    </div>
+
+                    {/* Buy button */}
+                    <Button
+                      onClick={() => setShowShopClosed(true)}
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-black py-5 rounded-xl shadow-lg text-sm"
+                    >
+                      <ShoppingBag className="w-3.5 h-3.5 ml-1.5" />
+                      קנה
+                    </Button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="text-center mt-5 bg-gradient-to-r from-purple-600/30 to-indigo-600/30 rounded-lg p-3 border border-purple-500/40">
+              <p className="text-white font-bold text-base">
+                🛒 החנות תיפתח רשמית ב-01.04.2026 עם תחילת עונה 2!
+              </p>
+              <p className="text-white/70 text-sm mt-1">
+                הסטארטקוין שצברתם בעונה 1 יועברו לעונה 2
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        )}
       </motion.div>
 
       {/* Search Bar */}
@@ -924,6 +1070,53 @@ export default function Leaderboard() {
         onClose={() => setShowProfileDialog(false)}
         student={selectedStudent}
       />
+
+      {/* Shop Closed Dialog */}
+      <Dialog open={showShopClosed} onOpenChange={setShowShopClosed}>
+        <DialogContent className="bg-gradient-to-br from-purple-600 to-pink-600 border-2 border-white/30 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-white text-center">
+              🛒 החנות סגורה
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-center space-y-4 py-6">
+            <div className="text-6xl mb-4">⏳</div>
+            <p className="text-white font-bold text-lg">
+              החנות עדיין לא נפתחה!
+            </p>
+            <p className="text-white/90 text-base">
+              העונה 2 מתחילה ב-01.04.2026
+            </p>
+            <div className="bg-white/20 rounded-xl p-4 space-y-2">
+              <p className="text-white/80 text-sm">זמן עד לפתיחה:</p>
+              <div className="flex items-center justify-center gap-2 text-white font-bold">
+                <div className="bg-white/30 rounded-lg px-2 py-1">
+                  <div className="text-lg">{timeLeft.days}</div>
+                  <div className="text-xs opacity-80">ימים</div>
+                </div>
+                <span>:</span>
+                <div className="bg-white/30 rounded-lg px-2 py-1">
+                  <div className="text-lg">{timeLeft.hours}</div>
+                  <div className="text-xs opacity-80">שעות</div>
+                </div>
+                <span>:</span>
+                <div className="bg-white/30 rounded-lg px-2 py-1">
+                  <div className="text-lg">{timeLeft.minutes}</div>
+                  <div className="text-xs opacity-80">דקות</div>
+                </div>
+                <span>:</span>
+                <div className="bg-white/30 rounded-lg px-2 py-1">
+                  <div className="text-lg">{timeLeft.seconds}</div>
+                  <div className="text-xs opacity-80">שניות</div>
+                </div>
+              </div>
+            </div>
+            <p className="text-white/70 text-sm">
+              צבור סטארטקוין וחזור בעונה 2! 💰
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
       </div>
     </TooltipProvider>
   );

@@ -9,6 +9,7 @@ import { Heart, MessageCircle, Send, Trash2, Edit2, Check, X } from "lucide-reac
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import TamagotchiAvatar from "../avatar/TamagotchiAvatar";
+import CoinIcon from "@/components/ui/CoinIcon";
 
 export default function CommunityFeed({ userData, onRefresh }) {
   const currentUser = userData;
@@ -21,6 +22,7 @@ export default function CommunityFeed({ userData, onRefresh }) {
   const [editingPost, setEditingPost] = useState(null); // { postId, text }
   const [showLikesDialog, setShowLikesDialog] = useState(null); // postId or null
   const [likesUserData, setLikesUserData] = useState({}); // { email: { name, equipped_items } }
+  const [leaderboardCache, setLeaderboardCache] = useState(new Map()); // Cache leaderboard data
 
   useEffect(() => {
     loadPosts();
@@ -32,6 +34,8 @@ export default function CommunityFeed({ userData, onRefresh }) {
       
       // Use LeaderboardEntry instead of User entity (better RLS support)
       let usersMap = {};
+      const lbCache = new Map();
+      
       try {
         // Check cache first
         const cacheKey = 'community_feed_users';
@@ -49,12 +53,14 @@ export default function CommunityFeed({ userData, onRefresh }) {
           sessionStorage.setItem(cacheKey + '_time', Date.now().toString());
         }
         
+        // Build leaderboard cache and usersMap
         allLeaderboardEntries.forEach(u => {
           usersMap[u.student_email] = {
             equipped_items: u.equipped_items || {},
             first_name: u.first_name,
             last_name: u.last_name
           };
+          lbCache.set(u.student_email, u);
         });
       } catch (userError) {
         console.log("Could not load leaderboard data:", userError);
@@ -67,6 +73,8 @@ export default function CommunityFeed({ userData, onRefresh }) {
           };
         }
       }
+      
+      setLeaderboardCache(lbCache);
       
       // Store user data for likes dialog
       setLikesUserData(usersMap);
@@ -293,7 +301,40 @@ export default function CommunityFeed({ userData, onRefresh }) {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <p className="text-white font-bold text-sm">{post.author_name}</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-white font-bold text-sm">{post.author_name}</p>
+                          {(() => {
+                            const leaderboardEntry = leaderboardCache.get(post.author_email);
+                            if (!leaderboardEntry || leaderboardCache.size === 0) {
+                              console.log("No leaderboard data for:", post.author_email);
+                              return null;
+                            }
+
+                            // Find rank
+                            const allEntries = Array.from(leaderboardCache.values());
+                            const sortedEntries = allEntries
+                              .filter(e => e.user_type === 'student')
+                              .sort((a, b) => (b.total_networth || 0) - (a.total_networth || 0));
+                            const rank = sortedEntries.findIndex(e => e.student_email === post.author_email) + 1;
+
+                            console.log("Showing for", post.author_email, "rank:", rank, "group:", leaderboardEntry.group_name);
+
+                            return (
+                              <>
+                                {rank > 0 && (
+                                  <span className="text-[10px] bg-yellow-500/30 text-yellow-200 px-2 py-0.5 rounded-full font-bold border border-yellow-400/50">
+                                    #{rank}
+                                  </span>
+                                )}
+                                {leaderboardEntry.group_name && (
+                                  <span className="text-[10px] bg-indigo-500/30 text-indigo-200 px-2 py-0.5 rounded-full font-bold border border-indigo-400/50">
+                                    {leaderboardEntry.group_name}
+                                  </span>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </div>
                         {isOwnPost && editingPost?.postId !== post.id && (
                           <div className="flex gap-1">
                             <Button

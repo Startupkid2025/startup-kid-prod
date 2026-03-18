@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { TrendingUp, TrendingDown, DollarSign, PieChart, Coins, AlertTriangle } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, PieChart, AlertTriangle } from "lucide-react";
+import CoinIcon from "@/components/ui/CoinIcon";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -789,7 +790,7 @@ export default function Investments() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center">
-                  <Coins className="w-6 h-6 text-white" />
+                  <CoinIcon size={28} />
                 </div>
                 <div>
                   <p className="text-white/70 text-sm">סטארטקוין זמינים</p>
@@ -838,11 +839,11 @@ export default function Investments() {
                   <p className={`text-2xl font-black ${unrealizedProfit >= 0 ? 'text-green-300' : 'text-red-300'}`}>
                     {unrealizedProfit >= 0 ? '+' : ''}{Math.round(unrealizedProfit)} ({totalProfitPercent}%)
                   </p>
-                  <p className={`text-xs text-white/60 mt-1`}>
-                    ממומש: {realizedProfit >= 0 ? '+' : ''}{Math.round(realizedProfit)} 🪙
+                  <p className={`text-xs text-white/60 mt-1 flex items-center gap-1`}>
+                   ממומש: {realizedProfit >= 0 ? '+' : ''}{Math.round(realizedProfit)} <CoinIcon size={14} />
                   </p>
-                  <p className={`text-sm font-bold ${totalDailyProfit >= 0 ? 'text-emerald-200' : 'text-rose-200'}`}>
-                    היום: {totalDailyProfit >= 0 ? '+' : ''}{totalDailyProfit} 🪙
+                  <p className={`text-sm font-bold flex items-center gap-1 ${totalDailyProfit >= 0 ? 'text-emerald-200' : 'text-rose-200'}`}>
+                   היום: {totalDailyProfit >= 0 ? '+' : ''}{totalDailyProfit} <CoinIcon size={16} />
                   </p>
                 </div>
               </div>
@@ -888,8 +889,8 @@ export default function Investments() {
                     <div>
                       <p className="font-bold text-white text-sm">{business.name}</p>
                       <p className="text-xs text-white/60">{business.description}</p>
-                      <p className="text-[10px] text-white/50 mt-0.5">
-                        {business.riskLevel === 0 ? '🛡️ בטוח' : '⚠️'.repeat(business.riskLevel) + ' סיכון'} • מינימום: {business.minInvestment} 🪙
+                      <p className="text-[10px] text-white/50 mt-0.5 flex items-center gap-1">
+                      {business.riskLevel === 0 ? '🛡️ בטוח' : '⚠️'.repeat(business.riskLevel) + ' סיכון'} • מינימום: {business.minInvestment} <CoinIcon size={14} />
                       </p>
                     </div>
                   </div>
@@ -949,7 +950,7 @@ export default function Investments() {
                    <div className="flex-1 min-w-0">
                      <h3 className="font-bold text-white text-sm mb-0.5">{business.name}</h3>
                      <div className="flex items-center gap-2 text-[10px] text-white/80">
-                       <span>מינימום: {business.minInvestment} 🪙</span>
+                       <span className="flex items-center gap-1">מינימום: {business.minInvestment} <CoinIcon size={16} /></span>
                        <span>•</span>
                        <span>{business.riskLevel === 0 ? '🛡️ בטוח' : '⚠️'.repeat(business.riskLevel)}</span>
                      </div>
@@ -960,9 +961,9 @@ export default function Investments() {
                        <p className={`text-xs font-bold ${profitInBusiness >= 0 ? 'text-green-200' : 'text-red-200'}`}>
                          {profitInBusiness >= 0 ? '+' : ''}{Math.round(profitInBusiness)}
                        </p>
-                       <p className={`text-[10px] font-bold ${todayProfit >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>
-                         היום: {todayProfit >= 0 ? '+' : ''}{todayProfit} 🪙
-                       </p>
+                       <p className={`text-[10px] font-bold flex items-center gap-1 ${todayProfit >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>
+                          היום: {todayProfit >= 0 ? '+' : ''}{todayProfit} <CoinIcon size={14} />
+                        </p>
                      </div>
                      )}
                      </div>
@@ -972,7 +973,7 @@ export default function Investments() {
                     <Input
                      type="number"
                      inputMode="numeric"
-                     placeholder={`השקע ${business.minInvestment}+ 🪙`}
+                     placeholder={`השקע ${business.minInvestment}+ סטארטקוין`}
                      value={investmentAmounts[business.id] || ''}
                      onChange={(e) => setInvestmentAmounts({
                        ...investmentAmounts,
@@ -1005,7 +1006,7 @@ export default function Investments() {
                        <Input
                          type="number"
                          inputMode="numeric"
-                         placeholder={`מכור עד ${Math.round(totalValueInBusiness)} 🪙`}
+                         placeholder={`מכור עד ${Math.round(totalValueInBusiness)} סטארטקוין`}
                          value={sellAmounts[business.id] || ''}
                          onChange={(e) => setSellAmounts({
                            ...sellAmounts,
@@ -1068,26 +1069,26 @@ export default function Investments() {
 
                     <div className="bg-white/10 rounded-lg p-3 space-y-2">
                       <div className="flex justify-between items-center">
-                        <span className="font-bold text-xl">{confirmInvestDialog.amount} 🪙</span>
+                        <span className="font-bold text-xl flex items-center gap-1">{confirmInvestDialog.amount} <CoinIcon size={16} /></span>
                         <span>סה״כ לתשלום:</span>
                       </div>
                       <div className="flex justify-between items-center text-red-300">
-                        <span className="font-bold">-{TRANSACTION_FEE} 🪙</span>
+                        <span className="font-bold flex items-center gap-1">-{TRANSACTION_FEE} <CoinIcon size={14} /></span>
                         <span>עמלת קנייה:</span>
                       </div>
                       <div className="border-t border-white/20 pt-2 flex justify-between items-center text-green-300">
-                        <span className="font-black text-2xl">{confirmInvestDialog.amount - TRANSACTION_FEE} 🪙</span>
+                        <span className="font-black text-2xl flex items-center gap-1">{confirmInvestDialog.amount - TRANSACTION_FEE} <CoinIcon size={18} /></span>
                         <span className="font-bold">סכום בפועל להשקעה:</span>
                       </div>
                     </div>
 
                     <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-3 space-y-1">
                       <div className="flex justify-between items-center text-sm">
-                        <span className="font-bold">{userData?.coins || 0} 🪙</span>
+                        <span className="font-bold flex items-center gap-1">{userData?.coins || 0} <CoinIcon size={14} /></span>
                         <span>יתרה נוכחית:</span>
                       </div>
                       <div className="flex justify-between items-center text-sm">
-                        <span className="font-bold">{(userData?.coins || 0) - confirmInvestDialog.amount} 🪙</span>
+                        <span className="font-bold flex items-center gap-1">{(userData?.coins || 0) - confirmInvestDialog.amount} <CoinIcon size={14} /></span>
                         <span>יתרה לאחר ההשקעה:</span>
                       </div>
                     </div>
@@ -1134,21 +1135,21 @@ export default function Investments() {
 
               <div className="bg-white/10 rounded-lg p-3 space-y-2">
                <div className="flex justify-between items-center">
-                 <span className="font-bold">{Math.round(confirmSellDialog.amount)} 🪙</span>
+                 <span className="font-bold flex items-center gap-1">{Math.round(confirmSellDialog.amount)} <CoinIcon size={14} /></span>
                  <span>סכום למכירה:</span>
                </div>
                <div className="flex justify-between items-center text-red-300">
-                 <span className="font-bold">-{TRANSACTION_FEE} 🪙</span>
+                 <span className="font-bold flex items-center gap-1">-{TRANSACTION_FEE} <CoinIcon size={14} /></span>
                  <span>עמלת מכירה:</span>
                </div>
                {confirmSellDialog.tax > 0 && (
                  <div className="flex justify-between items-center text-red-300">
-                   <span className="font-bold">-{Math.round(confirmSellDialog.tax)} 🪙</span>
+                   <span className="font-bold flex items-center gap-1">-{Math.round(confirmSellDialog.tax)} <CoinIcon size={14} /></span>
                    <span>מס רווח הון (25% מהרווח):</span>
                  </div>
                )}
                <div className="border-t border-white/20 pt-2 flex justify-between items-center text-green-300">
-                 <span className="font-black text-xl">{Math.round(confirmSellDialog.netAmount)} 🪙</span>
+                 <span className="font-black text-xl flex items-center gap-1">{Math.round(confirmSellDialog.netAmount)} <CoinIcon size={16} /></span>
                  <span className="font-bold">תקבל בפועל:</span>
                </div>
               </div>

@@ -16,7 +16,7 @@ import {
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { toast } from "sonner";
 
-export default function GroupScheduleManager({ group }) {
+export default function GroupScheduleManager({ group, allGroups = [], onGroupChange }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [scheduledLessons, setScheduledLessons] = useState([]);
   const [allLessons, setAllLessons] = useState([]);
@@ -31,19 +31,21 @@ export default function GroupScheduleManager({ group }) {
   const [enrollingLessonId, setEnrollingLessonId] = useState(null);
   const [enrollSummary, setEnrollSummary] = useState(null);
   const [showEnrollSummaryDialog, setShowEnrollSummaryDialog] = useState(false);
+  const [selectedGroupId, setSelectedGroupId] = useState(group?.id);
 
   const dayNames = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
   const monthNames = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
 
   useEffect(() => {
     loadData();
-  }, [group, currentMonth]);
+  }, [group, selectedGroupId, currentMonth]);
 
   const loadData = async () => {
     setIsLoading(true);
     try {
       const allScheduled = await base44.entities.ScheduledLesson.list();
-      const scheduled = allScheduled.filter(sl => sl.group_id === group.id);
+      const currentGroupId = selectedGroupId || group.id;
+      const scheduled = allScheduled.filter(sl => sl.group_id === currentGroupId);
       console.log("Loaded scheduled lessons for group:", group.id, scheduled);
       setScheduledLessons(scheduled);
 
@@ -108,9 +110,8 @@ export default function GroupScheduleManager({ group }) {
 
   const isGroupDay = (date) => {
     if (!date) return false;
-    // Assuming group.day_of_week is 0 for Sunday, 1 for Monday, etc.
-    // JavaScript's getDay() also returns 0 for Sunday, 1 for Monday.
-    return date.getDay() === group.day_of_week;
+    const currentGroupData = allGroups.find(g => g.id === (selectedGroupId || group.id)) || group;
+    return date.getDay() === currentGroupData.day_of_week;
   };
 
   const handlePrevMonth = () => {
@@ -130,12 +131,15 @@ export default function GroupScheduleManager({ group }) {
     const day = String(date.getDate()).padStart(2, '0');
     const formattedDate = `${year}-${month}-${day}`;
     
+    const currentGroupId = selectedGroupId || group.id;
+    const currentGroupData = allGroups.find(g => g.id === currentGroupId) || group;
+    
     console.log("Creating new lesson for date:", formattedDate);
     
     setEditingLesson({
-      group_id: group.id,
+      group_id: currentGroupId,
       scheduled_date: formattedDate,
-      start_time: group.hour,
+      start_time: currentGroupData.hour,
       lesson_id: "",
       teacher_email: "",
       notes: ""
@@ -394,17 +398,36 @@ export default function GroupScheduleManager({ group }) {
     );
   }
 
+  const currentGroup = selectedGroupId ? allGroups.find(g => g.id === selectedGroupId) || group : group;
+
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with Group Selector */}
       <Card className="bg-white/10 backdrop-blur-md border-white/20">
         <CardHeader>
           <CardTitle className="text-white flex items-center justify-between">
             <div className="flex items-center gap-3">
               <CalendarIcon className="w-6 h-6" />
-              <span>יומן שיעורים - {group.group_name}</span>
+              <span>יומן שיעורים - {currentGroup.group_name}</span>
             </div>
             <div className="flex items-center gap-3">
+              {allGroups.length > 1 && (
+                <select
+                  value={selectedGroupId || group.id}
+                  onChange={(e) => {
+                    const newGroupId = e.target.value;
+                    setSelectedGroupId(newGroupId);
+                    onGroupChange?.(newGroupId);
+                  }}
+                  className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm hover:bg-white/20 transition-colors"
+                >
+                  {allGroups.map(g => (
+                    <option key={g.id} value={g.id} className="bg-gray-800">
+                      {g.group_name}
+                    </option>
+                  ))}
+                </select>
+              )}
               <Button
                 onClick={handlePrevMonth}
                 size="sm"

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, ShoppingBag, Shirt, Coins, TrendingUp, Clock, DollarSign, Users, Briefcase, HelpCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import TamagotchiAvatar, { AVATAR_ITEMS } from "@/components/avatar/TamagotchiAvatar";
@@ -14,8 +15,10 @@ import Avatar from "@/components/home/Avatar";
 import SkillBar from "@/components/home/SkillBar";
 import CommunityFeed from "@/components/home/CommunityFeed";
 import { safeRequest } from "@/components/utils/base44SafeRequest";
+import CoinIcon from "@/components/ui/CoinIcon";
 
 import GroupSelectionDialog from "@/components/home/GroupSelectionDialog";
+import BirthdayDialog from "@/components/home/BirthdayDialog";
 import { toast } from "sonner";
 
 const SKILLS = [
@@ -31,6 +34,8 @@ export default function Home() {
   const [showShop, setShowShop] = useState(false);
   const [showWork, setShowWork] = useState(false);
   const [showGroupSelection, setShowGroupSelection] = useState(false);
+  const [showBirthdayDialog, setShowBirthdayDialog] = useState(false);
+  const [showIncomeReport, setShowIncomeReport] = useState(false);
   const [userGroup, setUserGroup] = useState(null);
   const [nextLesson, setNextLesson] = useState(null);
   const [netWorth, setNetWorth] = useState(0);
@@ -189,6 +194,11 @@ export default function Home() {
       if (needsOnboarding) {
         setShowGroupSelection(true);
       }
+
+      // Check if user needs to enter birth date
+      if (!user.birth_date) {
+        setShowBirthdayDialog(true);
+      }
       
       // Initialize intro lesson if needed
       if (!user.tutorial_initialized) {
@@ -264,6 +274,13 @@ export default function Home() {
           });
         }
         setSkillLessonCounts(counts);
+
+        // Update total_lessons from actual participations if it doesn't match
+        const actualTotalLessons = uniqueIds.length;
+        if (actualTotalLessons !== (user.total_lessons || 0)) {
+          await base44.auth.updateMe({ total_lessons: actualTotalLessons });
+          setUserData(prev => ({ ...prev, total_lessons: actualTotalLessons }));
+        }
       } catch (e) {
         console.error("Error counting skill lessons:", e);
       }
@@ -466,34 +483,20 @@ export default function Home() {
   const calculateExpectedDailyLoss = () => {
     if (!userData) return 0;
 
-    const netWorth = calculateNetWorth();
     const currentCoins = userData.coins || 0;
 
     let inflationLoss = 0;
-    let incomeTax = 0;
     let creditInterest = 0;
 
     if (currentCoins > 0) {
       inflationLoss = Math.floor(currentCoins * 0.03);
     }
 
-    const purchasedItems = userData.purchased_items || [];
-    let incomeTaxRate = 0.015;
-
-    for (const itemId of purchasedItems) {
-      const item = AVATAR_ITEMS[itemId];
-      if (item && item.category === 'body' && item.taxReduction) {
-        incomeTaxRate = Math.max(0, incomeTaxRate - (item.taxReduction / 100));
-      }
-    }
-
-    incomeTax = Math.floor(netWorth * incomeTaxRate);
-
     if (currentCoins < 0) {
       creditInterest = Math.floor(Math.abs(currentCoins) * 0.10);
     }
 
-    return inflationLoss + incomeTax + creditInterest;
+    return inflationLoss + creditInterest;
   };
 
   const expectedDailyLoss = calculateExpectedDailyLoss();
@@ -511,6 +514,24 @@ export default function Home() {
       </div>
     );
   }
+
+  const getIncomeBreakdown = () => {
+    if (!userData) return {};
+    
+    return {
+      base: userData.base_coins || 500,
+      lessons: userData.total_lessons_coins || 0,
+      surveys: userData.survey_coins || userData.total_survey_coins || 0,
+      vocabulary: userData.vocabulary_coins || 0,
+      math: userData.math_coins || 0,
+      quizzes: userData.total_quiz_coins || 0,
+      workEarnings: userData.total_work_earnings || 0,
+      loginStreak: userData.total_login_streak_coins || 0,
+      collaboration: userData.total_collaboration_coins || 0,
+      passiveIncome: userData.total_passive_income || 0,
+      adminCoins: userData.total_admin_coins || 0
+    };
+  };
 
   return (
     <div className="px-4 py-8 pb-24 max-w-6xl mx-auto space-y-8">
@@ -563,7 +584,7 @@ export default function Home() {
                     <p className="text-6xl font-black text-white drop-shadow-lg mb-2">
                       {(userData?.coins || 0).toLocaleString('he-IL')}
                     </p>
-                    <div className="flex items-center justify-center gap-2 text-white/80 text-sm">
+                    <div className="flex items-center justify-center gap-2 text-white/80 text-sm mb-3">
                       <span>💰</span>
                       <span className="font-medium">סטארטקוין זמינים</span>
                     </div>
@@ -585,21 +606,11 @@ export default function Home() {
                       const purchasedItems = userData?.purchased_items || [];
 
                       let inflationLoss = 0;
-                      let incomeTax = 0;
                       let creditInterest = 0;
 
                       if (currentCoins > 0) {
                         inflationLoss = Math.floor(currentCoins * 0.03);
                       }
-
-                      let incomeTaxRate = 0.015;
-                      for (const itemId of purchasedItems) {
-                        const item = AVATAR_ITEMS[itemId];
-                        if (item && item.category === 'body' && item.taxReduction) {
-                          incomeTaxRate = Math.max(0, incomeTaxRate - (item.taxReduction / 100));
-                        }
-                      }
-                      incomeTax = Math.floor(netWorth * incomeTaxRate);
 
                       if (currentCoins < 0) {
                         creditInterest = Math.floor(Math.abs(currentCoins) * 0.10);
@@ -620,7 +631,7 @@ export default function Home() {
                                   </span>
                                   <span className="text-white font-bold flex items-center gap-2">
                                     <span className="text-white">-{inflationLoss}</span>
-                                    <span className="text-xs">🪙</span>
+                                    <CoinIcon size={16} />
                                   </span>
                                 </motion.div>
                               </TooltipTrigger>
@@ -629,29 +640,7 @@ export default function Home() {
                               </TooltipContent>
                             </Tooltip>
                           )}
-                          {incomeTax > 0 && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <motion.div 
-                                  className="flex items-center justify-between bg-white/15 rounded-lg px-3 py-2.5 cursor-help hover:bg-white/25 transition-all border border-white/10"
-                                  whileHover={{ x: 5 }}
-                                >
-                                  <span className="text-white/90 text-sm font-medium flex items-center gap-1">
-                                    📊 מס הכנסה
-                                    <span className="text-white/60 text-[10px]">({(incomeTaxRate * 100).toFixed(1)}%)</span>
-                                  </span>
-                                  <span className="text-white font-bold flex items-center gap-2">
-                                    <span className="text-white">-{incomeTax}</span>
-                                    <span className="text-xs">🪙</span>
-                                  </span>
-                                </motion.div>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="bg-slate-900 text-white border-slate-700">
-                                <p className="text-xs">מס הכנסה: {(incomeTaxRate * 100).toFixed(1)}% ביום על שווי כולל</p>
-                                <p className="text-xs text-slate-400 mt-1">ניתן להפחית עם צבעי גוף שונים</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
+
                           {creditInterest > 0 && (
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -665,7 +654,7 @@ export default function Home() {
                                   </span>
                                   <span className="text-white font-bold flex items-center gap-2">
                                     <span className="text-white">-{creditInterest}</span>
-                                    <span className="text-xs">🪙</span>
+                                    <CoinIcon size={16} />
                                   </span>
                                 </motion.div>
                               </TooltipTrigger>
@@ -675,7 +664,7 @@ export default function Home() {
                               </TooltipContent>
                             </Tooltip>
                           )}
-                          {inflationLoss === 0 && incomeTax === 0 && creditInterest === 0 && (
+                          {inflationLoss === 0 && creditInterest === 0 && (
                             <div className="text-center py-3 bg-green-500/20 rounded-lg border border-green-400/30">
                               <p className="text-white font-medium text-sm">🎉 אין הפסדים צפויים!</p>
                             </div>
@@ -874,6 +863,79 @@ export default function Home() {
           loadData();
         }}
       />
+
+      <BirthdayDialog
+        isOpen={showBirthdayDialog && !showGroupSelection}
+        onComplete={() => setShowBirthdayDialog(false)}
+      />
+
+      {/* Income Report Dialog */}
+      <Dialog open={false} onOpenChange={setShowIncomeReport}>
+        <DialogContent className="bg-gradient-to-br from-blue-600 to-purple-600 border-2 border-white/30 max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-white text-center">
+              📊 דו"ח הכנסות
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3 py-4">
+            {(() => {
+              const income = getIncomeBreakdown();
+              const totalIncome = Object.values(income).reduce((sum, val) => sum + (val || 0), 0);
+
+              const items = [
+                { label: '🎯 התחלה', value: income.base, icon: '🎁' },
+                { label: '📚 שיעורים', value: income.lessons, icon: '📖' },
+                { label: '📝 סקרים', value: income.surveys, icon: '📋' },
+                { label: '🔤 אנגלית', value: income.vocabulary, icon: '🔤' },
+                { label: '🔢 חשבון', value: income.math, icon: '🔢' },
+                { label: '❓ חידונים', value: income.quizzes, icon: '❓' },
+                { label: '💼 הכנסות מעבודה', value: income.workEarnings, icon: '💼' },
+                { label: '🔥 רצף כניסות', value: income.loginStreak, icon: '🔥' },
+                { label: '🤝 שיתופי פעולה', value: income.collaboration, icon: '🤝' },
+                { label: '🏠 הכנסה פסיבית', value: income.passiveIncome, icon: '🏠' },
+                { label: '👑 עדכוני מנהל', value: income.adminCoins, icon: '👑' }
+              ];
+
+              return (
+                <>
+                  {items.map((item) => (
+                    item.value > 0 && (
+                      <motion.div
+                        key={item.label}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="bg-white/15 rounded-lg p-3 border border-white/20 backdrop-blur-sm"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">{item.icon}</span>
+                            <span className="text-white font-medium text-sm">{item.label}</span>
+                          </div>
+                          <span className="text-white font-black text-lg">
+                            {item.value.toLocaleString('he-IL')} <CoinIcon size={18} />
+                          </span>
+                        </div>
+                      </motion.div>
+                    )
+                  ))}
+
+                  <div className="border-t-2 border-white/20 pt-4 mt-4">
+                    <div className="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-white font-black text-lg">סה"כ הכנסות:</span>
+                        <span className="text-white font-black text-2xl">
+                          {totalIncome.toLocaleString('he-IL')} <CoinIcon size={20} />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* How to Earn Money Guide */}
       <motion.div

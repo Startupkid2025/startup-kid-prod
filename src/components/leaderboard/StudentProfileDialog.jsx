@@ -11,6 +11,7 @@ import TamagotchiAvatar from "../avatar/TamagotchiAvatar";
 import { base44 } from "@/api/base44Client";
 import { AVATAR_ITEMS } from "../avatar/TamagotchiAvatar";
 import { toast } from "sonner";
+import CoinIcon from "@/components/ui/CoinIcon";
 
 const BUSINESSES = {
   "government_bonds": { name: "🏛️ אג\"ח ממשלתיות", color: "from-blue-700 to-blue-900" },
@@ -436,8 +437,8 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                 {/* Net Worth */}
                 <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg p-3 mb-3">
                   <p className="text-white/80 text-sm text-center">💎 שווי כולל</p>
-                  <p className="text-white font-black text-3xl text-center">
-                    {Math.round(financeReport.netWorth)}
+                  <p className="text-white font-black text-3xl text-center flex items-center justify-center gap-2">
+                    {Math.round(financeReport.netWorth)} <CoinIcon size={28} />
                   </p>
                 </div>
 
@@ -503,9 +504,7 @@ export default function StudentProfileDialog({ isOpen, onClose, student }) {
                       {financeReport.losses.inflation > 0 && (
                         <div className="flex justify-between"><span className="text-white/70">📉 אינפלציה:</span><span className="text-white font-bold">{Math.round(financeReport.losses.inflation)}</span></div>
                       )}
-                      {financeReport.losses.incomeTax > 0 && (
-                        <div className="flex justify-between"><span className="text-white/70">🏛️ מס הכנסה:</span><span className="text-white font-bold">{Math.round(financeReport.losses.incomeTax)}</span></div>
-                      )}
+
                       {financeReport.losses.capitalGainsTax > 0 && (
                         <div className="flex justify-between"><span className="text-white/70">📈 מס רווחי הון:</span><span className="text-white font-bold">{Math.round(financeReport.losses.capitalGainsTax)}</span></div>
                       )}

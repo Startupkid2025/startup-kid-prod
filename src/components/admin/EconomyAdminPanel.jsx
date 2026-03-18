@@ -336,7 +336,6 @@ export default function EconomyAdminPanel() {
 
         const losses = {
           inflation: safeNum(user.total_inflation_lost),
-          incomeTax: safeNum(user.total_income_tax),
           capitalGainsTax: safeNum(user.total_capital_gains_tax),
           investmentFees: safeNum(user.total_investment_fees),
           itemSaleLosses: safeNum(user.total_item_sale_losses),
@@ -502,7 +501,6 @@ export default function EconomyAdminPanel() {
         // Calculate total losses
         const losses = {
           inflation: safeNum(user.total_inflation_lost),
-          incomeTax: safeNum(user.total_income_tax),
           capitalGainsTax: safeNum(user.total_capital_gains_tax),
           investmentFees: safeNum(user.total_investment_fees),
           itemSaleLosses: safeNum(user.total_item_sale_losses),
