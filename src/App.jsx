@@ -12,6 +12,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { Sentry } from '@/lib/sentry';
 import { logCrash, setUser } from '@/lib/crashLogger';
+import PageErrorBoundary from '@/components/PageErrorBoundary';
 
 const SentryErrorBoundary = Sentry.ErrorBoundary ?? (({ children }) => children);
 
@@ -63,7 +64,9 @@ const AuthenticatedApp = () => {
       <Routes>
         <Route path="/" element={
           <LayoutWrapper currentPageName={mainPageKey}>
-            <MainPage />
+            <PageErrorBoundary>
+              <MainPage />
+            </PageErrorBoundary>
           </LayoutWrapper>
         } />
         {Object.entries(Pages).map(([path, Page]) => (
@@ -72,7 +75,9 @@ const AuthenticatedApp = () => {
             path={`/${path}`}
             element={
               <LayoutWrapper currentPageName={path}>
-                <Page />
+                <PageErrorBoundary>
+                  <Page />
+                </PageErrorBoundary>
               </LayoutWrapper>
             }
           />

@@ -1,0 +1,11 @@
+{
+  "name": "Investment",
+  "type": "object",
+  "properties": {
+    "student_email": { "type": "string" },
+    "business_type": { "type": "string", "enum": ["government_bonds", "real_estate", "gold", "stock_market", "tech_startup", "crypto"] },
+    "invested_amount": { "type": "number" },
+    "current_value": { "type": "number" },
+    "daily_change_percent": { "type": "number" }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "DailyMarketPerformance",
+  "type": "object",
+  "properties": {
+    "business_type": { "type": "string" },
+    "date": { "type": "string" },
+    "change_percent": { "type": "number" }
+  }
+}

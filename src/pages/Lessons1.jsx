@@ -115,16 +115,13 @@ export default function Lessons() {
       if (myParticipations.length > 0) {
         const participatedLessonIds = myParticipations.map(p => p.lesson_id);
         
-        // Load only the specific lessons this user participated in
-        const lessonPromises = participatedLessonIds.map(lessonId =>
-          safeRequest(
-            () => base44.entities.Lesson.get(lessonId),
-            { key: `Lesson:${lessonId}`, ttlMs: 120000, retries: 1 }
-          ).catch(() => null)
-        );
-        
-        const loadedLessons = await Promise.all(lessonPromises);
-        myLessons = loadedLessons.filter(l => l !== null);
+        // Batch-fetch all lessons and filter locally (avoids N+1 API calls)
+        const allLessons = await safeRequest(
+          () => base44.entities.Lesson.list(),
+          { key: 'Lessons:all', ttlMs: 120000, retries: 1 }
+        ).catch(() => []);
+        const participatedLessonIdSet = new Set(participatedLessonIds);
+        myLessons = allLessons.filter(l => participatedLessonIdSet.has(l.id));
 
         // Sort by participation date
         myLessons.sort((a, b) => {

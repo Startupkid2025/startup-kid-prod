@@ -1,0 +1,10 @@
+{
+  "name": "ScheduledLesson",
+  "type": "object",
+  "properties": {
+    "group_id": { "type": "string" },
+    "lesson_id": { "type": "string" },
+    "scheduled_date": { "type": "string" },
+    "status": { "type": "string" }
+  }
+}

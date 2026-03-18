@@ -1,0 +1,26 @@
+{
+  "name": "StudentEconomySnapshot",
+  "type": "object",
+  "properties": {
+    "student_email": { "type": "string" },
+    "full_name": { "type": "string" },
+    "first_name": { "type": "string" },
+    "last_name": { "type": "string" },
+    "user_type": { "type": "string" },
+    "coins_cash": { "type": "number" },
+    "investments_value": { "type": "number" },
+    "items_value": { "type": "number" },
+    "total_assets": { "type": "number" },
+    "income_breakdown": { "type": "string" },
+    "expense_breakdown": { "type": "string" },
+    "investment_profit_unrealized": { "type": "number" },
+    "investment_profit_realized": { "type": "number" },
+    "capital_gains_tax_paid": { "type": "number" },
+    "fees_paid": { "type": "number" },
+    "inflation_loss": { "type": "number" },
+    "last_calculated_at": { "type": "string" },
+    "snapshot_version": { "type": "number" },
+    "equipped_items": { "type": "string" },
+    "purchased_items": { "type": "string" }
+  }
+}

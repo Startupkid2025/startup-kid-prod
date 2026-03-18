@@ -94,6 +94,7 @@ export default function AvatarShop({
   };
 
   const handlePurchase = async (itemId) => {
+    if (!userData) return;
     if (isPurchasing) return;
     
     const item = AVATAR_ITEMS[itemId];

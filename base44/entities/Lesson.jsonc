@@ -1,0 +1,15 @@
+{
+  "name": "Lesson",
+  "type": "object",
+  "properties": {
+    "lesson_name": { "type": "string" },
+    "lesson_date": { "type": "string" },
+    "category": { "type": "string", "enum": ["ai_tech", "personal_dev", "social_skills", "money_business"] },
+    "thumbnail_url": { "type": "string" },
+    "recorded_lesson_url": { "type": "string" },
+    "ai_tech_xp": { "type": "number", "default": 0 },
+    "personal_dev_xp": { "type": "number", "default": 0 },
+    "social_skills_xp": { "type": "number", "default": 0 },
+    "money_business_xp": { "type": "number", "default": 0 }
+  }
+}

@@ -5,8 +5,8 @@ export default async function updateKingsForStudent({ studentEmail }, { base44 }
 
   try {
     // Get student snapshot
-    const snapshots = await base44.entities.LeaderboardSnapshot.filter({ 
-      student_email: studentEmail 
+    const snapshots = await base44.entities.LeaderboardSnapshot.filter({
+      student_email: studentEmail
     });
 
     if (snapshots.length === 0) {
@@ -27,42 +27,42 @@ export default async function updateKingsForStudent({ studentEmail }, { base44 }
 
     // Categories to check
     const categories = [
-      { 
-        type: 'math', 
-        kingEmail: 'math_king_email', 
-        kingValue: 'math_king_value', 
+      {
+        type: 'math',
+        kingEmail: 'math_king_email',
+        kingValue: 'math_king_value',
         studentValue: studentSnapshot.mastered_math_questions,
         name: '🔢 מלך החשבון',
         bonus: '+5 מטבעות לתרגיל'
       },
-      { 
-        type: 'vocab', 
-        kingEmail: 'vocab_king_email', 
-        kingValue: 'vocab_king_value', 
+      {
+        type: 'vocab',
+        kingEmail: 'vocab_king_email',
+        kingValue: 'vocab_king_value',
         studentValue: studentSnapshot.mastered_words,
         name: '📚 מלך האנגלית',
         bonus: '+5 מטבעות למילה'
       },
-      { 
-        type: 'investment', 
-        kingEmail: 'investment_king_email', 
-        kingValue: 'investment_king_value', 
+      {
+        type: 'investment',
+        kingEmail: 'investment_king_email',
+        kingValue: 'investment_king_value',
         studentValue: studentSnapshot.investments_value,
         name: '💼 מלך ההשקעות',
         bonus: '+0.1% תשואה יומית'
       },
-      { 
-        type: 'login', 
-        kingEmail: 'login_king_email', 
-        kingValue: 'login_king_value', 
+      {
+        type: 'login',
+        kingEmail: 'login_king_email',
+        kingValue: 'login_king_value',
         studentValue: studentSnapshot.login_streak,
         name: '🔥 מלך הרצף',
         bonus: 'פי 2 על בונוס הרצף'
       },
-      { 
-        type: 'work', 
-        kingEmail: 'work_king_email', 
-        kingValue: 'work_king_value', 
+      {
+        type: 'work',
+        kingEmail: 'work_king_email',
+        kingValue: 'work_king_value',
         studentValue: studentSnapshot.work_hours,
         name: '💪 מלך העבודה',
         bonus: '+5 מטבעות לשעה'
@@ -81,8 +81,8 @@ export default async function updateKingsForStudent({ studentEmail }, { base44 }
         // If student was king and value dropped to 0, find new king
         if (currentKingEmail === studentEmail) {
           const allSnapshots = await base44.entities.LeaderboardSnapshot.list();
-          const eligible = allSnapshots.filter(s => 
-            s.student_email !== studentEmail && 
+          const eligible = allSnapshots.filter(s =>
+            s.student_email !== studentEmail &&
             s.user_type === 'student' &&
             (category.type === 'math' ? s.mastered_math_questions :
              category.type === 'vocab' ? s.mastered_words :
@@ -170,10 +170,10 @@ export default async function updateKingsForStudent({ studentEmail }, { base44 }
 
     // Update snapshots with crowns
     for (const update of snapshotsToUpdate) {
-      const snap = await base44.entities.LeaderboardSnapshot.filter({ 
-        student_email: update.email 
+      const snap = await base44.entities.LeaderboardSnapshot.filter({
+        student_email: update.email
       });
-      
+
       if (snap.length > 0) {
         const currentCrowns = snap[0].crowns || [];
         let newCrowns = [...currentCrowns];

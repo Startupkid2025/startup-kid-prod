@@ -1,0 +1,17 @@
+{
+  "name": "LessonParticipation",
+  "type": "object",
+  "properties": {
+    "lesson_id": { "type": "string" },
+    "student_email": { "type": "string" },
+    "lesson_date": { "type": "string" },
+    "attended": { "type": "boolean", "default": false },
+    "survey_completed": { "type": "boolean", "default": false },
+    "survey_interest": { "type": "number" },
+    "survey_fun": { "type": "number" },
+    "survey_learned": { "type": "number" },
+    "survey_difficulty": { "type": "number" },
+    "survey_comments": { "type": "string" },
+    "watched_recording": { "type": "boolean", "default": false }
+  }
+}

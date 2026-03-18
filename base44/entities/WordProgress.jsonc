@@ -1,0 +1,11 @@
+{
+  "name": "WordProgress",
+  "type": "object",
+  "properties": {
+    "student_email": { "type": "string" },
+    "word_english": { "type": "string" },
+    "total_attempts": { "type": "number", "default": 0 },
+    "correct_streak": { "type": "number", "default": 0 },
+    "mastered": { "type": "boolean", "default": false }
+  }
+}

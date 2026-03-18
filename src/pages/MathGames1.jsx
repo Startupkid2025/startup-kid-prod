@@ -510,6 +510,7 @@ ${question} = ${correctAnswer}
       toast.error("אין שאלה לענות עליה כרגע.");
       return;
     }
+    if (!userData) return;
 
     setIsChecking(true);
 

@@ -1,0 +1,14 @@
+{
+  "name": "VocabularyWordSuggestion",
+  "type": "object",
+  "properties": {
+    "word_english": { "type": "string" },
+    "word_hebrew": { "type": "string" },
+    "example_sentence": { "type": "string" },
+    "example_translation": { "type": "string" },
+    "difficulty_level": { "type": "number" },
+    "category": { "type": "string" },
+    "part_of_speech": { "type": "string" },
+    "status": { "type": "string", "enum": ["pending", "approved", "rejected"], "default": "pending" }
+  }
+}

@@ -20,6 +20,7 @@ import CoinIcon from "@/components/ui/CoinIcon";
 import GroupSelectionDialog from "@/components/home/GroupSelectionDialog";
 import BirthdayDialog from "@/components/home/BirthdayDialog";
 import { toast } from "sonner";
+import { cachedAuthMe, invalidateAuthCache } from "@/lib/cachedAuthMe";
 
 const SKILLS = [
   { key: "ai_tech", name: "בינה מלאכותית וטכנולוגיה", icon: "🤖", color: "from-blue-400 to-cyan-400" },
@@ -184,7 +185,7 @@ export default function Home() {
     loadingRef.current = true;
     
     try {
-      const user = await base44.auth.me();
+      const user = await cachedAuthMe();
       
       // Apply passive income FIRST (before any other calculations)
       await applyPassiveIncomeIfNeeded(user);
@@ -261,14 +262,13 @@ export default function Home() {
         const uniqueIds = [...new Set(attendedIds)];
         const counts = { ai_tech: 0, personal_skills: 0, money_business: 0 };
         if (uniqueIds.length > 0) {
-          const lessonDocs = await Promise.all(
-            uniqueIds.map(id => safeRequest(
-              () => base44.entities.Lesson.get(id),
-              { key: `Lesson:${id}`, ttlMs: 120000, retries: 0 }
-            ).catch(() => null))
-          );
-          lessonDocs.forEach(lesson => {
-            if (lesson && counts.hasOwnProperty(lesson.category)) {
+          const allLessons = await safeRequest(
+            () => base44.entities.Lesson.list(),
+            { key: 'Lessons:all', ttlMs: 120000, retries: 0 }
+          ).catch(() => []);
+          const uniqueIdSet = new Set(uniqueIds);
+          allLessons.forEach(lesson => {
+            if (uniqueIdSet.has(lesson.id) && counts.hasOwnProperty(lesson.category)) {
               counts[lesson.category]++;
             }
           });
@@ -431,8 +431,8 @@ export default function Home() {
 
     try {
       const leaderboardEntries = await safeRequest(
-        () => base44.entities.LeaderboardEntry.filter({ student_email: userData.email }),
-        { key: `LB:${userData.email}`, ttlMs: 10000, retries: 0 }
+        () => base44.entities.LeaderboardEntry.filter({ student_email: userData?.email }),
+        { key: `LB:${userData?.email}`, ttlMs: 10000, retries: 0 }
       ).catch(() => []);
       
       if (leaderboardEntries.length > 0) {
@@ -501,7 +501,7 @@ export default function Home() {
 
   const expectedDailyLoss = calculateExpectedDailyLoss();
 
-  if (isLoading) {
+  if (isLoading || !userData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <motion.div
@@ -786,10 +786,11 @@ export default function Home() {
       {/* Second Row - Avatar + Skills */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Avatar */}
-        <Avatar 
+        <Avatar
           stage={1}
           totalLessons={userData?.total_lessons || 0}
           equippedItems={userData?.equipped_items || {}}
+          userData={userData}
         />
 
         {/* Skills */}

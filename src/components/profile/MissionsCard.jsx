@@ -87,6 +87,11 @@ export default function MissionsCard({ userData, onCompleteTask, onStartEditing 
             url: window.location.origin
           }).then(() => {
             onCompleteTask("share");
+          }).catch((err) => {
+            // User cancelled the share dialog — not an error
+            if (err.name !== 'AbortError') {
+              console.error('Share failed:', err);
+            }
           });
         } else {
           navigator.clipboard.writeText(window.location.origin);

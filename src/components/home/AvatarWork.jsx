@@ -78,6 +78,7 @@ const JOBS = [
 export default function AvatarWork({ userData, onWorkComplete }) {
   const [workStatus, setWorkStatus] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     loadWorkStatus();
@@ -126,6 +127,9 @@ export default function AvatarWork({ userData, onWorkComplete }) {
   const availableJobs = JOBS.filter(job => job.minStage <= getCurrentStage());
 
   const sendToWork = async (job) => {
+    if (isSending || !userData) return;
+    setIsSending(true);
+    try {
     const returnTime = Date.now() + (60 * 60 * 1000); // 1 hour
 
     // Calculate total earnings including hourly bonuses from items
@@ -157,7 +161,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
 
     // Update leaderboard with work hours
     try {
-      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData?.email });
       if (leaderboardEntries.length > 0) {
         await base44.entities.LeaderboardEntry.update(leaderboardEntries[0].id, {
           total_work_hours: currentWorkHours + 1
@@ -177,6 +181,9 @@ export default function AvatarWork({ userData, onWorkComplete }) {
 
     const bonusText = hourlyBonus > 0 ? ` (כולל +${hourlyBonus} מפריטים!)` : '';
     toast.success(`${userData.avatar_name} יצא לעבוד כ${job.name}! 💼${bonusText}`);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const completeWork = async () => {
@@ -198,7 +205,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
         }
       });
       
-      if (workKingEmail === userData.email && maxWorkEarnings > 0) {
+      if (workKingEmail === userData?.email && maxWorkEarnings > 0) {
         coinsToAdd += 5; // Work king bonus!
       }
     } catch (error) {
@@ -220,7 +227,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     // Get leaderboard networth
     let leaderboardNetworth = 0;
     try {
-      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData.email });
+      const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ student_email: userData?.email });
       if (leaderboardEntries.length > 0) {
         leaderboardNetworth = leaderboardEntries[0].total_networth || 0;
       }
@@ -231,7 +238,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     // Log work earnings
     try {
       const { logCoinChange } = await import("../utils/coinLogger");
-      await logCoinChange(userData.email, oldCoins, oldCoins + coinsToAdd, "השלמת עבודה", {
+      await logCoinChange(userData?.email, oldCoins, oldCoins + coinsToAdd, "השלמת עבודה", {
         source: 'AvatarWork',
         job: workStatus.jobName,
         coinsEarned: coinsToAdd,
@@ -249,7 +256,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     if (incomeTax > 0) {
       try {
         const { logCoinChange } = await import("../utils/coinLogger");
-        await logCoinChange(userData.email, currentCoins, currentCoins - incomeTax, "מס הכנסה", {
+        await logCoinChange(userData?.email, currentCoins, currentCoins - incomeTax, "מס הכנסה", {
           source: 'AvatarWork',
           job: workStatus.jobName,
           taxRate: "10%",
@@ -276,10 +283,10 @@ export default function AvatarWork({ userData, onWorkComplete }) {
     });
 
     // Update net worth
-    const newNetWorth = await updateNetWorth(userData.email);
+    const newNetWorth = await updateNetWorth(userData?.email);
 
     // Sync to LeaderboardEntry (including total_work_hours)
-    await syncLeaderboardEntry(userData.email, {
+    await syncLeaderboardEntry(userData?.email, {
       coins: finalCoins,
       total_work_earnings: totalWorkEarnings,
       total_income_tax: (userData.total_income_tax || 0) + incomeTax,
@@ -400,6 +407,7 @@ export default function AvatarWork({ userData, onWorkComplete }) {
 
           <Button
             onClick={() => sendToWork(currentJob)}
+            disabled={isSending}
             className="w-full bg-white/20 hover:bg-white/30 text-white font-black text-xl py-6 shadow-lg backdrop-blur-sm border-2 border-white/40"
           >
             <Briefcase className="w-6 h-6 ml-2" />

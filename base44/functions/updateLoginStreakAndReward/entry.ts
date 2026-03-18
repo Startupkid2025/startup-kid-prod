@@ -46,8 +46,8 @@ export default async function updateLoginStreakAndReward({ studentEmail }, { bas
     });
 
     // Sync to LeaderboardEntry for public visibility
-    const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({ 
-      student_email: studentEmail 
+    const leaderboardEntries = await base44.entities.LeaderboardEntry.filter({
+      student_email: studentEmail
     });
 
     if (leaderboardEntries.length > 0) {
@@ -62,8 +62,8 @@ export default async function updateLoginStreakAndReward({ studentEmail }, { bas
     // Enqueue snapshot update for this student only
     await base44.functions.enqueueLeaderboardSnapshot({ studentEmail });
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: "Streak updated",
       streak: newStreak,
       reward,

@@ -1,0 +1,18 @@
+{
+  "name": "LeaderboardSnapshot",
+  "type": "object",
+  "properties": {
+    "student_email": { "type": "string" },
+    "full_name": { "type": "string" },
+    "first_name": { "type": "string" },
+    "last_name": { "type": "string" },
+    "user_type": { "type": "string" },
+    "mastered_math_questions": { "type": "number" },
+    "mastered_words": { "type": "number" },
+    "investments_value": { "type": "number" },
+    "login_streak": { "type": "number" },
+    "work_hours": { "type": "number" },
+    "crowns": { "type": "array", "items": { "type": "object" } },
+    "updated_at": { "type": "string" }
+  }
+}

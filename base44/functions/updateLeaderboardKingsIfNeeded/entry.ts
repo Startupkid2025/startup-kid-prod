@@ -33,7 +33,7 @@ export default async function updateLeaderboardKingsIfNeeded({ changedStudentEma
     for (const category of categories) {
       // Find current top student
       const eligible = studentSnapshots.filter(s => (s[category.snapshotField] || 0) > 0);
-      
+
       if (eligible.length === 0) {
         // No one qualifies
         const oldKingEmail = kingsRecord[category.emailField];
@@ -48,7 +48,7 @@ export default async function updateLeaderboardKingsIfNeeded({ changedStudentEma
         continue;
       }
 
-      const topStudent = eligible.reduce((max, s) => 
+      const topStudent = eligible.reduce((max, s) =>
         (s[category.snapshotField] || 0) > (max[category.snapshotField] || 0) ? s : max
       );
 
@@ -92,7 +92,7 @@ export default async function updateLeaderboardKingsIfNeeded({ changedStudentEma
     // Update crowns for affected students
     for (const [email, changes] of studentsToUpdateCrowns.entries()) {
       const snapshots = await base44.entities.LeaderboardSnapshot.filter({ student_email: email });
-      
+
       if (snapshots.length > 0) {
         let crowns = snapshots[0].crowns || [];
 
@@ -115,8 +115,8 @@ export default async function updateLeaderboardKingsIfNeeded({ changedStudentEma
       }
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: "Kings updated",
       kingsChanged: Object.keys(kingsUpdates).length > 0,
       studentsUpdated: studentsToUpdateCrowns.size

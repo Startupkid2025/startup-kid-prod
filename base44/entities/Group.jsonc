@@ -1,0 +1,10 @@
+{
+  "name": "Group",
+  "type": "object",
+  "properties": {
+    "group_name": { "type": "string" },
+    "student_emails": { "type": "array", "items": { "type": "string" } },
+    "teacher_email": { "type": "string" },
+    "next_lesson_id": { "type": "string" }
+  }
+}

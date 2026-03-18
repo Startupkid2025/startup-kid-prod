@@ -217,43 +217,6 @@ describe('Branch sync check', () => {
     // Warn but don't fail — orphans are suspicious but not always bugs
   });
 
-// ─── 8. Null-safety: userData access must use optional chaining ───
-
-describe('userData null-safety', () => {
-  const pagesToCheck = [
-    'src/pages/Home1.jsx',
-    'src/pages/Progress1.jsx',
-    'src/pages/Profile1.jsx',
-    'src/pages/Leaderboard1.jsx',
-  ];
-
-  for (const file of pagesToCheck) {
-    const name = file.split('/').pop();
-
-    it(`${name} does not use unguarded userData[...] bracket access`, () => {
-      const fullPath = resolve(ROOT, file);
-      if (!existsSync(fullPath)) return;
-      const content = readFileSync(fullPath, 'utf-8');
-      // Match userData[`...`] or userData[expr] WITHOUT optional chaining
-      // Allowed: userData?.[...], userData?.prop
-      // Disallowed: userData[...] (crashes when userData is null)
-      const unsafeBracket = /\buserData\s*\[/g;
-      const matches = [...content.matchAll(unsafeBracket)];
-      if (matches.length > 0) {
-        const lines = content.split('\n');
-        const locations = matches.map(m => {
-          const lineNum = content.substring(0, m.index).split('\n').length;
-          return `  line ${lineNum}: ${lines[lineNum - 1].trim()}`;
-        });
-        throw new Error(
-          `${name} has unguarded userData[...] access (crashes when userData is null):\n${locations.join('\n')}\n` +
-          `Fix: use userData?.[...] instead`
-        );
-      }
-    });
-  }
-});
-
   it('no source file drift between dev and main', () => {
     if (!isGitRepo) return;
     try {
@@ -286,4 +249,159 @@ describe('userData null-safety', () => {
       console.warn(`⚠ Files on main missing from dev: ${addedOnMain.join(', ')}. Consider: git merge origin/main`);
     }
   });
+});
+
+// ─── 8. Null-safety: userData access must use optional chaining ───
+
+describe('userData null-safety', () => {
+  const pagesToCheck = [
+    'src/pages/Home1.jsx',
+    'src/pages/Progress1.jsx',
+    'src/pages/Profile1.jsx',
+    'src/pages/Leaderboard1.jsx',
+    'src/pages/MathGames1.jsx',
+    'src/pages/Investments1.jsx',
+    'src/pages/Vocabulary1.jsx',
+    'src/components/home/AvatarWork.jsx',
+    'src/components/home/AvatarChat.jsx',
+    'src/components/home/CommunityFeed.jsx',
+    'src/components/avatar/AvatarShop.jsx',
+  ];
+
+  for (const file of pagesToCheck) {
+    const name = file.split('/').pop();
+
+    it(`${name} does not use unguarded userData[...] bracket access`, () => {
+      const fullPath = resolve(ROOT, file);
+      if (!existsSync(fullPath)) return;
+      const content = readFileSync(fullPath, 'utf-8');
+      const unsafeBracket = /\buserData\s*\[/g;
+      const matches = [...content.matchAll(unsafeBracket)];
+      if (matches.length > 0) {
+        const lines = content.split('\n');
+        const locations = matches.map(m => {
+          const lineNum = content.substring(0, m.index).split('\n').length;
+          return `  line ${lineNum}: ${lines[lineNum - 1].trim()}`;
+        });
+        throw new Error(
+          `${name} has unguarded userData[...] access (crashes when userData is null):\n${locations.join('\n')}\n` +
+          `Fix: use userData?.[...] instead`
+        );
+      }
+    });
+
+    it(`${name} has null guard or optional chaining for userData`, () => {
+      const fullPath = resolve(ROOT, file);
+      if (!existsSync(fullPath)) return;
+      const content = readFileSync(fullPath, 'utf-8');
+      // Every file that accesses userData.email or userData.coins must have
+      // either a guard (if (!userData) return) or use optional chaining (userData?.prop)
+      const accessesDotProp = /\buserData\.(email|coins|purchased_items)\b/.test(content);
+      if (!accessesDotProp) return; // file doesn't access these props directly
+      const hasGuard = /if\s*\(\s*!userData\s*\)\s*return/.test(content);
+      const hasOptionalChaining = /\buserData\?\.\b/.test(content);
+      expect(
+        hasGuard || hasOptionalChaining,
+        `${name} accesses userData.email/coins/purchased_items without a null guard or optional chaining`
+      ).toBe(true);
+    });
+  }
+});
+
+// ─── 9. No N+1 API patterns ───
+
+describe('No N+1 API patterns', () => {
+  const pageFiles = readdirSync(resolve(ROOT, 'src/pages'))
+    .filter(f => f.endsWith('.jsx'))
+    .map(f => `src/pages/${f}`);
+
+  for (const file of pageFiles) {
+    const name = file.split('/').pop();
+
+    it(`${name} does not call .get() inside .map()`, () => {
+      const fullPath = resolve(ROOT, file);
+      if (!existsSync(fullPath)) return;
+      const content = readFileSync(fullPath, 'utf-8');
+      const lines = content.split('\n');
+      // Detect: .map(id => ...entity.get(id)) on the same line or adjacent lines
+      // This catches the common N+1 pattern without false positives from multi-line code
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        // Check for .map( containing .get( on same line
+        if (/\.map\(/.test(line) && /\.get\(/.test(line)) {
+          throw new Error(
+            `${name} line ${i + 1}: potential N+1 pattern (.get() inside .map()). Use .list() or .filter() instead.\n  ${line.trim()}`
+          );
+        }
+        // Check for .map( callback that spans a few lines and contains .get(
+        if (/\.map\(\s*\(?\s*\w+\s*\)?\s*=>\s*$/.test(line) || /\.map\(\s*\w+\s*=>\s*{?\s*$/.test(line)) {
+          // Look ahead up to 5 lines for .get( inside this callback
+          for (let j = i + 1; j < Math.min(i + 6, lines.length); j++) {
+            if (/\.get\(/.test(lines[j]) && /entities\./.test(lines[j])) {
+              throw new Error(
+                `${name} line ${j + 1}: potential N+1 pattern (.get() inside .map()). Use .list() or .filter() instead.\n  ${lines[j].trim()}`
+              );
+            }
+            // Stop if we hit the closing of the map
+            if (/\)\s*[;,]?\s*$/.test(lines[j]) && !/\.map/.test(lines[j])) break;
+          }
+        }
+      }
+    });
+  }
+});
+
+// ─── 10. Page-level error boundaries ───
+
+describe('Page error boundaries', () => {
+  it('App.jsx wraps pages with PageErrorBoundary', () => {
+    const app = readFileSync(resolve(ROOT, 'src/App.jsx'), 'utf-8');
+    expect(app).toContain('PageErrorBoundary');
+  });
+
+  it('PageErrorBoundary component exists', () => {
+    const filePath = resolve(ROOT, 'src/components/PageErrorBoundary.jsx');
+    expect(existsSync(filePath)).toBe(true);
+  });
+});
+
+// ─── 11. Share cancellation handled ───
+
+describe('Share error handling', () => {
+  it('MissionsCard catches AbortError on navigator.share', () => {
+    const fullPath = resolve(ROOT, 'src/components/profile/MissionsCard.jsx');
+    if (!existsSync(fullPath)) return;
+    const content = readFileSync(fullPath, 'utf-8');
+    expect(content).toContain('.catch');
+    expect(content).toContain('AbortError');
+  });
+});
+
+// ─── 12. All page loadData functions have try/catch ───
+
+describe('API error handling in pages', () => {
+  const pagesToCheck = [
+    'src/pages/Home1.jsx',
+    'src/pages/Profile1.jsx',
+    'src/pages/MathGames1.jsx',
+    'src/pages/Investments1.jsx',
+    'src/pages/Vocabulary1.jsx',
+    'src/pages/Lessons1.jsx',
+    'src/pages/Leaderboard1.jsx',
+  ];
+
+  for (const file of pagesToCheck) {
+    const name = file.split('/').pop();
+
+    it(`${name} wraps data loading in try/catch`, () => {
+      const fullPath = resolve(ROOT, file);
+      if (!existsSync(fullPath)) return;
+      const content = readFileSync(fullPath, 'utf-8');
+      // Pages that fetch data should have try/catch
+      if (content.includes('base44.auth.me()') || content.includes('safeRequest')) {
+        expect(content).toContain('try');
+        expect(content).toContain('catch');
+      }
+    });
+  }
 });
