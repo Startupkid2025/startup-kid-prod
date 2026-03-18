@@ -886,7 +886,7 @@ export default function Leaderboard() {
                 { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/d079ac2b3_generated_image.png", name: "כיסא גיימינג", desc: "כיסא גיימינג ארגונומי", price: "300,000", isCoins: true },
                 { emoji: "📷", name: "מצלמת אינטרנט", desc: "מצלמת HD לשידורים", price: "150,000", isCoins: true },
                 { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/cc8d03062_image.png", name: "Razer Seiren V3 Mini", desc: "מיקרופון קונדנסר לגיימרים - שחור", price: "200,000", isCoins: true },
-                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/556486296_image.png", name: "גיפט קארד Steam 10$", desc: "שובר Steam 10 דולר", price: "50,000", isCoins: true },
+                { image: "https://media.base44.com/images/public/68e295dfd1c97e3c8c54140e/556486296_image.png", name: "גיפט קארד Steam 10$", desc: "שובר Steam 10 דולר", price: "32,000", isCoins: true },
               ].map((item, i) => (
                 <motion.div
                   key={i}
