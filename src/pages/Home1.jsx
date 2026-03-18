@@ -432,8 +432,8 @@ export default function Home() {
 
     try {
       const leaderboardEntries = await safeRequest(
-        () => base44.entities.LeaderboardEntry.filter({ student_email: userData.email }),
-        { key: `LB:${userData.email}`, ttlMs: 10000, retries: 0 }
+        () => base44.entities.LeaderboardEntry.filter({ student_email: userData?.email }),
+        { key: `LB:${userData?.email}`, ttlMs: 10000, retries: 0 }
       ).catch(() => []);
       
       if (leaderboardEntries.length > 0) {
@@ -502,7 +502,7 @@ export default function Home() {
 
   const expectedDailyLoss = calculateExpectedDailyLoss();
 
-  if (isLoading) {
+  if (isLoading || !userData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <motion.div
