@@ -495,7 +495,7 @@ export default function Avatar({ stage, totalLessons, equippedItems, userData: u
       return;
     }
     
-    const foodCost = 10;
+    const foodCost = 2;
     if ((user.coins || 0) < foodCost) {
       toast.error("אין מספיק מטבעות לקנות אוכל!");
       return;
@@ -799,7 +799,7 @@ export default function Avatar({ stage, totalLessons, equippedItems, userData: u
               >
                 <div className="flex flex-col items-center gap-1">
                   <UtensilsCrossed className="w-5 h-5" />
-                  <span className="text-xs">אוכל (10 🪙)</span>
+                  <span className="text-xs">אוכל (2 🪙)</span>
                 </div>
               </Button>
             </motion.div>
