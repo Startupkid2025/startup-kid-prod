@@ -181,7 +181,7 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
   if (showNameInput) {
     return (
       <Dialog open={isOpen} onOpenChange={() => {}}>
-        <DialogContent className="bg-gradient-to-br from-purple-600 to-pink-600 border-2 border-white/20 max-w-md">
+        <DialogContent className="bg-gradient-to-br from-purple-600 to-pink-600 border-2 border-white/20 max-w-md" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-3xl font-black text-white text-center mb-2">
               בוא נכיר! 👋
@@ -193,22 +193,24 @@ export default function GroupSelectionDialog({ isOpen, onComplete }) {
 
           <div className="space-y-4 py-6">
             <div>
-              <label className="text-white font-bold mb-2 block">שם פרטי</label>
+              <label className="text-white font-bold mb-2 block text-right">שם פרטי</label>
               <Input
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                placeholder="הזן שם פרטי"
-                className="bg-white/20 border-white/30 text-white placeholder:text-white/50 text-lg"
+                placeholder="הזן שם פרטי בעברית"
+                className="bg-white/20 border-white/30 text-white placeholder:text-white/50 text-lg text-right"
+                dir="rtl"
               />
             </div>
 
             <div>
-              <label className="text-white font-bold mb-2 block">שם משפחה</label>
+              <label className="text-white font-bold mb-2 block text-right">שם משפחה</label>
               <Input
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                placeholder="הזן שם משפחה"
-                className="bg-white/20 border-white/30 text-white placeholder:text-white/50 text-lg"
+                placeholder="הזן שם משפחה בעברית"
+                className="bg-white/20 border-white/30 text-white placeholder:text-white/50 text-lg text-right"
+                dir="rtl"
               />
             </div>
 
