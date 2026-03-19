@@ -490,11 +490,6 @@ export default function Avatar({ stage, totalLessons, equippedItems, userData: u
   };
   
   const feedAvatar = async () => {
-    if (hunger < 30) {
-      toast.error("הוא לא רעב עכשיו!");
-      return;
-    }
-    
     const foodCost = 2;
     if ((user.coins || 0) < foodCost) {
       toast.error("אין מספיק מטבעות לקנות אוכל!");
@@ -794,7 +789,7 @@ export default function Avatar({ stage, totalLessons, equippedItems, userData: u
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
                 onClick={feedAvatar}
-                disabled={sleepStatus?.isSleeping || workStatus?.isWorking || hunger < 30}
+                disabled={sleepStatus?.isSleeping || workStatus?.isWorking}
                 className="w-full bg-gradient-to-br from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold py-4 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="flex flex-col items-center gap-1">
