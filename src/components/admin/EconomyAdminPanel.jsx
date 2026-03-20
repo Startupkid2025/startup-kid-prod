@@ -838,20 +838,20 @@ export default function EconomyAdminPanel() {
           </Button>
         </div>
 
-        {isRecalculating && (
+        {(isRecalculating || isRecalculatingNetWorth) && (
           <div className="bg-white/5 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-white font-bold">
-                מעדכן... {progress.current} / {progress.total}
+                {isRecalculatingNetWorth ? 'מחשב Net Worth...' : 'מעדכן...'} {progress.current} / {progress.total}
               </span>
               <span className="text-white/60">
-                {Math.round((progress.current / progress.total) * 100)}%
+                {progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0}%
               </span>
             </div>
             <div className="w-full bg-white/20 rounded-full h-2">
               <div
                 className="bg-emerald-500 h-2 rounded-full transition-all"
-                style={{ width: `${(progress.current / progress.total) * 100}%` }}
+                style={{ width: `${progress.total > 0 ? (progress.current / progress.total) * 100 : 0}%` }}
               />
             </div>
             {progress.errors.length > 0 && (
