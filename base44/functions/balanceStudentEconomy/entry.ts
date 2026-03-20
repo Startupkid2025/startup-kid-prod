@@ -132,6 +132,7 @@ Deno.serve(async (req) => {
       investments_value: investmentsValue,
       items_value: itemsValue,
       total_networth: total_networth,
+      total_admin_coins: adjustedAdminCoins,
       last_calculated_at: new Date().toISOString()
     });
 
