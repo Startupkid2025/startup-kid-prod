@@ -290,153 +290,40 @@ export default function EconomyAdminPanel() {
       return;
     }
 
-    // Calculate preview first
-    const selectedStudents = students.filter(s => selectedEmails.has(s.student_email));
-    const previewData = [];
-
-    setIsRecalculating(true);
-    setProgress({ current: 0, total: selectedStudents.length, errors: [] });
-
-    for (let i = 0; i < selectedStudents.length; i++) {
-      try {
-        const studentEmail = selectedStudents[i].student_email;
-        const users = await base44.entities.User.filter({ email: studentEmail });
-        if (!users || users.length === 0) continue;
-
-        const user = users[0];
-
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const wordProgress = await base44.entities.WordProgress.filter({ student_email: studentEmail });
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const mathProgress = await base44.entities.MathProgress.filter({ student_email: studentEmail });
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const participations = await base44.entities.LessonParticipation.filter({ student_email: studentEmail });
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const quizProgress = await base44.entities.QuizProgress.filter({ student_email: studentEmail });
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const investments = await base44.entities.Investment.filter({ student_email: studentEmail });
-
-        const safeNum = (val) => typeof val === 'number' ? val : 0;
-
-        const { profileCompletionCoins, socialMissionsCoins } = computeProfileCoins(user);
-
-        const income = {
-          base: safeNum(user.base_coins ?? user.base ?? 500),
-          lessonsCoins: safeNum(user.total_lessons_coins ?? ((user.total_lessons || 0) * 100)),
-          vocabulary: wordProgress.reduce((sum, w) => sum + safeNum(w.coins_earned), 0),
-          math: mathProgress.reduce((sum, m) => sum + safeNum(m.coins_earned), 0),
-          surveys: safeNum(user.survey_coins ?? user.total_survey_coins) || (participations.filter(p => p.survey_completed).length * 70),
-          quizzes: quizProgress.reduce((sum, q) => sum + safeNum(q.coins_earned), 0),
-          collaboration: safeNum(user.total_collaboration_coins),
-          loginStreakIncome: safeNum(user.total_login_streak_coins),
-          workEarnings: safeNum(user.total_work_earnings),
-          passiveIncome: safeNum(user.total_passive_income),
-          adminCoins: safeNum(user.total_admin_coins)
-        };
-
-        const losses = {
-          inflation: safeNum(user.total_inflation_lost),
-          capitalGainsTax: safeNum(user.total_capital_gains_tax),
-          investmentFees: safeNum(user.total_investment_fees),
-          itemSaleLosses: safeNum(user.total_item_sale_losses),
-          creditInterest: safeNum(user.total_credit_interest)
-        };
-        const totalLosses = Object.values(losses).reduce((sum, val) => sum + safeNum(val), 0);
-
-        const purchasedItems = user.purchased_items || [];
-        const itemsValue = purchasedItems.reduce((sum, itemId) => {
-          return sum + (AVATAR_ITEM_PRICES[itemId] || 0);
-        }, 0);
-
-        const investmentsSpent = investments.reduce((sum, inv) => sum + safeNum(inv.invested_amount), 0);
-        const investmentsValue = investments.reduce((sum, inv) => sum + safeNum(inv.current_value), 0);
-
-        const realizedProfit = safeNum(user.total_realized_investment_profit);
-        let unrealized = 0;
-        if (user.investment_profit != null) {
-          unrealized = safeNum(user.investment_profit);
-        } else {
-          unrealized = investmentsValue - investmentsSpent;
-        }
-        const totalInvestmentProfits = unrealized + realizedProfit;
-
-        income.investmentProfits = totalInvestmentProfits;
-        income.profileCompletion = profileCompletionCoins;
-        income.socialMissions = socialMissionsCoins;
-        const totalIncome = Object.values(income).reduce((sum, val) => sum + safeNum(val), 0);
-
-        const balancedCoins = Math.round(totalIncome - totalLosses - itemsValue - investmentsValue);
-
-        const total_networth = balancedCoins + investmentsValue + itemsValue;
-        
-        previewData.push({
-          email: studentEmail,
-          name: user.full_name,
-          currentCoins: user.coins || 0,
-          newCoins: balancedCoins,
-          diff: balancedCoins - (user.coins || 0),
-          totalIncome,
-          totalLosses,
-          items_value: itemsValue,
-          investments_value: investmentsValue,
-          total_networth: total_networth,
-          profileCompletionCoins,
-          socialMissionsCoins
-        });
-
-        setProgress(prev => ({ ...prev, current: i + 1 }));
-        await new Promise(resolve => setTimeout(resolve, 1500));
-      } catch (error) {
-        console.error(`Error for ${selectedStudents[i].student_email}:`, error);
-      }
-    }
-
-    setIsRecalculating(false);
-
-    // Show preview
-    const previewText = previewData.map(p => 
-      `${p.name}:\n` +
-      `  עו"ש נוכחי: ${p.currentCoins.toLocaleString()}\n` +
-      `  עו"ש חדש: ${p.newCoins.toLocaleString()}\n` +
-      `  הפרש: ${p.diff >= 0 ? '+' : ''}${p.diff.toLocaleString()}\n` +
-      `  (הכנסות: ${p.totalIncome.toLocaleString()} - הפסדים: ${p.totalLosses.toLocaleString()} - פריטים: ${p.items_value.toLocaleString()} - השקעות: ${p.investments_value.toLocaleString()})\n` +
-      `  פרופיל: ${p.profileCompletionCoins} | משימות חברתיות: ${p.socialMissionsCoins}`
-    ).join('\n\n');
-
-    if (!confirm(`⚠️ לאזן עו"ש עבור ${previewData.length} תלמידים?\n\n${previewText}\n\nלהמשיך?`)) {
+    if (!confirm(`⚖️ לאזן עו"ש עבור ${selectedEmails.size} תלמידים נבחרים?`)) {
       return;
     }
 
-    // Apply changes
     setIsRecalculating(true);
-    setProgress({ current: 0, total: previewData.length, errors: [] });
+    const emails = Array.from(selectedEmails);
+    setProgress({ current: 0, total: emails.length, errors: [] });
 
     const errors = [];
 
-    for (let i = 0; i < previewData.length; i++) {
+    for (let i = 0; i < emails.length; i++) {
       try {
-        const preview = previewData[i];
-        const users = await base44.entities.User.filter({ email: preview.email });
-        if (!users || users.length === 0) continue;
-
-        const user = users[0];
-        await base44.entities.User.update(user.id, { coins: preview.newCoins });
-
-        setProgress(prev => ({ ...prev, current: i + 1 }));
-        await new Promise(resolve => setTimeout(resolve, 200));
+        const response = await base44.functions.invoke('balanceStudentEconomy', {
+          userEmail: emails[i]
+        });
+        const result = response.data;
+        if (!result.success) {
+          errors.push({ email: emails[i], error: result.error });
+        }
+        setProgress(prev => ({ ...prev, current: i + 1, errors: [...errors] }));
+        await new Promise(resolve => setTimeout(resolve, 300));
       } catch (error) {
-        console.error(`Error for ${previewData[i].email}:`, error);
-        errors.push({ email: previewData[i].email, error: error.message });
-        setProgress(prev => ({ ...prev, current: i + 1, errors }));
+        console.error(`Error for ${emails[i]}:`, error);
+        errors.push({ email: emails[i], error: error.message });
+        setProgress(prev => ({ ...prev, current: i + 1, errors: [...errors] }));
       }
     }
 
     setIsRecalculating(false);
 
     if (errors.length === 0) {
-      toast.success(`✅ אוזן עו"ש עבור ${previewData.length} תלמידים`);
+      toast.success(`✅ אוזן עו"ש עבור ${emails.length} תלמידים`);
     } else {
-      toast.warning(`⚠️ ${previewData.length - errors.length} הצליחו, ${errors.length} נכשלו`);
+      toast.warning(`⚠️ ${emails.length - errors.length} הצליחו, ${errors.length} נכשלו`);
     }
 
     await loadSnapshots();
@@ -455,96 +342,19 @@ export default function EconomyAdminPanel() {
 
     for (let i = 0; i < students.length; i++) {
       try {
-        const studentEmail = students[i].student_email;
-
-        // Fetch user data
-        const users = await base44.entities.User.filter({ email: studentEmail });
-        if (!users || users.length === 0) continue;
-
-        const user = users[0];
-
-        // Fetch additional data sequentially with VERY LONG delays to avoid rate limits
-        await new Promise(resolve => setTimeout(resolve, 800));
-        const wordProgress = await base44.entities.WordProgress.filter({ student_email: studentEmail });
-
-        await new Promise(resolve => setTimeout(resolve, 800));
-        const mathProgress = await base44.entities.MathProgress.filter({ student_email: studentEmail });
-
-        await new Promise(resolve => setTimeout(resolve, 800));
-        const participations = await base44.entities.LessonParticipation.filter({ student_email: studentEmail });
-
-        await new Promise(resolve => setTimeout(resolve, 800));
-        const quizProgress = await base44.entities.QuizProgress.filter({ student_email: studentEmail });
-
-        await new Promise(resolve => setTimeout(resolve, 800));
-        const investments = await base44.entities.Investment.filter({ student_email: studentEmail });
-
-        const safeNum = (val) => typeof val === 'number' ? val : 0;
-
-        const { profileCompletionCoins, socialMissionsCoins } = computeProfileCoins(user);
-
-        // Calculate total income
-        const income = {
-          base: safeNum(user.base_coins ?? user.base ?? 500),
-          lessonsCoins: safeNum(user.total_lessons_coins ?? (user.total_lessons * 100)),
-          vocabulary: wordProgress.reduce((sum, w) => sum + safeNum(w.coins_earned), 0),
-          math: mathProgress.reduce((sum, m) => sum + safeNum(m.coins_earned), 0),
-          surveys: safeNum(user.survey_coins ?? user.total_survey_coins) || (participations.filter(p => p.survey_completed).length * 70),
-          quizzes: quizProgress.reduce((sum, q) => sum + safeNum(q.coins_earned), 0),
-          collaboration: safeNum(user.total_collaboration_coins),
-          loginStreakIncome: safeNum(user.total_login_streak_coins),
-          workEarnings: safeNum(user.total_work_earnings),
-          passiveIncome: safeNum(user.total_passive_income),
-          adminCoins: safeNum(user.total_admin_coins)
-        };
-
-        // Calculate total losses
-        const losses = {
-          inflation: safeNum(user.total_inflation_lost),
-          capitalGainsTax: safeNum(user.total_capital_gains_tax),
-          investmentFees: safeNum(user.total_investment_fees),
-          itemSaleLosses: safeNum(user.total_item_sale_losses),
-          creditInterest: safeNum(user.total_credit_interest)
-        };
-        const totalLosses = Object.values(losses).reduce((sum, val) => sum + safeNum(val), 0);
-
-        const purchasedItems = user.purchased_items || [];
-        const itemsValue = purchasedItems.reduce((sum, itemId) => {
-          return sum + (AVATAR_ITEM_PRICES[itemId] || 0);
-        }, 0);
-
-        // Calculate investments - SPENT not current value
-        const investmentsSpent = investments.reduce((sum, inv) => sum + safeNum(inv.invested_amount), 0);
-        const investmentsValue = investments.reduce((sum, inv) => sum + safeNum(inv.current_value), 0);
-
-        // Calculate investment profits
-        const realizedProfit = safeNum(user.total_realized_investment_profit);
-        let unrealized = 0;
-        if (user.investment_profit != null) {
-          unrealized = safeNum(user.investment_profit);
-        } else {
-          unrealized = investmentsValue - investmentsSpent;
+        const response = await base44.functions.invoke('balanceStudentEconomy', {
+          userEmail: students[i].student_email
+        });
+        const result = response.data;
+        if (!result.success) {
+          errors.push({ email: students[i].student_email, error: result.error });
         }
-        const totalInvestmentProfits = unrealized + realizedProfit;
-
-        // Calculate total income
-        income.investmentProfits = totalInvestmentProfits;
-        income.profileCompletion = profileCompletionCoins;
-        income.socialMissions = socialMissionsCoins;
-        const totalIncome = Object.values(income).reduce((sum, val) => sum + safeNum(val), 0);
-
-        // Calculate balanced coins: coins = totalIncome - totalLosses - itemsValue - investmentsValue
-        const balancedCoins = Math.round(totalIncome - totalLosses - itemsValue - investmentsValue);
-
-        // Update user
-        await base44.entities.User.update(user.id, { coins: balancedCoins });
-
-        setProgress(prev => ({ ...prev, current: i + 1 }));
-        await new Promise(resolve => setTimeout(resolve, 1200));
+        setProgress(prev => ({ ...prev, current: i + 1, errors: [...errors] }));
+        await new Promise(resolve => setTimeout(resolve, 300));
       } catch (error) {
         console.error(`Error for ${students[i].student_email}:`, error);
         errors.push({ email: students[i].student_email, error: error.message });
-        setProgress(prev => ({ ...prev, current: i + 1, errors }));
+        setProgress(prev => ({ ...prev, current: i + 1, errors: [...errors] }));
       }
     }
 
@@ -565,23 +375,35 @@ export default function EconomyAdminPanel() {
     }
 
     setIsRecalculatingNetWorth(true);
+    setProgress({ current: 0, total: students.length, errors: [] });
 
-    try {
-      const response = await base44.functions.invoke('recalculateUserNetWorth', {});
-      const result = response.data;
+    const errors = [];
 
-      if (result.success) {
-        toast.success(`✅ ${result.message}`);
-        await loadSnapshots(); // Refresh data
-      } else {
-        toast.error(`❌ ${result.error}`);
+    for (let i = 0; i < students.length; i++) {
+      try {
+        const response = await base44.functions.invoke('recalculateUserNetWorth', { userEmail: students[i].student_email });
+        const result = response.data;
+        if (!result.success) {
+          errors.push({ email: students[i].student_email, error: result.error });
+        }
+        setProgress(prev => ({ ...prev, current: i + 1, errors: [...errors] }));
+        await new Promise(resolve => setTimeout(resolve, 300));
+      } catch (error) {
+        console.error(`Error for ${students[i].student_email}:`, error);
+        errors.push({ email: students[i].student_email, error: error.message });
+        setProgress(prev => ({ ...prev, current: i + 1, errors: [...errors] }));
       }
-    } catch (error) {
-      console.error("Error recalculating net worth:", error);
-      toast.error("שגיאה בחישוב מחדש");
-    } finally {
-      setIsRecalculatingNetWorth(false);
     }
+
+    setIsRecalculatingNetWorth(false);
+
+    if (errors.length === 0) {
+      toast.success(`✅ חושב Net Worth עבור כל התלמידים`);
+    } else {
+      toast.warning(`⚠️ ${students.length - errors.length} הצליחו, ${errors.length} נכשלו`);
+    }
+
+    await loadSnapshots();
   };
 
   const recalculateSelectedNetWorth = async () => {
