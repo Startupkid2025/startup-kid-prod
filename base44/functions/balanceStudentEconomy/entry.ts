@@ -51,14 +51,16 @@ Deno.serve(async (req) => {
 
     const safeNum = (val) => typeof val === 'number' ? val : 0;
 
-    // Fetch all data needed for balance calculation
-    const [wordProgress, mathProgress, participations, quizProgress, investments] = await Promise.all([
-      base44.asServiceRole.entities.WordProgress.filter({ student_email: userEmail }),
-      base44.asServiceRole.entities.MathProgress.filter({ student_email: userEmail }),
-      base44.asServiceRole.entities.LessonParticipation.filter({ student_email: userEmail }),
-      base44.asServiceRole.entities.QuizProgress.filter({ student_email: userEmail }),
-      base44.asServiceRole.entities.Investment.filter({ student_email: userEmail }),
-    ]);
+    // Fetch all data needed for balance calculation (sequential to avoid CPU limit)
+    const wordProgress = await base44.asServiceRole.entities.WordProgress.filter({ student_email: userEmail });
+    await new Promise(r => setTimeout(r, 150));
+    const mathProgress = await base44.asServiceRole.entities.MathProgress.filter({ student_email: userEmail });
+    await new Promise(r => setTimeout(r, 150));
+    const participations = await base44.asServiceRole.entities.LessonParticipation.filter({ student_email: userEmail });
+    await new Promise(r => setTimeout(r, 150));
+    const quizProgress = await base44.asServiceRole.entities.QuizProgress.filter({ student_email: userEmail });
+    await new Promise(r => setTimeout(r, 150));
+    const investments = await base44.asServiceRole.entities.Investment.filter({ student_email: userEmail });
 
     // Profile completion coins
     let profileCompletionCoins = 0;
