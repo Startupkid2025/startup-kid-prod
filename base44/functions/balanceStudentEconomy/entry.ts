@@ -115,7 +115,15 @@ Deno.serve(async (req) => {
     const totalIncome = Object.values(income).reduce((sum, val) => sum + safeNum(val), 0);
     const totalLosses = Object.values(losses).reduce((sum, val) => sum + safeNum(val), 0);
 
-    const balancedCoins = Math.round(totalIncome - totalLosses - itemsValue - investmentsValue);
+    let balancedCoins = Math.round(totalIncome - totalLosses - itemsValue - investmentsValue);
+
+    // If coins would go negative, add the deficit to admin_coins so the balance is always >= 0
+    let adjustedAdminCoins = safeNum(user.total_admin_coins);
+    if (balancedCoins < 0) {
+      adjustedAdminCoins += Math.abs(balancedCoins);
+      balancedCoins = 0;
+    }
+
     const total_networth = balancedCoins + investmentsValue + itemsValue;
 
     // Update user
