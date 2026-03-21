@@ -116,7 +116,6 @@ export default function GroupLessonStatus({ group, students, teachers = [], allG
         </div>
       </div>
 
-      <div className="flex items-center gap-3 mb-4">
       <Card className="bg-green-500/20 backdrop-blur-md border-green-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-green-200 text-base flex items-center gap-2">
@@ -130,14 +129,9 @@ export default function GroupLessonStatus({ group, students, teachers = [], allG
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {availableLessons.map(lesson => (
-                <div 
-                  key={lesson.id} 
-                  className="bg-green-500/20 rounded-lg p-3 border border-green-500/30"
-                >
+                <div key={lesson.id} className="bg-green-500/20 rounded-lg p-3 border border-green-500/30">
                   <p className="text-white font-medium text-sm">{lesson.lesson_name}</p>
-                  <p className="text-green-200/70 text-xs mt-1">
-                    ✅ אף תלמיד לא השתתף - ניתן ללמד!
-                  </p>
+                  <p className="text-green-200/70 text-xs mt-1">✅ אף תלמיד לא השתתף - ניתן ללמד!</p>
                 </div>
               ))}
             </div>
@@ -145,7 +139,6 @@ export default function GroupLessonStatus({ group, students, teachers = [], allG
         </CardContent>
       </Card>
 
-      {/* Unavailable Lessons */}
       <Card className="bg-red-500/20 backdrop-blur-md border-red-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-red-200 text-base flex items-center gap-2">
@@ -159,14 +152,9 @@ export default function GroupLessonStatus({ group, students, teachers = [], allG
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {unavailableLessons.map(lesson => (
-                <div 
-                  key={lesson.id} 
-                  className="bg-red-500/20 rounded-lg p-3 border border-red-500/30"
-                >
+                <div key={lesson.id} className="bg-red-500/20 rounded-lg p-3 border border-red-500/30">
                   <p className="text-white font-medium text-sm">{lesson.lesson_name}</p>
-                  <p className="text-red-200/70 text-xs mt-1">
-                    ❌ {lesson.attendedCount}/{lesson.totalStudents} תלמידים השתתפו
-                  </p>
+                  <p className="text-red-200/70 text-xs mt-1">❌ {lesson.attendedCount}/{lesson.totalStudents} תלמידים השתתפו</p>
                   <p className="text-red-200/50 text-[10px] mt-0.5">
                     {lesson.attendedStudents.slice(0, 3).join(', ')}
                     {lesson.attendedStudents.length > 3 && ` ועוד ${lesson.attendedStudents.length - 3}...`}
