@@ -192,9 +192,15 @@ export default function GroupManagement() {
         <GroupScheduleManager
           group={viewingSchedule}
           allGroups={groups}
+          teachers={teachers}
           onGroupChange={(groupId) => {
             const g = groups.find(g => g.id === groupId);
             if (g) setViewingSchedule(g);
+          }}
+          onSwitchToLessonStatus={(groupId) => {
+            const g = groups.find(gr => gr.id === (groupId || viewingSchedule?.id));
+            setViewingSchedule(null);
+            setViewingLessonStatus(g || viewingSchedule);
           }}
         />
       </div>
@@ -210,10 +216,16 @@ export default function GroupManagement() {
         <GroupLessonStatus
           group={viewingLessonStatus}
           students={students}
+          teachers={teachers}
           allGroups={groups}
           onGroupChange={(groupId) => {
             const g = groups.find(g => g.id === groupId);
             if (g) setViewingLessonStatus(g);
+          }}
+          onSwitchToSchedule={(groupId) => {
+            const g = groups.find(gr => gr.id === (groupId || viewingLessonStatus?.id));
+            setViewingLessonStatus(null);
+            setViewingSchedule(g || viewingLessonStatus);
           }}
         />
       </div>
