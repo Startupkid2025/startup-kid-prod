@@ -16,7 +16,9 @@ import {
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { toast } from "sonner";
 
-export default function GroupScheduleManager({ group, allGroups = [], onGroupChange }) {
+const DAY_NAMES_FULL = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+
+export default function GroupScheduleManager({ group, allGroups = [], teachers = [], onGroupChange, onSwitchToLessonStatus }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [scheduledLessons, setScheduledLessons] = useState([]);
   const [allLessons, setAllLessons] = useState([]);
@@ -400,8 +402,38 @@ export default function GroupScheduleManager({ group, allGroups = [], onGroupCha
 
   const currentGroup = selectedGroupId ? allGroups.find(g => g.id === selectedGroupId) || group : group;
 
+  // Compute student count from group data
+  const studentCount = (currentGroup.student_emails || []).length;
+  const groupTeacher = teachers.find(t => t.id === currentGroup.teacher_id);
+
   return (
     <div className="space-y-6">
+      {/* Group Info Card */}
+      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-white font-black text-lg">{currentGroup.group_name}</div>
+            {currentGroup.day_of_week !== undefined && (
+              <div className="flex flex-wrap items-center gap-3 text-white/70 text-sm mt-1">
+                <span className="flex items-center gap-1"><CalendarIcon className="w-3.5 h-3.5" /> יום {DAY_NAMES_FULL[currentGroup.day_of_week]}</span>
+                {currentGroup.hour && <span className="flex items-center gap-1"><span className="text-xs">שעה</span> {currentGroup.hour}</span>}
+                <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {studentCount} תלמידים</span>
+                {groupTeacher && <span>👩‍🏫 {groupTeacher.full_name}</span>}
+              </div>
+            )}
+          </div>
+          <Button
+            onClick={() => onSwitchToLessonStatus?.(currentGroup.id)}
+            size="sm"
+            variant="outline"
+            className="bg-green-500/20 border-green-500/30 hover:bg-green-500/30 text-green-200 gap-1"
+          >
+            <BookOpen className="w-4 h-4" />
+            סטטוס שיעורים
+          </Button>
+        </div>
+      </div>
+
       {/* Header with Group Selector */}
       <Card className="bg-white/10 backdrop-blur-md border-white/20">
         <CardHeader>
